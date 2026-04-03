@@ -8,7 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/alecthomas/kong"
-	"github.com/sacloud/sakumock/simplemq"
+	"github.com/sacloud/sakumock/secretmanager"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	var cfg simplemq.Config
+	var cfg secretmanager.Config
 	kong.Parse(&cfg)
 
 	level := slog.LevelInfo
@@ -30,10 +30,7 @@ func run(ctx context.Context) error {
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level})))
 
-	handler, err := simplemq.NewHandler(cfg)
-	if err != nil {
-		return err
-	}
+	handler := secretmanager.NewHandler(cfg)
 	defer handler.Close()
 
 	srv := &http.Server{
@@ -46,40 +43,18 @@ func run(ctx context.Context) error {
 		srv.Shutdown(context.Background())
 	}()
 
-	slog.Info("sakumock-simplemq starting",
+	slog.Info("sakumock-secretmanager starting",
 		"addr", cfg.Addr,
-		"api_key", apiKeyHint(cfg.APIKey),
-		"visibility_timeout", cfg.VisibilityTimeout,
-		"message_expire", cfg.MessageExpire,
-		"database", databaseHint(cfg.Database),
 		"latency", cfg.Latency,
 		"debug", cfg.Debug,
 	)
-	slog.Info("to use with simplemq-api-go SDK",
-		"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE", "http://"+cfg.Addr,
+	slog.Info("to use with sakura-secrets-cli",
+		"SAKURA_API_ROOT_URL", "http://"+cfg.Addr,
 		"SAKURA_ACCESS_TOKEN", "dummy",
 		"SAKURA_ACCESS_TOKEN_SECRET", "dummy",
-	)
-	slog.Info("to use with simplemq-cli",
-		"SIMPLEMQ_MESSAGE_API_URL", "http://"+cfg.Addr,
-		"SIMPLEMQ_API_KEY", apiKeyHint(cfg.APIKey),
 	)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
 	return nil
-}
-
-func apiKeyHint(key string) string {
-	if key == "" {
-		return "(any non-empty value accepted)"
-	}
-	return "(configured, use the key you specified)"
-}
-
-func databaseHint(path string) string {
-	if path == "" {
-		return "(in-memory)"
-	}
-	return path
 }

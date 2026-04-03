@@ -38,6 +38,14 @@ sakumock-simplemq --database ./messages.db
 sakumock-simplemq --latency 500ms
 ```
 
+## Use with simplemq-api-go SDK
+
+```bash
+export SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://localhost:18080
+export SAKURA_ACCESS_TOKEN=dummy
+export SAKURA_ACCESS_TOKEN_SECRET=dummy
+```
+
 ## Use with simplemq-cli
 
 ```bash

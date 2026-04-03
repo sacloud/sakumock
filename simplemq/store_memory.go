@@ -28,7 +28,7 @@ func (q *memoryQueue) send(content string, now time.Time) storedMessage {
 	defer q.mu.Unlock()
 
 	msg := &storedMessage{
-		ID:        uuid.New().String(),
+		ID:        uuid.Must(uuid.NewV7()).String(),
 		Content:   content,
 		CreatedAt: now,
 		UpdatedAt: now,

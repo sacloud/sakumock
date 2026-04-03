@@ -86,7 +86,7 @@ func (s *SQLiteStore) withTx(ctx context.Context, fn func(tx *sql.Tx) error) err
 
 func (s *SQLiteStore) Send(queueName, content string, now time.Time) (storedMessage, error) {
 	msg := storedMessage{
-		ID:        uuid.New().String(),
+		ID:        uuid.Must(uuid.NewV7()).String(),
 		Content:   content,
 		CreatedAt: now,
 		UpdatedAt: now,

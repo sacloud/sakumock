@@ -59,6 +59,37 @@ defer srv.Close()
 // srv.TestURL() returns http://127.0.0.1:<random-port>
 ```
 
+## Module Conventions
+
+Each service module must follow these conventions:
+
+### Public API
+
+| Symbol | Description |
+|---|---|
+| `Config` | Configuration struct with `alecthomas/kong` tags for CLI parsing |
+| `NewHandler(cfg Config) *Server` | Create an `http.Handler` without starting a listener |
+| `NewTestServer(cfg Config) *Server` | Create and start an `httptest.Server` for use in tests |
+| `Server.TestURL() string` | Return the base URL of the test server |
+| `Server.Close()` | Shut down the server and release resources |
+
+### Structure
+
+Each module is an independent Go module (`go.mod`) under its own subdirectory with:
+
+- `store.go` — `Store` interface and domain types
+- `store_memory.go` — In-memory `Store` implementation
+- `new_store.go` — Store factory function
+- `handler.go` — HTTP handlers and JSON request/response types
+- `server.go` — `Config`, `Server`, `NewHandler`, `NewTestServer`
+- `cmd/sakumock-<service>/` — CLI entrypoint with graceful shutdown
+- `Makefile` — build, test, install targets
+- `README.md` — usage and API documentation
+
+### Port Allocation
+
+Default ports are assigned sequentially starting from 18080. See the service table above.
+
 ## License
 
 This project is published under [Apache 2.0 License](LICENSE).

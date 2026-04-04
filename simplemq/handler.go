@@ -54,8 +54,8 @@ func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/queues/{queueName}/messages", s.authMiddleware(s.handleSend))
 	mux.HandleFunc("GET /v1/queues/{queueName}/messages", s.authMiddleware(s.handleReceive))
-	mux.HandleFunc("PUT /v1/queues/{queueName}/messages/{messageID}", s.authMiddleware(s.handleExtendTimeout))
-	mux.HandleFunc("DELETE /v1/queues/{queueName}/messages/{messageID}", s.authMiddleware(s.handleDelete))
+	mux.HandleFunc("PUT /v1/queues/{queueName}/messages/{messageId}", s.authMiddleware(s.handleExtendTimeout))
+	mux.HandleFunc("DELETE /v1/queues/{queueName}/messages/{messageId}", s.authMiddleware(s.handleDelete))
 	return mux
 }
 
@@ -241,7 +241,7 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleExtendTimeout(w http.ResponseWriter, r *http.Request) {
 	queueName := r.PathValue("queueName")
-	messageID := r.PathValue("messageID")
+	messageID := r.PathValue("messageId")
 	if err := validateQueueName(queueName); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -275,7 +275,7 @@ func (s *Server) handleExtendTimeout(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 	queueName := r.PathValue("queueName")
-	messageID := r.PathValue("messageID")
+	messageID := r.PathValue("messageId")
 	if err := validateQueueName(queueName); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return

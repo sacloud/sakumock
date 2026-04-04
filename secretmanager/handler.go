@@ -48,7 +48,7 @@ type wrappedUnveilRequest struct {
 
 type unveilResponse struct {
 	Name    string `json:"Name"`
-	Version int    `json:"Version"`
+	Version *int   `json:"Version"`
 	Value   string `json:"Value"`
 }
 
@@ -65,7 +65,7 @@ type paginatedSecretList struct {
 
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	base := "/secretmanager/vaults/{vault_id}"
+	base := "/secretmanager/vaults/{vault_resource_id}"
 	mux.HandleFunc("GET "+base+"/secrets", s.handleListSecrets)
 	mux.HandleFunc("POST "+base+"/secrets", s.handleCreateSecret)
 	mux.HandleFunc("DELETE "+base+"/secrets", s.handleDeleteSecret)
@@ -97,7 +97,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 }
 
 func (s *Server) handleListSecrets(w http.ResponseWriter, r *http.Request) {
-	vaultID := r.PathValue("vault_id")
+	vaultID := r.PathValue("vault_resource_id")
 	secrets := s.store.List(vaultID)
 	items := make([]secretResponse, len(secrets))
 	for i, sec := range secrets {
@@ -113,7 +113,7 @@ func (s *Server) handleListSecrets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
-	vaultID := r.PathValue("vault_id")
+	vaultID := r.PathValue("vault_resource_id")
 	var req wrappedCreateSecret
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -135,7 +135,7 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteSecret(w http.ResponseWriter, r *http.Request) {
-	vaultID := r.PathValue("vault_id")
+	vaultID := r.PathValue("vault_resource_id")
 	var req wrappedDeleteSecret
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -151,7 +151,7 @@ func (s *Server) handleDeleteSecret(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
-	vaultID := r.PathValue("vault_id")
+	vaultID := r.PathValue("vault_resource_id")
 	var req wrappedUnveilRequest
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -171,7 +171,7 @@ func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, wrappedUnveilResponse{
 		Secret: unveilResponse{
 			Name:    req.Secret.Name,
-			Version: actualVersion,
+			Version: &actualVersion,
 			Value:   value,
 		},
 	})

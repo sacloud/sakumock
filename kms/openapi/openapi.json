@@ -1,0 +1,719 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "KMS API",
+    "version": "1.0.0",
+    "description": "さくらのクラウド KMS API"
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1",
+      "description": "石狩第1ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1b/api/cloud/1.1",
+      "description": "石狩第2ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/tk1a/api/cloud/1.1",
+      "description": "東京第1ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/tk1b/api/cloud/1.1",
+      "description": "東京第2ゾーン"
+    }
+  ],
+  "paths": {
+    "/kms/keys": {
+      "get": {
+        "operationId": "kms_keys_list",
+        "tags": [
+          "kms-key"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedKeyList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "kms_keys_create",
+        "tags": [
+          "kms-key"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateKey"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCreateKey"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/kms/keys/{resource_id}": {
+      "get": {
+        "operationId": "kms_keys_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedKey"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "kms_keys_update",
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedKey"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedKey"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "kms_keys_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/kms/keys/{resource_id}/rotate": {
+      "post": {
+        "operationId": "kms_keys_rotate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedKey"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "Forbidden - Key is not available for rotation"
+          }
+        }
+      }
+    },
+    "/kms/keys/{resource_id}/status": {
+      "post": {
+        "operationId": "kms_keys_status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedChangeKeyStatus"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/kms/keys/{resource_id}/schedule-destruction": {
+      "post": {
+        "operationId": "kms_keys_schedule_destruction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedScheduleDestructionKey"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/kms/keys/{resource_id}/encrypt": {
+      "post": {
+        "operationId": "kms_keys_encrypt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedKeyPlain"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedKeyCipher"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/kms/keys/{resource_id}/decrypt": {
+      "post": {
+        "operationId": "kms_keys_decrypt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "kms-key"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedKeyCipher"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedKeyPlain"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "APIキーとシークレットをご利用ください"
+      }
+    },
+    "schemas": {
+      "DateTime": {
+        "type": "string",
+        "format": "iso8601",
+        "example": "2025-02-05T12:19:22.551827+09:00"
+      },
+      "AvailabilityEnum": {
+        "enum": [
+          "precreate",
+          "available",
+          "discontinued"
+        ],
+        "type": "string",
+        "description": "* `precreate` - 準備中\n* `available` - 利用可能\n* `discontinued` - 廃止"
+      },
+      "CreateKey": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KeyOrigin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyOriginEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "鍵の生成元"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "PlainKey": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "CreatedAt",
+          "ID",
+          "KeyOrigin",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "Key": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "ServiceClass": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyServiceClassEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "サービスクラス"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KeyOrigin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyOriginEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "鍵の生成元"
+          },
+          "LatestVersion": {
+            "type": "integer",
+            "readOnly": true,
+            "title": "最新のキーマテリアルバージョン",
+            "example": 0
+          },
+          "Status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "鍵のステータス"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ID",
+          "CreatedAt",
+          "ModifiedAt",
+          "Name",
+          "Description",
+          "KeyOrigin",
+          "Status",
+          "Tags"
+        ]
+      },
+      "KeyServiceClassEnum": {
+        "enum": [
+          "cloud/kms/key",
+          "cloud/kms/key/legacy"
+        ],
+        "type": "string"
+      },
+      "KeyOriginEnum": {
+        "enum": [
+          "generated",
+          "imported"
+        ],
+        "type": "string",
+        "description": "* `generated` - 生成\n* `imported` - インポート"
+      },
+      "KeyStatusEnum": {
+        "enum": [
+          "active",
+          "restricted",
+          "suspended",
+          "pending_destruction"
+        ],
+        "type": "string",
+        "description": "* `active` - 有効\n* `restricted` - 復号と署名検証にのみ利用可能\n* `suspended` - 利用不可\n* `pending_destruction` - 削除猶予"
+      },
+      "ChangeKeyStatus": {
+        "type": "object",
+        "properties": {
+          "Status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "restricted",
+              "suspended"
+            ]
+          }
+        }
+      },
+      "ScheduleDestructionKey": {
+        "type": "object",
+        "properties": {
+          "PendingDays": {
+            "type": "integer",
+            "title": "削除猶予日数",
+            "example": 7,
+            "description": "鍵を削除するまでの猶予期間を日数で指定します。\n7日から14日を指定できます。実際に削除されるのはこの予定時刻よりも後ろになります。"
+          }
+        },
+        "required": [
+          "PendingDays"
+        ]
+      },
+      "KeyPlain": {
+        "type": "object",
+        "properties": {
+          "Plain": {
+            "type": "string",
+            "title": "平文",
+            "description": "Base64でエンコードされた平文"
+          },
+          "Algo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyEncryptAlgoEnum"
+              }
+            ],
+            "title": "暗号化アルゴリズム",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "Plain"
+        ]
+      },
+      "KeyEncryptAlgoEnum": {
+        "enum": [
+          "aes-256-gcm",
+          "aes-256-cbc",
+          "aes-256-kw"
+        ],
+        "type": "string",
+        "description": "* `aes-256-gcm` - AES256-GCMモードでの暗号化(default)\n* `aes-256-cbc` - AES256-CBCモードでの暗号化\n* `aes-256-kw` - AES256-KWモードでの暗号化"
+      },
+      "KeyCipher": {
+        "type": "object",
+        "properties": {
+          "Cipher": {
+            "type": "string",
+            "title": "暗号文",
+            "description": "暗号化エンドポイントのレスポンス"
+          }
+        },
+        "required": [
+          "Cipher"
+        ]
+      },
+      "PaginatedKeyList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Keys"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Key"
+            }
+          }
+        }
+      },
+      "WrappedCreateKey": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/CreateKey"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedKey": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/Key"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedChangeKeyStatus": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/ChangeKeyStatus"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedScheduleDestructionKey": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/ScheduleDestructionKey"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedKeyPlain": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/KeyPlain"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedKeyCipher": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/KeyCipher"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      }
+    }
+  }
+}

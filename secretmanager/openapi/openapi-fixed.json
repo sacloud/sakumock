@@ -1,0 +1,655 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SecretManager API",
+    "version": "1.0.0",
+    "description": "さくらのクラウド SecretManager API"
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1",
+      "description": "石狩第1ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1b/api/cloud/1.1",
+      "description": "石狩第2ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/tk1a/api/cloud/1.1",
+      "description": "東京第1ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/tk1b/api/cloud/1.1",
+      "description": "東京第2ゾーン"
+    }
+  ],
+  "paths": {
+    "/secretmanager/vaults": {
+      "get": {
+        "operationId": "secretmanager_vaults_list",
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedVaultList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "secretmanager_vaults_create",
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateVault"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCreateVault"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/secretmanager/vaults/{resource_id}": {
+      "get": {
+        "operationId": "secretmanager_vaults_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedVault"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "secretmanager_vaults_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedVault"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedVault"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "secretmanager_vaults_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/secretmanager/vaults/{vault_resource_id}/secrets": {
+      "get": {
+        "operationId": "secretmanager_vaults_secrets_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vault_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedSecretList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "secretmanager_vaults_secrets_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vault_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateSecret"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedSecret"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "secretmanager_vaults_secrets_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vault_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedDeleteSecret"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/secretmanager/vaults/{vault_resource_id}/secrets/unveil": {
+      "post": {
+        "operationId": "secretmanager_vaults_secrets_unveil",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vault_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "secretmanager-vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedUnveil"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedUnveil"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "APIキーとシークレットをご利用ください"
+      }
+    },
+    "schemas": {
+      "DateTime": {
+        "type": "string",
+        "format": "iso8601",
+        "example": "2025-02-05T12:19:22.551827+09:00"
+      },
+      "AvailabilityEnum": {
+        "enum": [
+          "precreate",
+          "available",
+          "discontinued"
+        ],
+        "type": "string",
+        "description": "* `precreate` - 準備中\n* `available` - 利用可能\n* `discontinued` - 廃止"
+      },
+      "CreateSecret": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Value": {
+            "type": "string",
+            "writeOnly": true
+          },
+          "LatestVersion": {
+            "type": "integer",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "LatestVersion",
+          "Name",
+          "Value"
+        ]
+      },
+      "DeleteSecret": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "Name"
+        ]
+      },
+      "CreateVault": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KmsKeyID": {
+            "type": "string",
+            "title": "KMS 鍵ID",
+            "maxLength": 255
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "CreatedAt",
+          "ID",
+          "KmsKeyID",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "KeyOriginEnum": {
+        "enum": [
+          "generated",
+          "imported"
+        ],
+        "type": "string",
+        "description": "* `generated` - 生成\n* `imported` - インポート"
+      },
+      "PaginatedSecretList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Secrets"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Secrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Secret"
+            }
+          }
+        }
+      },
+      "PaginatedVaultList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Vaults"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Vaults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vault"
+            }
+          }
+        }
+      },
+      "Secret": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "LatestVersion": {
+            "type": "integer",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "LatestVersion",
+          "Name"
+        ]
+      },
+      "ServiceClassEnum": {
+        "enum": [
+          "cloud/cloudhsm/partition"
+        ],
+        "type": "string",
+        "description": "* `cloud/cloudhsm/partition` - Type-L7"
+      },
+      "Unveil": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string"
+          },
+          "Version": {
+            "type": "integer",
+            "nullable": true
+          },
+          "Value": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "Name",
+          "Value"
+        ]
+      },
+      "Vault": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KmsKeyID": {
+            "type": "string",
+            "readOnly": true,
+            "title": "KMS 鍵ID",
+            "example": "110000000000"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "CreatedAt",
+          "ID",
+          "KmsKeyID",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "WrappedCreateSecret": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/CreateSecret"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedSecret": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/Secret"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedDeleteSecret": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/DeleteSecret"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedCreateVault": {
+        "type": "object",
+        "properties": {
+          "Vault": {
+            "$ref": "#/components/schemas/CreateVault"
+          }
+        },
+        "required": [
+          "Vault"
+        ]
+      },
+      "WrappedUnveil": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/Unveil"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedVault": {
+        "type": "object",
+        "properties": {
+          "Vault": {
+            "$ref": "#/components/schemas/Vault"
+          }
+        },
+        "required": [
+          "Vault"
+        ]
+      }
+    }
+  }
+}

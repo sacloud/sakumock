@@ -1,4 +1,7 @@
-.PHONY: clean test
+OPENAPI_MODULE := github.com/sacloud/kms-api-go
+OPENAPI_FILES := openapi.json
+
+.PHONY: clean test openapi
 
 sakumock-kms: go.* *.go cmd/sakumock-kms/*.go
 	go build -o $@ ./cmd/sakumock-kms
@@ -11,3 +14,10 @@ test:
 
 install:
 	go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms
+
+openapi:
+	$(eval MOD_VERSION := $(shell go list -m -f '{{.Version}}' $(OPENAPI_MODULE)))
+	$(eval MOD_DIR := $(shell go env GOMODCACHE)/$(OPENAPI_MODULE)@$(MOD_VERSION))
+	mkdir -p openapi
+	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/openapi/$(f) openapi/$(f);)
+	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION)"

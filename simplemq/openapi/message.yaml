@@ -1,0 +1,348 @@
+openapi: 3.1.0
+info:
+  version: 1.1.0
+  title: シンプルMQ API
+  description: |
+    ---
+    Copyright SAKURA internet Inc.
+
+    # はじめに
+
+    「シンプルMQ」は、ソフトウェア同士を非同期に連携するために、ソフトウェアコンポーネント間でのデータの送受信ができる、マネージド型のメッセージキューサービスです。
+    シンプルMQを使うには、さくらのクラウド コントロールパネルもしくはさくらのクラウドAPI ([ドキュメント](./sacloud/)) でシンプルMQのキューを作成します。
+    キューを作成するとAPIキーが発行されます。
+    APIリクエストは、そのキーを `Auhorization header` の `Bearer token` に使用します。
+
+    APIエンドポイント：https://simplemq.tk1b.api.sacloud.jp
+
+  contact:
+    url: https://help.sakura.ad.jp/contact/
+servers:
+  - url: https://simplemq.tk1b.api.sacloud.jp
+
+paths:
+
+  /v1/queues/{queueName}/messages:
+    post:
+      summary: メッセージのsend
+      description: キューに対するメッセージのsend (enqueue)
+      operationId: sendMessage
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/queueNamePathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendRequest"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                  - message
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    $ref: "#/components/schemas/NewMessage"
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '429':
+          description: rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      summary: メッセージのreceive
+      description: キューに対するメッセージのreceive (dequeue)
+      operationId: receiveMessage
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/queueNamePathParam"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                  - messages
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '429':
+          description: rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/queues/{queueName}/messages/{messageId}:
+    put:
+      summary: メッセージのタイムアウト延長
+      description: メッセージのタイムアウトをキューの設定値で延長
+      operationId: extendMessageTimeout
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/queueNamePathParam"
+        - $ref: "#/components/parameters/messageIdPathParam"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                  - message
+                properties:
+                  result:
+                    type: string
+                    example: success
+                  message:
+                    $ref: "#/components/schemas/Message"
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '429':
+          description: rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: メッセージの削除
+      description: 読み取り済みのメッセージを削除 (ack)
+      operationId: deleteMessage
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/queueNamePathParam"
+        - $ref: "#/components/parameters/messageIdPathParam"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: string
+                    example: success
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '404':
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '429':
+          description: rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      description: キュー認証用のAPIキー
+
+  parameters:
+    queueNamePathParam:
+      in: path
+      name: queueName
+      schema:
+        $ref: "#/components/schemas/QueueName"
+      required: true
+
+    messageIdPathParam:
+      in: path
+      name: messageId
+      schema:
+        $ref: "#/components/schemas/MessageId"
+      required: true
+
+  schemas:
+    Error:
+      description: error content
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+        message:
+          type: string
+
+    QueueName:
+      description: キュー名
+      type: string
+      minLength: 5
+      maxLength: 64
+      pattern: '^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$'
+      example: my-own-queue-00
+
+    NewMessage:
+      type: object
+      required:
+        - id
+        - content
+        - created_at
+        - updated_at
+        - expires_at
+      properties:
+        id:
+          $ref: "#/components/schemas/MessageId"
+        content:
+          description: メッセージ本文
+          $ref: "#/components/schemas/MessageContent"
+        created_at:
+          description: 登録時刻 (Epochからのミリ秒)
+          type: integer
+          format: int64
+        updated_at:
+          description: 更新時刻 (Epochからのミリ秒)
+          type: integer
+          format: int64
+        expires_at:
+          description: 未処理メッセージ保存期間が過ぎる時点 (Epochからのミリ秒)
+          type: integer
+          format: int64
+
+    Message:
+      allOf:
+        - $ref: "#/components/schemas/NewMessage"
+        - type: object
+          required:
+            - acquired_at
+            - visibility_timeout_at
+          properties:
+            acquired_at:
+              description: 最新のメッセージ取得時刻 (Epochからのミリ秒)
+              type: integer
+              format: int64
+            visibility_timeout_at:
+              description: 可視性タイムアウトする時点 (Epochからのミリ秒)
+              type: integer
+              format: int64
+
+    MessageId:
+      description: メッセージID
+      type: string
+      minLength: 36
+      maxLength: 36
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      example: 0193b878-1b25-7775-87f5-9c698206a7e7
+
+    MessageContent:
+      description: メッセージ本文
+      type: string
+      maxLength: 256000
+      pattern: '^[0-9a-zA-Z+/=]*$'
+
+    SendRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          $ref: "#/components/schemas/MessageContent"
+

@@ -64,7 +64,6 @@ type updateKeyRequest struct {
 	Key struct {
 		Name        string   `json:"Name"`
 		Description string   `json:"Description"`
-		KeyOrigin   string   `json:"KeyOrigin"`
 		Tags        []string `json:"Tags"`
 	} `json:"Key"`
 }
@@ -294,8 +293,8 @@ func (s *Server) handleScheduleDestruction(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Key.PendingDays < 7 || req.Key.PendingDays > 90 {
-		writeError(w, http.StatusBadRequest, "PendingDays must be between 7 and 90")
+	if req.Key.PendingDays < 7 || req.Key.PendingDays > 14 {
+		writeError(w, http.StatusBadRequest, "PendingDays must be between 7 and 14")
 		return
 	}
 	if err := s.store.ChangeStatus(id, "pending_destruction"); err != nil {
@@ -314,6 +313,11 @@ func (s *Server) handleEncrypt(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := s.store.Read(id); err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	algo := req.Key.Algo
+	if algo != "" && algo != "aes-256-gcm" && algo != "aes-256-cbc" && algo != "aes-256-kw" {
+		writeError(w, http.StatusBadRequest, "Algo must be 'aes-256-gcm', 'aes-256-cbc', or 'aes-256-kw'")
 		return
 	}
 	ciphertext, err := s.store.Encrypt(id, []byte(req.Key.Plain))

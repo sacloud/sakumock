@@ -5,4 +5,4 @@
 	vPrefix = true
 	majorLabels = sacloud-major
 	minorLabels = sacloud-minor
-	changelog = simplemq/CHANGELOG.md
+	changelogFile = simplemq/CHANGELOG.md

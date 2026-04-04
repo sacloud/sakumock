@@ -9,8 +9,8 @@ Each service runs as an independent Go module with its own binary. See the indiv
 | Service | Default Port | Module | Description |
 |---|---|---|---|
 | [simplemq](simplemq/) | 18080 | `github.com/sacloud/sakumock/simplemq` | SimpleMQ message API |
-| kms | 18081 | `github.com/sacloud/sakumock/kms` | KMS encrypt/decrypt API (planned) |
 | [secretmanager](secretmanager/) | 18082 | `github.com/sacloud/sakumock/secretmanager` | SecretManager API |
+| [kms](kms/) | 18081 | `github.com/sacloud/sakumock/kms` | KMS key management API |
 
 New services should use the next available port in sequence (18083, 18084, ...).
 
@@ -22,6 +22,7 @@ New services should use the next available port in sequence (18083, 18084, ...).
 # Install individual services
 go install github.com/sacloud/sakumock/simplemq/cmd/sakumock-simplemq@latest
 go install github.com/sacloud/sakumock/secretmanager/cmd/sakumock-secretmanager@latest
+go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms@latest
 ```
 
 ### Run
@@ -30,6 +31,7 @@ go install github.com/sacloud/sakumock/secretmanager/cmd/sakumock-secretmanager@
 # Start mock servers
 sakumock-simplemq &
 sakumock-secretmanager &
+sakumock-kms &
 ```
 
 ### Connect your application
@@ -41,6 +43,8 @@ Point the SAKURA Cloud SDK to the local mock servers using `SAKURA_ENDPOINTS_*` 
 export SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://localhost:18080
 # SecretManager
 export SAKURA_ENDPOINTS_SECRETMANAGER=http://localhost:18082
+# KMS
+export SAKURA_ENDPOINTS_KMS=http://localhost:18081
 
 # Dummy credentials (required by SDK, not validated by mock)
 export SAKURA_ACCESS_TOKEN=dummy

@@ -1,6 +1,6 @@
 module github.com/sacloud/sakumock/simplemq
 
-go 1.26.1
+go 1.25.0
 
 require (
 	github.com/alecthomas/kong v1.15.0

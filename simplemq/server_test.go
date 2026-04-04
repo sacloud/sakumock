@@ -43,7 +43,7 @@ func TestSendReceiveDelete(t *testing.T) {
 	defer srv.Close()
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
-	ctx := context.Background()
+	ctx := t.Context()
 	queueName := "test-queue"
 	content := b64("hello")
 
@@ -118,7 +118,7 @@ func TestEmptyReceive(t *testing.T) {
 	defer srv.Close()
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
-	ctx := context.Background()
+	ctx := t.Context()
 
 	recvRes, err := client.ReceiveMessage(ctx, message.ReceiveMessageParams{QueueName: "empty-queue"})
 	if err != nil {
@@ -138,7 +138,7 @@ func TestDeleteNotFound(t *testing.T) {
 	defer srv.Close()
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
-	ctx := context.Background()
+	ctx := t.Context()
 
 	delRes, err := client.DeleteMessage(ctx, message.DeleteMessageParams{
 		QueueName: "test-queue",
@@ -158,7 +158,7 @@ func TestUnauthorized(t *testing.T) {
 
 	// Use empty token to trigger 401
 	client := newTestClient(t, srv.TestURL(), "")
-	ctx := context.Background()
+	ctx := t.Context()
 
 	sendRes, err := client.SendMessage(ctx, &message.SendRequest{Content: message.MessageContent(b64("hello"))}, message.SendMessageParams{QueueName: "test-queue"})
 	if err != nil {
@@ -173,7 +173,7 @@ func TestAPIKeyValidation(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{APIKey: "correct-key"})
 	defer srv.Close()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	queueName := "test-queue"
 	content := b64("hello")
 
@@ -215,7 +215,7 @@ func TestNoAPIKeyAcceptsAny(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
 	defer srv.Close()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	queueName := "test-queue"
 	content := b64("hello")
 
@@ -235,7 +235,7 @@ func TestExtendTimeout(t *testing.T) {
 	defer srv.Close()
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
-	ctx := context.Background()
+	ctx := t.Context()
 	queueName := "test-queue"
 
 	// Send and receive a message
@@ -288,7 +288,7 @@ func TestVisibilityTimeout(t *testing.T) {
 	defer srv.Close()
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
-	ctx := context.Background()
+	ctx := t.Context()
 	queueName := "test-queue"
 
 	// Send a message

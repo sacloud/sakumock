@@ -31,6 +31,13 @@ Sequential from 18080. Next available: 18083.
 - Support one version behind the latest stable Go release (e.g., if Go 1.26 is the latest, use Go 1.25)
 - Do not depend on features available only in the latest Go version
 
+### OpenAPI specs
+
+- Each service has an `openapi/` directory containing the API spec copied from the SDK module
+- Run `make openapi` in each service directory to fetch the spec from the Go module cache
+- When upgrading an SDK dependency, always run `make openapi` to update the spec
+- Handler implementations must conform to the OpenAPI spec (paths, methods, request/response schemas, status codes)
+
 ### Code style
 
 - Logging: `log/slog` (Info for requests, Debug for operations)

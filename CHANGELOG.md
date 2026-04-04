@@ -1,5 +1,7 @@
 # Changelog
 
+## [v0.0.1](https://github.com/sacloud/sakumock/compare/simplemq/v0.0.1...secretmanager/v0.0.1) - 2026-04-04
+
 ## [v0.0.1](https://github.com/sacloud/sakumock/commits/kms/v0.0.1) - 2026-04-04
 - Add Apache 2.0 license and update README by @yamamoto-febc in https://github.com/sacloud/sakumock/pull/1
 - Add simplemq mock server by @fujiwara in https://github.com/sacloud/sakumock/pull/2

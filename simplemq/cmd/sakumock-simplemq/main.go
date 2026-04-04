@@ -55,14 +55,10 @@ func run(ctx context.Context) error {
 		"latency", cfg.Latency,
 		"debug", cfg.Debug,
 	)
-	slog.Info("to use with simplemq-api-go SDK",
+	slog.Info("to use with simplemq-api-go SDK or simplemq-cli",
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE", "http://"+cfg.Addr,
 		"SAKURA_ACCESS_TOKEN", "dummy",
 		"SAKURA_ACCESS_TOKEN_SECRET", "dummy",
-	)
-	slog.Info("to use with simplemq-cli",
-		"SIMPLEMQ_MESSAGE_API_URL", "http://"+cfg.Addr,
-		"SIMPLEMQ_API_KEY", apiKeyHint(cfg.APIKey),
 	)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		return err

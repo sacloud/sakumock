@@ -5,3 +5,4 @@
 	vPrefix = true
 	majorLabels = sacloud-major
 	minorLabels = sacloud-minor
+	changelog = kms/CHANGELOG.md

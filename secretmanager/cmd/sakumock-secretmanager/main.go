@@ -48,6 +48,7 @@ func run(ctx context.Context) error {
 	}()
 
 	slog.Info("sakumock-secretmanager starting",
+		"version", secretmanager.Version,
 		"addr", cfg.Addr,
 		"latency", cfg.Latency,
 		"debug", cfg.Debug,

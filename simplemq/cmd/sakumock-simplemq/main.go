@@ -51,6 +51,7 @@ func run(ctx context.Context) error {
 	}()
 
 	slog.Info("sakumock-simplemq starting",
+		"version", simplemq.Version,
 		"addr", cfg.Addr,
 		"api_key", apiKeyHint(cfg.APIKey),
 		"visibility_timeout", cfg.VisibilityTimeout,

@@ -21,8 +21,12 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	var cfg kms.Config
-	kong.Parse(&cfg)
+	var cli struct {
+		kms.Config
+		Version kong.VersionFlag `help:"Show version" short:"v"`
+	}
+	kong.Parse(&cli, kong.Vars{"version": kms.Version})
+	cfg := cli.Config
 
 	level := slog.LevelInfo
 	if cfg.Debug {

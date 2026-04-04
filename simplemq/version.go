@@ -1,3 +1,3 @@
 package simplemq
 
-const version = "0.0.0"
+const Version = "0.0.0"

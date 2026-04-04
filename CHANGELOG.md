@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.2](https://github.com/sacloud/sakumock/compare/kms/v0.0.1...kms/v0.0.2) - 2026-04-04
+- Add OpenAPI specs and fix handler implementations by @fujiwara in https://github.com/sacloud/sakumock/pull/17
+
 ## [v0.0.2](https://github.com/sacloud/sakumock/compare/secretmanager/v0.0.1...secretmanager/v0.0.2) - 2026-04-04
 - Add OpenAPI specs and fix handler implementations by @fujiwara in https://github.com/sacloud/sakumock/pull/17
 

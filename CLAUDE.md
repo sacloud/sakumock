@@ -26,6 +26,11 @@ Each service is an independent Go module under its own subdirectory.
 
 Sequential from 18080. Next available: 18083.
 
+### Go version policy
+
+- Support one version behind the latest stable Go release (e.g., if Go 1.26 is the latest, use Go 1.25)
+- Do not depend on features available only in the latest Go version
+
 ### Code style
 
 - Logging: `log/slog` (Info for requests, Debug for operations)

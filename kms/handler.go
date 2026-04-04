@@ -312,6 +312,10 @@ func (s *Server) handleEncrypt(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	if _, err := s.store.Read(id); err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
 	ciphertext, err := s.store.Encrypt(id, []byte(req.Key.Plain))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -327,6 +331,10 @@ func (s *Server) handleDecrypt(w http.ResponseWriter, r *http.Request) {
 	var req decryptRequest
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if _, err := s.store.Read(id); err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
 	plaintext, err := s.store.Decrypt(id, req.Key.Cipher)

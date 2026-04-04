@@ -1,0 +1,805 @@
+openapi: 3.1.0
+
+info:
+  version: 1.0.0
+  title: シンプルMQ さくらのクラウドAPI
+  contact:
+    url: https://help.sakura.ad.jp/contact/
+  description: |-
+    ---
+    Copyright SAKURA internet Inc.
+
+    # はじめに
+
+    「シンプルMQ」は、ソフトウェア同士を非同期に連携するために、ソフトウェアコンポーネント間でのデータの送受信ができる、マネージド型のメッセージキューサービスです。
+    シンプルMQのリソースを作成・削除するには、さくらのクラウド コントロールパネルか下記APIを利用します。
+    キューへのメッセージの送受信などについては、[シンプルMQ API ドキュメント](../) を参照してください。
+
+    # 基本的な使い方
+    ## APIキーの発行
+    APIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。
+    APIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。
+    |   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |
+    |------------|------------------------------|--------------------------------------|
+    | ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |
+    | パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |
+    <div class="warning">
+      <b>操作マニュアル</b><br />
+      <ul><li><a href="https://manual.sakura.ad.jp/cloud/api/apikey.html">APIキー | さくらのクラウド ドキュメント</a></li></ul>
+    </div>
+
+    ## APIエンドポイント
+    https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1
+
+servers:
+  - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1
+    description: さくらのクラウドAPIエンドポイント
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+
+  /commonserviceitem:
+    post:
+      summary: キューの作成
+      operationId: createQueue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQueueRequest"
+      responses:
+        "201":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - CommonServiceItem
+                properties:
+                  CommonServiceItem:
+                    $ref: '#/components/schemas/CommonServiceItem'
+                  Success:
+                    type: boolean
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "409":
+          description: キュー名の重複
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "409 Conflict"
+                error_code: "conflict"
+                error_msg: "要求された操作を行えません。現在の対象の状態では、この操作を受け付けできません。\nsame queue name found"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      summary: キュー一覧の取得
+      operationId: getQueues
+      description: |-
+        クエリパラメータに下記のようにフィルタを設定することでシンプルMQのリソースのみを取得できます
+        `/commonserviceitem?{"Filter":{"Provider.Class":"simplemq"}}`
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - CommonServiceItems
+                properties:
+                  From:
+                    type: integer
+                  Count:
+                    type: integer
+                    example: 1
+                  Total:
+                    type: integer
+                    example: 1
+                  CommonServiceItems:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonServiceItem'
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /commonserviceitem/{id}:
+    get:
+      summary: キューの取得
+      operationId: getQueue
+      parameters:
+        - $ref: "#/components/parameters/resourceIdPathParam"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - CommonServiceItem
+                properties:
+                  CommonServiceItem:
+                    $ref: '#/components/schemas/CommonServiceItem'
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "404":
+          description: キューが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "404 Not Found"
+                error_code: "not_found"
+                error_msg: "対象が見つかりません。対象は利用できない状態か、IDまたはパスに誤りがあります。"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      summary: キューの設定変更
+      operationId: configQueue
+      description: キュー名の変更は不可
+      parameters:
+        - $ref: "#/components/parameters/resourceIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigQueueRequest"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - CommonServiceItem
+                properties:
+                  CommonServiceItem:
+                    $ref: '#/components/schemas/CommonServiceItem'
+                  Success:
+                    type: boolean
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "404":
+          description: キューが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "404 Not Found"
+                error_code: "not_found"
+                error_msg: "対象が見つかりません。対象は利用できない状態か、IDまたはパスに誤りがあります。"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: キューの削除
+      operationId: deleteQueue
+      parameters:
+        - $ref: "#/components/parameters/resourceIdPathParam"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - CommonServiceItem
+                properties:
+                  CommonServiceItem:
+                    $ref: '#/components/schemas/CommonServiceItem'
+                  Success:
+                    type: boolean
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "404":
+          description: キューが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "404 Not Found"
+                error_code: "not_found"
+                error_msg: "対象が見つかりません。対象は利用できない状態か、IDまたはパスに誤りがあります。"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /commonserviceitem/{id}/simplemq/message-count:
+    get:
+      summary: メッセージ数の取得
+      operationId: getMessageCount
+      parameters:
+        - $ref: "#/components/parameters/resourceIdPathParam"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - SimpleMQ
+                properties:
+                  SimpleMQ:
+                    type: object
+                    required:
+                      - count
+                    properties:
+                      result:
+                        type: string
+                        default: "success"
+                      count:
+                        type: integer
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "404":
+          description: キューが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "404 Not Found"
+                error_code: "not_found"
+                error_msg: "対象が見つかりません。対象は利用できない状態か、IDまたはパスに誤りがあります。"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /commonserviceitem/{id}/simplemq/rotate-apikey:
+    put:
+      summary: APIキーの発行
+      operationId: rotateAPIKey
+      parameters:
+        - $ref: "#/components/parameters/resourceIdPathParam"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - SimpleMQ
+                properties:
+                  SimpleMQ:
+                    type: object
+                    required:
+                      - apikey
+                    properties:
+                      result:
+                        type: string
+                        default: "success"
+                      apikey:
+                        type: string
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "404":
+          description: キューが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "404 Not Found"
+                error_code: "not_found"
+                error_msg: "対象が見つかりません。対象は利用できない状態か、IDまたはパスに誤りがあります。"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /commonserviceitem/{id}/simplemq/messages:
+    delete:
+      summary: キュー内メッセージの全件削除
+      operationId: clearQueue
+      parameters:
+        - $ref: "#/components/parameters/resourceIdPathParam"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  SimpleMQ:
+                    type: object
+                    properties:
+                      result:
+                        type: string
+                        default: "success"
+                  is_ok:
+                    type: boolean
+        "400":
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "400 Bad Request"
+                error_code: "bad_request"
+                error_msg: "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "401 Unauthorized"
+                error_code: "unauthorized"
+                error_msg: "error-unauthorized"
+        "404":
+          description: キューが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                is_fatal: true
+                serial: "749ad39e1eea340c4d75bf5a4dd4bd11"
+                status: "404 Not Found"
+                error_code: "not_found"
+                error_msg: "対象が見つかりません。対象は利用できない状態か、IDまたはパスに誤りがあります。"
+        "500":
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: basic
+      description: APIキーを利用したBasic認証
+
+  parameters:
+    resourceIdPathParam:
+      in: path
+      name: id
+      description: キューのリソースID
+      schema:
+        type: string
+      required: true
+
+  schemas:
+    QueueName:
+      description: キュー名 (アカウント内で一意の値)
+      type: string
+      minLength: 5
+      maxLength: 64
+      pattern: '^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$'
+      example: my-own-queue-00
+
+    CommonServiceItem:
+      type: object
+      required:
+        - ID
+        - Name
+        - Settings
+        - SettingsHash
+        - Status
+        - ServiceClass
+        - Availability
+        - CreatedAt
+        - ModifiedAt
+        - Provider
+        - Tags
+      properties:
+        ID:
+          oneOf:
+            - type: string
+              example: "113700153028"
+            - type: integer
+              example: 113700153028
+        Name:
+          type: string
+          example: "sample-queue-1"
+          description: リソース名
+        Description:
+          oneOf:
+            - type: string
+            - type: 'null'
+        Settings:
+          $ref: '#/components/schemas/Settings'
+        SettingsHash:
+          type: string
+        Status:
+          $ref: '#/components/schemas/Status'
+        ServiceClass:
+          type: string
+          example: "cloud/simplemq/1"
+        Availability:
+          type: string
+          example: "available"
+        CreatedAt:
+          type: string
+          format: date-time
+        ModifiedAt:
+          type: string
+          format: date-time
+        Provider:
+          $ref: '#/components/schemas/Provider'
+        Icon:
+          $ref: "#/components/schemas/Icon"
+        Tags:
+          type: array
+          items:
+            type: string
+
+    Settings:
+      type: object
+      required:
+        - VisibilityTimeoutSeconds
+        - ExpireSeconds
+      properties:
+        VisibilityTimeoutSeconds:
+          $ref: '#/components/schemas/VisibilityTimeoutSeconds'
+        ExpireSeconds:
+          $ref: '#/components/schemas/ExpireSeconds'
+
+    VisibilityTimeoutSeconds:
+      description: 可視性タイムアウト (秒)
+      type: integer
+      minimum: 5
+      maximum: 900
+      example: 30
+
+    ExpireSeconds:
+      description: 未処理メッセージ保存期間 (秒)
+      type: integer
+      minimum: 60
+      maximum: 1209600
+      example: 345600
+
+    Status:
+      type: object
+      required:
+        - QueueName
+      properties:
+        QueueName:
+          type: string
+          example: "sample-queue-1"
+          description: キュー名
+
+    Provider:
+      type: object
+      required:
+        - ID
+        - Class
+        - Name
+        - ServiceClass
+      properties:
+        ID:
+          type: integer
+          example: 5200001
+        Class:
+          type: string
+          enum: ["simplemq"]
+        Name:
+          type: string
+          example: "SimpleMQ"
+        ServiceClass:
+          type: string
+          example: "cloud/simplemq"
+
+    Icon:
+      oneOf:
+        - type: 'null'
+        - type: object
+          properties:
+            ID:
+              oneOf:
+                - type: string
+                  example: "113700153028"
+                - type: integer
+                  example: 113700153028
+              description: 0を指定することでIconなしに設定することが出来ます
+            URL:
+              type: string
+              example: "https://secure.sakura.ad.jp/cloud/zone/is1b/api/cloud/1.1/icon/112901627751.png"
+            Name:
+              type: string
+              example: "Ubuntu"
+            Scope:
+              type: string
+              example: "shared"
+            Tags:
+              type: array
+              items:
+                type: string
+
+    CreateQueueRequest:
+      type: object
+      required:
+        - CommonServiceItem
+      properties:
+        CommonServiceItem:
+          type: object
+          required:
+            - Name
+            - Provider
+          properties:
+            Name:
+              $ref: "#/components/schemas/QueueName"
+            Description:
+              type: string
+            Provider:
+              type: object
+              required:
+                - Class
+              properties:
+                Class:
+                  type: string
+                  enum: ["simplemq"]
+            Tags:
+              type: array
+              items:
+                type: string
+            Icon:
+              $ref: "#/components/schemas/Icon"
+
+    ConfigQueueRequest:
+      type: object
+      required:
+        - CommonServiceItem
+      properties:
+        CommonServiceItem:
+          type: object
+          required:
+            - Settings
+          properties:
+            Description:
+              type: string
+            Settings:
+              $ref: "#/components/schemas/Settings"
+            Tags:
+              type: array
+              items:
+                type: string
+            Icon:
+              $ref: "#/components/schemas/Icon"
+
+    Error:
+      type: object
+      properties:
+        is_fatal:
+          type: boolean
+        serial:
+          type: string
+          example: "749ad39e1eea340c4d75bf5a4dd4bd11"
+        status:
+          type: string
+        error_code:
+          type: string
+        error_msg:
+          type: string

@@ -21,8 +21,12 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	var cfg secretmanager.Config
-	kong.Parse(&cfg)
+	var cli struct {
+		secretmanager.Config
+		Version kong.VersionFlag `help:"Show version" short:"v"`
+	}
+	kong.Parse(&cli, kong.Vars{"version": secretmanager.Version})
+	cfg := cli.Config
 
 	level := slog.LevelInfo
 	if cfg.Debug {
@@ -44,6 +48,7 @@ func run(ctx context.Context) error {
 	}()
 
 	slog.Info("sakumock-secretmanager starting",
+		"version", secretmanager.Version,
 		"addr", cfg.Addr,
 		"latency", cfg.Latency,
 		"debug", cfg.Debug,

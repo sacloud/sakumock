@@ -1,0 +1,7 @@
+[tagpr]
+	releaseBranch = main
+	versionFile = simplemq/version.go
+	tagPrefix = simplemq/
+	vPrefix = true
+	majorLabels = sacloud-major
+	minorLabels = sacloud-minor

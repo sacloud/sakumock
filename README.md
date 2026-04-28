@@ -1,5 +1,7 @@
 # sakumock
 
+**Status: Alpha (under active development).** APIs, behavior, and module layout may change without notice. Not recommended for production use.
+
 A local mock server suite for SAKURA Cloud APIs, inspired by [LocalStack](https://github.com/localstack/localstack). Run SAKURA Cloud services locally for development and testing without connecting to the real API.
 
 ## Services

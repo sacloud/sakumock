@@ -1,7 +1,6 @@
 package simplenotification
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -119,24 +118,23 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 // runExec spawns the configured shell command for an accepted message.
 // The message body is piped to the command's stdin and metadata is exposed
-// via environment variables. Failures only emit a warning log; the HTTP
-// response remains 202 because the notification was successfully accepted.
+// via environment variables. The command's stdout and stderr are inherited
+// from the mock process so that output (e.g. from "cat") is visible in the
+// same terminal as the server logs. Failures only emit a warning log; the
+// HTTP response remains 202 because the notification was successfully
+// accepted.
 func (s *Server) runExec(rec MessageRecord) {
 	cmd := exec.Command("sh", "-c", s.exec)
 	cmd.Stdin = strings.NewReader(rec.Message)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmd.Env = append(os.Environ(),
 		"SAKUMOCK_GROUP_ID="+rec.GroupID,
 		"SAKUMOCK_MESSAGE_ID="+rec.ID,
 		"SAKUMOCK_CREATED_AT="+rec.CreatedAt.Format(time.RFC3339Nano),
 	)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		slog.Warn("exec failed",
-			"message_id", rec.ID,
-			"error", err,
-			"stderr", strings.TrimSpace(stderr.String()),
-		)
+		slog.Warn("exec failed", "message_id", rec.ID, "error", err)
 		return
 	}
 	slog.Debug("exec done", "message_id", rec.ID)

@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.1](https://github.com/sacloud/sakumock/compare/core/v0.0.1...simplenotification/v0.0.1) - 2026-05-01
+- Pin services to released core v0.0.1 by @fujiwara in https://github.com/sacloud/sakumock/pull/32
+
 ## [v0.0.1](https://github.com/sacloud/sakumock/compare/v0.0.1...core/v0.0.1) - 2026-05-01
 - Add --routes flag to list supported HTTP endpoints by @fujiwara in https://github.com/sacloud/sakumock/pull/27
 - Move per-module tagpr configs into each subdirectory by @fujiwara in https://github.com/sacloud/sakumock/pull/29

@@ -111,16 +111,9 @@ type decryptRequest struct {
 
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /kms/keys", s.handleListKeys)
-	mux.HandleFunc("POST /kms/keys", s.handleCreateKey)
-	mux.HandleFunc("GET /kms/keys/{resource_id}", s.handleReadKey)
-	mux.HandleFunc("PUT /kms/keys/{resource_id}", s.handleUpdateKey)
-	mux.HandleFunc("DELETE /kms/keys/{resource_id}", s.handleDeleteKey)
-	mux.HandleFunc("POST /kms/keys/{resource_id}/rotate", s.handleRotateKey)
-	mux.HandleFunc("POST /kms/keys/{resource_id}/status", s.handleChangeStatus)
-	mux.HandleFunc("POST /kms/keys/{resource_id}/schedule-destruction", s.handleScheduleDestruction)
-	mux.HandleFunc("POST /kms/keys/{resource_id}/encrypt", s.handleEncrypt)
-	mux.HandleFunc("POST /kms/keys/{resource_id}/decrypt", s.handleDecrypt)
+	for _, r := range s.routeTable() {
+		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
+	}
 	return mux
 }
 

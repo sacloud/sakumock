@@ -8,6 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/alecthomas/kong"
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/simplemq"
 )
 
@@ -23,10 +24,20 @@ func main() {
 func run(ctx context.Context) error {
 	var cli struct {
 		simplemq.Config
+		Routes  bool             `help:"List supported HTTP routes and exit"`
 		Version kong.VersionFlag `help:"Show version" short:"v"`
 	}
 	kong.Parse(&cli, kong.Vars{"version": simplemq.Version})
 	cfg := cli.Config
+
+	if cli.Routes {
+		handler, err := simplemq.NewHandler(simplemq.Config{})
+		if err != nil {
+			return err
+		}
+		defer handler.Close()
+		return core.PrintRoutes(os.Stdout, handler.Routes())
+	}
 
 	level := slog.LevelInfo
 	if cfg.Debug {

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/alecthomas/kong"
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/secretmanager"
 )
 
@@ -23,10 +24,17 @@ func main() {
 func run(ctx context.Context) error {
 	var cli struct {
 		secretmanager.Config
+		Routes  bool             `help:"List supported HTTP routes and exit"`
 		Version kong.VersionFlag `help:"Show version" short:"v"`
 	}
 	kong.Parse(&cli, kong.Vars{"version": secretmanager.Version})
 	cfg := cli.Config
+
+	if cli.Routes {
+		handler := secretmanager.NewHandler(secretmanager.Config{})
+		defer handler.Close()
+		return core.PrintRoutes(os.Stdout, handler.Routes())
+	}
 
 	level := slog.LevelInfo
 	if cfg.Debug {

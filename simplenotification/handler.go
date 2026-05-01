@@ -56,9 +56,9 @@ type inspectMessageList struct {
 
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /commonserviceitem/{id}/simplenotification/message", s.handleSendMessage)
-	mux.HandleFunc("GET /_sakumock/messages", s.handleInspectMessages)
-	mux.HandleFunc("DELETE /_sakumock/messages", s.handleResetMessages)
+	for _, r := range s.routeTable() {
+		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
+	}
 	return mux
 }
 

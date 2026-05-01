@@ -2,9 +2,12 @@ module github.com/sacloud/sakumock/simplemq
 
 go 1.25.0
 
+replace github.com/sacloud/sakumock/core => ../core
+
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/google/uuid v1.6.0
+	github.com/sacloud/sakumock/core v0.0.0-00010101000000-000000000000
 	github.com/sacloud/simplemq-api-go v0.5.0
 	golang.org/x/sys v0.42.0
 	modernc.org/sqlite v1.48.1

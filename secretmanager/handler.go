@@ -65,11 +65,9 @@ type paginatedSecretList struct {
 
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	base := "/secretmanager/vaults/{vault_resource_id}"
-	mux.HandleFunc("GET "+base+"/secrets", s.handleListSecrets)
-	mux.HandleFunc("POST "+base+"/secrets", s.handleCreateSecret)
-	mux.HandleFunc("DELETE "+base+"/secrets", s.handleDeleteSecret)
-	mux.HandleFunc("POST "+base+"/secrets/unveil", s.handleUnveil)
+	for _, r := range s.routeTable() {
+		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
+	}
 	return mux
 }
 

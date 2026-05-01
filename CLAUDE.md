@@ -37,7 +37,8 @@ Sequential from 18080. Next available: 18084.
 - Run `make openapi` in each service directory to fetch the spec from the Go module cache
 - When upgrading an SDK dependency, always run `make openapi` to update the spec
 - Handler implementations must conform to the OpenAPI spec (paths, methods, request/response schemas, status codes)
-- Error responses must also conform to the spec's error schema (e.g., `components/schemas/Error`); do not invent ad-hoc shapes like `{"error": "..."}`
+- Error responses must conform to the spec's error schema when one is defined (e.g., `commonserviceitem`-based endpoints share the SAKURA Cloud standard `Error { is_fatal, serial, status, error_code, error_msg }`)
+- When the spec does not define an error schema (typical for service-specific proprietary endpoints), pick a shape that matches the real API's behavior rather than inventing an ad-hoc one
 
 ### Code style
 

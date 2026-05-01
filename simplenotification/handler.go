@@ -32,6 +32,15 @@ type sendMessageResponse struct {
 	IsOk bool `json:"is_ok"`
 }
 
+// errorResponse matches components/schemas/Error in the Simple Notification OpenAPI spec.
+type errorResponse struct {
+	IsFatal   bool   `json:"is_fatal"`
+	Serial    string `json:"serial,omitempty"`
+	Status    string `json:"status,omitempty"`
+	ErrorCode string `json:"error_code,omitempty"`
+	ErrorMsg  string `json:"error_msg,omitempty"`
+}
+
 // Inspection JSON types for the /_sakumock/messages endpoint.
 // This namespace is sakumock-specific and not part of the SAKURA Cloud API.
 
@@ -173,5 +182,8 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
+	writeJSON(w, status, errorResponse{
+		Status:   fmt.Sprintf("%d %s", status, http.StatusText(status)),
+		ErrorMsg: msg,
+	})
 }

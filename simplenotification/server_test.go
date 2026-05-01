@@ -115,12 +115,26 @@ func TestSendMessage_InvalidID(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
 	defer srv.Close()
 
-	resp, _ := rawSend(t, srv.TestURL(), "abc", map[string]string{"Message": "hi"})
+	resp, body := rawSend(t, srv.TestURL(), "abc", map[string]string{"Message": "hi"})
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", resp.StatusCode)
 	}
 	if len(srv.Messages()) != 0 {
 		t.Fatalf("expected 0 stored messages, got %d", len(srv.Messages()))
+	}
+
+	var got struct {
+		Status   string `json:"status"`
+		ErrorMsg string `json:"error_msg"`
+	}
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("failed to parse error response: %v (body=%s)", err, body)
+	}
+	if got.ErrorMsg == "" {
+		t.Fatalf("expected error_msg field, got %s", body)
+	}
+	if !strings.HasPrefix(got.Status, "400 ") {
+		t.Fatalf("expected status field starting with '400 ', got %q", got.Status)
 	}
 }
 

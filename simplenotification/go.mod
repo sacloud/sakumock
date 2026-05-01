@@ -2,12 +2,10 @@ module github.com/sacloud/sakumock/simplenotification
 
 go 1.25.0
 
-replace github.com/sacloud/sakumock/core => ../core
-
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/sacloud/saclient-go v0.3.7
-	github.com/sacloud/sakumock/core v0.0.0-00010101000000-000000000000
+	github.com/sacloud/sakumock/core v0.0.1
 	github.com/sacloud/simple-notification-api-go v0.3.1
 	golang.org/x/sys v0.42.0
 )

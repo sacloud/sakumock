@@ -64,6 +64,8 @@ github.com/sacloud/packages-go v0.0.12 h1:MKeZNN3FQn1heqUSRBrbZw89YusZA1n4kammjM
 github.com/sacloud/packages-go v0.0.12/go.mod h1:XNF5MCTWcHo9NiqWnYctVbASSSZR3ZOmmQORIzcurJ8=
 github.com/sacloud/saclient-go v0.3.7 h1:LAkOHStYxIKoypiaarhNOwm/JPuubgoKuOSXZWEerbc=
 github.com/sacloud/saclient-go v0.3.7/go.mod h1:h8ATHi9AnQhOxYNm8mbVWyM9/2569PPESIGwAc2SNg4=
+github.com/sacloud/sakumock/core v0.0.1 h1:odUK6Q0/Jq6dfreGw52jTUquG70u1BU1ot/IItFmCUA=
+github.com/sacloud/sakumock/core v0.0.1/go.mod h1:Hj0CxzEA78mFMXD/vR3/4lP//nvV/hQfKvaZ87LDSvI=
 github.com/sacloud/simple-notification-api-go v0.3.1 h1:m44N9/qkh19WPcCVS0HMX40rOcpcLqt9fQlXeUKVi/8=
 github.com/sacloud/simple-notification-api-go v0.3.1/go.mod h1:PPrg9hFZn3Fv802Q8ki8k+nYjqPNPr5jaCx5swGhK9c=
 github.com/segmentio/asm v1.2.1 h1:DTNbBqs57ioxAD4PrArqftgypG4/qNpXoJx8TVXxPR0=

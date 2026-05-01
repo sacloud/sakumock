@@ -24,7 +24,7 @@ Each service is an independent Go module under its own subdirectory.
 
 ### Port allocation
 
-Sequential from 18080. Next available: 18083.
+Sequential from 18080. Next available: 18084.
 
 ### Go version policy
 
@@ -37,6 +37,7 @@ Sequential from 18080. Next available: 18083.
 - Run `make openapi` in each service directory to fetch the spec from the Go module cache
 - When upgrading an SDK dependency, always run `make openapi` to update the spec
 - Handler implementations must conform to the OpenAPI spec (paths, methods, request/response schemas, status codes)
+- Error responses must also conform to the spec's error schema (e.g., `components/schemas/Error`); do not invent ad-hoc shapes like `{"error": "..."}`
 
 ### Code style
 

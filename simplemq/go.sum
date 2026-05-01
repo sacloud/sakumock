@@ -45,6 +45,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
+github.com/sacloud/sakumock/core v0.0.1 h1:odUK6Q0/Jq6dfreGw52jTUquG70u1BU1ot/IItFmCUA=
+github.com/sacloud/sakumock/core v0.0.1/go.mod h1:Hj0CxzEA78mFMXD/vR3/4lP//nvV/hQfKvaZ87LDSvI=
 github.com/sacloud/simplemq-api-go v0.5.0 h1:B1NVpzAhQyjPeCgZoneiLq2DzHIoQIZHTrOluLUfnB8=
 github.com/sacloud/simplemq-api-go v0.5.0/go.mod h1:G3Uy/sOTBIpSossAE0g4AzTX1R7cxRbwvwYRDdgzOe0=
 github.com/segmentio/asm v1.2.1 h1:DTNbBqs57ioxAD4PrArqftgypG4/qNpXoJx8TVXxPR0=

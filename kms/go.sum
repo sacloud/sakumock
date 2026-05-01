@@ -66,6 +66,8 @@ github.com/sacloud/packages-go v0.0.12 h1:MKeZNN3FQn1heqUSRBrbZw89YusZA1n4kammjM
 github.com/sacloud/packages-go v0.0.12/go.mod h1:XNF5MCTWcHo9NiqWnYctVbASSSZR3ZOmmQORIzcurJ8=
 github.com/sacloud/saclient-go v0.3.5 h1:cgMNAapY4xu34uMjeAEYkPnsDjLSvfR0GF+nYKSIWec=
 github.com/sacloud/saclient-go v0.3.5/go.mod h1:43p2uetaKVpKo9vnCl8tcGvEPCyXoBEQHLavMbmcIes=
+github.com/sacloud/sakumock/core v0.0.1 h1:odUK6Q0/Jq6dfreGw52jTUquG70u1BU1ot/IItFmCUA=
+github.com/sacloud/sakumock/core v0.0.1/go.mod h1:Hj0CxzEA78mFMXD/vR3/4lP//nvV/hQfKvaZ87LDSvI=
 github.com/segmentio/asm v1.2.0 h1:9BQrFxC+YOHJlTlHGkTrFWf59nbL3XnCoFLTwDCI7ys=
 github.com/segmentio/asm v1.2.0/go.mod h1:BqMnlJP91P8d+4ibuonYZw9mfnzI9HfxselHZr5aAcs=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=

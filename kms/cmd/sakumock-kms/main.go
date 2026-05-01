@@ -8,6 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/alecthomas/kong"
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/kms"
 )
 
@@ -32,7 +33,7 @@ func run(ctx context.Context) error {
 	if cli.Routes {
 		handler := kms.NewHandler(kms.Config{})
 		defer handler.Close()
-		return handler.PrintRoutes(os.Stdout)
+		return core.PrintRoutes(os.Stdout, handler.Routes())
 	}
 
 	level := slog.LevelInfo

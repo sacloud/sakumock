@@ -8,6 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/alecthomas/kong"
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/simplemq"
 )
 
@@ -35,7 +36,7 @@ func run(ctx context.Context) error {
 			return err
 		}
 		defer handler.Close()
-		return handler.PrintRoutes(os.Stdout)
+		return core.PrintRoutes(os.Stdout, handler.Routes())
 	}
 
 	level := slog.LevelInfo

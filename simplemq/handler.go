@@ -53,7 +53,7 @@ func validateMessageID(id string) error {
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, r := range s.routeTable() {
-		mux.HandleFunc(r.Method+" "+r.Path, r.handler)
+		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
 	}
 	return mux
 }

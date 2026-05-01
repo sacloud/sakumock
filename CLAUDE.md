@@ -2,7 +2,7 @@
 
 ## Module Conventions
 
-Each service is an independent Go module under its own subdirectory.
+Each service is an independent Go module under its own subdirectory. Shared building blocks (e.g., `Route` type, `PrintRoutes` formatter) live in the `core/` module at `github.com/sacloud/sakumock/core`; each service depends on it via `replace ../core` and a top-level `go.work` makes local development transparent.
 
 ### Required public API
 
@@ -10,8 +10,7 @@ Each service is an independent Go module under its own subdirectory.
 - `NewHandler(cfg Config) *Server` — creates `http.Handler` without listener
 - `NewTestServer(cfg Config) *Server` — creates and starts `httptest.Server`
 - `Server.TestURL() string` — returns base URL
-- `Server.Routes() []Route` — returns metadata for every HTTP endpoint registered on the server
-- `Server.PrintRoutes(io.Writer) error` — prints `Routes()` in a human-readable form for the CLI's `--routes` flag
+- `Server.Routes() []core.Route` — returns metadata for every HTTP endpoint registered on the server (the CLI's `--routes` flag prints these via `core.PrintRoutes`)
 - `Server.Close()` — shuts down server and releases resources
 
 ### File structure
@@ -20,7 +19,7 @@ Each service is an independent Go module under its own subdirectory.
 - `store_memory.go` — in-memory Store implementation
 - `new_store.go` — Store factory
 - `handler.go` — HTTP handlers and JSON types
-- `route.go` — `Route` type, `routeTable()` (single source of truth driving both `buildMux()` and `Routes()`), and `PrintRoutes()`
+- `route.go` — `routeTable()` (single source of truth driving both `buildMux()` and `Routes()`) plus the public `Routes()` method, all built on the shared types in `github.com/sacloud/sakumock/core`
 - `server.go` — Config, Server, NewHandler, NewTestServer
 - `cmd/sakumock-<service>/` — CLI entrypoint (graceful shutdown, slog, `--routes` flag)
 - Makefile, README.md

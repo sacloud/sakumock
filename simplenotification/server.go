@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Addr    string        `help:"Listen address" default:"127.0.0.1:18083" env:"SIMPLENOTIFICATION_LOCALSERVER_ADDR"`
 	Latency time.Duration `help:"Artificial latency added to every response" env:"SIMPLENOTIFICATION_LATENCY"`
+	Exec    string        `help:"Shell command to run for each accepted message; the message body is piped to its stdin and metadata is exposed via SAKUMOCK_GROUP_ID / SAKUMOCK_MESSAGE_ID / SAKUMOCK_CREATED_AT environment variables" env:"SIMPLENOTIFICATION_EXEC"`
 	Debug   bool          `help:"Enable debug mode" env:"SIMPLENOTIFICATION_DEBUG" default:"false"`
 }
 
@@ -19,6 +20,7 @@ type Server struct {
 	mux        *http.ServeMux
 	store      *MemoryStore
 	latency    time.Duration
+	exec       string
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -26,6 +28,7 @@ func NewHandler(cfg Config) *Server {
 	s := &Server{
 		store:   NewStore(),
 		latency: cfg.Latency,
+		exec:    cfg.Exec,
 	}
 	s.mux = s.buildMux()
 	return s

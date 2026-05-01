@@ -1,12 +1,16 @@
 package simplenotification
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -97,8 +101,36 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if s.exec != "" {
+		go s.runExec(rec)
+	}
 	slog.Debug("notification message accepted", "id", id, "message_id", rec.ID)
 	writeJSON(w, http.StatusAccepted, sendMessageResponse{IsOk: true})
+}
+
+// runExec spawns the configured shell command for an accepted message.
+// The message body is piped to the command's stdin and metadata is exposed
+// via environment variables. Failures only emit a warning log; the HTTP
+// response remains 202 because the notification was successfully accepted.
+func (s *Server) runExec(rec MessageRecord) {
+	cmd := exec.Command("sh", "-c", s.exec)
+	cmd.Stdin = strings.NewReader(rec.Message)
+	cmd.Env = append(os.Environ(),
+		"SAKUMOCK_GROUP_ID="+rec.GroupID,
+		"SAKUMOCK_MESSAGE_ID="+rec.ID,
+		"SAKUMOCK_CREATED_AT="+rec.CreatedAt.Format(time.RFC3339Nano),
+	)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		slog.Warn("exec failed",
+			"message_id", rec.ID,
+			"error", err,
+			"stderr", strings.TrimSpace(stderr.String()),
+		)
+		return
+	}
+	slog.Debug("exec done", "message_id", rec.ID)
 }
 
 func (s *Server) handleInspectMessages(w http.ResponseWriter, r *http.Request) {

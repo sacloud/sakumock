@@ -20,7 +20,29 @@ sakumock-simplenotification
 |------|-----|---------|-------------|
 | `--addr` | `SIMPLENOTIFICATION_LOCALSERVER_ADDR` | `127.0.0.1:18083` | Listen address |
 | `--latency` | `SIMPLENOTIFICATION_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
+| `--exec` | `SIMPLENOTIFICATION_EXEC` | (none) | Shell command run for each accepted message (see [Per-message exec hook](#per-message-exec-hook)) |
 | `--debug` | `SIMPLENOTIFICATION_DEBUG` | `false` | Enable debug mode |
+
+### Per-message exec hook
+
+When `--exec` is set, the mock spawns the given shell command for every accepted message:
+
+- The message body is piped to the command's stdin.
+- Metadata is exposed as environment variables: `SAKUMOCK_GROUP_ID`, `SAKUMOCK_MESSAGE_ID`, `SAKUMOCK_CREATED_AT`.
+- The command is run asynchronously (fire-and-forget). The HTTP response is always `202` regardless of whether the command succeeds; failures are logged at warn level.
+
+Examples:
+
+```bash
+# Print every notification to the terminal
+sakumock-simplenotification --exec 'cat; echo'
+
+# Show as a desktop notification (Linux)
+sakumock-simplenotification --exec 'notify-send "sakura notification ($SAKUMOCK_GROUP_ID)" "$(cat)"'
+
+# Forward to a personal Slack webhook during local dev
+sakumock-simplenotification --exec 'jq -Rs "{text:.}" | curl -sS -X POST -H "content-type: application/json" -d @- "$SLACK_WEBHOOK"'
+```
 
 ## Use with simple-notification-api-go SDK
 

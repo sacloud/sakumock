@@ -3,10 +3,15 @@ package simplenotification_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sacloud/saclient-go"
 	sdk "github.com/sacloud/simple-notification-api-go"
@@ -193,6 +198,52 @@ func TestInspectMessages(t *testing.T) {
 	}
 	if got.Messages[0].CreatedAt == "" {
 		t.Fatalf("expected non-empty created_at")
+	}
+}
+
+func TestSendMessage_Exec(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("exec test requires sh")
+	}
+	out := filepath.Join(t.TempDir(), "out")
+	script := fmt.Sprintf(`{ printf "msg="; cat; printf "\ngroup=%%s\nid=%%s\n" "$SAKUMOCK_GROUP_ID" "$SAKUMOCK_MESSAGE_ID"; } > %s`, out)
+	srv := simplenotification.NewTestServer(simplenotification.Config{Exec: script})
+	defer srv.Close()
+
+	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "exec-me"})
+	if resp.StatusCode != http.StatusAccepted {
+		t.Fatalf("expected 202, got %d", resp.StatusCode)
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		data, err := os.ReadFile(out)
+		if err == nil && bytes.Contains(data, []byte("msg=exec-me")) && bytes.Contains(data, []byte("group=123456789012")) {
+			if !bytes.Contains(data, []byte("id=1")) {
+				t.Fatalf("expected message id in output, got %q", data)
+			}
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for exec output (last read: %q, err=%v)", data, err)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func TestSendMessage_ExecFailureStillReturns202(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("exec test requires sh")
+	}
+	srv := simplenotification.NewTestServer(simplenotification.Config{Exec: "exit 1"})
+	defer srv.Close()
+
+	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "doomed"})
+	if resp.StatusCode != http.StatusAccepted {
+		t.Fatalf("expected 202 even though exec fails, got %d", resp.StatusCode)
+	}
+	if len(srv.Messages()) != 1 {
+		t.Fatalf("expected message to be stored even though exec failed")
 	}
 }
 

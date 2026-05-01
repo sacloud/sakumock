@@ -13,8 +13,9 @@ Each service runs as an independent Go module with its own binary. See the indiv
 | [simplemq](simplemq/) | 18080 | `github.com/sacloud/sakumock/simplemq` | SimpleMQ message API |
 | [secretmanager](secretmanager/) | 18082 | `github.com/sacloud/sakumock/secretmanager` | SecretManager API |
 | [kms](kms/) | 18081 | `github.com/sacloud/sakumock/kms` | KMS key management API |
+| [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
 
-New services should use the next available port in sequence (18083, 18084, ...).
+New services should use the next available port in sequence (18084, 18085, ...).
 
 ## Quick Start
 
@@ -25,6 +26,7 @@ New services should use the next available port in sequence (18083, 18084, ...).
 go install github.com/sacloud/sakumock/simplemq/cmd/sakumock-simplemq@latest
 go install github.com/sacloud/sakumock/secretmanager/cmd/sakumock-secretmanager@latest
 go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms@latest
+go install github.com/sacloud/sakumock/simplenotification/cmd/sakumock-simplenotification@latest
 ```
 
 ### Run
@@ -34,6 +36,7 @@ go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms@latest
 sakumock-simplemq &
 sakumock-secretmanager &
 sakumock-kms &
+sakumock-simplenotification &
 ```
 
 ### Connect your application
@@ -47,6 +50,8 @@ export SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://localhost:18080
 export SAKURA_ENDPOINTS_SECRETMANAGER=http://localhost:18082
 # KMS
 export SAKURA_ENDPOINTS_KMS=http://localhost:18081
+# Simple Notification
+export SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=http://localhost:18083
 
 # Dummy credentials (required by SDK, not validated by mock)
 export SAKURA_ACCESS_TOKEN=dummy

@@ -24,7 +24,7 @@ Each service is an independent Go module under its own subdirectory.
 
 ### Port allocation
 
-Sequential from 18080. Next available: 18083.
+Sequential from 18080. Next available: 18084.
 
 ### Go version policy
 

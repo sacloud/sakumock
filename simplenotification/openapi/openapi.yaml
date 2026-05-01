@@ -1,0 +1,1060 @@
+openapi: 3.0.3
+info:
+  title: シンプル通知 API
+  description: |-
+    ---
+    Copyright SAKURA internet Inc.
+
+    # はじめに
+    「シンプル通知」は、メールや Webhook を利用し、任意のタイミングで通知を送信するサービスです。
+
+    # 基本的な使い方
+    ## APIキーの発行
+    APIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。
+    APIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。
+    |   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |
+    |------------|------------------------------|--------------------------------------|
+    | ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |
+    | パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |
+    <div class="warning">
+      <b>操作マニュアル</b><br />
+      <ul><li><a href="https://manual.sakura.ad.jp/cloud/api/apikey.html">APIキー | さくらのクラウド ドキュメント</a></li></ul>
+    </div>
+
+    ## APIエンドポイント
+    https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1
+  version: "1.0.0"
+  contact:
+    name: simple-notification
+tags:
+  - name: 通知送信
+    description: 通知送信関連のエンドポイント
+  - name: 通知履歴
+    description: 通知履歴関連のエンドポイント
+  - name: 通知先
+    description: 通知先関連のエンドポイント
+  - name: 通知先グループ
+    description: 通知先グループ関連のエンドポイント
+  - name: 通知ルーティング
+    description: 通知ルーティング関連のエンドポイント
+paths:
+  /commonserviceitem:
+    get:
+      operationId: listCommonServiceItems
+      tags:
+        - 通知先
+        - 通知先グループ
+        - 通知ルーティング
+      summary: リソースの一覧取得
+      description: |
+        リソースの一覧取得。クエリパラメータにて下記のように`Provider.Class`を指定してフィルタを設定することで通知先、通知先グループまたは通知ルーティングのリソースのみを取得できます。
+        - 通知先: `/commonserviceitem?{"Filter":{"Provider.Class":"saknoticedestination"}}`<br>
+        - 通知先グループ: `/commonserviceitem?{"Filter":{"Provider.Class":"saknoticegroup"}}`<br>
+        - 通知ルーティング: `/commonserviceitem?{"Filter":{"Provider.Class":"saknoticerouting"}}`
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListCommonServiceItemsResponse"
+              examples:
+                通知先一覧:
+                  $ref: "#/components/examples/ListCommonServiceItemsResponseDestinations"
+                通知先グループ一覧:
+                  $ref: "#/components/examples/ListCommonServiceItemsResponseGroups"
+                通知ルーティング一覧:
+                  $ref: "#/components/examples/ListCommonServiceItemsResponseRoutings"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createCommonServiceItem
+      tags:
+        - 通知先
+        - 通知先グループ
+        - 通知ルーティング
+      summary: リソースの作成
+      description: |
+        リソースの作成。`Provider.Class`の値に応じて必要な`Settings`の内容が異なります。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCommonServiceItemRequest"
+            examples:
+              通知先:
+                $ref: "#/components/examples/PostCommonServiceItemRequestDestination"
+              通知先グループ:
+                $ref: "#/components/examples/PostCommonServiceItemRequestGroup"
+              通知ルーティング:
+                $ref: "#/components/examples/PostCommonServiceItemRequestRouting"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  CommonServiceItem:
+                    $ref: "#/components/schemas/CommonServiceItem"
+                required:
+                  - CommonServiceItem
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/{id}:
+    get:
+      operationId: getCommonServiceItem
+      tags:
+        - 通知先
+        - 通知先グループ
+        - 通知ルーティング
+      summary: リソースの取得
+      description: |
+        リソースの取得。取得された`CommonServiceItem`の`Provider.Class`の値に応じて`Settings`の内容は異なります。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{12}$
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  CommonServiceItem:
+                    $ref: "#/components/schemas/CommonServiceItem"
+                required:
+                  - CommonServiceItem
+              examples:
+                通知先:
+                  $ref: "#/components/examples/GetCommonServiceItemsResponseDestination"
+                通知先グループ:
+                  $ref: "#/components/examples/GetCommonServiceItemsResponseGroup"
+                通知ルーティング:
+                  $ref: "#/components/examples/GetCommonServiceItemsResponseRouting"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: updateCommonServiceItem
+      tags:
+        - 通知先
+        - 通知先グループ
+        - 通知ルーティング
+      summary: リソースの更新
+      description: |
+        リソースの更新。更新される`CommonServiceItem`の`Provider.Class`の値に応じて`Settings`の内容は異なります。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{12}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutCommonServiceItemRequest"
+            examples:
+              通知先:
+                $ref: "#/components/examples/PutCommonServiceItemRequestDestination"
+              通知先グループ:
+                $ref: "#/components/examples/PutCommonServiceItemRequestGroup"
+              通知ルーティング:
+                $ref: "#/components/examples/PutCommonServiceItemRequestRouting"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  CommonServiceItem:
+                    $ref: "#/components/schemas/CommonServiceItem"
+                required:
+                  - CommonServiceItem
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteCommonServiceItem
+      tags:
+        - 通知先
+        - 通知先グループ
+        - 通知ルーティング
+      summary: リソースの削除
+      description: |
+        リソースの削除。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{12}$
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  CommonServiceItem:
+                    $ref: "#/components/schemas/CommonServiceItem"
+                required:
+                  - CommonServiceItem
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/simplenotification/routing/reorder:
+    put:
+      operationId: reorderRouting
+      tags:
+        - 通知ルーティング
+      summary: 通知ルーティングの並び替え
+      description: |
+        通知ルーティングの優先順位を並び替えます。
+        `PriorityRank`の値は他の通知ルーティングと重複しないように指定する必要があります。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutCommonServiceItemRoutingReorderRequest"
+      responses:
+        "202":
+          description: "Accepted"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/{id}/simplenotification/status:
+    get:
+      operationId: getCommonServiceItemStatus
+      tags:
+        - 通知先
+      summary: 通知先ステータス情報の取得
+      description: |
+        通知先が通知送信可能かどうかのステータス情報を取得します。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{12}$
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCommonServiceItemStatusResponse"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/{id}/simplenotification/message:
+    post:
+      operationId: sendNotificationMessage
+      tags:
+        - 通知送信
+      summary: メッセージの送信
+      description: |
+        指定した通知先グループに対してメッセージを送信します。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{12}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendNotificationMessageRequest"
+      responses:
+        "202":
+          description: "Accepted"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendNotificationMessageResponse"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/simplenotification/history:
+    get:
+      operationId: listNotificationHistories
+      tags:
+        - 通知履歴
+      summary: 通知履歴の一覧取得
+      description: |
+        通知履歴の一覧取得。
+        直近30日間以内の通知送信履歴が最大100件まで取得可能です。
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListSimpleNotificationHistoriesResponse"
+              examples:
+                通知履歴一覧:
+                  $ref: "#/components/examples/ListSimpleNotificationHistoriesResponse"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/simplenotification/history/{request_id}:
+    get:
+      operationId: getNotificationHistory
+      tags:
+        - 通知履歴
+      summary: 通知履歴の取得
+      description: |
+        指定した`request_id`に対応する通知履歴の取得。
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]+$
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSimpleNotificationHistoryResponse"
+              examples:
+                通知履歴:
+                  $ref: "#/components/examples/GetSimpleNotificationHistoryResponse"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /commonserviceitem/simplenotification/sources:
+    get:
+      operationId: listSources
+      tags:
+        - 通知ルーティング
+      summary: 通知元一覧の取得
+      description: |
+        通知ルーティングに設定する通知元の情報を取得します。
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListSourcesResponse"
+        default:
+          description: "Unexpected Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    CommonServiceItem:
+      type: object
+      properties:
+        Index:
+          type: integer
+        ID:
+          type: string
+        Name:
+          type: string
+        Description:
+          type: string
+        Settings:
+          $ref: "#/components/schemas/CommonServiceItemSettings"
+        Provider:
+          $ref: "#/components/schemas/CommonServiceItemProvider"
+        Icon:
+          $ref: "#/components/schemas/CommonServiceItemIcon"
+        Tags:
+          type: array
+          items:
+            type: string
+        CreatedAt:
+          type: string
+          format: date-time
+        ModifiedAt:
+          type: string
+          format: date-time
+      required:
+        - ID
+        - Name
+        - Description
+        - Settings
+        - CreatedAt
+        - ModifiedAt
+        - Provider
+        - Icon
+        - Tags
+    CommonServiceItemSettings:
+      oneOf:
+        - $ref: "#/components/schemas/DestinationSettings"
+        - $ref: "#/components/schemas/GroupSettings"
+        - $ref: "#/components/schemas/RoutingSettings"
+    CommonServiceItemProvider:
+      properties:
+        Class:
+          type: string
+          enum:
+            - saknoticedestination
+            - saknoticegroup
+            - saknoticerouting
+        Name:
+          type: string
+        ServiceClass:
+          type: string
+      required:
+        - Class
+      type: object
+    CommonServiceItemIcon:
+      type: object
+      nullable: true
+      properties:
+        ID:
+          type: string
+        URL:
+          type: string
+        Name:
+          type: string
+        Scope:
+          type: string
+      required:
+        - ID
+    CommonServiceItemServiceClass:
+      type: string
+      enum:
+        - cloud/saknoticedestination/2
+        - cloud/saknoticegroup/2
+        - cloud/saknoticerouting/2
+    ListCommonServiceItemsResponse:
+      type: object
+      properties:
+        From:
+          type: integer
+        Count:
+          type: integer
+        Total:
+          type: integer
+        CommonServiceItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommonServiceItem"
+      required:
+        - CommonServiceItems
+    PostCommonServiceItemRequest:
+      type: object
+      properties:
+        CommonServiceItem:
+          type: object
+          properties:
+            Name:
+              type: string
+            Description:
+              type: string
+            Settings:
+              $ref: "#/components/schemas/CommonServiceItemSettings"
+            Provider:
+              $ref: "#/components/schemas/CommonServiceItemProvider"
+            ServiceClass:
+              $ref: "#/components/schemas/CommonServiceItemServiceClass"
+            Icon:
+              $ref: "#/components/schemas/CommonServiceItemIcon"
+            Tags:
+              type: array
+              items:
+                type: string
+              nullable: true
+          required:
+            - Name
+            - Description
+            - Tags
+            - Icon
+            - Provider
+            - Settings
+            - ServiceClass
+      required:
+        - CommonServiceItem
+    PutCommonServiceItemRequest:
+      type: object
+      properties:
+        CommonServiceItem:
+          type: object
+          properties:
+            Name:
+              type: string
+            Description:
+              type: string
+            Tags:
+              type: array
+              items:
+                type: string
+              nullable: true
+            Icon:
+              $ref: "#/components/schemas/CommonServiceItemIcon"
+            Settings:
+              $ref: "#/components/schemas/CommonServiceItemSettings"
+          required:
+            - Name
+            - Description
+            - Tags
+            - Icon
+      required:
+        - CommonServiceItem
+    DestinationSettings:
+      type: object
+      properties:
+        Type:
+          type: string
+          enum:
+            - email
+            - webhook
+        Value:
+          type: string
+        Disabled:
+          type: boolean
+      required:
+        - Type
+        - Value
+    GroupSettings:
+      type: object
+      properties:
+        Destinations:
+          type: array
+          items:
+            type: string
+            pattern: ^[0-9]{12}$
+        Disabled:
+          type: boolean
+      required:
+        - Destinations
+    RoutingSettings:
+      type: object
+      properties:
+        MatchLabels:
+          items:
+            properties:
+              Name:
+                type: string
+                maxLength: 64
+                pattern: "^[a-zA-Z0-9_-]*$"
+              Value:
+                type: string
+                maxLength: 64
+                pattern: "^[\\x20-\\x7E]*$"
+            required:
+              - Name
+              - Value
+            type: object
+          type: array
+        SourceID:
+          pattern: ^[0-9]{1,12}$
+          type: string
+        TargetGroupID:
+          pattern: ^[0-9]{1,12}$
+          type: string
+        PriorityRank:
+          maximum: 100
+          minimum: 1
+          type: integer
+          readOnly: true
+      required:
+        - SourceID
+        - MatchLabels
+        - TargetGroupID
+        - PriorityRank
+    PutCommonServiceItemRoutingReorderRequest:
+      properties:
+        Orders:
+          items:
+            properties:
+              PriorityRank:
+                maximum: 100
+                minimum: 1
+                type: integer
+              RoutingID:
+                pattern: ^[0-9]{1,12}$
+                type: string
+            required:
+              - RoutingID
+              - PriorityRank
+            type: object
+          type: array
+      required:
+        - Orders
+      type: object
+    GetCommonServiceItemStatusResponse:
+      type: object
+      properties:
+        NotificationStatus:
+          type: object
+          properties:
+            IsValid:
+              type: boolean
+            ModifiedAt:
+              type: string
+              format: date-time
+          required:
+            - IsValid
+            - ModifiedAt
+      required:
+        - NotificationStatus
+    SendNotificationMessageRequest:
+      type: object
+      properties:
+        Message:
+          type: string
+          maxLength: 2048
+      required:
+        - Message
+    SendNotificationMessageResponse:
+      type: object
+      properties:
+        is_ok:
+          type: boolean
+      required:
+        - is_ok
+    ListSimpleNotificationHistoriesResponse:
+      type: object
+      properties:
+        NotificationHistories:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationHistory"
+      required:
+        - NotificationHistories
+    GetSimpleNotificationHistoryResponse:
+      type: object
+      properties:
+        NotificationHistory:
+          $ref: "#/components/schemas/NotificationHistory"
+      required:
+        - NotificationHistory
+    NotificationHistory:
+      type: object
+      properties:
+        request_id:
+          type: string
+        source_id:
+          type: string
+        statuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationStatus"
+        received_at:
+          type: string
+          format: date-time
+        message:
+          $ref: "#/components/schemas/NotificationMessage"
+      required:
+        - request_id
+        - source_id
+        - statuses
+        - received_at
+        - message
+    NotificationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: integer
+          description: |
+            - 0: 未送信
+            - 1: 送信中
+            - 2: 送信済
+            - 3: スキップ
+            - 9: 送信失敗
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 9
+        error_info:
+          type: string
+        notification_request_id:
+          type: string
+        group_id:
+          type: string
+          pattern: ^[0-9]{12}$
+        destination_id:
+          type: string
+          pattern: ^[0-9]{12}$
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - status
+        - error_info
+        - notification_request_id
+        - group_id
+        - destination_id
+        - created_at
+        - updated_at
+    NotificationMessage:
+      type: object
+      properties:
+        body:
+          type: string
+        color:
+          type: string
+        color_code:
+          type: string
+        icon_url:
+          type: string
+        image_url:
+          type: string
+        title:
+          type: string
+      required:
+        - body
+        - color
+        - color_code
+        - icon_url
+        - image_url
+        - title
+    ListSourcesResponse:
+      type: object
+      properties:
+        Sources:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            required:
+              - id
+              - name
+      required:
+        - Sources
+    Error:
+      type: object
+      properties:
+        is_fatal:
+          type: boolean
+        serial:
+          type: string
+        status:
+          type: string
+        error_code:
+          type: string
+        error_msg:
+          type: string
+  examples:
+    ListCommonServiceItemsResponseDestinations:
+      value:
+        From: 0
+        Count: 2
+        Total: 2
+        CommonServiceItems:
+          - Index: 0
+            ID: "123700010001"
+            Name: "mail destination"
+            Description: "メール通知先の説明"
+            Provider:
+              Class: saknoticedestination
+            Settings:
+              Type: email
+              Value: "user@example.com"
+            CreatedAt: "2025-12-18T12:00:00+09:00"
+            ModifiedAt: "2025-12-18T12:00:00+09:00"
+            Icon:
+              ID: "123700100001"
+            Tags: []
+          - Index: 1
+            ID: "123700010002"
+            Name: "webhook destination"
+            Description: "Webhook通知先の説明"
+            Provider:
+              Class: saknoticedestination
+            Settings:
+              Type: webhook
+              Value: "https://example.com/notify"
+            CreatedAt: "2025-12-18T12:00:00+09:00"
+            ModifiedAt: "2025-12-18T12:00:00+09:00"
+            Icon:
+              ID: "123700100001"
+            Tags: []
+    ListCommonServiceItemsResponseGroups:
+      value:
+        From: 0
+        Count: 1
+        Total: 1
+        CommonServiceItems:
+          - Index: 0
+            ID: "123700020001"
+            Name: "test group"
+            Description: "通知先グループの説明"
+            Provider:
+              Class: saknoticegroup
+            Settings:
+              Destinations:
+                - "123700010001"
+                - "123700010002"
+            CreatedAt: "2025-12-18T12:00:00+09:00"
+            ModifiedAt: "2025-12-18T12:00:00+09:00"
+            Icon:
+              ID: "123700100001"
+            Tags: []
+    ListCommonServiceItemsResponseRoutings:
+      value:
+        From: 0
+        Count: 1
+        Total: 1
+        CommonServiceItems:
+          - Index: 0
+            ID: "123700030001"
+            Name: "test routing"
+            Description: "通知ルーティングの説明"
+            Provider:
+              Class: saknoticerouting
+            Settings:
+              SourceID: "1"
+              MatchLabels:
+                - Name: environment
+                  Value: development
+              TargetGroupID: "123700020001"
+              PriorityRank: 1
+            CreatedAt: "2025-12-18T12:00:00+09:00"
+            ModifiedAt: "2025-12-18T12:00:00+09:00"
+            Icon:
+              ID: "123700100001"
+            Tags: []
+    GetCommonServiceItemsResponseDestination:
+      value:
+        CommonServiceItem:
+          ID: "123700010001"
+          Name: "mail destination"
+          Description: "メール通知先の説明"
+          Provider:
+            Class: saknoticedestination
+          Settings:
+            Type: email
+            Value: "user@example.com"
+          CreatedAt: "2025-12-18T12:00:00+09:00"
+          ModifiedAt: "2025-12-18T12:00:00+09:00"
+          Icon:
+            ID: "123700100001"
+          Tags: []
+    GetCommonServiceItemsResponseGroup:
+      value:
+        CommonServiceItem:
+          ID: "123700020001"
+          Name: "test group"
+          Description: "通知先グループの説明"
+          Provider:
+            Class: saknoticegroup
+          Settings:
+            Destinations:
+              - "123700010001"
+              - "123700010002"
+          CreatedAt: "2025-12-18T12:00:00+09:00"
+          ModifiedAt: "2025-12-18T12:00:00+09:00"
+          Icon:
+            ID: "123700100001"
+          Tags: []
+    GetCommonServiceItemsResponseRouting:
+      value:
+        CommonServiceItem:
+          ID: "123700030001"
+          Name: "test routing"
+          Description: "通知ルーティングの説明"
+          Provider:
+            Class: saknoticerouting
+          Settings:
+            SourceID: "1"
+            MatchLabels:
+              - Name: environment
+                Value: development
+            TargetGroupID: "123700020001"
+            PriorityRank: 1
+          CreatedAt: "2025-12-18T12:00:00+09:00"
+          ModifiedAt: "2025-12-18T12:00:00+09:00"
+          Icon:
+            ID: "123700100001"
+          Tags: []
+    PostCommonServiceItemRequestDestination:
+      value:
+        CommonServiceItem:
+          Name: "mail destination"
+          Description: "メール通知先の説明"
+          Tags: []
+          Icon:
+            ID: "123700100001"
+          Provider:
+            Class: saknoticedestination
+          Settings:
+            Type: email
+            Value: "user@example.com"
+          ServiceClass: "cloud/saknoticedestination/2"
+    PostCommonServiceItemRequestGroup:
+      value:
+        CommonServiceItem:
+          Name: "test group"
+          Description: "通知先グループの説明"
+          Tags: []
+          Icon:
+            ID: "123700100001"
+          Provider:
+            Class: saknoticegroup
+          Settings:
+            Destinations:
+              - "123700010001"
+          ServiceClass: "cloud/saknoticegroup/2"
+    PostCommonServiceItemRequestRouting:
+      value:
+        CommonServiceItem:
+          Name: "test routing"
+          Description: "通知ルーティングの説明"
+          Tags: []
+          Icon:
+            ID: "123700100001"
+          Provider:
+            Class: saknoticerouting
+          Settings:
+            SourceID: "1"
+            MatchLabels:
+              - Name: environment
+                Value: development
+            TargetGroupID: "123700020001"
+          ServiceClass: "cloud/saknoticerouting/2"
+    PutCommonServiceItemRequestDestination:
+      value:
+        CommonServiceItem:
+          Name: "mail destination"
+          Description: "メール通知先の説明"
+          Tags: []
+          Icon:
+            ID: "123700100001"
+          Settings:
+            Type: email
+            Value: "user@example.com"
+    PutCommonServiceItemRequestGroup:
+      value:
+        CommonServiceItem:
+          Name: "test group"
+          Description: "通知先グループの説明"
+          Tags: []
+          Icon:
+            ID: "123700100001"
+          Settings:
+            Destinations:
+              - "123700010001"
+    PutCommonServiceItemRequestRouting:
+      value:
+        CommonServiceItem:
+          Name: "test routing"
+          Description: "通知ルーティングの説明"
+          Tags: []
+          Icon:
+            ID: "123700100001"
+          Settings:
+            SourceID: "1"
+            MatchLabels:
+              - Name: environment
+                Value: development
+            TargetGroupID: "123700020001"
+    ListSimpleNotificationHistoriesResponse:
+      value:
+        NotificationHistories:
+          - request_id: "12345"
+            source_id: ""
+            statuses:
+              - id: "67890"
+                status: 2
+                error_info: ""
+                notification_request_id: "12345"
+                group_id: "123700020001"
+                destination_id: "123700010001"
+                created_at: "2025-12-18T12:00:00+09:00"
+                updated_at: "2025-12-18T12:05:00+09:00"
+            received_at: "2025-12-18T12:00:00+09:00"
+            message:
+              body: "This is a test notification message."
+              color: "default"
+              color_code: "#7d7d7d"
+              icon_url: "https://example.com/icon.png"
+              image_url: "https://example.com/image.png"
+              title: "Test Notification"
+    GetSimpleNotificationHistoryResponse:
+      value:
+        NotificationHistory:
+          request_id: "12345"
+          source_id: ""
+          statuses:
+            - id: "67890"
+              status: 2
+              error_info: ""
+              notification_request_id: "12345"
+              group_id: "123700020001"
+              destination_id: "123700010001"
+              created_at: "2025-12-18T12:00:00+09:00"
+              updated_at: "2025-12-18T12:05:00+09:00"
+          received_at: "2025-12-18T12:00:00+09:00"
+          message:
+            body: "This is a test notification message."
+            color: "default"
+            color_code: "#7d7d7d"
+            icon_url: "https://example.com/icon.png"
+            image_url: "https://example.com/image.png"
+            title: "Test Notification"

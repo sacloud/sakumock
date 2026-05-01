@@ -27,7 +27,9 @@ sakumock-simplenotification
 
 When `--exec` is set, the mock spawns the given shell command for every accepted message:
 
+- The command is invoked as `sh -c '<command>'`, so shell features (pipes, env interpolation, redirects) are available. Windows is not supported.
 - The message body is piped to the command's stdin.
+- The command's stdout and stderr are inherited from the mock process, so any output appears in the same terminal as the server logs.
 - Metadata is exposed as environment variables: `SAKUMOCK_GROUP_ID`, `SAKUMOCK_MESSAGE_ID`, `SAKUMOCK_CREATED_AT`.
 - The command is run asynchronously (fire-and-forget). The HTTP response is always `202` regardless of whether the command succeeds; failures are logged at warn level.
 

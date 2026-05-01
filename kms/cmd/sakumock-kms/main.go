@@ -23,10 +23,17 @@ func main() {
 func run(ctx context.Context) error {
 	var cli struct {
 		kms.Config
+		Routes  bool             `help:"List supported HTTP routes and exit"`
 		Version kong.VersionFlag `help:"Show version" short:"v"`
 	}
 	kong.Parse(&cli, kong.Vars{"version": kms.Version})
 	cfg := cli.Config
+
+	if cli.Routes {
+		handler := kms.NewHandler(kms.Config{})
+		defer handler.Close()
+		return handler.PrintRoutes(os.Stdout)
+	}
 
 	level := slog.LevelInfo
 	if cfg.Debug {

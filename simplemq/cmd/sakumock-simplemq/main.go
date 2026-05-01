@@ -23,10 +23,20 @@ func main() {
 func run(ctx context.Context) error {
 	var cli struct {
 		simplemq.Config
+		Routes  bool             `help:"List supported HTTP routes and exit"`
 		Version kong.VersionFlag `help:"Show version" short:"v"`
 	}
 	kong.Parse(&cli, kong.Vars{"version": simplemq.Version})
 	cfg := cli.Config
+
+	if cli.Routes {
+		handler, err := simplemq.NewHandler(simplemq.Config{})
+		if err != nil {
+			return err
+		}
+		defer handler.Close()
+		return handler.PrintRoutes(os.Stdout)
+	}
 
 	level := slog.LevelInfo
 	if cfg.Debug {

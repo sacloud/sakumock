@@ -52,10 +52,9 @@ func validateMessageID(id string) error {
 
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /v1/queues/{queueName}/messages", s.authMiddleware(s.handleSend))
-	mux.HandleFunc("GET /v1/queues/{queueName}/messages", s.authMiddleware(s.handleReceive))
-	mux.HandleFunc("PUT /v1/queues/{queueName}/messages/{messageId}", s.authMiddleware(s.handleExtendTimeout))
-	mux.HandleFunc("DELETE /v1/queues/{queueName}/messages/{messageId}", s.authMiddleware(s.handleDelete))
+	for _, r := range s.routeTable() {
+		mux.HandleFunc(r.Method+" "+r.Path, r.handler)
+	}
 	return mux
 }
 

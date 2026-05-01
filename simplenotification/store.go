@@ -14,5 +14,6 @@ type MessageRecord struct {
 type Store interface {
 	Send(groupID, message string, now time.Time) (MessageRecord, error)
 	List() []MessageRecord
+	Reset()
 	Close() error
 }

@@ -151,3 +151,71 @@ func TestSendMessage_MaxLengthMessage(t *testing.T) {
 		t.Fatalf("expected 1 stored message, got %d", len(srv.Messages()))
 	}
 }
+
+func TestInspectMessages(t *testing.T) {
+	srv := simplenotification.NewTestServer(simplenotification.Config{})
+	defer srv.Close()
+
+	for _, m := range []string{"first", "second"} {
+		resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": m})
+		if resp.StatusCode != http.StatusAccepted {
+			t.Fatalf("send %q: expected 202, got %d", m, resp.StatusCode)
+		}
+	}
+
+	resp, err := http.Get(srv.TestURL() + "/_sakumock/messages")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	var got struct {
+		Messages []struct {
+			ID        string `json:"id"`
+			GroupID   string `json:"group_id"`
+			Message   string `json:"message"`
+			CreatedAt string `json:"created_at"`
+		} `json:"messages"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Messages) != 2 {
+		t.Fatalf("expected 2 messages, got %d", len(got.Messages))
+	}
+	if got.Messages[0].Message != "first" || got.Messages[1].Message != "second" {
+		t.Fatalf("unexpected message order: %+v", got.Messages)
+	}
+	if got.Messages[0].GroupID != "123456789012" {
+		t.Fatalf("unexpected group id: %s", got.Messages[0].GroupID)
+	}
+	if got.Messages[0].CreatedAt == "" {
+		t.Fatalf("expected non-empty created_at")
+	}
+}
+
+func TestResetMessages(t *testing.T) {
+	srv := simplenotification.NewTestServer(simplenotification.Config{})
+	defer srv.Close()
+
+	rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "to be reset"})
+	if len(srv.Messages()) != 1 {
+		t.Fatalf("expected 1 message before reset")
+	}
+
+	req, _ := http.NewRequest(http.MethodDelete, srv.TestURL()+"/_sakumock/messages", nil)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d", resp.StatusCode)
+	}
+
+	if len(srv.Messages()) != 0 {
+		t.Fatalf("expected 0 messages after reset, got %d", len(srv.Messages()))
+	}
+}

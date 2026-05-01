@@ -48,6 +48,14 @@ func (s *MemoryStore) List() []MessageRecord {
 	return out
 }
 
+// Reset clears all accepted messages.
+func (s *MemoryStore) Reset() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.messages = nil
+}
+
 // Close releases resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil

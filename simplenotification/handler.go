@@ -28,9 +28,25 @@ type sendMessageResponse struct {
 	IsOk bool `json:"is_ok"`
 }
 
+// Inspection JSON types for the /_sakumock/messages endpoint.
+// This namespace is sakumock-specific and not part of the SAKURA Cloud API.
+
+type inspectMessage struct {
+	ID        string `json:"id"`
+	GroupID   string `json:"group_id"`
+	Message   string `json:"message"`
+	CreatedAt string `json:"created_at"`
+}
+
+type inspectMessageList struct {
+	Messages []inspectMessage `json:"messages"`
+}
+
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /commonserviceitem/{id}/simplenotification/message", s.handleSendMessage)
+	mux.HandleFunc("GET /_sakumock/messages", s.handleInspectMessages)
+	mux.HandleFunc("DELETE /_sakumock/messages", s.handleResetMessages)
 	return mux
 }
 
@@ -83,6 +99,25 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Debug("notification message accepted", "id", id, "message_id", rec.ID)
 	writeJSON(w, http.StatusAccepted, sendMessageResponse{IsOk: true})
+}
+
+func (s *Server) handleInspectMessages(w http.ResponseWriter, r *http.Request) {
+	records := s.store.List()
+	out := make([]inspectMessage, len(records))
+	for i, rec := range records {
+		out[i] = inspectMessage{
+			ID:        rec.ID,
+			GroupID:   rec.GroupID,
+			Message:   rec.Message,
+			CreatedAt: rec.CreatedAt.Format(time.RFC3339Nano),
+		}
+	}
+	writeJSON(w, http.StatusOK, inspectMessageList{Messages: out})
+}
+
+func (s *Server) handleResetMessages(w http.ResponseWriter, r *http.Request) {
+	s.store.Reset()
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func readJSON(r *http.Request, v any) error {

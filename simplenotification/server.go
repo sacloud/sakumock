@@ -49,6 +49,11 @@ func (s *Server) Messages() []MessageRecord {
 	return s.store.List()
 }
 
+// Reset clears all notification messages accepted by the server.
+func (s *Server) Reset() {
+	s.store.Reset()
+}
+
 // Close shuts down the test server (if running) and closes the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {

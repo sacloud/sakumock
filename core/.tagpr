@@ -1,0 +1,6 @@
+[tagpr]
+	releaseBranch = main
+	versionFile = core/version.go
+	tagPrefix = core/
+	vPrefix = true
+	majorLabels = sacloud-major

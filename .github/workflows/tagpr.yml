@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: find
         run: |
-          services=$(find . -mindepth 2 -maxdepth 2 -name go.mod -printf '%h\n' | sed 's|^\./||' | sort | jq -R . | jq -sc .)
+          services=$(find . -mindepth 2 -maxdepth 2 -name .tagpr -printf '%h\n' | sed 's|^\./||' | sort | jq -R . | jq -sc .)
           echo "services=$services" >> "$GITHUB_OUTPUT"
 
   tagpr:
@@ -34,4 +34,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          config: .tagpr-${{ matrix.service }}
+          config: ${{ matrix.service }}/.tagpr

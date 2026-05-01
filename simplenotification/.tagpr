@@ -76,6 +76,8 @@
 #       Cannot be used with calendarVersioning.
 #
 [tagpr]
-	vPrefix = true
 	releaseBranch = main
-	versionFile = -
+	versionFile = simplenotification/version.go
+	tagPrefix = simplenotification/
+	vPrefix = true
+	majorLabels = sacloud-major

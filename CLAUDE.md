@@ -22,6 +22,8 @@ Each service is an independent Go module under its own subdirectory. Shared buil
 - `route.go` — `routeTable()` (single source of truth driving both `buildMux()` and `Routes()`) plus the public `Routes()` method, all built on the shared types in `github.com/sacloud/sakumock/core`
 - `server.go` — Config, Server, NewHandler, NewTestServer
 - `cmd/sakumock-<service>/` — CLI entrypoint (graceful shutdown, slog, `--routes` flag)
+- `.tagpr` — per-module tagpr config (`tagPrefix = <service>/`, `versionFile = <service>/version.go`); the release workflow auto-discovers any subdir containing both `go.mod` and `.tagpr`
+- `version.go` — `const Version = "..."`, kept in sync with the git tag by tagpr
 - Makefile, README.md
 
 ### Port allocation

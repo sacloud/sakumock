@@ -1,5 +1,7 @@
 # Changelog
 
+## [v0.0.5](https://github.com/sacloud/sakumock/compare/secretmanager/v0.0.4...secretmanager/v0.0.5) - 2026-05-02
+
 ## [v0.0.4](https://github.com/sacloud/sakumock/compare/secretmanager/v0.0.3...secretmanager/v0.0.4) - 2026-05-02
 - Add HTTP rate limit option to all services by @fujiwara in https://github.com/sacloud/sakumock/pull/38
 

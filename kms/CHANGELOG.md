@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.4](https://github.com/sacloud/sakumock/compare/kms/v0.0.3...kms/v0.0.4) - 2026-05-02
+- Add HTTP rate limit option to all services by @fujiwara in https://github.com/sacloud/sakumock/pull/38
+
 ## [v0.0.3](https://github.com/sacloud/sakumock/compare/kms/v0.0.2...kms/v0.0.3) - 2026-05-01
 - Split changelog into per-service files by @fujiwara in https://github.com/sacloud/sakumock/pull/21
 - Fix tagpr config: use changelogFile instead of changelog by @fujiwara in https://github.com/sacloud/sakumock/pull/23

@@ -4,21 +4,26 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // Config holds configuration for the local SecretManager server.
 type Config struct {
-	Addr    string        `help:"Listen address" default:"127.0.0.1:18082" env:"SECRETMANAGER_LOCALSERVER_ADDR"`
-	Latency time.Duration `help:"Artificial latency added to every response" env:"SECRETMANAGER_LATENCY"`
-	Debug   bool          `help:"Enable debug mode" env:"SECRETMANAGER_DEBUG" default:"false"`
+	Addr            string        `help:"Listen address" default:"127.0.0.1:18082" env:"SECRETMANAGER_LOCALSERVER_ADDR"`
+	Latency         time.Duration `help:"Artificial latency added to every response" env:"SECRETMANAGER_LATENCY"`
+	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"SECRETMANAGER_RATE_LIMIT"`
+	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"SECRETMANAGER_RATE_LIMIT_WINDOW"`
+	Debug           bool          `help:"Enable debug mode" env:"SECRETMANAGER_DEBUG" default:"false"`
 }
 
 // Server is a local SecretManager-compatible test server.
 type Server struct {
-	httpServer *httptest.Server
-	mux        *http.ServeMux
-	store      Store
-	latency    time.Duration
+	httpServer  *httptest.Server
+	mux         *http.ServeMux
+	store       Store
+	latency     time.Duration
+	rateLimiter *core.RateLimiter
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -26,6 +31,13 @@ func NewHandler(cfg Config) *Server {
 	s := &Server{
 		store:   NewStore(),
 		latency: cfg.Latency,
+		rateLimiter: core.NewRateLimiter(
+			cfg.RateLimit,
+			core.WithRateLimitWindow(cfg.RateLimitWindow),
+			core.WithRateLimitErrorWriter(func(w http.ResponseWriter, status int, message string) {
+				writeError(w, status, message)
+			}),
+		),
 	}
 	s.mux = s.buildMux()
 	return s

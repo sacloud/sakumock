@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock/core"
@@ -59,6 +61,7 @@ func run(ctx context.Context) error {
 		"version", simplenotification.Version,
 		"addr", cfg.Addr,
 		"latency", cfg.Latency,
+		"rate_limit", rateLimitHint(cfg.RateLimit, cfg.RateLimitWindow),
 		"debug", cfg.Debug,
 	)
 	slog.Info("to use with simple-notification-api-go SDK",
@@ -70,4 +73,11 @@ func run(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func rateLimitHint(events float64, window time.Duration) string {
+	if events <= 0 {
+		return "(disabled)"
+	}
+	return fmt.Sprintf("%g per %s", events, window)
 }

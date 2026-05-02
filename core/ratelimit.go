@@ -140,6 +140,15 @@ func PathValueKey(name string) RateLimitKeyFunc {
 	}
 }
 
+// GlobalKey returns a RateLimitKeyFunc that always returns the same bucket key,
+// so every request to the wrapped handler shares a single token bucket. Use this
+// for services whose production quotas are per-account rather than per-resource.
+func GlobalKey() RateLimitKeyFunc {
+	return func(*http.Request) string {
+		return "_global"
+	}
+}
+
 func defaultRateLimitErrorWriter(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

@@ -195,6 +195,35 @@ func TestRateLimiterWindow(t *testing.T) {
 	}
 }
 
+func TestRateLimiterGlobalKey(t *testing.T) {
+	rl := core.NewRateLimiter(2)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/a", rl.Middleware(core.GlobalKey(), okHandler))
+	mux.HandleFunc("/b", rl.Middleware(core.GlobalKey(), okHandler))
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	// Two different paths share one bucket; burst 2 -> third request 429.
+	for _, path := range []string{"/a", "/b"} {
+		r, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatalf("get %s: %v", path, err)
+		}
+		r.Body.Close()
+		if r.StatusCode != http.StatusOK {
+			t.Fatalf("%s: expected 200, got %d", path, r.StatusCode)
+		}
+	}
+	r, err := http.Get(srv.URL + "/a")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	defer r.Body.Close()
+	if r.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("expected 429, got %d", r.StatusCode)
+	}
+}
+
 func TestRateLimiterRecovery(t *testing.T) {
 	rl := core.NewRateLimiter(10)
 	mux := http.NewServeMux()

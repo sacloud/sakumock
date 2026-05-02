@@ -104,7 +104,7 @@ func (rl *RateLimiter) Middleware(keyFn RateLimitKeyFunc, next http.HandlerFunc)
 		l := rl.getLimiter(key)
 		now := time.Now()
 		if !l.AllowN(now, 1) {
-			w.Header().Set("Retry-After", strconv.Itoa(rl.retryAfterSeconds(l, now)))
+			w.Header().Set("Retry-After", strconv.Itoa(rl.retryAfterSeconds(l)))
 			rl.errWrite(w, http.StatusTooManyRequests, "rate limit exceeded")
 			return
 		}
@@ -123,13 +123,21 @@ func (rl *RateLimiter) getLimiter(key string) *rate.Limiter {
 	return l
 }
 
-func (rl *RateLimiter) retryAfterSeconds(l *rate.Limiter, now time.Time) int {
-	r := l.ReserveN(now, 1)
-	defer r.Cancel()
-	if !r.OK() {
+// retryAfterSeconds computes how long the caller should wait before the next
+// token would be available, in integer seconds (minimum 1). It uses the read-
+// only Tokens() / Limit() accessors so that concurrent in-flight requests are
+// not transiently rejected by a temporary reservation.
+func (rl *RateLimiter) retryAfterSeconds(l *rate.Limiter) int {
+	tokens := l.Tokens()
+	if tokens >= 1 {
 		return 1
 	}
-	return max(int(math.Ceil(r.DelayFrom(now).Seconds())), 1)
+	limit := float64(l.Limit())
+	if limit <= 0 {
+		return 1
+	}
+	wait := time.Duration((1 - tokens) / limit * float64(time.Second))
+	return max(int(math.Ceil(wait.Seconds())), 1)
 }
 
 // PathValueKey returns a RateLimitKeyFunc that uses r.PathValue(name) as the bucket key.

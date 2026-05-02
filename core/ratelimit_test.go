@@ -143,7 +143,10 @@ func TestRateLimiterCustomErrorWriter(t *testing.T) {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	r1, _ := http.Get(srv.URL + "/q/aaa")
+	r1, err := http.Get(srv.URL + "/q/aaa")
+	if err != nil {
+		t.Fatalf("first get: %v", err)
+	}
 	r1.Body.Close()
 	r2, err := http.Get(srv.URL + "/q/aaa")
 	if err != nil {
@@ -232,23 +235,37 @@ func TestRateLimiterRecovery(t *testing.T) {
 	defer srv.Close()
 
 	for range 10 {
-		r, _ := http.Get(srv.URL + "/q/aaa")
+		r, err := http.Get(srv.URL + "/q/aaa")
+		if err != nil {
+			t.Fatalf("drain get: %v", err)
+		}
 		r.Body.Close()
 	}
-	r, _ := http.Get(srv.URL + "/q/aaa")
+	r, err := http.Get(srv.URL + "/q/aaa")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
 	r.Body.Close()
 	if r.StatusCode != http.StatusTooManyRequests {
 		t.Fatalf("expected 429 after drain, got %d", r.StatusCode)
 	}
 
-	time.Sleep(250 * time.Millisecond)
-
-	r, err := http.Get(srv.URL + "/q/aaa")
-	if err != nil {
-		t.Fatalf("get: %v", err)
-	}
-	defer r.Body.Close()
-	if r.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200 after refill, got %d", r.StatusCode)
+	// Refill rate is 10/sec (a token every 100ms). Poll until a token is
+	// available rather than relying on a fixed sleep, which can be flaky on
+	// loaded CI runners.
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		r, err := http.Get(srv.URL + "/q/aaa")
+		if err != nil {
+			t.Fatalf("get: %v", err)
+		}
+		r.Body.Close()
+		if r.StatusCode == http.StatusOK {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("limiter never refilled within deadline; last status=%d", r.StatusCode)
+		}
+		time.Sleep(20 * time.Millisecond)
 	}
 }

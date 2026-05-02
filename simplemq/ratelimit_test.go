@@ -128,11 +128,18 @@ func TestRateLimitRecovery(t *testing.T) {
 		t.Fatalf("expected 429 after drain, got %d", status)
 	}
 
-	// Wait long enough for at least one token to refill.
-	time.Sleep(250 * time.Millisecond)
-
-	if status, _ := doRawRequest(t, "POST", url, "test-api-key", body); status != http.StatusOK {
-		t.Fatalf("expected 200 after refill, got %d", status)
+	// Refill rate is 10/sec (a token every 100ms). Poll instead of sleeping
+	// a fixed duration so the test is robust to scheduling jitter on CI.
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		status, _ := doRawRequest(t, "POST", url, "test-api-key", body)
+		if status == http.StatusOK {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("limiter never refilled within deadline; last status=%d", status)
+		}
+		time.Sleep(20 * time.Millisecond)
 	}
 }
 

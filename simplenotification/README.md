@@ -21,6 +21,8 @@ sakumock-simplenotification
 | `--addr` | `SIMPLENOTIFICATION_LOCALSERVER_ADDR` | `127.0.0.1:18083` | Listen address |
 | `--latency` | `SIMPLENOTIFICATION_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--exec` | `SIMPLENOTIFICATION_EXEC` | (none) | Shell command run for each accepted message (see [Per-message exec hook](#per-message-exec-hook)) |
+| `--rate-limit` | `SIMPLENOTIFICATION_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoint (events per `--rate-limit-window`, `0` disables). Inspection endpoints are not limited. Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--rate-limit-window` | `SIMPLENOTIFICATION_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `SIMPLENOTIFICATION_DEBUG` | `false` | Enable debug mode |
 
 ### Per-message exec hook

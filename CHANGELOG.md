@@ -1,5 +1,7 @@
 # Changelog
 
+## [v0.0.3](https://github.com/sacloud/sakumock/compare/simplenotification/v0.0.2...simplenotification/v0.0.3) - 2026-05-02
+
 ## [v0.0.2](https://github.com/sacloud/sakumock/compare/simplenotification/v0.0.1...simplenotification/v0.0.2) - 2026-05-02
 - [kms] Release for v0.0.3 by @github-actions[bot] in https://github.com/sacloud/sakumock/pull/20
 - Add HTTP rate limit option to all services by @fujiwara in https://github.com/sacloud/sakumock/pull/38

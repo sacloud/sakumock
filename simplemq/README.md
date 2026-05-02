@@ -25,6 +25,8 @@ sakumock-simplemq
 | `--message-expire` | `SIMPLEMQ_MESSAGE_EXPIRE` | `96h` | Message expire time (default: 4 days) |
 | `--database` | `SIMPLEMQ_DATABASE` | (empty) | SQLite database path for persistent storage |
 | `--latency` | `SIMPLEMQ_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
+| `--rate-limit` | `SIMPLEMQ_RATE_LIMIT` | `0` | Per-queue HTTP rate limit (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--rate-limit-window` | `SIMPLEMQ_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `SIMPLEMQ_DEBUG` | `false` | Enable debug mode |
 
 ```bash
@@ -36,6 +38,12 @@ sakumock-simplemq --database ./messages.db
 
 # Add 500ms latency to every response (useful for timeout testing)
 sakumock-simplemq --latency 500ms
+
+# Rate limit each queue to 10 req/sec (excess returns 429 + Retry-After)
+sakumock-simplemq --rate-limit 10
+
+# Or 100 req/min, matching production-like quotas
+sakumock-simplemq --rate-limit 100 --rate-limit-window 1m
 ```
 
 ## Use with simplemq-api-go SDK or simplemq-cli

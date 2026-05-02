@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock/core"
@@ -69,6 +71,7 @@ func run(ctx context.Context) error {
 		"message_expire", cfg.MessageExpire,
 		"database", databaseHint(cfg.Database),
 		"latency", cfg.Latency,
+		"rate_limit", rateLimitHint(cfg.RateLimit, cfg.RateLimitWindow),
 		"debug", cfg.Debug,
 	)
 	slog.Info("to use with simplemq-api-go SDK or simplemq-cli",
@@ -94,4 +97,11 @@ func databaseHint(path string) string {
 		return "(in-memory)"
 	}
 	return path
+}
+
+func rateLimitHint(events float64, window time.Duration) string {
+	if events <= 0 {
+		return "(disabled)"
+	}
+	return fmt.Sprintf("%g per %s per queue", events, window)
 }

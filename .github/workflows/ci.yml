@@ -53,4 +53,9 @@ jobs:
         working-directory: ${{ matrix.service }}
         run: |
           go test -v ./...
-          go install github.com/sacloud/sakumock/$SERVICE@latest
+      - name: Install
+        working-directory: ${{ matrix.service }}
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          go install ./cmd/sakumock-${SERVICE}/

@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/sacloud/saclient-go v0.3.7
-	github.com/sacloud/sakumock/core v0.0.1
+	github.com/sacloud/sakumock/core v0.0.2
 	github.com/sacloud/simple-notification-api-go v0.3.1
 	golang.org/x/sys v0.42.0
 )
@@ -38,5 +38,6 @@ require (
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

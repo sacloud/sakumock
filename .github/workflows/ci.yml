@@ -36,6 +36,7 @@ jobs:
     if: needs.detect-changes.outputs.services != '[]'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
         go-version: ["1.25", "1.26"]
@@ -50,4 +51,11 @@ jobs:
         run: go build ./...
       - name: Test
         working-directory: ${{ matrix.service }}
-        run: go test -v ./...
+        run: |
+          go test -v ./...
+      - name: Install
+        working-directory: ${{ matrix.service }}
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          go install ./cmd/sakumock-${SERVICE}/

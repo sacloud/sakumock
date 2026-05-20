@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
+      fail-fast: false
       matrix:
         service: ${{ fromJSON(needs.detect-services.outputs.services) }}
     steps:

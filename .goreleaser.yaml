@@ -47,3 +47,6 @@ release:
   github:
     owner: sacloud
     name: sakumock
+  # tagpr creates the GitHub Release with its generated notes; only upload the
+  # binaries to it, leaving the release body untouched.
+  mode: keep-existing

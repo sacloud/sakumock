@@ -4,9 +4,11 @@
 	vPrefix = true
 	# The unified binary uses bare version tags (vX.Y.Z, no tagPrefix). The
 	# per-service modules keep their own prefixed tags via .github/workflows/tagpr.yml.
-	# release is left to GoReleaser, which creates the GitHub Release with binaries
-	# in the same workflow run (see .github/workflows/release.yml).
-	release = false
+	# tagpr creates the GitHub Release with auto-generated notes (categorized via
+	# .github/release.yml); GoReleaser then uploads the binaries to that release
+	# with release.mode=keep-existing, leaving the notes intact
+	# (see .github/workflows/release.yml and .goreleaser.yaml).
+	release = true
 	majorLabels = sacloud-major
 	minorLabels = sacloud-minor
 	changelogFile = CHANGELOG.md

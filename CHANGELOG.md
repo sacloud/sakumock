@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.3](https://github.com/sacloud/sakumock/compare/core/v0.0.2...core/v0.0.3) - 2026-05-29
+- bump core to v0.0.2 by @fujiwara in https://github.com/sacloud/sakumock/pull/45
+- Add unified sakumock binary with per-service subcommands by @fujiwara in https://github.com/sacloud/sakumock/pull/52
+
 ## [v0.0.3](https://github.com/sacloud/sakumock/compare/simplenotification/v0.0.2...simplenotification/v0.0.3) - 2026-05-20
 - bump core to v0.0.2 by @fujiwara in https://github.com/sacloud/sakumock/pull/45
 

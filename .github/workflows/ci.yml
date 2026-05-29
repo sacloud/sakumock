@@ -61,7 +61,11 @@ jobs:
         env:
           SERVICE: ${{ matrix.service }}
         run: |
-          go install ./cmd/sakumock-${SERVICE}/
+          if [ -d "./cmd/sakumock-${SERVICE}" ]; then
+            go install ./cmd/sakumock-${SERVICE}/
+          else
+            echo "no command entrypoint for ${SERVICE}, skipping install"
+          fi
 
   unified:
     runs-on: ubuntu-latest

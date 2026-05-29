@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.7](https://github.com/sacloud/sakumock/compare/simplemq/v0.0.6...simplemq/v0.0.7) - 2026-05-29
+- Pin root module to released service versions by @fujiwara in https://github.com/sacloud/sakumock/pull/61
+
 ## [v0.0.6](https://github.com/sacloud/sakumock/compare/simplemq/v0.0.5...simplemq/v0.0.6) - 2026-05-29
 - Add unified sakumock binary with per-service subcommands by @fujiwara in https://github.com/sacloud/sakumock/pull/52
 

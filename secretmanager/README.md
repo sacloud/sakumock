@@ -8,6 +8,8 @@ A SecretManager-compatible mock server for local development and testing. It imp
 go install github.com/sacloud/sakumock/secretmanager/cmd/sakumock-secretmanager@latest
 ```
 
+Or use the unified [`sakumock`](../README.md#install) binary: `sakumock secretmanager` accepts the same flags as `sakumock-secretmanager`.
+
 ## Usage
 
 ```bash

@@ -27,7 +27,7 @@ type Server struct {
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
-func NewHandler(cfg Config) *Server {
+func NewHandler(cfg Config) (*Server, error) {
 	s := &Server{
 		store:   NewStore(),
 		latency: cfg.Latency,
@@ -40,12 +40,15 @@ func NewHandler(cfg Config) *Server {
 		),
 	}
 	s.mux = s.buildMux()
-	return s
+	return s, nil
 }
 
 // NewTestServer creates and starts a new local KMS test server using httptest.
 func NewTestServer(cfg Config) *Server {
-	s := NewHandler(cfg)
+	s, err := NewHandler(cfg)
+	if err != nil {
+		panic(err)
+	}
 	s.httpServer = httptest.NewServer(s)
 	return s
 }

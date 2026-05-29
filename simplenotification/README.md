@@ -8,6 +8,8 @@ A Simple Notification compatible mock server for local development and testing. 
 go install github.com/sacloud/sakumock/simplenotification/cmd/sakumock-simplenotification@latest
 ```
 
+Or use the unified [`sakumock`](../README.md#install) binary: `sakumock simplenotification` accepts the same flags as `sakumock-simplenotification`.
+
 ## Usage
 
 ```bash

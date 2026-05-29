@@ -1,9 +1,9 @@
 //go:build windows
 
-package main
+package core
 
 import "os"
 
-func signals() []os.Signal {
+func shutdownSignals() []os.Signal {
 	return []os.Signal{os.Interrupt}
 }

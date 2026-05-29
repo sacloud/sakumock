@@ -8,6 +8,8 @@ A KMS (Key Management Service) compatible mock server for local development and 
 go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms@latest
 ```
 
+Or use the unified [`sakumock`](../README.md#install) binary: `sakumock kms` accepts the same flags as `sakumock-kms`.
+
 ## Usage
 
 ```bash

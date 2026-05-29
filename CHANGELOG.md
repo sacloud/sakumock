@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.1.0](https://github.com/sacloud/sakumock/compare/v0.0.1...v0.1.0) - 2026-05-29
+- Add --routes flag to list supported HTTP endpoints by @fujiwara in https://github.com/sacloud/sakumock/pull/27
+- Move per-module tagpr configs into each subdirectory by @fujiwara in https://github.com/sacloud/sakumock/pull/29
+- Pin services to released core v0.0.1 by @fujiwara in https://github.com/sacloud/sakumock/pull/32
+- [kms] Release for v0.0.3 by @github-actions[bot] in https://github.com/sacloud/sakumock/pull/20
+- Add HTTP rate limit option to all services by @fujiwara in https://github.com/sacloud/sakumock/pull/38
+- bump core to v0.0.2 by @fujiwara in https://github.com/sacloud/sakumock/pull/45
+- Add unified sakumock binary with per-service subcommands by @fujiwara in https://github.com/sacloud/sakumock/pull/52
+- Pin root module to released service versions by @fujiwara in https://github.com/sacloud/sakumock/pull/61
+- Run tagpr only for modules changed in the push by @fujiwara in https://github.com/sacloud/sakumock/pull/63
+
 ## [v0.0.4](https://github.com/sacloud/sakumock/compare/simplenotification/v0.0.3...simplenotification/v0.0.4) - 2026-05-29
 - Add unified sakumock binary with per-service subcommands by @fujiwara in https://github.com/sacloud/sakumock/pull/52
 

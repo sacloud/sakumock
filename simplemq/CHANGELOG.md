@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.6](https://github.com/sacloud/sakumock/compare/simplemq/v0.0.5...simplemq/v0.0.6) - 2026-05-29
+- Add unified sakumock binary with per-service subcommands by @fujiwara in https://github.com/sacloud/sakumock/pull/52
+
 ## [v0.0.5](https://github.com/sacloud/sakumock/compare/simplemq/v0.0.4...simplemq/v0.0.5) - 2026-05-20
 - bump core to v0.0.2 by @fujiwara in https://github.com/sacloud/sakumock/pull/45
 

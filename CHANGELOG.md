@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.4](https://github.com/sacloud/sakumock/compare/core/v0.0.3...core/v0.0.4) - 2026-05-29
+- Pin root module to released service versions by @fujiwara in https://github.com/sacloud/sakumock/pull/61
+
 ## [v0.0.4](https://github.com/sacloud/sakumock/compare/simplenotification/v0.0.3...simplenotification/v0.0.4) - 2026-05-29
 - Add unified sakumock binary with per-service subcommands by @fujiwara in https://github.com/sacloud/sakumock/pull/52
 

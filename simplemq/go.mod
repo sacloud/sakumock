@@ -7,7 +7,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/sacloud/sakumock/core v0.0.2
 	github.com/sacloud/simplemq-api-go v0.5.0
-	golang.org/x/sys v0.42.0
 	modernc.org/sqlite v1.48.1
 )
 
@@ -31,6 +30,7 @@ require (
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -1,0 +1,49 @@
+# Release config for the unified `sakumock` binary.
+# A single binary aggregates every service as a subcommand, so the OSS
+# (non-Pro) single-target build is sufficient. modernc.org/sqlite is pure Go,
+# so CGO is disabled and cross-compilation works for every target.
+version: 2
+
+project_name: sakumock
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: sakumock
+    main: ./cmd/sakumock
+    binary: sakumock
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: sakumock
+    formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  disable: true
+
+release:
+  github:
+    owner: sacloud
+    name: sakumock

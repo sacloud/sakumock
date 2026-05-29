@@ -6,7 +6,7 @@ A local mock server suite for SAKURA Cloud APIs, inspired by [LocalStack](https:
 
 ## Services
 
-Each service runs as an independent Go module with its own binary. See the individual README for details.
+Every service is available as a subcommand of the single `sakumock` binary (e.g. `sakumock simplemq`), and as a Go library for spinning up in-process test servers. See each service's README for details.
 
 | Service | Default Port | Module | Description |
 |---|---|---|---|
@@ -21,23 +21,23 @@ New services should use the next available port in sequence (18084, 18085, ...).
 
 ### Install
 
+Download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page, or install with Go:
+
 ```bash
-# Install individual services
-go install github.com/sacloud/sakumock/simplemq/cmd/sakumock-simplemq@latest
-go install github.com/sacloud/sakumock/secretmanager/cmd/sakumock-secretmanager@latest
-go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms@latest
-go install github.com/sacloud/sakumock/simplenotification/cmd/sakumock-simplenotification@latest
+go install github.com/sacloud/sakumock/cmd/sakumock@latest
 ```
 
 ### Run
 
 ```bash
-# Start mock servers
-sakumock-simplemq &
-sakumock-secretmanager &
-sakumock-kms &
-sakumock-simplenotification &
+# Each service is a subcommand
+sakumock simplemq &
+sakumock secretmanager &
+sakumock kms &
+sakumock simplenotification &
 ```
+
+Run `sakumock --help` to list services, and `sakumock <service> --help` for a service's flags.
 
 ### Connect your application
 
@@ -79,7 +79,8 @@ Each service module must follow these conventions:
 | Symbol | Description |
 |---|---|
 | `Config` | Configuration struct with `alecthomas/kong` tags for CLI parsing |
-| `NewHandler(cfg Config) *Server` | Create an `http.Handler` without starting a listener |
+| `Command` | kong command embedding `Config`; reused by both the standalone binary and the unified `sakumock` binary |
+| `NewHandler(cfg Config) (*Server, error)` | Create an `http.Handler` without starting a listener |
 | `NewTestServer(cfg Config) *Server` | Create and start an `httptest.Server` for use in tests |
 | `Server.TestURL() string` | Return the base URL of the test server |
 | `Server.Close()` | Shut down the server and release resources |
@@ -93,9 +94,12 @@ Each module is an independent Go module (`go.mod`) under its own subdirectory wi
 - `new_store.go` — Store factory function
 - `handler.go` — HTTP handlers and JSON request/response types
 - `server.go` — `Config`, `Server`, `NewHandler`, `NewTestServer`
-- `cmd/sakumock-<service>/` — CLI entrypoint with graceful shutdown
+- `cli.go` — `Command` (kong command embedding `Config` + `--routes` + `Run`)
+- `cmd/sakumock-<service>/` — standalone CLI entrypoint (a thin shim over `Command`)
 - `Makefile` — build, test, install targets
 - `README.md` — usage and API documentation
+
+The unified `sakumock` binary lives in the repository-root module at `cmd/sakumock`; it imports each service's `Command` and registers it as a subcommand. Shared CLI plumbing (graceful shutdown, logging, the serve loop) lives in the `core` module.
 
 ### Port Allocation
 

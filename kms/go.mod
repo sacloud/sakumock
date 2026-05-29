@@ -7,7 +7,6 @@ require (
 	github.com/sacloud/kms-api-go v0.4.0
 	github.com/sacloud/saclient-go v0.3.5
 	github.com/sacloud/sakumock/core v0.0.2
-	golang.org/x/sys v0.42.0
 )
 
 require (
@@ -36,6 +35,7 @@ require (
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
 	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

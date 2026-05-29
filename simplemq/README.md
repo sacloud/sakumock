@@ -8,6 +8,8 @@ A SimpleMQ-compatible mock server for local development and testing. It implemen
 go install github.com/sacloud/sakumock/simplemq/cmd/sakumock-simplemq@latest
 ```
 
+Or use the unified [`sakumock`](../README.md#install) binary: `sakumock simplemq` accepts the same flags as `sakumock-simplemq`.
+
 ## Usage
 
 ```bash

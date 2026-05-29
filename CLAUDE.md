@@ -2,13 +2,16 @@
 
 ## Module Conventions
 
-Each service is an independent Go module under its own subdirectory. Shared building blocks (e.g., `Route` type, `PrintRoutes` formatter) live in the `core/` module at `github.com/sacloud/sakumock/core`; each service depends on it via `replace ../core` and a top-level `go.work` makes local development transparent.
+Each service is an independent Go module under its own subdirectory. Shared building blocks live in the `core/` module at `github.com/sacloud/sakumock/core` — the `Route` type and `PrintRoutes` formatter, plus the CLI serve helpers (`Serve`, `NotifyContext`, `SetupLogger`, `RateLimitHint`). Each service depends on `core` and a top-level `go.work` makes local development transparent.
+
+All services are also aggregated into a single `sakumock` binary built from the repository-root module (`github.com/sacloud/sakumock`, entrypoint `cmd/sakumock`). It exposes each service as a subcommand (`sakumock <service>`) with the same flags as the standalone `sakumock-<service>` binary. Only this unified binary is released as a prebuilt artifact (via GoReleaser); per-service binaries remain `go install`-able. See "Unified binary & release" below.
 
 ### Required public API
 
 - `Config` struct with `alecthomas/kong` tags
-- `NewHandler(cfg Config) *Server` — creates `http.Handler` without listener
-- `NewTestServer(cfg Config) *Server` — creates and starts `httptest.Server`
+- `Command` struct — embeds `Config`, adds a `Routes bool` flag and a `Run(ctx context.Context) error` method; reused by both the standalone `sakumock-<service>` binary and the unified `sakumock` binary
+- `NewHandler(cfg Config) (*Server, error)` — creates `http.Handler` without listener (return a `nil` error when construction cannot fail, to keep the signature uniform across services)
+- `NewTestServer(cfg Config) *Server` — creates and starts `httptest.Server` (panics on `NewHandler` error)
 - `Server.TestURL() string` — returns base URL
 - `Server.Routes() []core.Route` — returns metadata for every HTTP endpoint registered on the server (the CLI's `--routes` flag prints these via `core.PrintRoutes`)
 - `Server.Close()` — shuts down server and releases resources
@@ -21,10 +24,19 @@ Each service is an independent Go module under its own subdirectory. Shared buil
 - `handler.go` — HTTP handlers and JSON types
 - `route.go` — `routeTable()` (single source of truth driving both `buildMux()` and `Routes()`) plus the public `Routes()` method, all built on the shared types in `github.com/sacloud/sakumock/core`
 - `server.go` — Config, Server, NewHandler, NewTestServer
-- `cmd/sakumock-<service>/` — CLI entrypoint (graceful shutdown, slog, `--routes` flag)
-- `.tagpr` — per-module tagpr config (`tagPrefix = <service>/`, `versionFile = <service>/version.go`); the release workflow auto-discovers any subdir containing both `go.mod` and `.tagpr`
+- `cli.go` — `Command` (embeds `Config`, adds `--routes`); its `Run` sets up logging, prints routes or starts the server via `core.Serve`, and holds the service-specific startup log lines
+- `cmd/sakumock-<service>/` — standalone CLI entrypoint; a thin shim that parses flags into `Command` and calls `Command.Run` (uses `core.NotifyContext` for signal handling — no per-service signal files)
+- `.tagpr` — per-module tagpr config (`tagPrefix = <service>/`, `versionFile = <service>/version.go`); the `tagpr.yml` workflow auto-discovers any subdir containing both `go.mod` and `.tagpr`
 - `version.go` — `const Version = "..."`, kept in sync with the git tag by tagpr
 - Makefile, README.md
+
+### Unified binary & release
+
+- The repository-root module `github.com/sacloud/sakumock` contains only the unified binary at `cmd/sakumock` (`main.go` + `version.go` with `const Version`). It `require`s every service module, and `go.work` includes `./` so local and CI builds compile against the current source of every service (not the published versions).
+- `cmd/sakumock/main.go` registers each service's `Command` as a kong subcommand and dispatches via `kong.BindTo(ctx, (*context.Context)(nil))` so each `Command.Run(ctx)` receives the signal-aware context from `core.NotifyContext`.
+- Release flow: tagpr maintains a release PR for the root module using bare `vX.Y.Z` tags (root `.tagpr`, no `tagPrefix`, `release = false`). When merged, `release.yml` creates the tag and runs GoReleaser in the same job — in workspace mode (`go.work`) — which builds the single cross-platform binary and creates the GitHub Release. Running GoReleaser in the same run avoids the `GITHUB_TOKEN` limitation where a token-pushed tag does not trigger a new workflow.
+- Because the release build uses `go.work`, the released binary always matches the repository source at the tagged commit. `go install .../cmd/sakumock@latest` instead builds against the service versions pinned in the root `go.mod`; bump those to keep `go install` current. The released binary is the authoritative artifact.
+- A single binary means GoReleaser OSS suffices (the multi-binary monorepo feature is Pro-only), which is the whole reason for aggregating.
 
 ### Port allocation
 

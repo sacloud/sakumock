@@ -1,0 +1,12 @@
+[tagpr]
+	releaseBranch = main
+	versionFile = cmd/sakumock/version.go
+	vPrefix = true
+	# The unified binary uses bare version tags (vX.Y.Z, no tagPrefix). The
+	# per-service modules keep their own prefixed tags via .github/workflows/tagpr.yml.
+	# release is left to GoReleaser, which creates the GitHub Release with binaries
+	# in the same workflow run (see .github/workflows/release.yml).
+	release = false
+	majorLabels = sacloud-major
+	minorLabels = sacloud-minor
+	changelogFile = CHANGELOG.md

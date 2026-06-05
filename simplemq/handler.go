@@ -58,6 +58,17 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+func (s *Server) basicAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if !ok || (user == "" && pass == "") {
+			writeCPError(w, http.StatusUnauthorized, "unauthorized", "error-unauthorized")
+			return
+		}
+		next(w, r)
+	}
+}
+
 func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")

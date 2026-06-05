@@ -3,8 +3,10 @@ package simplemq
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,6 +26,17 @@ CREATE TABLE IF NOT EXISTS messages (
     visibility_timeout_at INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_messages_queue_name ON messages(queue_name);
+CREATE TABLE IF NOT EXISTS queues (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    tags TEXT NOT NULL DEFAULT '[]',
+    visibility_timeout_seconds INTEGER NOT NULL,
+    expire_seconds INTEGER NOT NULL,
+    api_key TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    modified_at INTEGER NOT NULL
+);
 `
 
 // SQLiteStore is a Store backed by SQLite.
@@ -31,6 +44,8 @@ type SQLiteStore struct {
 	db                *sql.DB
 	visibilityTimeout time.Duration
 	messageExpiration time.Duration
+	nextID            int64
+	idMu              sync.Mutex
 	done              chan struct{}
 	closeOnce         sync.Once
 }
@@ -56,15 +71,29 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
+	var maxID int64
+	if err := db.QueryRow(`SELECT COALESCE(MAX(CAST(id AS INTEGER)), 0) FROM queues`).Scan(&maxID); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to get max queue id: %w", err)
+	}
+
 	slog.Info("sqlite store opened", "path", path)
 	s := &SQLiteStore{
 		db:                db,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
+		nextID:            maxID,
 		done:              make(chan struct{}),
 	}
 	go s.compactLoop()
 	return s, nil
+}
+
+func (s *SQLiteStore) allocateID() string {
+	s.idMu.Lock()
+	defer s.idMu.Unlock()
+	s.nextID++
+	return fmt.Sprintf("%012d", s.nextID)
 }
 
 func (s *SQLiteStore) withTx(ctx context.Context, fn func(tx *sql.Tx) error) error {
@@ -84,13 +113,25 @@ func (s *SQLiteStore) withTx(ctx context.Context, fn func(tx *sql.Tx) error) err
 	return nil
 }
 
+// queueSettingsFor returns the visibility timeout and message expiration for the named queue.
+// Falls back to store defaults when the queue has no control plane resource.
+func (s *SQLiteStore) queueSettingsFor(queueName string) (vt, me time.Duration) {
+	var vtSecs, expSecs int64
+	row := s.db.QueryRow(`SELECT visibility_timeout_seconds, expire_seconds FROM queues WHERE name = ?`, queueName)
+	if err := row.Scan(&vtSecs, &expSecs); err == nil && vtSecs > 0 && expSecs > 0 {
+		return time.Duration(vtSecs) * time.Second, time.Duration(expSecs) * time.Second
+	}
+	return s.visibilityTimeout, s.messageExpiration
+}
+
 func (s *SQLiteStore) Send(queueName, content string, now time.Time) (storedMessage, error) {
+	_, msgExpiration := s.queueSettingsFor(queueName)
 	msg := storedMessage{
 		ID:        uuid.Must(uuid.NewV7()).String(),
 		Content:   content,
 		CreatedAt: now,
 		UpdatedAt: now,
-		ExpiresAt: now.Add(s.messageExpiration),
+		ExpiresAt: now.Add(msgExpiration),
 	}
 	query := `INSERT INTO messages (id, queue_name, content, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)`
 	args := []any{msg.ID, queueName, msg.Content, msg.CreatedAt.UnixMilli(), msg.UpdatedAt.UnixMilli(), msg.ExpiresAt.UnixMilli()}
@@ -106,8 +147,9 @@ func (s *SQLiteStore) Send(queueName, content string, now time.Time) (storedMess
 }
 
 func (s *SQLiteStore) Receive(queueName string, now time.Time) (msg storedMessage, ok bool, retErr error) {
+	visibilityTimeout, _ := s.queueSettingsFor(queueName)
 	nowMilli := now.UnixMilli()
-	visibilityTimeoutAtMilli := now.Add(s.visibilityTimeout).UnixMilli()
+	visibilityTimeoutAtMilli := now.Add(visibilityTimeout).UnixMilli()
 
 	err := s.withTx(context.Background(), func(tx *sql.Tx) error {
 		// Find and atomically update the first available message
@@ -145,8 +187,9 @@ func (s *SQLiteStore) Receive(queueName string, now time.Time) (msg storedMessag
 }
 
 func (s *SQLiteStore) ExtendTimeout(queueName, id string, now time.Time) (msg storedMessage, retErr error) {
+	visibilityTimeout, _ := s.queueSettingsFor(queueName)
 	nowMilli := now.UnixMilli()
-	visibilityTimeoutAtMilli := now.Add(s.visibilityTimeout).UnixMilli()
+	visibilityTimeoutAtMilli := now.Add(visibilityTimeout).UnixMilli()
 
 	query := `UPDATE messages SET visibility_timeout_at = ?, updated_at = ?
 		 WHERE queue_name = ? AND id = ?
@@ -223,4 +266,216 @@ func (s *SQLiteStore) Close() error {
 		err = s.db.Close()
 	})
 	return err
+}
+
+// Control plane operations
+
+func scanQueueRow(rows *sql.Rows) (storedQueue, error) {
+	var q storedQueue
+	var tagsJSON string
+	var createdAt, modifiedAt int64
+	if err := rows.Scan(&q.ID, &q.Name, &q.Description, &tagsJSON, &q.VisibilityTimeoutSeconds, &q.ExpireSeconds, &q.APIKey, &createdAt, &modifiedAt); err != nil {
+		return storedQueue{}, fmt.Errorf("failed to scan queue row: %w", err)
+	}
+	if err := json.Unmarshal([]byte(tagsJSON), &q.Tags); err != nil {
+		q.Tags = []string{}
+	}
+	q.CreatedAt = time.UnixMilli(createdAt)
+	q.ModifiedAt = time.UnixMilli(modifiedAt)
+	return q, nil
+}
+
+func scanQueueSingleRow(row *sql.Row) (storedQueue, error) {
+	var q storedQueue
+	var tagsJSON string
+	var createdAt, modifiedAt int64
+	err := row.Scan(&q.ID, &q.Name, &q.Description, &tagsJSON, &q.VisibilityTimeoutSeconds, &q.ExpireSeconds, &q.APIKey, &createdAt, &modifiedAt)
+	if err == sql.ErrNoRows {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	if err != nil {
+		return storedQueue{}, fmt.Errorf("failed to scan queue: %w", err)
+	}
+	if err := json.Unmarshal([]byte(tagsJSON), &q.Tags); err != nil {
+		q.Tags = []string{}
+	}
+	q.CreatedAt = time.UnixMilli(createdAt)
+	q.ModifiedAt = time.UnixMilli(modifiedAt)
+	return q, nil
+}
+
+const selectQueueColumns = `id, name, description, tags, visibility_timeout_seconds, expire_seconds, api_key, created_at, modified_at`
+
+func (s *SQLiteStore) CreateQueue(name, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
+	if tags == nil {
+		tags = []string{}
+	}
+	if vtSecs <= 0 {
+		vtSecs = int(s.visibilityTimeout.Seconds())
+	}
+	if expSecs <= 0 {
+		expSecs = int(s.messageExpiration.Seconds())
+	}
+
+	tagsJSON, err := json.Marshal(tags)
+	if err != nil {
+		return storedQueue{}, fmt.Errorf("failed to marshal tags: %w", err)
+	}
+
+	id := s.allocateID()
+	nowMilli := now.UnixMilli()
+
+	err = s.withTx(context.Background(), func(tx *sql.Tx) error {
+		_, err := tx.Exec(
+			`INSERT INTO queues (id, name, description, tags, visibility_timeout_seconds, expire_seconds, api_key, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			id, name, description, string(tagsJSON), vtSecs, expSecs, "", nowMilli, nowMilli,
+		)
+		if err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrQueueConflict
+		}
+		return err
+	})
+	if err != nil {
+		return storedQueue{}, err
+	}
+
+	return storedQueue{
+		ID:                       id,
+		Name:                     name,
+		Description:              description,
+		Tags:                     tags,
+		VisibilityTimeoutSeconds: vtSecs,
+		ExpireSeconds:            expSecs,
+		CreatedAt:                now,
+		ModifiedAt:               now,
+	}, nil
+}
+
+func (s *SQLiteStore) ListQueues() ([]storedQueue, error) {
+	rows, err := s.db.Query(`SELECT ` + selectQueueColumns + ` FROM queues ORDER BY id`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list queues: %w", err)
+	}
+	defer rows.Close()
+
+	var result []storedQueue
+	for rows.Next() {
+		q, err := scanQueueRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, q)
+	}
+	if result == nil {
+		result = []storedQueue{}
+	}
+	return result, rows.Err()
+}
+
+func (s *SQLiteStore) GetQueueByID(id string) (storedQueue, error) {
+	row := s.db.QueryRow(`SELECT `+selectQueueColumns+` FROM queues WHERE id = ?`, id)
+	return scanQueueSingleRow(row)
+}
+
+func (s *SQLiteStore) UpdateQueue(id, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
+	if tags == nil {
+		tags = []string{}
+	}
+	tagsJSON, err := json.Marshal(tags)
+	if err != nil {
+		return storedQueue{}, fmt.Errorf("failed to marshal tags: %w", err)
+	}
+
+	nowMilli := now.UnixMilli()
+	err = s.withTx(context.Background(), func(tx *sql.Tx) error {
+		result, err := tx.Exec(
+			`UPDATE queues SET description = ?, tags = ?, visibility_timeout_seconds = ?, expire_seconds = ?, modified_at = ? WHERE id = ?`,
+			description, string(tagsJSON), vtSecs, expSecs, nowMilli, id,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to update queue: %w", err)
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			return ErrQueueNotFound
+		}
+		return nil
+	})
+	if err != nil {
+		return storedQueue{}, err
+	}
+	return s.GetQueueByID(id)
+}
+
+func (s *SQLiteStore) DeleteQueueByID(id string) error {
+	return s.withTx(context.Background(), func(tx *sql.Tx) error {
+		var name string
+		if err := tx.QueryRow(`SELECT name FROM queues WHERE id = ?`, id).Scan(&name); err == sql.ErrNoRows {
+			return ErrQueueNotFound
+		} else if err != nil {
+			return fmt.Errorf("failed to get queue: %w", err)
+		}
+		if _, err := tx.Exec(`DELETE FROM messages WHERE queue_name = ?`, name); err != nil {
+			return fmt.Errorf("failed to delete messages: %w", err)
+		}
+		if _, err := tx.Exec(`DELETE FROM queues WHERE id = ?`, id); err != nil {
+			return fmt.Errorf("failed to delete queue: %w", err)
+		}
+		return nil
+	})
+}
+
+func (s *SQLiteStore) CountMessages(id string, now time.Time) (int, error) {
+	var name string
+	if err := s.db.QueryRow(`SELECT name FROM queues WHERE id = ?`, id).Scan(&name); err == sql.ErrNoRows {
+		return 0, ErrQueueNotFound
+	} else if err != nil {
+		return 0, fmt.Errorf("failed to get queue: %w", err)
+	}
+
+	var count int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM messages WHERE queue_name = ? AND expires_at > ?`, name, now.UnixMilli()).Scan(&count); err != nil {
+		return 0, fmt.Errorf("failed to count messages: %w", err)
+	}
+	return count, nil
+}
+
+func (s *SQLiteStore) RotateAPIKey(id, newKey string, now time.Time) (storedQueue, error) {
+	nowMilli := now.UnixMilli()
+	err := s.withTx(context.Background(), func(tx *sql.Tx) error {
+		result, err := tx.Exec(`UPDATE queues SET api_key = ?, modified_at = ? WHERE id = ?`, newKey, nowMilli, id)
+		if err != nil {
+			return fmt.Errorf("failed to rotate api key: %w", err)
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			return ErrQueueNotFound
+		}
+		return nil
+	})
+	if err != nil {
+		return storedQueue{}, err
+	}
+	return s.GetQueueByID(id)
+}
+
+func (s *SQLiteStore) ClearMessages(id string) error {
+	return s.withTx(context.Background(), func(tx *sql.Tx) error {
+		var name string
+		if err := tx.QueryRow(`SELECT name FROM queues WHERE id = ?`, id).Scan(&name); err == sql.ErrNoRows {
+			return ErrQueueNotFound
+		} else if err != nil {
+			return fmt.Errorf("failed to get queue: %w", err)
+		}
+		if _, err := tx.Exec(`DELETE FROM messages WHERE queue_name = ?`, name); err != nil {
+			return fmt.Errorf("failed to clear messages: %w", err)
+		}
+		return nil
+	})
 }

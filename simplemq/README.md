@@ -135,7 +135,9 @@ plane:
 1. Only serves queues that were created via the control plane (`POST /commonserviceitem`); requests to an unknown queue are rejected with `401`.
 2. Authenticates each request with the queue's own API key — the one returned by `rotate-apikey`. A queue has no usable key until `rotate-apikey` is called, and rotating again invalidates the previous key.
 
-`--api-key` is ignored in strict mode (per-queue keys are used instead).
+`--strict` and `--api-key` are mutually exclusive: the data plane is authenticated
+either by a single shared key (`--api-key`) or by per-queue issued keys (`--strict`),
+not both. Passing both is a startup error.
 
 The real-world flow against a strict server is:
 

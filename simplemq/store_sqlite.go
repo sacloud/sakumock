@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sacloud/sakumock/core"
 	_ "modernc.org/sqlite"
 )
 
@@ -44,8 +45,7 @@ type SQLiteStore struct {
 	db                *sql.DB
 	visibilityTimeout time.Duration
 	messageExpiration time.Duration
-	nextID            int64
-	idMu              sync.Mutex
+	ids               *core.IDGenerator
 	done              chan struct{}
 	closeOnce         sync.Once
 }
@@ -78,17 +78,15 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 	}
 	// Resume from the highest persisted ID, but never below the base so a
 	// fresh database starts at a realistic 12-digit value.
-	nextID := queueIDBase
-	if maxID >= nextID {
-		nextID = maxID + 1
-	}
+	ids := core.NewIDGenerator(core.DefaultIDBase)
+	ids.Observe(strconv.FormatInt(maxID, 10))
 
 	slog.Info("sqlite store opened", "path", path)
 	s := &SQLiteStore{
 		db:                db,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
-		nextID:            nextID,
+		ids:               ids,
 		done:              make(chan struct{}),
 	}
 	go s.compactLoop()
@@ -96,11 +94,7 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 }
 
 func (s *SQLiteStore) allocateID() string {
-	s.idMu.Lock()
-	defer s.idMu.Unlock()
-	id := s.nextID
-	s.nextID++
-	return strconv.FormatInt(id, 10)
+	return s.ids.Next()
 }
 
 func (s *SQLiteStore) withTx(ctx context.Context, fn func(tx *sql.Tx) error) error {

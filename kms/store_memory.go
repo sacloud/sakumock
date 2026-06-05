@@ -11,13 +11,15 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // MemoryStore is an in-memory Store for KMS keys.
 type MemoryStore struct {
-	mu     sync.RWMutex
-	keys   map[string]*KeyRecord
-	nextID int64
+	mu   sync.RWMutex
+	keys map[string]*KeyRecord
+	ids  *core.IDGenerator
 	// encryption key material per key ID per version (version -> 32-byte AES key)
 	keyMaterial map[string]map[int][]byte
 }
@@ -26,15 +28,13 @@ type MemoryStore struct {
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		keys:        make(map[string]*KeyRecord),
-		nextID:      110000000001,
+		ids:         core.NewIDGenerator(core.DefaultIDBase),
 		keyMaterial: make(map[string]map[int][]byte),
 	}
 }
 
 func (s *MemoryStore) generateID() string {
-	id := fmt.Sprintf("%012d", s.nextID)
-	s.nextID++
-	return id
+	return s.ids.Next()
 }
 
 func (s *MemoryStore) generateKeyMaterial(id string, version int) {

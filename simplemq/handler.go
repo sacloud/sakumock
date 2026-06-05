@@ -2,6 +2,7 @@ package simplemq
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -58,6 +59,17 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+func (s *Server) basicAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, pass, ok := r.BasicAuth()
+		if !ok || (user == "" && pass == "") {
+			writeCPError(w, http.StatusUnauthorized, "unauthorized", "error-unauthorized")
+			return
+		}
+		next(w, r)
+	}
+}
+
 func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
@@ -65,12 +77,32 @@ func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			writeError(w, http.StatusUnauthorized, "authorization required")
 			return
 		}
-		if s.apiKey != "" {
-			token := strings.TrimPrefix(auth, "Bearer ")
-			if token != s.apiKey {
+		token := strings.TrimPrefix(auth, "Bearer ")
+
+		if s.strict {
+			// The token must match the API key issued for an existing queue
+			// (via rotate-apikey). A missing queue or unissued key is rejected
+			// as unauthorized; other store errors are surfaced as 500.
+			q, err := s.store.GetQueueByName(r.PathValue("queueName"))
+			if err != nil {
+				if errors.Is(err, ErrQueueNotFound) {
+					writeError(w, http.StatusUnauthorized, "invalid api key")
+					return
+				}
+				writeError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if q.APIKey == "" || token != q.APIKey {
 				writeError(w, http.StatusUnauthorized, "invalid api key")
 				return
 			}
+			next(w, r)
+			return
+		}
+
+		if s.apiKey != "" && token != s.apiKey {
+			writeError(w, http.StatusUnauthorized, "invalid api key")
+			return
 		}
 		next(w, r)
 	}

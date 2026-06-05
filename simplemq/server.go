@@ -10,7 +10,7 @@ import (
 
 // Config holds configuration for the local SimpleMQ server.
 type Config struct {
-	APIKey            string        `help:"API key for authentication (if empty, any key is accepted)" env:"SIMPLEMQ_API_KEY"`
+	APIKey            string        `help:"API key for authentication (if empty, any key is accepted). Mutually exclusive with --strict." env:"SIMPLEMQ_API_KEY" xor:"auth"`
 	Addr              string        `help:"Listen address" default:"127.0.0.1:18080" env:"SIMPLEMQ_LOCALSERVER_ADDR"`
 	VisibilityTimeout time.Duration `help:"Visibility timeout" default:"30s" env:"SIMPLEMQ_VISIBILITY_TIMEOUT"`
 	MessageExpire     time.Duration `help:"Message expire time" default:"96h" env:"SIMPLEMQ_MESSAGE_EXPIRE"`
@@ -18,6 +18,7 @@ type Config struct {
 	Latency           time.Duration `help:"Artificial latency added to every response" env:"SIMPLEMQ_LATENCY"`
 	RateLimit         float64       `help:"Per-queue HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"SIMPLEMQ_RATE_LIMIT"`
 	RateLimitWindow   time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"SIMPLEMQ_RATE_LIMIT_WINDOW"`
+	Strict            bool          `help:"Strict mode: the data plane only accepts queues created via the control plane, authenticated with the queue's issued API key (from rotate-apikey). Mutually exclusive with --api-key." env:"SIMPLEMQ_STRICT" xor:"auth"`
 	Debug             bool          `help:"Enable debug mode" env:"SIMPLEMQ_DEBUG" default:"false"`
 }
 
@@ -27,6 +28,7 @@ type Server struct {
 	mux         *http.ServeMux
 	store       Store
 	apiKey      string
+	strict      bool
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
 }
@@ -41,6 +43,7 @@ func NewHandler(cfg Config) (*Server, error) {
 	s := &Server{
 		store:   store,
 		apiKey:  cfg.APIKey,
+		strict:  cfg.Strict,
 		latency: cfg.Latency,
 		rateLimiter: core.NewRateLimiter(
 			cfg.RateLimit,

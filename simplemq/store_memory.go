@@ -3,6 +3,7 @@ package simplemq
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 	"sync"
 	"time"
 
@@ -97,10 +98,31 @@ func (q *memoryQueue) delete(id string) error {
 	return fmt.Errorf("message not found: %s", id)
 }
 
+func (q *memoryQueue) clear() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.messages = nil
+}
+
+func (q *memoryQueue) count(now time.Time) int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	n := 0
+	for _, msg := range q.messages {
+		if now.Before(msg.ExpiresAt) {
+			n++
+		}
+	}
+	return n
+}
+
 // MemoryStore manages named queues in memory.
 type MemoryStore struct {
 	mu                sync.Mutex
-	queues            map[string]*memoryQueue
+	queues            map[string]*memoryQueue // name → message queue
+	queueResources    map[string]*storedQueue // id → queue resource
+	queueByName       map[string]string       // name → id
+	nextID            int64
 	visibilityTimeout time.Duration
 	messageExpiration time.Duration
 	done              chan struct{}
@@ -117,6 +139,9 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryS
 	}
 	s := &MemoryStore{
 		queues:            make(map[string]*memoryQueue),
+		queueResources:    make(map[string]*storedQueue),
+		queueByName:       make(map[string]string),
+		nextID:            queueIDBase,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
 		done:              make(chan struct{}),
@@ -125,13 +150,28 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryS
 	return s
 }
 
+// allocateID must be called with s.mu held.
+func (s *MemoryStore) allocateID() string {
+	id := s.nextID
+	s.nextID++
+	return strconv.FormatInt(id, 10)
+}
+
 func (s *MemoryStore) getQueue(name string) *memoryQueue {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	q, ok := s.queues[name]
 	if !ok {
-		q = newMemoryQueue(s.visibilityTimeout, s.messageExpiration)
+		vt := s.visibilityTimeout
+		me := s.messageExpiration
+		if id, hasCP := s.queueByName[name]; hasCP {
+			if res := s.queueResources[id]; res != nil {
+				vt = time.Duration(res.VisibilityTimeoutSeconds) * time.Second
+				me = time.Duration(res.ExpireSeconds) * time.Second
+			}
+		}
+		q = newMemoryQueue(vt, me)
 		s.queues[name] = q
 		slog.Info("queue created", "queue", name)
 	}
@@ -182,5 +222,184 @@ func (s *MemoryStore) Close() error {
 	s.closeOnce.Do(func() {
 		close(s.done)
 	})
+	return nil
+}
+
+// Control plane operations
+
+func (s *MemoryStore) CreateQueue(name, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
+	if tags == nil {
+		tags = []string{}
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.queueByName[name]; exists {
+		return storedQueue{}, ErrQueueConflict
+	}
+
+	vt := s.visibilityTimeout
+	me := s.messageExpiration
+	if vtSecs > 0 {
+		vt = time.Duration(vtSecs) * time.Second
+	} else {
+		vtSecs = int(vt.Seconds())
+	}
+	if expSecs > 0 {
+		me = time.Duration(expSecs) * time.Second
+	} else {
+		expSecs = int(me.Seconds())
+	}
+
+	id := s.allocateID()
+	res := &storedQueue{
+		ID:                       id,
+		Name:                     name,
+		Description:              description,
+		Tags:                     tags,
+		VisibilityTimeoutSeconds: vtSecs,
+		ExpireSeconds:            expSecs,
+		CreatedAt:                now,
+		ModifiedAt:               now,
+	}
+	s.queueResources[id] = res
+	s.queueByName[name] = id
+
+	// Update existing message queue settings if already created via data plane
+	if q, ok := s.queues[name]; ok {
+		q.mu.Lock()
+		q.visibilityTimeout = vt
+		q.messageExpiration = me
+		q.mu.Unlock()
+	}
+
+	return *res, nil
+}
+
+func (s *MemoryStore) ListQueues() ([]storedQueue, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	result := make([]storedQueue, 0, len(s.queueResources))
+	for _, res := range s.queueResources {
+		result = append(result, *res)
+	}
+	return result, nil
+}
+
+func (s *MemoryStore) GetQueueByID(id string) (storedQueue, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, ok := s.queueResources[id]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	return *res, nil
+}
+
+func (s *MemoryStore) GetQueueByName(name string) (storedQueue, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	id, ok := s.queueByName[name]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	res, ok := s.queueResources[id]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	return *res, nil
+}
+
+func (s *MemoryStore) UpdateQueue(id, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
+	if tags == nil {
+		tags = []string{}
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, ok := s.queueResources[id]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+
+	res.Description = description
+	res.Tags = tags
+	res.VisibilityTimeoutSeconds = vtSecs
+	res.ExpireSeconds = expSecs
+	res.ModifiedAt = now
+
+	vt := time.Duration(vtSecs) * time.Second
+	me := time.Duration(expSecs) * time.Second
+	if q, ok := s.queues[res.Name]; ok {
+		q.mu.Lock()
+		q.visibilityTimeout = vt
+		q.messageExpiration = me
+		q.mu.Unlock()
+	}
+
+	return *res, nil
+}
+
+func (s *MemoryStore) DeleteQueueByID(id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, ok := s.queueResources[id]
+	if !ok {
+		return ErrQueueNotFound
+	}
+
+	name := res.Name
+	delete(s.queueResources, id)
+	delete(s.queueByName, name)
+	delete(s.queues, name)
+	return nil
+}
+
+func (s *MemoryStore) CountMessages(id string, now time.Time) (int, error) {
+	s.mu.Lock()
+	res, ok := s.queueResources[id]
+	if !ok {
+		s.mu.Unlock()
+		return 0, ErrQueueNotFound
+	}
+	q := s.queues[res.Name]
+	s.mu.Unlock()
+
+	if q == nil {
+		return 0, nil
+	}
+	return q.count(now), nil
+}
+
+func (s *MemoryStore) RotateAPIKey(id, newKey string, now time.Time) (storedQueue, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res, ok := s.queueResources[id]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	res.APIKey = newKey
+	res.ModifiedAt = now
+	return *res, nil
+}
+
+func (s *MemoryStore) ClearMessages(id string) error {
+	s.mu.Lock()
+	res, ok := s.queueResources[id]
+	if !ok {
+		s.mu.Unlock()
+		return ErrQueueNotFound
+	}
+	q := s.queues[res.Name]
+	s.mu.Unlock()
+
+	if q != nil {
+		q.clear()
+	}
 	return nil
 }

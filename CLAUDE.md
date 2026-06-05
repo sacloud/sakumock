@@ -2,7 +2,7 @@
 
 ## Module Conventions
 
-Each service is an independent Go module under its own subdirectory. Shared building blocks live in the `core/` module at `github.com/sacloud/sakumock/core` — the `Route` type and `PrintRoutes` formatter, plus the CLI serve helpers (`Serve`, `NotifyContext`, `SetupLogger`, `RateLimitHint`). Each service depends on `core` and a top-level `go.work` makes local development transparent.
+Each service is an independent Go module under its own subdirectory. Shared building blocks live in the `core/` module at `github.com/sacloud/sakumock/core` — the `Route` type and `PrintRoutes` formatter, the CLI serve helpers (`Serve`, `NotifyContext`, `SetupLogger`, `RateLimitHint`), and the `IDGenerator` for sequential numeric resource IDs (services pass their own base value). Each service depends on `core` and a top-level `go.work` makes local development transparent.
 
 All services are also aggregated into a single `sakumock` binary built from the repository-root module (`github.com/sacloud/sakumock`, entrypoint `cmd/sakumock`). It exposes each service as a subcommand (`sakumock <service>`) with the same flags as the standalone `sakumock-<service>` binary. Only this unified binary is released as a prebuilt artifact (via GoReleaser); per-service binaries remain `go install`-able. See "Unified binary & release" below.
 
@@ -41,6 +41,12 @@ All services are also aggregated into a single `sakumock` binary built from the 
 ### Port allocation
 
 Sequential from 18080. Next available: 18084.
+
+### Resource ID generation
+
+- Real SAKURA Cloud resource IDs are a single **global incremental** counter shared across all resource types (a queue, a KMS key, a server, etc. all draw from one monotonic sequence, so an ID is unique platform-wide). They are 12-digit numbers; the counter currently sits in the `11xx`–`12xx` band.
+- Mocks generate control-plane resource IDs via `core.IDGenerator` starting at `core.DefaultIDBase` (`990000000000`, the top of the 12-digit space). This keeps mock IDs realistic in length while never colliding with a real resource ID: the global counter would have to grow ~7x to reach the `9xx` band, by which point the 12-digit space would be near exhaustion and real IDs would have grown more digits. So if a test accidentally runs against the real API (e.g. an unset endpoint env var), a mock ID resolves to nothing (404) instead of a live resource.
+- Mocks do not replicate the cross-type global uniqueness (each store counts independently from the same base, so two resource types can share a numeric ID) — harmless for a mock. Data-plane identifiers (e.g. message IDs) are not resource IDs and do not use `IDGenerator`.
 
 ### Go version policy
 

@@ -3,11 +3,11 @@ package simplemq
 import (
 	"fmt"
 	"log/slog"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sacloud/sakumock/core"
 )
 
 type memoryQueue struct {
@@ -122,7 +122,7 @@ type MemoryStore struct {
 	queues            map[string]*memoryQueue // name → message queue
 	queueResources    map[string]*storedQueue // id → queue resource
 	queueByName       map[string]string       // name → id
-	nextID            int64
+	ids               *core.IDGenerator
 	visibilityTimeout time.Duration
 	messageExpiration time.Duration
 	done              chan struct{}
@@ -141,20 +141,13 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryS
 		queues:            make(map[string]*memoryQueue),
 		queueResources:    make(map[string]*storedQueue),
 		queueByName:       make(map[string]string),
-		nextID:            queueIDBase,
+		ids:               core.NewIDGenerator(core.DefaultIDBase),
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
 		done:              make(chan struct{}),
 	}
 	go s.compactLoop()
 	return s
-}
-
-// allocateID must be called with s.mu held.
-func (s *MemoryStore) allocateID() string {
-	id := s.nextID
-	s.nextID++
-	return strconv.FormatInt(id, 10)
 }
 
 func (s *MemoryStore) getQueue(name string) *memoryQueue {
@@ -251,7 +244,7 @@ func (s *MemoryStore) CreateQueue(name, description string, tags []string, vtSec
 		expSecs = int(me.Seconds())
 	}
 
-	id := s.allocateID()
+	id := s.ids.Next()
 	res := &storedQueue{
 		ID:                       id,
 		Name:                     name,

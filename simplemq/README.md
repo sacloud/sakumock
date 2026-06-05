@@ -1,6 +1,6 @@
 # sakumock/simplemq
 
-A SimpleMQ-compatible mock server for local development and testing. It implements the message API (send, receive, delete, extend timeout) with in-memory or SQLite-backed persistent storage.
+A SimpleMQ-compatible mock server for local development and testing. It implements both the data plane message API (send, receive, delete, extend timeout) and the control plane resource API (create/list/get/update/delete queues, message count, API key rotation, clearing a queue), with in-memory or SQLite-backed persistent storage.
 
 ## Install
 
@@ -50,16 +50,29 @@ sakumock-simplemq --rate-limit 100 --rate-limit-window 1m
 
 ## Use with simplemq-api-go SDK or simplemq-cli
 
+Both the data plane (message) and control plane (queue) APIs are served by the same
+mock process, so point both endpoint overrides at it:
+
 ```bash
 export SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://localhost:18080
+export SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://localhost:18080
 export SAKURA_ACCESS_TOKEN=dummy
 export SAKURA_ACCESS_TOKEN_SECRET=dummy
 
+# Control plane: manage queue resources
+simplemq-cli queue create myqueue
+simplemq-cli queue list
+
+# Data plane: send/receive messages
 simplemq-cli message send --queue myqueue "Hello!"
 simplemq-cli message receive --queue myqueue
 ```
 
-Queues are created automatically on first access. When using in-memory storage (default), all data is lost when the server stops. Use `--database` for persistent storage.
+A queue created via the control plane uses the visibility timeout and expiration set
+on it (`configQueue`). For data plane requests to a queue that was never created via
+the control plane, the queue is created automatically on first access using the
+server's default settings. When using in-memory storage (default), all data is lost
+when the server stops. Use `--database` for persistent storage.
 
 ## Use as a library
 
@@ -81,6 +94,8 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 
 ## API Endpoints
 
+### Data plane (message API)
+
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/v1/queues/{queueName}/messages` | Send a message |
@@ -88,7 +103,29 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 | `PUT` | `/v1/queues/{queueName}/messages/{messageID}` | Extend visibility timeout |
 | `DELETE` | `/v1/queues/{queueName}/messages/{messageID}` | Delete a message |
 
-All endpoints require `Authorization: Bearer <token>` header.
+Data plane endpoints require an `Authorization: Bearer <token>` header. When
+`--api-key` is set the token must match it; otherwise any non-empty token is accepted.
+
+### Control plane (queue resource API)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/commonserviceitem` | Create a queue |
+| `GET` | `/commonserviceitem` | List queues |
+| `GET` | `/commonserviceitem/{id}` | Get a queue |
+| `PUT` | `/commonserviceitem/{id}` | Update queue settings |
+| `DELETE` | `/commonserviceitem/{id}` | Delete a queue |
+| `GET` | `/commonserviceitem/{id}/simplemq/message-count` | Get message count |
+| `PUT` | `/commonserviceitem/{id}/simplemq/rotate-apikey` | Rotate the queue API key |
+| `DELETE` | `/commonserviceitem/{id}/simplemq/messages` | Clear all messages in a queue |
+
+Control plane endpoints use HTTP Basic authentication (the SAKURA Cloud access
+token / secret). The mock accepts any non-empty credentials and does not validate
+them against `--api-key`.
+
+> **Note:** `rotate-apikey` returns a freshly generated key but the mock does not
+> enforce per-queue keys on the data plane, so the rotated key has no effect on
+> message API authentication.
 
 ## Storage Backends
 

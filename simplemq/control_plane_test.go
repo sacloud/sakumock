@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -31,16 +32,37 @@ func newTestQueueClient(t *testing.T, serverURL string) *queue.Client {
 	return client
 }
 
-func TestCreateAndGetQueue(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+// controlPlaneBackends enumerates the storage backends every control plane test
+// runs against, so the SQLite-backed implementation is exercised alongside the
+// in-memory one.
+var controlPlaneBackends = []struct {
+	name   string
+	config func(t *testing.T) simplemq.Config
+}{
+	{"memory", func(t *testing.T) simplemq.Config { return simplemq.Config{} }},
+	{"sqlite", func(t *testing.T) simplemq.Config {
+		return simplemq.Config{Database: filepath.Join(t.TempDir(), "test.db")}
+	}},
+}
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
+// eachBackend runs fn as a subtest against every storage backend.
+func eachBackend(t *testing.T, fn func(t *testing.T, srv *simplemq.Server)) {
+	t.Helper()
+	for _, b := range controlPlaneBackends {
+		t.Run(b.name, func(t *testing.T) {
+			srv := simplemq.NewTestServer(b.config(t))
+			defer srv.Close()
+			fn(t, srv)
+		})
+	}
+}
 
+// createQueue is a helper that creates a queue and returns its resource ID.
+func createQueue(t *testing.T, ctx context.Context, client *queue.Client, name string) string {
+	t.Helper()
 	res, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
 		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "test-queue-1",
+			Name:     queue.QueueName(name),
 			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
 		},
 	})
@@ -51,482 +73,465 @@ func TestCreateAndGetQueue(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected CreateQueueCreated, got %T", res)
 	}
-	csi := created.CommonServiceItem
-	if csi.Name != "test-queue-1" {
-		t.Errorf("expected Name=test-queue-1, got %s", csi.Name)
-	}
-	if csi.Status.GetQueueName() != "test-queue-1" {
-		t.Errorf("expected Status.QueueName=test-queue-1, got %s", csi.Status.GetQueueName())
-	}
-	if csi.ServiceClass != "cloud/simplemq/1" {
-		t.Errorf("expected ServiceClass=cloud/simplemq/1, got %s", csi.ServiceClass)
-	}
-	if csi.Availability != "available" {
-		t.Errorf("expected Availability=available, got %s", csi.Availability)
-	}
+	return simplemqsdk.GetQueueID(&created.CommonServiceItem)
+}
 
-	id := simplemqsdk.GetQueueID(&csi)
+func TestCreateAndGetQueue(t *testing.T) {
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	// GetQueue
-	getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
-	if err != nil {
-		t.Fatalf("GetQueue failed: %v", err)
-	}
-	got, ok := getRes.(*queue.GetQueueOK)
-	if !ok {
-		t.Fatalf("expected GetQueueOK, got %T", getRes)
-	}
-	if simplemqsdk.GetQueueID(&got.CommonServiceItem) != id {
-		t.Errorf("expected ID=%s, got %s", id, simplemqsdk.GetQueueID(&got.CommonServiceItem))
-	}
+		res, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
+			CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
+				Name:     "test-queue-1",
+				Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
+			},
+		})
+		if err != nil {
+			t.Fatalf("CreateQueue failed: %v", err)
+		}
+		created, ok := res.(*queue.CreateQueueCreated)
+		if !ok {
+			t.Fatalf("expected CreateQueueCreated, got %T", res)
+		}
+		csi := created.CommonServiceItem
+		if csi.Name != "test-queue-1" {
+			t.Errorf("expected Name=test-queue-1, got %s", csi.Name)
+		}
+		if csi.Status.GetQueueName() != "test-queue-1" {
+			t.Errorf("expected Status.QueueName=test-queue-1, got %s", csi.Status.GetQueueName())
+		}
+		if csi.ServiceClass != "cloud/simplemq/1" {
+			t.Errorf("expected ServiceClass=cloud/simplemq/1, got %s", csi.ServiceClass)
+		}
+		if csi.Availability != "available" {
+			t.Errorf("expected Availability=available, got %s", csi.Availability)
+		}
+
+		id := simplemqsdk.GetQueueID(&csi)
+
+		// GetQueue
+		getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
+		if err != nil {
+			t.Fatalf("GetQueue failed: %v", err)
+		}
+		got, ok := getRes.(*queue.GetQueueOK)
+		if !ok {
+			t.Fatalf("expected GetQueueOK, got %T", getRes)
+		}
+		if simplemqsdk.GetQueueID(&got.CommonServiceItem) != id {
+			t.Errorf("expected ID=%s, got %s", id, simplemqsdk.GetQueueID(&got.CommonServiceItem))
+		}
+	})
 }
 
 func TestGetQueueNotFound(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	res, err := client.GetQueue(ctx, queue.GetQueueParams{ID: "999999999999"})
-	if err != nil {
-		t.Fatalf("GetQueue request failed: %v", err)
-	}
-	if _, ok := res.(*queue.GetQueueNotFound); !ok {
-		t.Fatalf("expected GetQueueNotFound, got %T", res)
-	}
+		res, err := client.GetQueue(ctx, queue.GetQueueParams{ID: "999999999999"})
+		if err != nil {
+			t.Fatalf("GetQueue request failed: %v", err)
+		}
+		if _, ok := res.(*queue.GetQueueNotFound); !ok {
+			t.Fatalf("expected GetQueueNotFound, got %T", res)
+		}
+	})
 }
 
 func TestCreateQueueConflict(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
+		req := &queue.CreateQueueRequest{
+			CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
+				Name:     "conflict-queue",
+				Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
+			},
+		}
 
-	req := &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "conflict-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
-	}
+		if _, err := client.CreateQueue(ctx, req); err != nil {
+			t.Fatalf("first CreateQueue failed: %v", err)
+		}
 
-	if _, err := client.CreateQueue(ctx, req); err != nil {
-		t.Fatalf("first CreateQueue failed: %v", err)
-	}
-
-	res, err := client.CreateQueue(ctx, req)
-	if err != nil {
-		t.Fatalf("second CreateQueue request failed: %v", err)
-	}
-	if _, ok := res.(*queue.CreateQueueConflict); !ok {
-		t.Fatalf("expected CreateQueueConflict, got %T", res)
-	}
+		res, err := client.CreateQueue(ctx, req)
+		if err != nil {
+			t.Fatalf("second CreateQueue request failed: %v", err)
+		}
+		if _, ok := res.(*queue.CreateQueueConflict); !ok {
+			t.Fatalf("expected CreateQueueConflict, got %T", res)
+		}
+	})
 }
 
 func TestListQueues(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	for i := range 3 {
-		name := fmt.Sprintf("list-queue-%d", i)
-		if _, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
-			CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-				Name:     queue.QueueName(name),
-				Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-			},
-		}); err != nil {
-			t.Fatalf("CreateQueue %s failed: %v", name, err)
+		for i := range 3 {
+			createQueue(t, ctx, client, fmt.Sprintf("list-queue-%d", i))
 		}
-	}
 
-	res, err := client.GetQueues(ctx)
-	if err != nil {
-		t.Fatalf("GetQueues failed: %v", err)
-	}
-	got, ok := res.(*queue.GetQueuesOK)
-	if !ok {
-		t.Fatalf("expected GetQueuesOK, got %T", res)
-	}
-	if len(got.CommonServiceItems) != 3 {
-		t.Errorf("expected 3 queues, got %d", len(got.CommonServiceItems))
-	}
+		res, err := client.GetQueues(ctx)
+		if err != nil {
+			t.Fatalf("GetQueues failed: %v", err)
+		}
+		got, ok := res.(*queue.GetQueuesOK)
+		if !ok {
+			t.Fatalf("expected GetQueuesOK, got %T", res)
+		}
+		if len(got.CommonServiceItems) != 3 {
+			t.Errorf("expected 3 queues, got %d", len(got.CommonServiceItems))
+		}
+	})
 }
 
 func TestConfigQueue(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
+		id := createQueue(t, ctx, client, "config-queue")
 
-	createRes, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "config-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
-	})
-	if err != nil {
-		t.Fatalf("CreateQueue failed: %v", err)
-	}
-	id := simplemqsdk.GetQueueID(&createRes.(*queue.CreateQueueCreated).CommonServiceItem)
-
-	configRes, err := client.ConfigQueue(ctx, &queue.ConfigQueueRequest{
-		CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
-			Settings: queue.Settings{
-				VisibilityTimeoutSeconds: 60,
-				ExpireSeconds:            86400,
+		configRes, err := client.ConfigQueue(ctx, &queue.ConfigQueueRequest{
+			CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
+				Settings: queue.Settings{
+					VisibilityTimeoutSeconds: 60,
+					ExpireSeconds:            86400,
+				},
 			},
-		},
-	}, queue.ConfigQueueParams{ID: id})
-	if err != nil {
-		t.Fatalf("ConfigQueue failed: %v", err)
-	}
-	updated, ok := configRes.(*queue.ConfigQueueOK)
-	if !ok {
-		t.Fatalf("expected ConfigQueueOK, got %T", configRes)
-	}
-	if updated.CommonServiceItem.Settings.GetVisibilityTimeoutSeconds() != 60 {
-		t.Errorf("expected VisibilityTimeoutSeconds=60, got %d", updated.CommonServiceItem.Settings.GetVisibilityTimeoutSeconds())
-	}
-	if updated.CommonServiceItem.Settings.GetExpireSeconds() != 86400 {
-		t.Errorf("expected ExpireSeconds=86400, got %d", updated.CommonServiceItem.Settings.GetExpireSeconds())
-	}
+		}, queue.ConfigQueueParams{ID: id})
+		if err != nil {
+			t.Fatalf("ConfigQueue failed: %v", err)
+		}
+		updated, ok := configRes.(*queue.ConfigQueueOK)
+		if !ok {
+			t.Fatalf("expected ConfigQueueOK, got %T", configRes)
+		}
+		if updated.CommonServiceItem.Settings.GetVisibilityTimeoutSeconds() != 60 {
+			t.Errorf("expected VisibilityTimeoutSeconds=60, got %d", updated.CommonServiceItem.Settings.GetVisibilityTimeoutSeconds())
+		}
+		if updated.CommonServiceItem.Settings.GetExpireSeconds() != 86400 {
+			t.Errorf("expected ExpireSeconds=86400, got %d", updated.CommonServiceItem.Settings.GetExpireSeconds())
+		}
+
+		// The change must survive a round-trip read (important for SQLite).
+		getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
+		if err != nil {
+			t.Fatalf("GetQueue failed: %v", err)
+		}
+		gotSettings := getRes.(*queue.GetQueueOK).CommonServiceItem.Settings
+		if gotSettings.GetVisibilityTimeoutSeconds() != 60 || gotSettings.GetExpireSeconds() != 86400 {
+			t.Errorf("settings not persisted: got vt=%d exp=%d", gotSettings.GetVisibilityTimeoutSeconds(), gotSettings.GetExpireSeconds())
+		}
+	})
 }
 
 func TestConfigQueueNotFound(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	res, err := client.ConfigQueue(ctx, &queue.ConfigQueueRequest{
-		CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
-			Settings: queue.Settings{VisibilityTimeoutSeconds: 30, ExpireSeconds: 3600},
-		},
-	}, queue.ConfigQueueParams{ID: "999999999999"})
-	if err != nil {
-		t.Fatalf("ConfigQueue request failed: %v", err)
-	}
-	if _, ok := res.(*queue.ConfigQueueNotFound); !ok {
-		t.Fatalf("expected ConfigQueueNotFound, got %T", res)
-	}
+		res, err := client.ConfigQueue(ctx, &queue.ConfigQueueRequest{
+			CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
+				Settings: queue.Settings{VisibilityTimeoutSeconds: 30, ExpireSeconds: 3600},
+			},
+		}, queue.ConfigQueueParams{ID: "999999999999"})
+		if err != nil {
+			t.Fatalf("ConfigQueue request failed: %v", err)
+		}
+		if _, ok := res.(*queue.ConfigQueueNotFound); !ok {
+			t.Fatalf("expected ConfigQueueNotFound, got %T", res)
+		}
+	})
 }
 
 func TestDeleteQueue(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
+		id := createQueue(t, ctx, client, "delete-queue")
 
-	createRes, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "delete-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
+		delRes, err := client.DeleteQueue(ctx, queue.DeleteQueueParams{ID: id})
+		if err != nil {
+			t.Fatalf("DeleteQueue failed: %v", err)
+		}
+		if _, ok := delRes.(*queue.DeleteQueueOK); !ok {
+			t.Fatalf("expected DeleteQueueOK, got %T", delRes)
+		}
+
+		// Queue should no longer exist
+		getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
+		if err != nil {
+			t.Fatalf("GetQueue request failed: %v", err)
+		}
+		if _, ok := getRes.(*queue.GetQueueNotFound); !ok {
+			t.Fatalf("expected GetQueueNotFound after delete, got %T", getRes)
+		}
 	})
-	if err != nil {
-		t.Fatalf("CreateQueue failed: %v", err)
-	}
-	id := simplemqsdk.GetQueueID(&createRes.(*queue.CreateQueueCreated).CommonServiceItem)
+}
 
-	delRes, err := client.DeleteQueue(ctx, queue.DeleteQueueParams{ID: id})
-	if err != nil {
-		t.Fatalf("DeleteQueue failed: %v", err)
-	}
-	if _, ok := delRes.(*queue.DeleteQueueOK); !ok {
-		t.Fatalf("expected DeleteQueueOK, got %T", delRes)
-	}
+func TestDeleteQueueRemovesMessages(t *testing.T) {
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		cpClient := newTestQueueClient(t, srv.TestURL())
+		dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
 
-	// Queue should no longer exist
-	getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
-	if err != nil {
-		t.Fatalf("GetQueue request failed: %v", err)
-	}
-	if _, ok := getRes.(*queue.GetQueueNotFound); !ok {
-		t.Fatalf("expected GetQueueNotFound after delete, got %T", getRes)
-	}
+		const queueName = "purge-queue"
+		id := createQueue(t, ctx, cpClient, queueName)
+
+		content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
+		if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: queueName}); err != nil {
+			t.Fatalf("SendMessage failed: %v", err)
+		}
+
+		if _, err := cpClient.DeleteQueue(ctx, queue.DeleteQueueParams{ID: id}); err != nil {
+			t.Fatalf("DeleteQueue failed: %v", err)
+		}
+
+		// Recreate with the same name; messages from the deleted queue must not linger.
+		newID := createQueue(t, ctx, cpClient, queueName)
+		countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: newID})
+		if err != nil {
+			t.Fatalf("GetMessageCount failed: %v", err)
+		}
+		if c := countRes.(*queue.GetMessageCountOK).SimpleMQ.GetCount(); c != 0 {
+			t.Errorf("expected 0 messages after queue delete+recreate, got %d", c)
+		}
+	})
 }
 
 func TestDeleteQueueNotFound(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	res, err := client.DeleteQueue(ctx, queue.DeleteQueueParams{ID: "999999999999"})
-	if err != nil {
-		t.Fatalf("DeleteQueue request failed: %v", err)
-	}
-	if _, ok := res.(*queue.DeleteQueueNotFound); !ok {
-		t.Fatalf("expected DeleteQueueNotFound, got %T", res)
-	}
+		res, err := client.DeleteQueue(ctx, queue.DeleteQueueParams{ID: "999999999999"})
+		if err != nil {
+			t.Fatalf("DeleteQueue request failed: %v", err)
+		}
+		if _, ok := res.(*queue.DeleteQueueNotFound); !ok {
+			t.Fatalf("expected DeleteQueueNotFound, got %T", res)
+		}
+	})
 }
 
 func TestGetMessageCount(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		cpClient := newTestQueueClient(t, srv.TestURL())
+		dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
 
-	ctx := t.Context()
-	cpClient := newTestQueueClient(t, srv.TestURL())
-	dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
+		id := createQueue(t, ctx, cpClient, "count-queue")
 
-	// Create queue via control plane
-	createRes, err := cpClient.CreateQueue(ctx, &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "count-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
-	})
-	if err != nil {
-		t.Fatalf("CreateQueue failed: %v", err)
-	}
-	id := simplemqsdk.GetQueueID(&createRes.(*queue.CreateQueueCreated).CommonServiceItem)
-
-	// Count before sending (should be 0)
-	countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
-	if err != nil {
-		t.Fatalf("GetMessageCount failed: %v", err)
-	}
-	countOK, ok := countRes.(*queue.GetMessageCountOK)
-	if !ok {
-		t.Fatalf("expected GetMessageCountOK, got %T", countRes)
-	}
-	if countOK.SimpleMQ.GetCount() != 0 {
-		t.Errorf("expected count=0, got %d", countOK.SimpleMQ.GetCount())
-	}
-
-	// Send 3 messages via data plane
-	content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
-	for range 3 {
-		if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "count-queue"}); err != nil {
-			t.Fatalf("SendMessage failed: %v", err)
+		// Count before sending (should be 0)
+		countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
+		if err != nil {
+			t.Fatalf("GetMessageCount failed: %v", err)
 		}
-	}
+		countOK, ok := countRes.(*queue.GetMessageCountOK)
+		if !ok {
+			t.Fatalf("expected GetMessageCountOK, got %T", countRes)
+		}
+		if countOK.SimpleMQ.GetCount() != 0 {
+			t.Errorf("expected count=0, got %d", countOK.SimpleMQ.GetCount())
+		}
 
-	// Count after sending (should be 3)
-	countRes2, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
-	if err != nil {
-		t.Fatalf("GetMessageCount failed: %v", err)
-	}
-	countOK2 := countRes2.(*queue.GetMessageCountOK)
-	if countOK2.SimpleMQ.GetCount() != 3 {
-		t.Errorf("expected count=3, got %d", countOK2.SimpleMQ.GetCount())
-	}
+		// Send 3 messages via data plane
+		content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
+		for range 3 {
+			if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "count-queue"}); err != nil {
+				t.Fatalf("SendMessage failed: %v", err)
+			}
+		}
+
+		// Count after sending (should be 3)
+		countRes2, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
+		if err != nil {
+			t.Fatalf("GetMessageCount failed: %v", err)
+		}
+		countOK2 := countRes2.(*queue.GetMessageCountOK)
+		if countOK2.SimpleMQ.GetCount() != 3 {
+			t.Errorf("expected count=3, got %d", countOK2.SimpleMQ.GetCount())
+		}
+	})
 }
 
 func TestGetMessageCountNotFound(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	res, err := client.GetMessageCount(ctx, queue.GetMessageCountParams{ID: "999999999999"})
-	if err != nil {
-		t.Fatalf("GetMessageCount request failed: %v", err)
-	}
-	if _, ok := res.(*queue.GetMessageCountNotFound); !ok {
-		t.Fatalf("expected GetMessageCountNotFound, got %T", res)
-	}
+		res, err := client.GetMessageCount(ctx, queue.GetMessageCountParams{ID: "999999999999"})
+		if err != nil {
+			t.Fatalf("GetMessageCount request failed: %v", err)
+		}
+		if _, ok := res.(*queue.GetMessageCountNotFound); !ok {
+			t.Fatalf("expected GetMessageCountNotFound, got %T", res)
+		}
+	})
 }
 
 func TestRotateAPIKey(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
+		id := createQueue(t, ctx, client, "rotate-queue")
 
-	createRes, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "rotate-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
+		rotateRes, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
+		if err != nil {
+			t.Fatalf("RotateAPIKey failed: %v", err)
+		}
+		rotateOK, ok := rotateRes.(*queue.RotateAPIKeyOK)
+		if !ok {
+			t.Fatalf("expected RotateAPIKeyOK, got %T", rotateRes)
+		}
+		if rotateOK.SimpleMQ.GetApikey() == "" {
+			t.Error("expected non-empty apikey")
+		}
+
+		// Rotate again should return a different key
+		rotateRes2, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
+		if err != nil {
+			t.Fatalf("second RotateAPIKey failed: %v", err)
+		}
+		rotateOK2 := rotateRes2.(*queue.RotateAPIKeyOK)
+		if rotateOK2.SimpleMQ.GetApikey() == rotateOK.SimpleMQ.GetApikey() {
+			t.Error("expected different API key after second rotation")
+		}
 	})
-	if err != nil {
-		t.Fatalf("CreateQueue failed: %v", err)
-	}
-	id := simplemqsdk.GetQueueID(&createRes.(*queue.CreateQueueCreated).CommonServiceItem)
-
-	rotateRes, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
-	if err != nil {
-		t.Fatalf("RotateAPIKey failed: %v", err)
-	}
-	rotateOK, ok := rotateRes.(*queue.RotateAPIKeyOK)
-	if !ok {
-		t.Fatalf("expected RotateAPIKeyOK, got %T", rotateRes)
-	}
-	if rotateOK.SimpleMQ.GetApikey() == "" {
-		t.Error("expected non-empty apikey")
-	}
-
-	// Rotate again should return a different key
-	rotateRes2, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
-	if err != nil {
-		t.Fatalf("second RotateAPIKey failed: %v", err)
-	}
-	rotateOK2 := rotateRes2.(*queue.RotateAPIKeyOK)
-	if rotateOK2.SimpleMQ.GetApikey() == rotateOK.SimpleMQ.GetApikey() {
-		t.Error("expected different API key after second rotation")
-	}
 }
 
 func TestRotateAPIKeyNotFound(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	res, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: "999999999999"})
-	if err != nil {
-		t.Fatalf("RotateAPIKey request failed: %v", err)
-	}
-	if _, ok := res.(*queue.RotateAPIKeyNotFound); !ok {
-		t.Fatalf("expected RotateAPIKeyNotFound, got %T", res)
-	}
+		res, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: "999999999999"})
+		if err != nil {
+			t.Fatalf("RotateAPIKey request failed: %v", err)
+		}
+		if _, ok := res.(*queue.RotateAPIKeyNotFound); !ok {
+			t.Fatalf("expected RotateAPIKeyNotFound, got %T", res)
+		}
+	})
 }
 
 func TestClearMessages(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		cpClient := newTestQueueClient(t, srv.TestURL())
+		dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
 
-	ctx := t.Context()
-	cpClient := newTestQueueClient(t, srv.TestURL())
-	dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
+		id := createQueue(t, ctx, cpClient, "clear-queue")
 
-	createRes, err := cpClient.CreateQueue(ctx, &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "clear-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
-	})
-	if err != nil {
-		t.Fatalf("CreateQueue failed: %v", err)
-	}
-	id := simplemqsdk.GetQueueID(&createRes.(*queue.CreateQueueCreated).CommonServiceItem)
-
-	// Send 2 messages
-	content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
-	for range 2 {
-		if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "clear-queue"}); err != nil {
-			t.Fatalf("SendMessage failed: %v", err)
+		// Send 2 messages
+		content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
+		for range 2 {
+			if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "clear-queue"}); err != nil {
+				t.Fatalf("SendMessage failed: %v", err)
+			}
 		}
-	}
 
-	// Clear messages
-	clearRes, err := cpClient.ClearQueue(ctx, queue.ClearQueueParams{ID: id})
-	if err != nil {
-		t.Fatalf("ClearQueue failed: %v", err)
-	}
-	if _, ok := clearRes.(*queue.ClearQueueOK); !ok {
-		t.Fatalf("expected ClearQueueOK, got %T", clearRes)
-	}
+		// Clear messages
+		clearRes, err := cpClient.ClearQueue(ctx, queue.ClearQueueParams{ID: id})
+		if err != nil {
+			t.Fatalf("ClearQueue failed: %v", err)
+		}
+		if _, ok := clearRes.(*queue.ClearQueueOK); !ok {
+			t.Fatalf("expected ClearQueueOK, got %T", clearRes)
+		}
 
-	// Count should be 0
-	countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
-	if err != nil {
-		t.Fatalf("GetMessageCount failed: %v", err)
-	}
-	countOK := countRes.(*queue.GetMessageCountOK)
-	if countOK.SimpleMQ.GetCount() != 0 {
-		t.Errorf("expected count=0 after clear, got %d", countOK.SimpleMQ.GetCount())
-	}
+		// Count should be 0
+		countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
+		if err != nil {
+			t.Fatalf("GetMessageCount failed: %v", err)
+		}
+		countOK := countRes.(*queue.GetMessageCountOK)
+		if countOK.SimpleMQ.GetCount() != 0 {
+			t.Errorf("expected count=0 after clear, got %d", countOK.SimpleMQ.GetCount())
+		}
+	})
 }
 
 func TestClearMessagesNotFound(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
 
-	ctx := t.Context()
-	client := newTestQueueClient(t, srv.TestURL())
-
-	res, err := client.ClearQueue(ctx, queue.ClearQueueParams{ID: "999999999999"})
-	if err != nil {
-		t.Fatalf("ClearQueue request failed: %v", err)
-	}
-	if _, ok := res.(*queue.ClearQueueNotFound); !ok {
-		t.Fatalf("expected ClearQueueNotFound, got %T", res)
-	}
+		res, err := client.ClearQueue(ctx, queue.ClearQueueParams{ID: "999999999999"})
+		if err != nil {
+			t.Fatalf("ClearQueue request failed: %v", err)
+		}
+		if _, ok := res.(*queue.ClearQueueNotFound); !ok {
+			t.Fatalf("expected ClearQueueNotFound, got %T", res)
+		}
+	})
 }
 
 func TestControlPlaneUnauthorized(t *testing.T) {
-	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		// Empty credentials should fail
+		noAuthClient, err := queue.NewClient(srv.TestURL(), &testQueueSecuritySource{username: "", password: ""})
+		if err != nil {
+			t.Fatalf("failed to create client: %v", err)
+		}
 
-	ctx := t.Context()
-	// Empty credentials should fail
-	noAuthClient, err := queue.NewClient(srv.TestURL(), &testQueueSecuritySource{username: "", password: ""})
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-
-	res, err := noAuthClient.GetQueues(ctx)
-	if err != nil {
-		t.Fatalf("GetQueues request failed: %v", err)
-	}
-	if _, ok := res.(*queue.GetQueuesUnauthorized); !ok {
-		t.Fatalf("expected GetQueuesUnauthorized, got %T", res)
-	}
+		res, err := noAuthClient.GetQueues(ctx)
+		if err != nil {
+			t.Fatalf("GetQueues request failed: %v", err)
+		}
+		if _, ok := res.(*queue.GetQueuesUnauthorized); !ok {
+			t.Fatalf("expected GetQueuesUnauthorized, got %T", res)
+		}
+	})
 }
 
 func TestConfigQueueSettingsAffectDataPlane(t *testing.T) {
 	// Verify that updating queue settings via control plane changes data plane behavior.
-	srv := simplemq.NewTestServer(simplemq.Config{VisibilityTimeout: 30 * time.Second})
-	defer srv.Close()
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		cpClient := newTestQueueClient(t, srv.TestURL())
+		dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
 
-	ctx := t.Context()
-	cpClient := newTestQueueClient(t, srv.TestURL())
-	dpClient := newTestClient(t, srv.TestURL(), "test-api-key")
+		id := createQueue(t, ctx, cpClient, "settings-queue")
 
-	// Create queue
-	createRes, err := cpClient.CreateQueue(ctx, &queue.CreateQueueRequest{
-		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
-			Name:     "settings-queue",
-			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
-		},
+		// Set very long visibility timeout (900s)
+		if _, err := cpClient.ConfigQueue(ctx, &queue.ConfigQueueRequest{
+			CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
+				Settings: queue.Settings{VisibilityTimeoutSeconds: 900, ExpireSeconds: 345600},
+			},
+		}, queue.ConfigQueueParams{ID: id}); err != nil {
+			t.Fatalf("ConfigQueue failed: %v", err)
+		}
+
+		// Send and receive — the received message should have a ~900s visibility timeout
+		content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("test")))
+		if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "settings-queue"}); err != nil {
+			t.Fatalf("SendMessage failed: %v", err)
+		}
+
+		recvRes, err := dpClient.ReceiveMessage(ctx, message.ReceiveMessageParams{QueueName: "settings-queue"})
+		if err != nil {
+			t.Fatalf("ReceiveMessage failed: %v", err)
+		}
+		recvOK := recvRes.(*message.ReceiveMessageOK)
+		if len(recvOK.Messages) != 1 {
+			t.Fatalf("expected 1 message, got %d", len(recvOK.Messages))
+		}
+		msg := recvOK.Messages[0]
+		// visibility_timeout_at should be ~900s from now (not 30s)
+		now := time.Now()
+		timeoutAt := time.UnixMilli(msg.VisibilityTimeoutAt)
+		elapsed := timeoutAt.Sub(now)
+		if elapsed < 800*time.Second {
+			t.Errorf("expected visibility timeout ~900s, got ~%.0fs", elapsed.Seconds())
+		}
 	})
-	if err != nil {
-		t.Fatalf("CreateQueue failed: %v", err)
-	}
-	id := simplemqsdk.GetQueueID(&createRes.(*queue.CreateQueueCreated).CommonServiceItem)
-
-	// Set very long visibility timeout (900s)
-	if _, err := cpClient.ConfigQueue(ctx, &queue.ConfigQueueRequest{
-		CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
-			Settings: queue.Settings{VisibilityTimeoutSeconds: 900, ExpireSeconds: 345600},
-		},
-	}, queue.ConfigQueueParams{ID: id}); err != nil {
-		t.Fatalf("ConfigQueue failed: %v", err)
-	}
-
-	// Send and receive — the received message should have a ~900s visibility timeout
-	content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("test")))
-	if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "settings-queue"}); err != nil {
-		t.Fatalf("SendMessage failed: %v", err)
-	}
-
-	recvRes, err := dpClient.ReceiveMessage(ctx, message.ReceiveMessageParams{QueueName: "settings-queue"})
-	if err != nil {
-		t.Fatalf("ReceiveMessage failed: %v", err)
-	}
-	recvOK := recvRes.(*message.ReceiveMessageOK)
-	if len(recvOK.Messages) != 1 {
-		t.Fatalf("expected 1 message, got %d", len(recvOK.Messages))
-	}
-	msg := recvOK.Messages[0]
-	// visibility_timeout_at should be ~900s from now (not 30s)
-	now := time.Now()
-	timeoutAt := time.UnixMilli(msg.VisibilityTimeoutAt)
-	elapsed := timeoutAt.Sub(now)
-	if elapsed < 800*time.Second {
-		t.Errorf("expected visibility timeout ~900s, got ~%.0fs", elapsed.Seconds())
-	}
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -334,14 +333,24 @@ func (s *SQLiteStore) CreateQueue(name, description string, tags []string, vtSec
 	nowMilli := now.UnixMilli()
 
 	err = s.withTx(context.Background(), func(tx *sql.Tx) error {
-		_, err := tx.Exec(
-			`INSERT INTO queues (id, name, description, tags, visibility_timeout_seconds, expire_seconds, api_key, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		// ON CONFLICT(name) DO NOTHING leaves a duplicate-name insert as a
+		// no-op (0 rows affected), so we detect conflicts via RowsAffected
+		// instead of matching a driver-specific error string.
+		res, err := tx.Exec(
+			`INSERT INTO queues (id, name, description, tags, visibility_timeout_seconds, expire_seconds, api_key, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(name) DO NOTHING`,
 			id, name, description, string(tagsJSON), vtSecs, expSecs, "", nowMilli, nowMilli,
 		)
-		if err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		if err != nil {
+			return fmt.Errorf("failed to insert queue: %w", err)
+		}
+		affected, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
 			return ErrQueueConflict
 		}
-		return err
+		return nil
 	})
 	if err != nil {
 		return storedQueue{}, err

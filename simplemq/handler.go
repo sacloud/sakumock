@@ -2,6 +2,7 @@ package simplemq
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -80,9 +81,18 @@ func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		if s.strict {
 			// The token must match the API key issued for an existing queue
-			// (via rotate-apikey). A missing queue or unissued key is rejected.
+			// (via rotate-apikey). A missing queue or unissued key is rejected
+			// as unauthorized; other store errors are surfaced as 500.
 			q, err := s.store.GetQueueByName(r.PathValue("queueName"))
-			if err != nil || q.APIKey == "" || token != q.APIKey {
+			if err != nil {
+				if errors.Is(err, ErrQueueNotFound) {
+					writeError(w, http.StatusUnauthorized, "invalid api key")
+					return
+				}
+				writeError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if q.APIKey == "" || token != q.APIKey {
 				writeError(w, http.StatusUnauthorized, "invalid api key")
 				return
 			}

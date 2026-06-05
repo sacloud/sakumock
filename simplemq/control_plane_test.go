@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -121,6 +122,38 @@ func TestCreateAndGetQueue(t *testing.T) {
 		}
 		if simplemqsdk.GetQueueID(&got.CommonServiceItem) != id {
 			t.Errorf("expected ID=%s, got %s", id, simplemqsdk.GetQueueID(&got.CommonServiceItem))
+		}
+	})
+}
+
+func TestQueueIDFormat(t *testing.T) {
+	// Generated IDs must be realistic 12-digit values with no leading zeros so
+	// they round-trip through clients that parse the oneOf string|int ID as an
+	// integer (re-formatting an int must yield the same string).
+	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
+		ctx := t.Context()
+		client := newTestQueueClient(t, srv.TestURL())
+
+		id := createQueue(t, ctx, client, "id-format-queue")
+
+		n, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			t.Fatalf("queue ID %q is not numeric: %v", id, err)
+		}
+		if got := strconv.FormatInt(n, 10); got != id {
+			t.Errorf("queue ID %q does not round-trip as integer (got %q)", id, got)
+		}
+		if n < 100000000000 {
+			t.Errorf("expected a 12-digit queue ID, got %q", id)
+		}
+
+		// The integer form must still resolve via GetQueue.
+		getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: strconv.FormatInt(n, 10)})
+		if err != nil {
+			t.Fatalf("GetQueue failed: %v", err)
+		}
+		if _, ok := getRes.(*queue.GetQueueOK); !ok {
+			t.Fatalf("expected GetQueueOK for integer-form ID, got %T", getRes)
 		}
 	})
 }

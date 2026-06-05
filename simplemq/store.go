@@ -8,6 +8,13 @@ import (
 const (
 	defaultVisibilityTimeout = 30 * time.Second
 	defaultMessageExpiration = 4 * 24 * time.Hour
+
+	// queueIDBase is the starting value for generated queue resource IDs.
+	// It is a realistic 12-digit value (matching the spec example
+	// "113700153028") so IDs never carry leading zeros, which would not
+	// round-trip through clients that parse the oneOf string|int ID as an
+	// integer.
+	queueIDBase int64 = 113700000000
 )
 
 var (

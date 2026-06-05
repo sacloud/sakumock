@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -76,13 +77,19 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 		db.Close()
 		return nil, fmt.Errorf("failed to get max queue id: %w", err)
 	}
+	// Resume from the highest persisted ID, but never below the base so a
+	// fresh database starts at a realistic 12-digit value.
+	nextID := queueIDBase
+	if maxID >= nextID {
+		nextID = maxID + 1
+	}
 
 	slog.Info("sqlite store opened", "path", path)
 	s := &SQLiteStore{
 		db:                db,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
-		nextID:            maxID,
+		nextID:            nextID,
 		done:              make(chan struct{}),
 	}
 	go s.compactLoop()
@@ -92,8 +99,9 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 func (s *SQLiteStore) allocateID() string {
 	s.idMu.Lock()
 	defer s.idMu.Unlock()
+	id := s.nextID
 	s.nextID++
-	return fmt.Sprintf("%012d", s.nextID)
+	return strconv.FormatInt(id, 10)
 }
 
 func (s *SQLiteStore) withTx(ctx context.Context, fn func(tx *sql.Tx) error) error {

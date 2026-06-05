@@ -3,6 +3,7 @@ package simplemq
 import (
 	"fmt"
 	"log/slog"
+	"strconv"
 	"sync"
 	"time"
 
@@ -121,7 +122,7 @@ type MemoryStore struct {
 	queues            map[string]*memoryQueue // name → message queue
 	queueResources    map[string]*storedQueue // id → queue resource
 	queueByName       map[string]string       // name → id
-	nextID            int
+	nextID            int64
 	visibilityTimeout time.Duration
 	messageExpiration time.Duration
 	done              chan struct{}
@@ -140,6 +141,7 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryS
 		queues:            make(map[string]*memoryQueue),
 		queueResources:    make(map[string]*storedQueue),
 		queueByName:       make(map[string]string),
+		nextID:            queueIDBase,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
 		done:              make(chan struct{}),
@@ -150,8 +152,9 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryS
 
 // allocateID must be called with s.mu held.
 func (s *MemoryStore) allocateID() string {
+	id := s.nextID
 	s.nextID++
-	return fmt.Sprintf("%012d", s.nextID)
+	return strconv.FormatInt(id, 10)
 }
 
 func (s *MemoryStore) getQueue(name string) *memoryQueue {

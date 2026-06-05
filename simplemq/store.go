@@ -56,6 +56,7 @@ type Store interface {
 	CreateQueue(name, description string, tags []string, visibilityTimeoutSeconds, expireSeconds int, now time.Time) (storedQueue, error)
 	ListQueues() ([]storedQueue, error)
 	GetQueueByID(id string) (storedQueue, error)
+	GetQueueByName(name string) (storedQueue, error)
 	UpdateQueue(id, description string, tags []string, visibilityTimeoutSeconds, expireSeconds int, now time.Time) (storedQueue, error)
 	DeleteQueueByID(id string) error
 	CountMessages(id string, now time.Time) (int, error)

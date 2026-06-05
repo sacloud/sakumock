@@ -298,6 +298,21 @@ func (s *MemoryStore) GetQueueByID(id string) (storedQueue, error) {
 	return *res, nil
 }
 
+func (s *MemoryStore) GetQueueByName(name string) (storedQueue, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	id, ok := s.queueByName[name]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	res, ok := s.queueResources[id]
+	if !ok {
+		return storedQueue{}, ErrQueueNotFound
+	}
+	return *res, nil
+}
+
 func (s *MemoryStore) UpdateQueue(id, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
 	if tags == nil {
 		tags = []string{}

@@ -526,6 +526,73 @@ func TestControlPlaneUnauthorized(t *testing.T) {
 	})
 }
 
+func TestStrictModeDataPlaneAuth(t *testing.T) {
+	// In strict mode the data plane only accepts queues created via the control
+	// plane, authenticated with the API key issued by rotate-apikey.
+	for _, b := range controlPlaneBackends {
+		t.Run(b.name, func(t *testing.T) {
+			cfg := b.config(t)
+			cfg.Strict = true
+			srv := simplemq.NewTestServer(cfg)
+			defer srv.Close()
+
+			ctx := t.Context()
+			cpClient := newTestQueueClient(t, srv.TestURL())
+			const queueName = "strict-queue"
+			id := createQueue(t, ctx, cpClient, queueName)
+
+			content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
+			send := func(token, queue string) message.SendMessageRes {
+				t.Helper()
+				c := newTestClient(t, srv.TestURL(), token)
+				res, err := c.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: message.QueueName(queue)})
+				if err != nil {
+					t.Fatalf("send request failed: %v", err)
+				}
+				return res
+			}
+
+			// Before a key is issued, no token is accepted.
+			if _, ok := send("anything", queueName).(*message.SendMessageUnauthorized); !ok {
+				t.Fatal("expected unauthorized before key issuance")
+			}
+
+			// Issue the key via rotate-apikey.
+			rotateRes, err := cpClient.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
+			if err != nil {
+				t.Fatalf("RotateAPIKey failed: %v", err)
+			}
+			key := rotateRes.(*queue.RotateAPIKeyOK).SimpleMQ.GetApikey()
+
+			// Correct key succeeds.
+			if _, ok := send(key, queueName).(*message.SendMessageOK); !ok {
+				t.Fatal("expected success with issued key")
+			}
+			// Wrong key is rejected.
+			if _, ok := send("wrong-key", queueName).(*message.SendMessageUnauthorized); !ok {
+				t.Fatal("expected unauthorized with wrong key")
+			}
+			// A queue never created via the control plane is rejected even with a valid-looking key.
+			if _, ok := send(key, "ghost-queue").(*message.SendMessageUnauthorized); !ok {
+				t.Fatal("expected unauthorized for queue not created via control plane")
+			}
+
+			// Rotating again invalidates the old key.
+			rotateRes2, err := cpClient.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
+			if err != nil {
+				t.Fatalf("second RotateAPIKey failed: %v", err)
+			}
+			newKey := rotateRes2.(*queue.RotateAPIKeyOK).SimpleMQ.GetApikey()
+			if _, ok := send(key, queueName).(*message.SendMessageUnauthorized); !ok {
+				t.Fatal("expected old key to be rejected after rotation")
+			}
+			if _, ok := send(newKey, queueName).(*message.SendMessageOK); !ok {
+				t.Fatal("expected new key to be accepted after rotation")
+			}
+		})
+	}
+}
+
 func TestConfigQueueSettingsAffectDataPlane(t *testing.T) {
 	// Verify that updating queue settings via control plane changes data plane behavior.
 	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {

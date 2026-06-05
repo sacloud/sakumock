@@ -385,6 +385,11 @@ func (s *SQLiteStore) GetQueueByID(id string) (storedQueue, error) {
 	return scanQueueSingleRow(row)
 }
 
+func (s *SQLiteStore) GetQueueByName(name string) (storedQueue, error) {
+	row := s.db.QueryRow(`SELECT `+selectQueueColumns+` FROM queues WHERE name = ?`, name)
+	return scanQueueSingleRow(row)
+}
+
 func (s *SQLiteStore) UpdateQueue(id, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
 	if tags == nil {
 		tags = []string{}

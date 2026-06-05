@@ -29,6 +29,7 @@ sakumock-simplemq
 | `--latency` | `SIMPLEMQ_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `SIMPLEMQ_RATE_LIMIT` | `0` | Per-queue HTTP rate limit (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SIMPLEMQ_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--strict` | `SIMPLEMQ_STRICT` | `false` | Strict mode: the data plane only accepts queues created via the control plane, authenticated with the queue's issued API key (see [Strict mode](#strict-mode)) |
 | `--debug` | `SIMPLEMQ_DEBUG` | `false` | Enable debug mode |
 
 ```bash
@@ -59,14 +60,13 @@ export SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://localhost:18080
 export SAKURA_ACCESS_TOKEN=dummy
 export SAKURA_ACCESS_TOKEN_SECRET=dummy
 
-# Control plane: manage queue resources
-simplemq-cli queue create myqueue
-simplemq-cli queue list
-
 # Data plane: send/receive messages
 simplemq-cli message send --queue myqueue "Hello!"
 simplemq-cli message receive --queue myqueue
 ```
+
+Queue resources (control plane) can be managed with the SDK's queue client or any
+tool that talks to the `/commonserviceitem` endpoints.
 
 A queue created via the control plane uses the visibility timeout and expiration set
 on it (`configQueue`). For data plane requests to a queue that was never created via
@@ -123,9 +123,25 @@ Control plane endpoints use HTTP Basic authentication (the SAKURA Cloud access
 token / secret). The mock accepts any non-empty credentials and does not validate
 them against `--api-key`.
 
-> **Note:** `rotate-apikey` returns a freshly generated key but the mock does not
-> enforce per-queue keys on the data plane, so the rotated key has no effect on
-> message API authentication.
+## Strict mode
+
+By default the data plane is permissive: queues are created automatically on first
+access and any non-empty Bearer token (or `--api-key`, if set) is accepted. This is
+convenient for quick local testing.
+
+Pass `--strict` to model the real SAKURA Cloud flow instead. In strict mode the data
+plane:
+
+1. Only serves queues that were created via the control plane (`POST /commonserviceitem`); requests to an unknown queue are rejected with `401`.
+2. Authenticates each request with the queue's own API key — the one returned by `rotate-apikey`. A queue has no usable key until `rotate-apikey` is called, and rotating again invalidates the previous key.
+
+`--api-key` is ignored in strict mode (per-queue keys are used instead).
+
+The real-world flow against a strict server is:
+
+1. Create the queue via the control plane (`POST /commonserviceitem`).
+2. Issue the data plane key via `rotate-apikey` (`PUT /commonserviceitem/{id}/simplemq/rotate-apikey`) and keep the returned `apikey`.
+3. Use that `apikey` as the `Authorization: Bearer <apikey>` token for the message API.
 
 ## Storage Backends
 

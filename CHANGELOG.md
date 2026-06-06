@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.2.1](https://github.com/sacloud/sakumock/compare/v0.2.0...v0.2.1) - 2026-06-06
+- ci: publish releases via a draft so assets attach under immutable releases by @fujiwara in https://github.com/sacloud/sakumock/pull/80
+
 ## [v0.2.0](https://github.com/sacloud/sakumock/compare/v0.1.0...v0.2.0) - 2026-06-06
 - Update GitHub Actions to latest pinned versions by @fujiwara in https://github.com/sacloud/sakumock/pull/64
 - Let tagpr create the GitHub Release with generated notes by @fujiwara in https://github.com/sacloud/sakumock/pull/66

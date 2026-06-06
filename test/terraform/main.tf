@@ -19,12 +19,23 @@ resource "sakura_kms" "test" {
 }
 
 resource "sakura_simple_mq" "test" {
-  name = "sakumock-tf-queue"
+  name                       = "sakumock-tf-queue"
+  description                = "description"
+  tags                       = ["tag1"]
+  visibility_timeout_seconds = 60
+  expire_seconds             = 3600
 }
 
 resource "sakura_secret_manager" "test" {
   name       = "sakumock-tf-vault"
   kms_key_id = sakura_kms.test.id
+}
+
+resource "sakura_secret_manager_secret" "test" {
+  name             = "foobar"
+  vault_id         = sakura_secret_manager.test.id
+  value_wo         = "secret value!"
+  value_wo_version = 1
 }
 
 resource "sakura_simple_notification_destination" "test" {

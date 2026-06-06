@@ -1,0 +1,6 @@
+# Terraform artifacts from running `terraform` manually in this directory.
+# The automated test copies main.tf into a temp dir, so these never matter to it.
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*

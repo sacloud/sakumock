@@ -45,7 +45,7 @@ All services are also aggregated into a single `sakumock` binary built from the 
 
 ### Port allocation
 
-Sequential from 18080. Next available: 18084.
+Sequential from 18080. Next available: 18085. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite.)
 
 ### Resource ID generation
 

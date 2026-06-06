@@ -1,0 +1,7 @@
+[tagpr]
+	releaseBranch = main
+	versionFile = monitoringsuite/version.go
+	tagPrefix = monitoringsuite/
+	vPrefix = true
+	majorLabels = sacloud-major
+	minorLabels = sacloud-minor

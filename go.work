@@ -4,6 +4,7 @@ use (
 	./
 	./core
 	./kms
+	./monitoringsuite
 	./secretmanager
 	./simplemq
 	./simplenotification

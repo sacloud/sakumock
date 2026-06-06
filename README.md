@@ -14,8 +14,9 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [secretmanager](secretmanager/) | 18082 | `github.com/sacloud/sakumock/secretmanager` | SecretManager API |
 | [kms](kms/) | 18081 | `github.com/sacloud/sakumock/kms` | KMS key management API |
 | [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
+| [monitoringsuite](monitoringsuite/) | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
 
-New services should use the next available port in sequence (18084, 18085, ...).
+New services should use the next available port in sequence (18085, 18086, ...).
 
 ## Quick Start
 
@@ -38,6 +39,7 @@ sakumock simplemq &
 sakumock secretmanager &
 sakumock kms &
 sakumock simplenotification &
+sakumock monitoringsuite &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` (or `sakumock all --help`) for flags. Under `all`, per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
@@ -86,6 +88,8 @@ export SAKURA_ENDPOINTS_SECRETMANAGER=http://localhost:18082
 export SAKURA_ENDPOINTS_KMS=http://localhost:18081
 # Simple Notification
 export SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=http://localhost:18083
+# Monitoring Suite
+export SAKURA_ENDPOINTS_MONITORING_SUITE=http://localhost:18084
 
 # Dummy credentials (required by SDK, not validated by mock)
 export SAKURA_ACCESS_TOKEN=dummy

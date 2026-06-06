@@ -16,6 +16,7 @@ func newTestAllCmd() *AllCmd {
 	c.Kms.Addr = "127.0.0.1:18081"
 	c.Secretmanager.Addr = "127.0.0.1:18082"
 	c.Simplenotification.Addr = "127.0.0.1:18083"
+	c.Monitoringsuite.Addr = "127.0.0.1:18084"
 	return c
 }
 
@@ -30,7 +31,7 @@ func TestAllBuild(t *testing.T) {
 		}
 	}()
 
-	if got, want := len(services), 4; got != want {
+	if got, want := len(services), 5; got != want {
 		t.Fatalf("got %d services, want %d", got, want)
 	}
 	if services[0].cfg.Name() != "simplemq" || len(services[0].cfg.ClientEnv()) != 2 {
@@ -111,6 +112,7 @@ func TestClientEnvVars(t *testing.T) {
 		"SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081",
 		"SAKURA_ENDPOINTS_SECRETMANAGER=http://127.0.0.1:18082",
 		"SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=http://127.0.0.1:18083",
+		"SAKURA_ENDPOINTS_MONITORING_SUITE=http://127.0.0.1:18084",
 		"SAKURA_ACCESS_TOKEN=dummy",
 		"SAKURA_ACCESS_TOKEN_SECRET=dummy",
 	} {

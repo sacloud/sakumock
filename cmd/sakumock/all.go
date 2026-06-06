@@ -9,6 +9,7 @@ import (
 
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/kms"
+	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/secretmanager"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
@@ -23,6 +24,7 @@ type AllCmd struct {
 	Kms                kms.Config                `embed:"" prefix:"kms-"`
 	Secretmanager      secretmanager.Config      `embed:"" prefix:"secretmanager-"`
 	Simplenotification simplenotification.Config `embed:"" prefix:"simplenotification-"`
+	Monitoringsuite    monitoringsuite.Config    `embed:"" prefix:"monitoringsuite-"`
 
 	Config       configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
 	Debug        bool           `help:"Enable debug logging for all services"`
@@ -40,7 +42,7 @@ type serviceInstance struct {
 // `sakumock all`; name, address, endpoint vars, and construction all come
 // through the core.ServiceConfig interface.
 func (c *AllCmd) configs() []core.ServiceConfig {
-	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification}
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite}
 }
 
 // build constructs every service's server. On error it closes the servers it
@@ -78,7 +80,7 @@ func clientEnvVars(instances []serviceInstance) []core.EnvVar {
 }
 
 func (c *AllCmd) debug() bool {
-	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug
+	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug
 }
 
 // Run starts every mock service and serves until ctx is canceled. If one

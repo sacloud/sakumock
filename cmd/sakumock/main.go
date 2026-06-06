@@ -9,6 +9,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/kms"
+	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/secretmanager"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
@@ -23,6 +24,7 @@ type CLI struct {
 	Kms                kms.Command                `cmd:"" name:"kms" help:"KMS mock server"`
 	Secretmanager      secretmanager.Command      `cmd:"" name:"secretmanager" help:"SecretManager mock server"`
 	Simplenotification simplenotification.Command `cmd:"" name:"simplenotification" help:"Simple Notification mock server"`
+	Monitoringsuite    monitoringsuite.Command    `cmd:"" name:"monitoringsuite" help:"Monitoring Suite mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

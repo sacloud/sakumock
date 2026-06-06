@@ -4,11 +4,11 @@ go 1.25.5
 
 require (
 	github.com/alecthomas/kong v1.15.0
-	github.com/sacloud/sakumock/core v0.0.3
-	github.com/sacloud/sakumock/kms v0.0.6
-	github.com/sacloud/sakumock/secretmanager v0.0.6
-	github.com/sacloud/sakumock/simplemq v0.0.6
-	github.com/sacloud/sakumock/simplenotification v0.0.4
+	github.com/sacloud/sakumock/core v0.0.4
+	github.com/sacloud/sakumock/kms v0.1.0
+	github.com/sacloud/sakumock/secretmanager v0.1.0
+	github.com/sacloud/sakumock/simplemq v0.1.0
+	github.com/sacloud/sakumock/simplenotification v0.0.5
 	gopkg.in/yaml.v3 v3.0.1
 )
 

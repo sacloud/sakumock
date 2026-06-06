@@ -47,10 +47,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"debug", c.Debug,
 	)
 	slog.Info("to use with simplemq-api-go SDK or simplemq-cli",
-		"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE", "http://"+c.Addr,
-		"SAKURA_ACCESS_TOKEN", "dummy",
-		"SAKURA_ACCESS_TOKEN_SECRET", "dummy",
-	)
+		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }
 

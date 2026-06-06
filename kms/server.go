@@ -17,6 +17,29 @@ type Config struct {
 	Debug           bool          `help:"Enable debug mode" env:"KMS_DEBUG" default:"false"`
 }
 
+// ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
+// Terraform provider) sets to reach this mock.
+func (c Config) ClientEnv() []core.EnvVar {
+	return []core.EnvVar{
+		{Key: "SAKURA_ENDPOINTS_KMS", Value: "http://" + c.Addr},
+	}
+}
+
+// Name returns the service's short name.
+func (Config) Name() string { return "kms" }
+
+// ListenAddr returns the configured listen address.
+func (c Config) ListenAddr() string { return c.Addr }
+
+// NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
+func (c Config) NewServer() (core.Server, error) { return NewHandler(c) }
+
+// Compile-time checks that the service satisfies the core interfaces.
+var (
+	_ core.Server        = (*Server)(nil)
+	_ core.ServiceConfig = Config{}
+)
+
 // Server is a local KMS-compatible test server.
 type Server struct {
 	httpServer  *httptest.Server

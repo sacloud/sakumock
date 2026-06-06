@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"sync"
 
 	"github.com/sacloud/sakumock/core"
@@ -30,74 +29,45 @@ type AllCmd struct {
 	WriteEnvFile string         `name:"write-env-file" type:"path" placeholder:"PATH" help:"Write client environment variables (service endpoints + dummy credentials) to this dotenv file for your SDK / Terraform client to load"`
 }
 
-// mockServer is the shared shape of every service's *Server.
-type mockServer interface {
-	http.Handler
-	Close()
-}
-
-// serviceInstance is one running mock service within the unified "all" command.
+// serviceInstance pairs a service's config with its running server.
 type serviceInstance struct {
-	name string
-	addr string
-	// envKeys lists the SAKURA_ENDPOINTS_* variables a client sets to reach
-	// this service. SimpleMQ exposes both the control plane (queue) and the
-	// data plane (message) on the same address, so it has two keys.
-	envKeys []string
-	server  mockServer
+	cfg    core.ServiceConfig
+	server core.Server
 }
 
-// build constructs every service handler. On error it closes the handlers it
+// configs lists every service in start order. Registering a new service here —
+// as a field above and an entry below — is all that is needed to add it to
+// `sakumock all`; name, address, endpoint vars, and construction all come
+// through the core.ServiceConfig interface.
+func (c *AllCmd) configs() []core.ServiceConfig {
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification}
+}
+
+// build constructs every service's server. On error it closes the servers it
 // already created so no store is leaked.
 func (c *AllCmd) build() ([]serviceInstance, error) {
-	var services []serviceInstance
-	add := func(name, addr string, envKeys []string, srv mockServer, err error) error {
+	var instances []serviceInstance
+	for _, cfg := range c.configs() {
+		srv, err := cfg.NewServer()
 		if err != nil {
-			for _, s := range services {
-				s.server.Close()
+			for _, i := range instances {
+				i.server.Close()
 			}
-			return fmt.Errorf("%s: %w", name, err)
+			return nil, fmt.Errorf("%s: %w", cfg.Name(), err)
 		}
-		services = append(services, serviceInstance{name: name, addr: addr, envKeys: envKeys, server: srv})
-		return nil
+		instances = append(instances, serviceInstance{cfg: cfg, server: srv})
 	}
-
-	smq, err := simplemq.NewHandler(c.Simplemq)
-	if err := add("simplemq", c.Simplemq.Addr,
-		[]string{"SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE", "SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE"}, smq, err); err != nil {
-		return nil, err
-	}
-	k, err := kms.NewHandler(c.Kms)
-	if err := add("kms", c.Kms.Addr,
-		[]string{"SAKURA_ENDPOINTS_KMS"}, k, err); err != nil {
-		return nil, err
-	}
-	sm, err := secretmanager.NewHandler(c.Secretmanager)
-	if err := add("secretmanager", c.Secretmanager.Addr,
-		[]string{"SAKURA_ENDPOINTS_SECRETMANAGER"}, sm, err); err != nil {
-		return nil, err
-	}
-	sn, err := simplenotification.NewHandler(c.Simplenotification)
-	if err := add("simplenotification", c.Simplenotification.Addr,
-		[]string{"SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION"}, sn, err); err != nil {
-		return nil, err
-	}
-	return services, nil
+	return instances, nil
 }
 
-// clientEnvVars assembles the endpoint overrides for every service plus the
-// shared dummy credentials, in a stable order.
-func clientEnvVars(services []serviceInstance) []core.EnvVar {
+// clientEnvVars assembles every service's endpoint overrides plus the shared
+// dummy credentials, in a stable order.
+func clientEnvVars(instances []serviceInstance) []core.EnvVar {
 	var vars []core.EnvVar
-	for _, s := range services {
-		for _, key := range s.envKeys {
-			vars = append(vars, core.EnvVar{Key: key, Value: "http://" + s.addr})
-		}
+	for _, i := range instances {
+		vars = append(vars, i.cfg.ClientEnv()...)
 	}
-	return append(vars,
-		core.EnvVar{Key: "SAKURA_ACCESS_TOKEN", Value: "dummy"},
-		core.EnvVar{Key: "SAKURA_ACCESS_TOKEN_SECRET", Value: "dummy"},
-	)
+	return append(vars, core.DummyCredentialEnv()...)
 }
 
 func (c *AllCmd) debug() bool {
@@ -109,25 +79,25 @@ func (c *AllCmd) debug() bool {
 func (c *AllCmd) Run(ctx context.Context) error {
 	core.SetupLogger(c.debug())
 
-	services, err := c.build()
+	instances, err := c.build()
 	if err != nil {
 		return err
 	}
 	defer func() {
-		for _, s := range services {
-			s.server.Close()
+		for _, i := range instances {
+			i.server.Close()
 		}
 	}()
 
 	if c.WriteEnvFile != "" {
-		if err := core.WriteEnvFile(c.WriteEnvFile, clientEnvVars(services)); err != nil {
+		if err := core.WriteEnvFile(c.WriteEnvFile, clientEnvVars(instances)); err != nil {
 			return fmt.Errorf("write env file: %w", err)
 		}
 	}
 
 	slog.Info("sakumock all starting", "version", Version)
-	for _, s := range services {
-		slog.Info("starting service", "service", s.name, "addr", s.addr)
+	for _, i := range instances {
+		slog.Info("starting service", "service", i.cfg.Name(), "addr", i.cfg.ListenAddr())
 	}
 	if c.WriteEnvFile != "" {
 		slog.Info("wrote client env file", "path", c.WriteEnvFile,
@@ -140,18 +110,18 @@ func (c *AllCmd) Run(ctx context.Context) error {
 	defer cancel()
 
 	var wg sync.WaitGroup
-	errs := make([]error, len(services))
-	for i, s := range services {
+	errs := make([]error, len(instances))
+	for idx, inst := range instances {
 		wg.Add(1)
-		go func(i int, s serviceInstance) {
+		go func(idx int, inst serviceInstance) {
 			defer wg.Done()
 			// If any service stops (clean shutdown or bind error), cancel the
 			// shared context so the others stop as well.
 			defer cancel()
-			if err := core.Serve(ctx, s.addr, s.server); err != nil {
-				errs[i] = fmt.Errorf("%s: %w", s.name, err)
+			if err := core.Serve(ctx, inst.cfg.ListenAddr(), inst.server); err != nil {
+				errs[idx] = fmt.Errorf("%s: %w", inst.cfg.Name(), err)
 			}
-		}(i, s)
+		}(idx, inst)
 	}
 	wg.Wait()
 

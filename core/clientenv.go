@@ -14,6 +14,26 @@ type EnvVar struct {
 	Value string
 }
 
+// DummyCredentialEnv returns the placeholder credential variables every mock
+// accepts. The SAKURA Cloud SDK requires them to be set, but the mock does not
+// validate them, so any client reaching a mock endpoint authenticates while a
+// request that escapes to the real API fails instead of touching an account.
+func DummyCredentialEnv() []EnvVar {
+	return []EnvVar{
+		{Key: "SAKURA_ACCESS_TOKEN", Value: "dummy"},
+		{Key: "SAKURA_ACCESS_TOKEN_SECRET", Value: "dummy"},
+	}
+}
+
+// LogArgs renders env vars as alternating key/value arguments for slog.
+func LogArgs(vars []EnvVar) []any {
+	args := make([]any, 0, len(vars)*2)
+	for _, v := range vars {
+		args = append(args, v.Key, v.Value)
+	}
+	return args
+}
+
 // RenderEnvFile renders vars in dotenv format (KEY=value, one per line) with a
 // short header explaining how to load the file. The output is consumable by
 // `set -a; source <file>; set +a`, direnv, and docker compose.

@@ -22,6 +22,33 @@ type Config struct {
 	Debug             bool          `help:"Enable debug mode" env:"SIMPLEMQ_DEBUG" default:"false"`
 }
 
+// ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
+// Terraform provider) sets to reach this mock. SimpleMQ serves both the control
+// plane (queue) and the data plane (message) on the same address, so it exposes
+// both endpoint keys.
+func (c Config) ClientEnv() []core.EnvVar {
+	url := "http://" + c.Addr
+	return []core.EnvVar{
+		{Key: "SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE", Value: url},
+		{Key: "SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE", Value: url},
+	}
+}
+
+// Name returns the service's short name.
+func (Config) Name() string { return "simplemq" }
+
+// ListenAddr returns the configured listen address.
+func (c Config) ListenAddr() string { return c.Addr }
+
+// NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
+func (c Config) NewServer() (core.Server, error) { return NewHandler(c) }
+
+// Compile-time checks that the service satisfies the core interfaces.
+var (
+	_ core.Server        = (*Server)(nil)
+	_ core.ServiceConfig = Config{}
+)
+
 // Server is a local SimpleMQ-compatible test server.
 type Server struct {
 	httpServer  *httptest.Server

@@ -113,11 +113,14 @@ Each service module must follow these conventions:
 | Symbol | Description |
 |---|---|
 | `Config` | Configuration struct with `alecthomas/kong` tags for CLI parsing |
+| `Config.ClientEnv() []core.EnvVar` | The `SAKURA_ENDPOINTS_*` override(s) a client sets to reach this mock, derived from `Config.Addr` |
 | `Command` | kong command embedding `Config`; reused by both the standalone binary and the unified `sakumock` binary |
 | `NewHandler(cfg Config) (*Server, error)` | Create an `http.Handler` without starting a listener |
 | `NewTestServer(cfg Config) *Server` | Create and start an `httptest.Server` for use in tests |
 | `Server.TestURL() string` | Return the base URL of the test server |
 | `Server.Close()` | Shut down the server and release resources |
+
+`*Server` satisfies the `core.Server` interface and `Config` satisfies `core.ServiceConfig`, both asserted at compile time in each service so the unified binary can build and treat every service uniformly.
 
 ### Structure
 

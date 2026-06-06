@@ -30,7 +30,7 @@ func TestAllBuild(t *testing.T) {
 	if got, want := len(services), 4; got != want {
 		t.Fatalf("got %d services, want %d", got, want)
 	}
-	if services[0].name != "simplemq" || len(services[0].envKeys) != 2 {
+	if services[0].cfg.Name() != "simplemq" || len(services[0].cfg.ClientEnv()) != 2 {
 		t.Errorf("simplemq should expose both control- and data-plane keys, got %+v", services[0])
 	}
 }

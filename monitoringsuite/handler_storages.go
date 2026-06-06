@@ -559,10 +559,21 @@ func getAccessKey(tbl *table[AccessKey], key string) (*AccessKey, bool) {
 	return nil, false
 }
 
-// deleteAccessKey removes a key found by UUID or numeric id, returning false if
-// no such key exists.
-func deleteAccessKey(tbl *table[AccessKey], key string) bool {
+// getStorageKey resolves a key by UUID or numeric id and verifies it belongs to
+// the storage addressed by parent, so a key cannot be read through a different
+// storage's path.
+func getStorageKey(tbl *table[AccessKey], parent, key string) (*AccessKey, bool) {
 	k, ok := getAccessKey(tbl, key)
+	if !ok || k.ParentKey != parent {
+		return nil, false
+	}
+	return k, true
+}
+
+// deleteStorageKey removes a key found by UUID or numeric id only when it belongs
+// to the storage addressed by parent, returning false otherwise.
+func deleteStorageKey(tbl *table[AccessKey], parent, key string) bool {
+	k, ok := getStorageKey(tbl, parent, key)
 	if !ok {
 		return false
 	}
@@ -610,7 +621,7 @@ func (s *Server) handleCreateLogStorageKey(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) handleReadLogStorageKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := getAccessKey(s.store.logKeys, r.PathValue("uid"))
+	k, ok := getStorageKey(s.store.logKeys, r.PathValue("log_resource_id"), r.PathValue("uid"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "No LogStorageAccessKey matches the given query.")
 		return
@@ -619,7 +630,7 @@ func (s *Server) handleReadLogStorageKey(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Server) handleUpdateLogStorageKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := getAccessKey(s.store.logKeys, r.PathValue("uid"))
+	k, ok := getStorageKey(s.store.logKeys, r.PathValue("log_resource_id"), r.PathValue("uid"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "No LogStorageAccessKey matches the given query.")
 		return
@@ -636,7 +647,7 @@ func (s *Server) handleUpdateLogStorageKey(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) handleDeleteLogStorageKey(w http.ResponseWriter, r *http.Request) {
-	if !deleteAccessKey(s.store.logKeys, r.PathValue("uid")) {
+	if !deleteStorageKey(s.store.logKeys, r.PathValue("log_resource_id"), r.PathValue("uid")) {
 		writeError(w, http.StatusNotFound, "No LogStorageAccessKey matches the given query.")
 		return
 	}
@@ -674,7 +685,7 @@ func (s *Server) handleCreateMetricsStorageKey(w http.ResponseWriter, r *http.Re
 }
 
 func (s *Server) handleReadMetricsStorageKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := getAccessKey(s.store.metricsKeys, r.PathValue("uid"))
+	k, ok := getStorageKey(s.store.metricsKeys, r.PathValue("metrics_resource_id"), r.PathValue("uid"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "No MetricsStorageAccessKey matches the given query.")
 		return
@@ -683,7 +694,7 @@ func (s *Server) handleReadMetricsStorageKey(w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Server) handleUpdateMetricsStorageKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := getAccessKey(s.store.metricsKeys, r.PathValue("uid"))
+	k, ok := getStorageKey(s.store.metricsKeys, r.PathValue("metrics_resource_id"), r.PathValue("uid"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "No MetricsStorageAccessKey matches the given query.")
 		return
@@ -700,7 +711,7 @@ func (s *Server) handleUpdateMetricsStorageKey(w http.ResponseWriter, r *http.Re
 }
 
 func (s *Server) handleDeleteMetricsStorageKey(w http.ResponseWriter, r *http.Request) {
-	if !deleteAccessKey(s.store.metricsKeys, r.PathValue("uid")) {
+	if !deleteStorageKey(s.store.metricsKeys, r.PathValue("metrics_resource_id"), r.PathValue("uid")) {
 		writeError(w, http.StatusNotFound, "No MetricsStorageAccessKey matches the given query.")
 		return
 	}
@@ -738,7 +749,7 @@ func (s *Server) handleCreateTraceStorageKey(w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Server) handleReadTraceStorageKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := getAccessKey(s.store.traceKeys, r.PathValue("uid"))
+	k, ok := getStorageKey(s.store.traceKeys, r.PathValue("trace_resource_id"), r.PathValue("uid"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "No TraceStorageAccessKey matches the given query.")
 		return
@@ -747,7 +758,7 @@ func (s *Server) handleReadTraceStorageKey(w http.ResponseWriter, r *http.Reques
 }
 
 func (s *Server) handleUpdateTraceStorageKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := getAccessKey(s.store.traceKeys, r.PathValue("uid"))
+	k, ok := getStorageKey(s.store.traceKeys, r.PathValue("trace_resource_id"), r.PathValue("uid"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "No TraceStorageAccessKey matches the given query.")
 		return
@@ -764,7 +775,7 @@ func (s *Server) handleUpdateTraceStorageKey(w http.ResponseWriter, r *http.Requ
 }
 
 func (s *Server) handleDeleteTraceStorageKey(w http.ResponseWriter, r *http.Request) {
-	if !deleteAccessKey(s.store.traceKeys, r.PathValue("uid")) {
+	if !deleteStorageKey(s.store.traceKeys, r.PathValue("trace_resource_id"), r.PathValue("uid")) {
 		writeError(w, http.StatusNotFound, "No TraceStorageAccessKey matches the given query.")
 		return
 	}

@@ -144,19 +144,32 @@ func (s *Server) handleCreateAlertRule(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, alertRuleToJSON(rule))
 }
 
-func (s *Server) handleReadAlertRule(w http.ResponseWriter, r *http.Request) {
-	rule, ok := s.store.alertRules.get(r.PathValue("uid"))
+// alertRuleInProject resolves the rule addressed by {uid}, verifying it belongs
+// to the project in {project_resource_id}; otherwise it writes a 404.
+func (s *Server) alertRuleInProject(w http.ResponseWriter, r *http.Request) (*AlertRule, bool) {
+	p, ok := s.alertProject(w, r)
 	if !ok {
+		return nil, false
+	}
+	rule, ok := s.store.alertRules.get(r.PathValue("uid"))
+	if !ok || rule.ProjectID != p.ResourceID {
 		writeError(w, http.StatusNotFound, "No AlertRule matches the given query.")
+		return nil, false
+	}
+	return rule, true
+}
+
+func (s *Server) handleReadAlertRule(w http.ResponseWriter, r *http.Request) {
+	rule, ok := s.alertRuleInProject(w, r)
+	if !ok {
 		return
 	}
 	writeJSON(w, http.StatusOK, alertRuleToJSON(rule))
 }
 
 func (s *Server) handleUpdateAlertRule(w http.ResponseWriter, r *http.Request) {
-	rule, ok := s.store.alertRules.get(r.PathValue("uid"))
+	rule, ok := s.alertRuleInProject(w, r)
 	if !ok {
-		writeError(w, http.StatusNotFound, "No AlertRule matches the given query.")
 		return
 	}
 	var req alertRuleRequest
@@ -169,10 +182,11 @@ func (s *Server) handleUpdateAlertRule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteAlertRule(w http.ResponseWriter, r *http.Request) {
-	if !s.store.alertRules.delete(r.PathValue("uid")) {
-		writeError(w, http.StatusNotFound, "No AlertRule matches the given query.")
+	rule, ok := s.alertRuleInProject(w, r)
+	if !ok {
 		return
 	}
+	s.store.alertRules.delete(rule.UID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -283,10 +297,24 @@ func (s *Server) handleCreateLogMeasureRule(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, http.StatusCreated, j)
 }
 
-func (s *Server) handleReadLogMeasureRule(w http.ResponseWriter, r *http.Request) {
-	rule, ok := s.store.logMeasureRules.get(r.PathValue("uid"))
+// logMeasureRuleInProject resolves the rule addressed by {uid}, verifying it
+// belongs to the project in {project_resource_id}; otherwise it writes a 404.
+func (s *Server) logMeasureRuleInProject(w http.ResponseWriter, r *http.Request) (*LogMeasureRule, bool) {
+	p, ok := s.alertProject(w, r)
 	if !ok {
+		return nil, false
+	}
+	rule, ok := s.store.logMeasureRules.get(r.PathValue("uid"))
+	if !ok || rule.ProjectID != p.ResourceID {
 		writeError(w, http.StatusNotFound, "No LogMeasureRule matches the given query.")
+		return nil, false
+	}
+	return rule, true
+}
+
+func (s *Server) handleReadLogMeasureRule(w http.ResponseWriter, r *http.Request) {
+	rule, ok := s.logMeasureRuleInProject(w, r)
+	if !ok {
 		return
 	}
 	j, _ := s.logMeasureRuleToJSON(rule)
@@ -294,9 +322,8 @@ func (s *Server) handleReadLogMeasureRule(w http.ResponseWriter, r *http.Request
 }
 
 func (s *Server) handleUpdateLogMeasureRule(w http.ResponseWriter, r *http.Request) {
-	rule, ok := s.store.logMeasureRules.get(r.PathValue("uid"))
+	rule, ok := s.logMeasureRuleInProject(w, r)
 	if !ok {
-		writeError(w, http.StatusNotFound, "No LogMeasureRule matches the given query.")
 		return
 	}
 	var req logMeasureRuleRequest
@@ -400,19 +427,32 @@ func (s *Server) handleCreateNotificationTarget(w http.ResponseWriter, r *http.R
 	writeJSON(w, http.StatusCreated, notificationTargetToJSON(t))
 }
 
-func (s *Server) handleReadNotificationTarget(w http.ResponseWriter, r *http.Request) {
-	t, ok := s.store.notificationTargets.get(r.PathValue("uid"))
+// notificationTargetInProject resolves the target addressed by {uid}, verifying
+// it belongs to the project in {project_resource_id}; otherwise it writes a 404.
+func (s *Server) notificationTargetInProject(w http.ResponseWriter, r *http.Request) (*NotificationTarget, bool) {
+	p, ok := s.alertProject(w, r)
 	if !ok {
+		return nil, false
+	}
+	t, ok := s.store.notificationTargets.get(r.PathValue("uid"))
+	if !ok || t.ProjectID != p.ResourceID {
 		writeError(w, http.StatusNotFound, "No NotificationTarget matches the given query.")
+		return nil, false
+	}
+	return t, true
+}
+
+func (s *Server) handleReadNotificationTarget(w http.ResponseWriter, r *http.Request) {
+	t, ok := s.notificationTargetInProject(w, r)
+	if !ok {
 		return
 	}
 	writeJSON(w, http.StatusOK, notificationTargetToJSON(t))
 }
 
 func (s *Server) handleUpdateNotificationTarget(w http.ResponseWriter, r *http.Request) {
-	t, ok := s.store.notificationTargets.get(r.PathValue("uid"))
+	t, ok := s.notificationTargetInProject(w, r)
 	if !ok {
-		writeError(w, http.StatusNotFound, "No NotificationTarget matches the given query.")
 		return
 	}
 	var req notificationTargetRequest
@@ -433,10 +473,11 @@ func (s *Server) handleUpdateNotificationTarget(w http.ResponseWriter, r *http.R
 }
 
 func (s *Server) handleDeleteNotificationTarget(w http.ResponseWriter, r *http.Request) {
-	if !s.store.notificationTargets.delete(r.PathValue("uid")) {
-		writeError(w, http.StatusNotFound, "No NotificationTarget matches the given query.")
+	t, ok := s.notificationTargetInProject(w, r)
+	if !ok {
 		return
 	}
+	s.store.notificationTargets.delete(t.UID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -508,7 +549,7 @@ func (s *Server) handleCreateNotificationRouting(w http.ResponseWriter, r *http.
 		writeError(w, http.StatusBadRequest, "notification_target_uid is required")
 		return
 	}
-	if _, ok := s.store.notificationTargets.get(*req.NotificationTargetUID); !ok {
+	if t, ok := s.store.notificationTargets.get(*req.NotificationTargetUID); !ok || t.ProjectID != p.ResourceID {
 		writeError(w, http.StatusBadRequest, "notification_target not found")
 		return
 	}
@@ -531,10 +572,24 @@ func (s *Server) handleCreateNotificationRouting(w http.ResponseWriter, r *http.
 	writeJSON(w, http.StatusCreated, j)
 }
 
-func (s *Server) handleReadNotificationRouting(w http.ResponseWriter, r *http.Request) {
-	rt, ok := s.store.notificationRoutings.get(r.PathValue("uid"))
+// notificationRoutingInProject resolves the routing addressed by {uid}, verifying
+// it belongs to the project in {project_resource_id}; otherwise it writes a 404.
+func (s *Server) notificationRoutingInProject(w http.ResponseWriter, r *http.Request) (*NotificationRouting, *Project, bool) {
+	p, ok := s.alertProject(w, r)
 	if !ok {
+		return nil, nil, false
+	}
+	rt, ok := s.store.notificationRoutings.get(r.PathValue("uid"))
+	if !ok || rt.ProjectID != p.ResourceID {
 		writeError(w, http.StatusNotFound, "No NotificationRouting matches the given query.")
+		return nil, nil, false
+	}
+	return rt, p, true
+}
+
+func (s *Server) handleReadNotificationRouting(w http.ResponseWriter, r *http.Request) {
+	rt, _, ok := s.notificationRoutingInProject(w, r)
+	if !ok {
 		return
 	}
 	j, _ := s.notificationRoutingToJSON(rt)
@@ -542,9 +597,8 @@ func (s *Server) handleReadNotificationRouting(w http.ResponseWriter, r *http.Re
 }
 
 func (s *Server) handleUpdateNotificationRouting(w http.ResponseWriter, r *http.Request) {
-	rt, ok := s.store.notificationRoutings.get(r.PathValue("uid"))
+	rt, p, ok := s.notificationRoutingInProject(w, r)
 	if !ok {
-		writeError(w, http.StatusNotFound, "No NotificationRouting matches the given query.")
 		return
 	}
 	var req notificationRoutingRequest
@@ -553,7 +607,7 @@ func (s *Server) handleUpdateNotificationRouting(w http.ResponseWriter, r *http.
 		return
 	}
 	if req.NotificationTargetUID != nil {
-		if _, ok := s.store.notificationTargets.get(*req.NotificationTargetUID); !ok {
+		if t, ok := s.store.notificationTargets.get(*req.NotificationTargetUID); !ok || t.ProjectID != p.ResourceID {
 			writeError(w, http.StatusBadRequest, "notification_target not found")
 			return
 		}
@@ -570,10 +624,11 @@ func (s *Server) handleUpdateNotificationRouting(w http.ResponseWriter, r *http.
 }
 
 func (s *Server) handleDeleteNotificationRouting(w http.ResponseWriter, r *http.Request) {
-	if !s.store.notificationRoutings.delete(r.PathValue("uid")) {
-		writeError(w, http.StatusNotFound, "No NotificationRouting matches the given query.")
+	rt, _, ok := s.notificationRoutingInProject(w, r)
+	if !ok {
 		return
 	}
+	s.store.notificationRoutings.delete(rt.UID)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -583,7 +638,8 @@ type reorderItem struct {
 }
 
 func (s *Server) handleReorderNotificationRoutings(w http.ResponseWriter, r *http.Request) {
-	if _, ok := s.alertProject(w, r); !ok {
+	p, ok := s.alertProject(w, r)
+	if !ok {
 		return
 	}
 	var items []reorderItem
@@ -592,7 +648,9 @@ func (s *Server) handleReorderNotificationRoutings(w http.ResponseWriter, r *htt
 		return
 	}
 	for _, it := range items {
-		if rt, ok := s.store.notificationRoutings.get(it.NotificationRoutingUID); ok {
+		// Only reorder routings that belong to the addressed project; ignore
+		// UIDs from other projects to prevent cross-project mutation.
+		if rt, ok := s.store.notificationRoutings.get(it.NotificationRoutingUID); ok && rt.ProjectID == p.ResourceID {
 			rt.Order = it.Order
 		}
 	}

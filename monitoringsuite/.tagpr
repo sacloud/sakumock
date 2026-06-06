@@ -5,4 +5,3 @@
 	vPrefix = true
 	majorLabels = sacloud-major
 	minorLabels = sacloud-minor
-	changelogFile = monitoringsuite/CHANGELOG.md

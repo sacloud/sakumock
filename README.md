@@ -42,6 +42,21 @@ sakumock simplenotification &
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` (or `sakumock all --help`) for flags. Under `all`, per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
 
+Instead of passing many flags, `sakumock all` can read a config file (`--config`, YAML or JSON by extension) with options grouped per service. CLI flags override the file:
+
+```yaml
+# sakumock.yaml
+simplemq:
+  addr: 127.0.0.1:28080
+  database: /var/lib/sakumock/mq.db
+kms:
+  latency: 5s
+```
+
+```bash
+sakumock all --config sakumock.yaml
+```
+
 ### Connect your application
 
 `sakumock all` can write the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs into a dotenv file, so you never hand-copy endpoints:

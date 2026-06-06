@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
@@ -116,7 +115,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 	s.mux.ServeHTTP(rw, r)
-	slog.Info("request",
+	s.logger.Info("request",
 		"method", r.Method,
 		"path", r.URL.Path,
 		"status", rw.statusCode,
@@ -223,7 +222,7 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	slog.Debug("message sent", "queue", queueName, "message_id", msg.ID)
+	s.logger.Debug("message sent", "queue", queueName, "message_id", msg.ID)
 	writeJSON(w, http.StatusOK, sendMessageResponse{
 		Result: "success",
 		Message: newMessageResponse{
@@ -250,9 +249,9 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if ok {
-		slog.Debug("message received", "queue", queueName, "message_id", msg.ID)
+		s.logger.Debug("message received", "queue", queueName, "message_id", msg.ID)
 	} else {
-		slog.Debug("no messages available", "queue", queueName)
+		s.logger.Debug("no messages available", "queue", queueName)
 	}
 	messages := []messageResponse{}
 	if ok {
@@ -287,11 +286,11 @@ func (s *Server) handleExtendTimeout(w http.ResponseWriter, r *http.Request) {
 
 	msg, err := s.store.ExtendTimeout(queueName, messageID, now)
 	if err != nil {
-		slog.Debug("extend timeout failed", "queue", queueName, "message_id", messageID, "error", err)
+		s.logger.Debug("extend timeout failed", "queue", queueName, "message_id", messageID, "error", err)
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	slog.Debug("timeout extended", "queue", queueName, "message_id", messageID)
+	s.logger.Debug("timeout extended", "queue", queueName, "message_id", messageID)
 	writeJSON(w, http.StatusOK, singleMessageResponse{
 		Result: "success",
 		Message: messageResponse{
@@ -318,11 +317,11 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.store.Delete(queueName, messageID); err != nil {
-		slog.Debug("delete failed", "queue", queueName, "message_id", messageID, "error", err)
+		s.logger.Debug("delete failed", "queue", queueName, "message_id", messageID, "error", err)
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	slog.Debug("message deleted", "queue", queueName, "message_id", messageID)
+	s.logger.Debug("message deleted", "queue", queueName, "message_id", messageID)
 	writeJSON(w, http.StatusOK, successResponse{
 		Result: "success",
 	})

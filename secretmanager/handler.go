@@ -77,7 +77,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 	s.mux.ServeHTTP(rw, r)
-	slog.Info("request",
+	s.logger.Info("request",
 		"method", r.Method,
 		"path", r.URL.Path,
 		"status", rw.statusCode,
@@ -101,7 +101,7 @@ func (s *Server) handleListSecrets(w http.ResponseWriter, r *http.Request) {
 	for i, sec := range secrets {
 		items[i] = secretResponse{Name: sec.Name, LatestVersion: sec.LatestVersion}
 	}
-	slog.Debug("secrets listed", "vault_id", vaultID, "count", len(items))
+	s.logger.Debug("secrets listed", "vault_id", vaultID, "count", len(items))
 	writeJSON(w, http.StatusOK, paginatedSecretList{
 		Count:   len(items),
 		From:    0,
@@ -126,7 +126,7 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	slog.Debug("secret created", "vault_id", vaultID, "name", req.Secret.Name, "version", latestVersion)
+	s.logger.Debug("secret created", "vault_id", vaultID, "name", req.Secret.Name, "version", latestVersion)
 	writeJSON(w, http.StatusCreated, wrappedSecret{
 		Secret: secretResponse{Name: req.Secret.Name, LatestVersion: latestVersion},
 	})
@@ -140,11 +140,11 @@ func (s *Server) handleDeleteSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.store.Delete(vaultID, req.Secret.Name); err != nil {
-		slog.Debug("delete failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
+		s.logger.Debug("delete failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	}
-	slog.Debug("secret deleted", "vault_id", vaultID, "name", req.Secret.Name)
+	s.logger.Debug("secret deleted", "vault_id", vaultID, "name", req.Secret.Name)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -161,11 +161,11 @@ func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	}
 	value, actualVersion, err := s.store.Unveil(vaultID, req.Secret.Name, version)
 	if err != nil {
-		slog.Debug("unveil failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
+		s.logger.Debug("unveil failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	}
-	slog.Debug("secret unveiled", "vault_id", vaultID, "name", req.Secret.Name, "version", actualVersion)
+	s.logger.Debug("secret unveiled", "vault_id", vaultID, "name", req.Secret.Name, "version", actualVersion)
 	writeJSON(w, http.StatusOK, wrappedUnveilResponse{
 		Secret: unveilResponse{
 			Name:    req.Secret.Name,

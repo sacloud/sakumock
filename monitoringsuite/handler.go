@@ -25,7 +25,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 	s.mux.ServeHTTP(rw, r)
-	slog.Info("request",
+	s.logger.Info("request",
 		"method", r.Method,
 		"path", r.URL.Path,
 		"status", rw.statusCode,

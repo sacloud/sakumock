@@ -53,7 +53,13 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 	// base and minting the same ID for different resource types — which is
 	// confusing when reading Terraform output. Injected through the interface,
 	// so adding a service needs no change here.
-	opts := core.ServerOptions{IDGen: core.NewIDGenerator(core.DefaultIDBase)}
+	// Inject the configured default logger so each service tags its log lines
+	// with its own name (service=<name>), making the interleaved output of all
+	// services in one process attributable to the service that emitted it.
+	opts := core.ServerOptions{
+		IDGen:  core.NewIDGenerator(core.DefaultIDBase),
+		Logger: slog.Default(),
+	}
 
 	var instances []serviceInstance
 	for _, cfg := range c.configs() {

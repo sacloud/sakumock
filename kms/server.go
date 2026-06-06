@@ -1,6 +1,7 @@
 package kms
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -19,6 +20,10 @@ type Config struct {
 	// idGen, when non-nil, is the resource ID generator injected by the unified
 	// binary via NewServer; nil means the store creates its own.
 	idGen *core.IDGenerator
+
+	// logger, when non-nil, is the base logger injected by the unified binary
+	// via NewServer; nil means the server falls back to slog.Default().
+	logger *slog.Logger
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -38,6 +43,7 @@ func (c Config) ListenAddr() string { return c.Addr }
 // NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
+	c.logger = opts.Logger
 	return NewHandler(c)
 }
 
@@ -54,6 +60,7 @@ type Server struct {
 	store       *MemoryStore
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
+	logger      *slog.Logger
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -72,6 +79,11 @@ func NewHandler(cfg Config) (*Server, error) {
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
 	}
+	base := cfg.logger
+	if base == nil {
+		base = slog.Default()
+	}
+	s.logger = base.With("service", cfg.Name())
 	s.mux = s.buildMux()
 	return s, nil
 }

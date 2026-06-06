@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.1.1](https://github.com/sacloud/sakumock/compare/kms/v0.1.0...kms/v0.1.1) - 2026-06-06
+- chore: bump service dependencies to their latest releases by @fujiwara in https://github.com/sacloud/sakumock/pull/79
+- ci: publish releases via a draft so assets attach under immutable releases by @fujiwara in https://github.com/sacloud/sakumock/pull/80
+- Add Monitoring Suite mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/82
+- Tag every log line with the originating service name by @fujiwara in https://github.com/sacloud/sakumock/pull/85
+
 ## [v0.1.0](https://github.com/sacloud/sakumock/compare/kms/v0.0.6...kms/v0.1.0) - 2026-06-06
 - Pin root module to released service versions by @fujiwara in https://github.com/sacloud/sakumock/pull/61
 - Run tagpr only for modules changed in the push by @fujiwara in https://github.com/sacloud/sakumock/pull/63

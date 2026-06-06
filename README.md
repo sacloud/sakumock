@@ -16,8 +16,6 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
 | [monitoringsuite](monitoringsuite/) | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
 
-New services should use the next available port in sequence (18085, 18086, ...).
-
 ## Quick Start
 
 ### Install

@@ -34,7 +34,11 @@ Or pin a version in your project's `mise.toml`:
 "github:sacloud/sakumock" = "0.2.1"
 ```
 
-Alternatively, download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page.
+Alternatively, download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page, or use the container image (see [Run with Docker](#run-with-docker)):
+
+```bash
+docker pull ghcr.io/sacloud/sakumock:latest
+```
 
 ### Run
 
@@ -81,6 +85,17 @@ credentials. The dummy credentials also act as a safety net: a request to an API
 that sakumock does not mock reaches the real endpoint but fails authentication
 instead of touching your account.
 
+`--write-env-file` is for a client on the same host (the endpoints point at the
+listen address). When the client reaches sakumock over the network — most
+importantly from a container — use the `env` subcommand instead: it prints the
+same dotenv to stdout (or `--output FILE`) without starting any server, and
+`--host` substitutes the host the client actually uses (keeping the port):
+
+```bash
+# Endpoints pointing at a host reachable as `localhost`
+sakumock env --host localhost > sakumock.env
+```
+
 Or set them by hand:
 
 ```bash
@@ -114,6 +129,26 @@ sakumock monitoringsuite &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
+
+### Run with Docker
+
+A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Container Registry. Its default command runs every service bound to `0.0.0.0`, so published ports are reachable from the host:
+
+```bash
+docker run --rm \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 \
+  ghcr.io/sacloud/sakumock:latest
+```
+
+Writing an env file *inside* the container is not useful: a file there is invisible to a client on the host, and the in-container listen host is not how the client reaches the service. Instead, generate the client env with the `env` subcommand, telling it the host the client uses (the host shell does the redirection):
+
+```bash
+docker run --rm ghcr.io/sacloud/sakumock:latest env --host localhost > sakumock.env
+set -a; source ./sakumock.env; set +a
+terraform apply
+```
+
+For docker compose, run `env` as a oneshot that writes the file into a shared volume (the image has no shell, so use `--output` rather than `>`) and have your app load it. See [`examples/compose.yaml`](examples/compose.yaml) for a complete example.
 
 ### Use as a library in tests
 

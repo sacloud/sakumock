@@ -30,21 +30,40 @@ go install github.com/sacloud/sakumock/cmd/sakumock@latest
 ### Run
 
 ```bash
-# Each service is a subcommand
+# Run every service together in one process (recommended)
+sakumock all
+
+# ...or run a single service as a subcommand
 sakumock simplemq &
 sakumock secretmanager &
 sakumock kms &
 sakumock simplenotification &
 ```
 
-Run `sakumock --help` to list services, and `sakumock <service> --help` for a service's flags.
+Run `sakumock --help` to list services, and `sakumock <service> --help` (or `sakumock all --help`) for flags. Under `all`, per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
 
 ### Connect your application
 
-Point the SAKURA Cloud SDK to the local mock servers using `SAKURA_ENDPOINTS_*` environment variables:
+`sakumock all` can write the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs into a dotenv file, so you never hand-copy endpoints:
 
 ```bash
-# SimpleMQ
+sakumock all --write-env-file ./sakumock.env
+
+# In the shell that runs your SDK / Terraform:
+set -a; source ./sakumock.env; set +a
+terraform apply
+```
+
+The generated file sets each service's `SAKURA_ENDPOINTS_*` override plus dummy
+credentials. The dummy credentials also act as a safety net: a request to an API
+that sakumock does not mock reaches the real endpoint but fails authentication
+instead of touching your account.
+
+Or set them by hand:
+
+```bash
+# SimpleMQ (control plane + message plane share one address)
+export SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://localhost:18080
 export SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://localhost:18080
 # SecretManager
 export SAKURA_ENDPOINTS_SECRETMANAGER=http://localhost:18082

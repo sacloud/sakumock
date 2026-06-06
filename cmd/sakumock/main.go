@@ -18,6 +18,7 @@ import (
 // own Command type, so flags and behavior are identical to the standalone
 // sakumock-<service> binaries.
 type CLI struct {
+	All                AllCmd                     `cmd:"" name:"all" help:"Run all mock services together in one process"`
 	Simplemq           simplemq.Command           `cmd:"" name:"simplemq" help:"SimpleMQ mock server"`
 	Kms                kms.Command                `cmd:"" name:"kms" help:"KMS mock server"`
 	Secretmanager      secretmanager.Command      `cmd:"" name:"secretmanager" help:"SecretManager mock server"`

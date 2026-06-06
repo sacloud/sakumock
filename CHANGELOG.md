@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.1](https://github.com/sacloud/sakumock/compare/v0.2.1...monitoringsuite/v0.0.1) - 2026-06-06
+- Add Monitoring Suite mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/82
+- Tag every log line with the originating service name by @fujiwara in https://github.com/sacloud/sakumock/pull/85
+
 ## [v0.2.1](https://github.com/sacloud/sakumock/compare/v0.2.0...v0.2.1) - 2026-06-06
 - ci: publish releases via a draft so assets attach under immutable releases by @fujiwara in https://github.com/sacloud/sakumock/pull/80
 

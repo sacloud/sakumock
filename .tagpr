@@ -4,11 +4,14 @@
 	vPrefix = true
 	# The unified binary uses bare version tags (vX.Y.Z, no tagPrefix). The
 	# per-service modules keep their own prefixed tags via .github/workflows/tagpr.yml.
-	# tagpr creates the GitHub Release with auto-generated notes (categorized via
-	# .github/release.yml); GoReleaser then uploads the binaries to that release
-	# with release.mode=keep-existing, leaving the notes intact
-	# (see .github/workflows/release.yml and .goreleaser.yaml).
-	release = true
+	# tagpr creates the GitHub Release as a DRAFT with auto-generated notes
+	# (categorized via .github/release.yml); GoReleaser then uploads the binaries
+	# to that release with release.mode=keep-existing and publishes it. A draft
+	# must be used because GitHub immutable releases freeze a published release's
+	# assets — uploading after publish fails with 422, so we attach assets while
+	# it is still a draft and publish last (see .github/workflows/release.yml and
+	# .goreleaser.yaml).
+	release = draft
 	majorLabels = sacloud-major
 	minorLabels = sacloud-minor
 	changelogFile = CHANGELOG.md

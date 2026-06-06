@@ -11,10 +11,9 @@ import (
 
 // EnvCmd prints the client environment variables (service endpoints + dummy
 // credentials) as a dotenv file to stdout, then exits without starting any
-// server. Unlike `all --write-env-file`, which writes a file from inside the
-// running process, this is the way to obtain the env for a client that reaches
-// sakumock over the network — most importantly from a container, where the file
-// path and the listen host both differ from what the client sees:
+// server. It is how a client obtains the env to reach sakumock — including over
+// the network from a container, where --host substitutes the host the client
+// actually uses:
 //
 //	docker run --rm ghcr.io/sacloud/sakumock env --host localhost > sakumock.env
 //

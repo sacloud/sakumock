@@ -25,18 +25,19 @@ type MemoryStore struct {
 	logger       *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore.
-func NewMemoryStore() *MemoryStore {
+// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
+// logger used for operation logs; nil falls back to the default.
+func NewMemoryStore(logger *slog.Logger) *MemoryStore {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &MemoryStore{
 		vaults:       make(map[string]map[string]*secret),
 		vaultRecords: make(map[string]*Vault),
 		ids:          core.NewIDGenerator(core.DefaultIDBase),
-		logger:       slog.Default(),
+		logger:       logger,
 	}
 }
-
-// setLogger sets the service-tagged logger used for operation logs.
-func (s *MemoryStore) setLogger(l *slog.Logger) { s.logger = l }
 
 func cloneVault(v *Vault) *Vault {
 	c := *v

@@ -8,7 +8,7 @@ import (
 
 func TestSQLiteStoreSendReceiveDelete(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
-	store, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour)
+	store, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
 	}
@@ -69,7 +69,7 @@ func TestSQLiteStoreSendReceiveDelete(t *testing.T) {
 
 func TestSQLiteStoreVisibilityTimeoutRevisibility(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
-	store, err := NewSQLiteStore(dbPath, 2*time.Second, time.Hour)
+	store, err := NewSQLiteStore(dbPath, 2*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestSQLiteStoreVisibilityTimeoutRevisibility(t *testing.T) {
 
 func TestSQLiteStoreMessageExpiration(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
-	store, err := NewSQLiteStore(dbPath, time.Second, 5*time.Second)
+	store, err := NewSQLiteStore(dbPath, time.Second, 5*time.Second, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestSQLiteStoreMessageExpiration(t *testing.T) {
 
 func TestSQLiteStoreExtendTimeout(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
-	store, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour)
+	store, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestSQLiteStoreExtendTimeout(t *testing.T) {
 
 func TestSQLiteStoreMultipleQueues(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
-	store, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour)
+	store, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
 	}
@@ -228,7 +228,7 @@ func TestSQLiteStorePersistence(t *testing.T) {
 	now := time.Now().Truncate(time.Millisecond)
 
 	// Write with first store instance
-	store1, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour)
+	store1, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
 	}
@@ -239,7 +239,7 @@ func TestSQLiteStorePersistence(t *testing.T) {
 	store1.Close()
 
 	// Read with second store instance
-	store2, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour)
+	store2, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to reopen sqlite store: %v", err)
 	}

@@ -65,9 +65,15 @@ type Server struct {
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
 func NewHandler(cfg Config) (*Server, error) {
+	base := cfg.logger
+	if base == nil {
+		base = slog.Default()
+	}
+	logger := base.With("service", cfg.Name())
 	s := &Server{
-		store:   NewStore(),
+		store:   NewStore(logger),
 		latency: cfg.Latency,
+		logger:  logger,
 		rateLimiter: core.NewRateLimiter(
 			cfg.RateLimit,
 			core.WithRateLimitWindow(cfg.RateLimitWindow),
@@ -79,12 +85,6 @@ func NewHandler(cfg Config) (*Server, error) {
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
 	}
-	base := cfg.logger
-	if base == nil {
-		base = slog.Default()
-	}
-	s.logger = base.With("service", cfg.Name())
-	s.store.logger = s.logger
 	s.mux = s.buildMux()
 	return s, nil
 }

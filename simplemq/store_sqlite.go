@@ -51,13 +51,19 @@ type SQLiteStore struct {
 	logger            *slog.Logger
 }
 
-// NewSQLiteStore opens (or creates) the SQLite database at path and returns a Store.
-func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Duration) (*SQLiteStore, error) {
+// NewSQLiteStore opens (or creates) the SQLite database at path and returns a
+// Store. logger is the service-tagged logger used for operation logs; nil falls
+// back to the default. It is set before the compaction goroutine starts so the
+// goroutine never races with a later logger assignment.
+func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Duration, logger *slog.Logger) (*SQLiteStore, error) {
 	if visibilityTimeout <= 0 {
 		visibilityTimeout = defaultVisibilityTimeout
 	}
 	if messageExpiration <= 0 {
 		messageExpiration = defaultMessageExpiration
+	}
+	if logger == nil {
+		logger = slog.Default()
 	}
 
 	db, err := sql.Open("sqlite", path+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=synchronous(NORMAL)")
@@ -88,15 +94,12 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 		messageExpiration: messageExpiration,
 		ids:               ids,
 		done:              make(chan struct{}),
-		logger:            slog.Default(),
+		logger:            logger,
 	}
 	s.logger.Info("sqlite store opened", "path", path)
 	go s.compactLoop()
 	return s, nil
 }
-
-// setLogger sets the service-tagged logger used for operation logs.
-func (s *SQLiteStore) setLogger(l *slog.Logger) { s.logger = l }
 
 func (s *SQLiteStore) allocateID() string {
 	return s.ids.Next()

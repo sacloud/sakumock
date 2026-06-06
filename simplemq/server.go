@@ -79,7 +79,12 @@ type Server struct {
 // NewHandler creates a Server as an http.Handler without starting a listener.
 // If cfg.APIKey is non-empty, the server validates that incoming requests use this key.
 func NewHandler(cfg Config) (*Server, error) {
-	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.Database)
+	base := cfg.logger
+	if base == nil {
+		base = slog.Default()
+	}
+	logger := base.With("service", cfg.Name())
+	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.Database, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +93,7 @@ func NewHandler(cfg Config) (*Server, error) {
 		apiKey:  cfg.APIKey,
 		strict:  cfg.Strict,
 		latency: cfg.Latency,
+		logger:  logger,
 		rateLimiter: core.NewRateLimiter(
 			cfg.RateLimit,
 			core.WithRateLimitWindow(cfg.RateLimitWindow),
@@ -101,12 +107,6 @@ func NewHandler(cfg Config) (*Server, error) {
 			ms.ids = cfg.idGen
 		}
 	}
-	base := cfg.logger
-	if base == nil {
-		base = slog.Default()
-	}
-	s.logger = base.With("service", cfg.Name())
-	s.store.setLogger(s.logger)
 	s.mux = s.buildMux()
 	return s, nil
 }

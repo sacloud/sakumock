@@ -130,13 +130,17 @@ type MemoryStore struct {
 	logger            *slog.Logger
 }
 
-// NewMemoryStore creates a new in-memory Store.
-func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryStore {
+// NewMemoryStore creates a new in-memory Store. logger is the service-tagged
+// logger used for operation logs; nil falls back to the default.
+func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration, logger *slog.Logger) *MemoryStore {
 	if visibilityTimeout <= 0 {
 		visibilityTimeout = defaultVisibilityTimeout
 	}
 	if messageExpiration <= 0 {
 		messageExpiration = defaultMessageExpiration
+	}
+	if logger == nil {
+		logger = slog.Default()
 	}
 	s := &MemoryStore{
 		queues:            make(map[string]*memoryQueue),
@@ -146,14 +150,11 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration) *MemoryS
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
 		done:              make(chan struct{}),
-		logger:            slog.Default(),
+		logger:            logger,
 	}
 	go s.compactLoop()
 	return s
 }
-
-// setLogger sets the service-tagged logger used for operation logs.
-func (s *MemoryStore) setLogger(l *slog.Logger) { s.logger = l }
 
 func (s *MemoryStore) getQueue(name string) *memoryQueue {
 	s.mu.Lock()

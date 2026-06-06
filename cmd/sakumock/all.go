@@ -24,7 +24,7 @@ type AllCmd struct {
 	Secretmanager      secretmanager.Config      `embed:"" prefix:"secretmanager-"`
 	Simplenotification simplenotification.Config `embed:"" prefix:"simplenotification-"`
 
-	Config       configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file (per-service nested keys, e.g. kms.latency); CLI flags override it"`
+	Config       configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
 	Debug        bool           `help:"Enable debug logging for all services"`
 	WriteEnvFile string         `name:"write-env-file" type:"path" placeholder:"PATH" help:"Write client environment variables (service endpoints + dummy credentials) to this dotenv file for your SDK / Terraform client to load"`
 }

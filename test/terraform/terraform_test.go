@@ -14,14 +14,6 @@ import (
 	"time"
 )
 
-// mockPorts are the default listen addresses of `sakumock all`.
-var mockPorts = []string{
-	"127.0.0.1:18080", // simplemq
-	"127.0.0.1:18081", // kms
-	"127.0.0.1:18082", // secretmanager
-	"127.0.0.1:18083", // simplenotification
-}
-
 // TestTerraformEndToEnd starts the real `sakumock all` binary and runs a full
 // terraform apply / plan(no-diff) / destroy against it through the
 // sacloud/sakura provider, covering one resource per mocked service.
@@ -46,19 +38,26 @@ func TestTerraformEndToEnd(t *testing.T) {
 		t.Fatalf("build sakumock: %v", err)
 	}
 
-	// Start `sakumock all`, writing the client env file.
+	// Start `sakumock all` on dynamically allocated free ports rather than the
+	// fixed defaults, so the test never collides with — or accidentally talks
+	// to — a process already listening on those ports. The chosen address for
+	// each service is passed via its prefixed --<service>-addr flag.
+	addrs := []string{freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t)}
 	envFile := filepath.Join(binDir, "sakumock.env")
-	srv := exec.Command(sakumockBin, "all", "--write-env-file", envFile)
+	srv := exec.Command(sakumockBin, "all",
+		"--write-env-file", envFile,
+		"--simplemq-addr", addrs[0],
+		"--kms-addr", addrs[1],
+		"--secretmanager-addr", addrs[2],
+		"--simplenotification-addr", addrs[3],
+	)
 	srv.Stdout, srv.Stderr = os.Stdout, os.Stderr
 	if err := srv.Start(); err != nil {
 		t.Fatalf("start sakumock all: %v", err)
 	}
-	t.Cleanup(func() {
-		_ = srv.Process.Signal(syscall.SIGTERM)
-		_ = srv.Wait()
-	})
+	t.Cleanup(func() { stopProcess(srv) })
 
-	for _, addr := range mockPorts {
+	for _, addr := range addrs {
 		waitPort(t, addr)
 	}
 
@@ -113,6 +112,40 @@ func TestTerraformEndToEnd(t *testing.T) {
 	}
 
 	runTF("destroy", "-auto-approve", "-no-color", "-input=false")
+}
+
+// freeAddr returns a currently-free loopback address. There is a small window
+// between closing the listener and sakumock binding it, which is acceptable for
+// a test and far less likely than a clash on a fixed port.
+func freeAddr(t *testing.T) string {
+	t.Helper()
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("allocate free port: %v", err)
+	}
+	addr := l.Addr().String()
+	_ = l.Close()
+	return addr
+}
+
+// stopProcess sends SIGTERM and waits for the process to exit, force-killing it
+// if it does not stop in time so a stuck child can never hang the test.
+func stopProcess(cmd *exec.Cmd) {
+	if cmd.Process == nil {
+		return
+	}
+	_ = cmd.Process.Signal(syscall.SIGTERM)
+	done := make(chan struct{})
+	go func() {
+		_ = cmd.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		_ = cmd.Process.Kill()
+		<-done
+	}
 }
 
 func waitPort(t *testing.T, addr string) {

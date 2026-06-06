@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 var (
@@ -63,7 +65,7 @@ func (s *Server) basicAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
 		if !ok || (user == "" && pass == "") {
-			writeCPError(w, http.StatusUnauthorized, "unauthorized", "error-unauthorized")
+			core.WriteStandardError(w, http.StatusUnauthorized, "unauthorized", "error-unauthorized")
 			return
 		}
 		next(w, r)

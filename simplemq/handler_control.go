@@ -10,27 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sacloud/sakumock/core"
 )
-
-// Control plane error response (SAKURA Cloud standard format).
-type cpError struct {
-	IsFatal   bool   `json:"is_fatal"`
-	Serial    string `json:"serial"`
-	Status    string `json:"status"`
-	ErrorCode string `json:"error_code"`
-	ErrorMsg  string `json:"error_msg"`
-}
-
-func writeCPError(w http.ResponseWriter, status int, code, msg string) {
-	statusText := fmt.Sprintf("%d %s", status, http.StatusText(status))
-	writeJSON(w, status, cpError{
-		IsFatal:   true,
-		Serial:    "00000000000000000000000000000000",
-		Status:    statusText,
-		ErrorCode: code,
-		ErrorMsg:  msg,
-	})
-}
 
 // Control plane JSON response types.
 
@@ -127,21 +108,21 @@ type cpConfigQueueRequest struct {
 func (s *Server) handleCreateQueue(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "failed to read body")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "failed to read body")
 		return
 	}
 	var req cpCreateQueueRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "invalid JSON")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "invalid JSON")
 		return
 	}
 	csi := req.CommonServiceItem
 	if err := validateQueueName(csi.Name); err != nil {
-		writeCPError(w, http.StatusBadRequest, "bad_request", err.Error())
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", err.Error())
 		return
 	}
 	if csi.Provider.Class != "simplemq" {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "Provider.Class must be simplemq")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "Provider.Class must be simplemq")
 		return
 	}
 
@@ -149,10 +130,10 @@ func (s *Server) handleCreateQueue(w http.ResponseWriter, r *http.Request) {
 	q, err := s.store.CreateQueue(csi.Name, csi.Description, csi.Tags, 0, 0, now)
 	if err != nil {
 		if errors.Is(err, ErrQueueConflict) {
-			writeCPError(w, http.StatusConflict, "conflict", "same queue name found")
+			core.WriteStandardError(w, http.StatusConflict, "conflict", "same queue name found")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 
@@ -166,7 +147,7 @@ func (s *Server) handleCreateQueue(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleListQueues(w http.ResponseWriter, r *http.Request) {
 	queues, err := s.store.ListQueues()
 	if err != nil {
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 	items := make([]cpCommonServiceItem, len(queues))
@@ -187,10 +168,10 @@ func (s *Server) handleGetQueue(w http.ResponseWriter, r *http.Request) {
 	q, err := s.store.GetQueueByID(id)
 	if err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -204,21 +185,21 @@ func (s *Server) handleConfigQueue(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "failed to read body")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "failed to read body")
 		return
 	}
 	var req cpConfigQueueRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "invalid JSON")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "invalid JSON")
 		return
 	}
 	settings := req.CommonServiceItem.Settings
 	if settings.VisibilityTimeoutSeconds < 5 || settings.VisibilityTimeoutSeconds > 900 {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "VisibilityTimeoutSeconds must be between 5 and 900")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "VisibilityTimeoutSeconds must be between 5 and 900")
 		return
 	}
 	if settings.ExpireSeconds < 60 || settings.ExpireSeconds > 1209600 {
-		writeCPError(w, http.StatusBadRequest, "bad_request", "ExpireSeconds must be between 60 and 1209600")
+		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "ExpireSeconds must be between 60 and 1209600")
 		return
 	}
 
@@ -227,10 +208,10 @@ func (s *Server) handleConfigQueue(w http.ResponseWriter, r *http.Request) {
 		settings.VisibilityTimeoutSeconds, settings.ExpireSeconds, now)
 	if err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 
@@ -247,19 +228,19 @@ func (s *Server) handleDeleteQueue(w http.ResponseWriter, r *http.Request) {
 	q, err := s.store.GetQueueByID(id)
 	if err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 
 	if err := s.store.DeleteQueueByID(id); err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 
@@ -277,10 +258,10 @@ func (s *Server) handleGetMessageCount(w http.ResponseWriter, r *http.Request) {
 	count, err := s.store.CountMessages(id, now)
 	if err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 
@@ -301,10 +282,10 @@ func (s *Server) handleRotateAPIKey(w http.ResponseWriter, r *http.Request) {
 	_, err := s.store.RotateAPIKey(id, newKey, now)
 	if err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 
@@ -322,10 +303,10 @@ func (s *Server) handleClearMessages(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.store.ClearMessages(id); err != nil {
 		if errors.Is(err, ErrQueueNotFound) {
-			writeCPError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
+			core.WriteStandardError(w, http.StatusNotFound, "not_found", "対象が見つかりません。")
 			return
 		}
-		writeCPError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
+		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
 

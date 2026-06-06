@@ -95,17 +95,7 @@ func postResourceID(t *testing.T, h core.Server, path, body, wrapper string) str
 }
 
 func TestClientEnvVars(t *testing.T) {
-	services, err := newTestAllCmd().build()
-	if err != nil {
-		t.Fatalf("build: %v", err)
-	}
-	defer func() {
-		for _, s := range services {
-			s.server.Close()
-		}
-	}()
-
-	rendered := strings.Join(envLines(clientEnvVars(services)), "\n")
+	rendered := strings.Join(envLines(clientEnvVars(newTestAllCmd().configs())), "\n")
 	for _, want := range []string{
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://127.0.0.1:18080",
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://127.0.0.1:18080",

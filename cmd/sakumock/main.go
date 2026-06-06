@@ -21,6 +21,7 @@ import (
 // sakumock-<service> binaries.
 type CLI struct {
 	All                AllCmd                     `cmd:"" name:"all" help:"Run all mock services together in one process"`
+	Env                EnvCmd                     `cmd:"" name:"env" help:"Print client environment variables (endpoints + dummy credentials) as a dotenv file and exit"`
 	Simplemq           simplemq.Command           `cmd:"" name:"simplemq" help:"SimpleMQ mock server"`
 	Kms                kms.Command                `cmd:"" name:"kms" help:"KMS mock server"`
 	Secretmanager      secretmanager.Command      `cmd:"" name:"secretmanager" help:"SecretManager mock server"`

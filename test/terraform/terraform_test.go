@@ -72,7 +72,7 @@ func TestTerraformEndToEnd(t *testing.T) {
 		env = append(env, kv)
 	}
 	env = append(env, readEnvFile(t, envFile)...)
-	env = append(env, "SAKURA_ZONE=is1b")
+	env = append(env, "SAKURA_ZONE=tk1v") // tk1v is SAKURA Cloud's sandbox zone
 
 	// Run terraform in an isolated working dir holding a copy of the fixture.
 	work := t.TempDir()

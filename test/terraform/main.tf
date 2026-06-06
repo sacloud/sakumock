@@ -8,9 +8,10 @@ terraform {
 }
 
 # Endpoints and dummy credentials come from the environment (the dotenv file
-# written by `sakumock all --write-env-file`). Only the zone is set here.
+# written by `sakumock all --write-env-file`). tk1v is SAKURA Cloud's sandbox
+# zone (used for testing); the mock ignores the zone regardless.
 provider "sakura" {
-  zone = "is1b"
+  zone = "tk1v"
 }
 
 resource "sakura_kms" "test" {

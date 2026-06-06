@@ -92,7 +92,7 @@ func (s *Server) handleCreateVault(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleGetVault(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("resource_id")
+	id := r.PathValue("vault_resource_id")
 	v, ok := s.store.GetVault(id)
 	if !ok {
 		writeError(w, http.StatusNotFound, "vault not found")
@@ -102,7 +102,7 @@ func (s *Server) handleGetVault(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleUpdateVault(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("resource_id")
+	id := r.PathValue("vault_resource_id")
 	var req wrappedVaultRequest
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -117,7 +117,7 @@ func (s *Server) handleUpdateVault(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteVault(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("resource_id")
+	id := r.PathValue("vault_resource_id")
 	if !s.store.DeleteVault(id) {
 		writeError(w, http.StatusNotFound, "vault not found")
 		return

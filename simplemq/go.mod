@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/google/uuid v1.6.0
-	github.com/sacloud/sakumock/core v0.0.2
+	github.com/sacloud/sakumock/core v0.0.4
 	github.com/sacloud/simplemq-api-go v0.5.0
 	modernc.org/sqlite v1.48.1
 )

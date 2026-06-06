@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/sacloud/saclient-go v0.3.5
-	github.com/sacloud/sakumock/core v0.0.2
+	github.com/sacloud/sakumock/core v0.0.4
 	github.com/sacloud/secretmanager-api-go v0.4.0
 )
 

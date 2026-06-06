@@ -140,7 +140,7 @@ func (s *Server) handleDeleteSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.store.Delete(vaultID, req.Secret.Name); err != nil {
-		s.logger.Debug("delete failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
+		s.logger.Error("delete failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	}
@@ -161,7 +161,7 @@ func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	}
 	value, actualVersion, err := s.store.Unveil(vaultID, req.Secret.Name, version)
 	if err != nil {
-		s.logger.Debug("unveil failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
+		s.logger.Error("unveil failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	}

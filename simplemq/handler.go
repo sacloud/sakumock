@@ -286,7 +286,7 @@ func (s *Server) handleExtendTimeout(w http.ResponseWriter, r *http.Request) {
 
 	msg, err := s.store.ExtendTimeout(queueName, messageID, now)
 	if err != nil {
-		s.logger.Debug("extend timeout failed", "queue", queueName, "message_id", messageID, "error", err)
+		s.logger.Error("extend timeout failed", "queue", queueName, "message_id", messageID, "error", err)
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -317,7 +317,7 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.store.Delete(queueName, messageID); err != nil {
-		s.logger.Debug("delete failed", "queue", queueName, "message_id", messageID, "error", err)
+		s.logger.Error("delete failed", "queue", queueName, "message_id", messageID, "error", err)
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}

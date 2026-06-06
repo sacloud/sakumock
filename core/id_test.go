@@ -64,11 +64,9 @@ func TestIDGeneratorConcurrent(t *testing.T) {
 	var wg sync.WaitGroup
 	results := make([]string, n)
 	for i := range n {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			results[i] = g.Next()
-		}()
+		})
 	}
 	wg.Wait()
 

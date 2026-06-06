@@ -123,7 +123,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 	s.mux.ServeHTTP(rw, r)
-	slog.Info("request",
+	s.logger.Info("request",
 		"method", r.Method,
 		"path", r.URL.Path,
 		"status", rw.statusCode,
@@ -165,7 +165,7 @@ func (s *Server) handleListKeys(w http.ResponseWriter, r *http.Request) {
 	for i, k := range keys {
 		items[i] = keyRecordToResponse(k)
 	}
-	slog.Debug("keys listed", "count", len(items))
+	s.logger.Debug("keys listed", "count", len(items))
 	writeJSON(w, http.StatusOK, paginatedKeyList{
 		Count: len(items),
 		From:  0,
@@ -197,7 +197,7 @@ func (s *Server) handleCreateKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	slog.Debug("key created", "id", k.ID, "name", k.Name)
+	s.logger.Debug("key created", "id", k.ID, "name", k.Name)
 	writeJSON(w, http.StatusCreated, wrappedCreateKey{
 		Key: createKeyResponse{
 			ID:          k.ID,

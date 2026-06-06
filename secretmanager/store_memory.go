@@ -22,14 +22,20 @@ type MemoryStore struct {
 	vaults       map[string]map[string]*secret // vaultID -> secretName -> secret
 	vaultRecords map[string]*Vault             // vaultID -> vault metadata
 	ids          *core.IDGenerator
+	logger       *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore.
-func NewMemoryStore() *MemoryStore {
+// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
+// logger used for operation logs; nil falls back to the default.
+func NewMemoryStore(logger *slog.Logger) *MemoryStore {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &MemoryStore{
 		vaults:       make(map[string]map[string]*secret),
 		vaultRecords: make(map[string]*Vault),
 		ids:          core.NewIDGenerator(core.DefaultIDBase),
+		logger:       logger,
 	}
 }
 
@@ -54,7 +60,7 @@ func (s *MemoryStore) CreateVault(name, kmsKeyID, description string, tags []str
 		ModifiedAt:  now,
 	}
 	s.vaultRecords[v.ID] = v
-	slog.Info("vault created", "vault_id", v.ID, "name", name)
+	s.logger.Info("vault created", "vault_id", v.ID, "name", name)
 	return cloneVault(v)
 }
 
@@ -114,7 +120,7 @@ func (s *MemoryStore) getOrCreateVault(vaultID string) map[string]*secret {
 	if !ok {
 		v = make(map[string]*secret)
 		s.vaults[vaultID] = v
-		slog.Info("vault created", "vault_id", vaultID)
+		s.logger.Info("vault created", "vault_id", vaultID)
 	}
 	return v
 }

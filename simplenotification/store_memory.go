@@ -19,14 +19,20 @@ type MemoryStore struct {
 	nextID   int64
 	items    map[string]*ServiceItem
 	ids      *core.IDGenerator
+	logger   *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore.
-func NewMemoryStore() *MemoryStore {
+// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
+// logger used for operation logs; nil falls back to the default.
+func NewMemoryStore(logger *slog.Logger) *MemoryStore {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &MemoryStore{
 		nextID: 1,
 		items:  make(map[string]*ServiceItem),
 		ids:    core.NewIDGenerator(core.DefaultIDBase),
+		logger: logger,
 	}
 }
 
@@ -48,7 +54,7 @@ func (s *MemoryStore) CreateItem(item ServiceItem) ServiceItem {
 	item.ModifiedAt = now
 	stored := cloneItem(&item)
 	s.items[item.ID] = &stored
-	slog.Info("service item created", "id", item.ID, "class", item.ProviderClass, "name", item.Name)
+	s.logger.Info("service item created", "id", item.ID, "class", item.ProviderClass, "name", item.Name)
 	return cloneItem(&stored)
 }
 
@@ -124,7 +130,7 @@ func (s *MemoryStore) Send(groupID, message string, now time.Time) (MessageRecor
 	}
 	s.nextID++
 	s.messages = append(s.messages, rec)
-	slog.Debug("message stored", "id", rec.ID, "group_id", groupID)
+	s.logger.Debug("message stored", "id", rec.ID, "group_id", groupID)
 	return rec, nil
 }
 

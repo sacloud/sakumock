@@ -1,7 +1,10 @@
 package secretmanager
 
-// NewStore creates a Store based on configuration.
+import "log/slog"
+
+// NewStore creates a Store based on configuration. logger is the service-tagged
+// logger used for operation logs (nil falls back to the default).
 // Currently only in-memory storage is supported.
-func NewStore() Store {
-	return NewMemoryStore()
+func NewStore(logger *slog.Logger) Store {
+	return NewMemoryStore(logger)
 }

@@ -2,7 +2,6 @@ package simplenotification
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -124,7 +123,7 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		Settings:      csi.Settings,
 		Icon:          csi.Icon,
 	})
-	slog.Debug("service item created", "id", it.ID, "class", it.ProviderClass)
+	s.logger.Debug("service item created", "id", it.ID, "class", it.ProviderClass)
 	writeJSON(w, http.StatusCreated, map[string]any{"CommonServiceItem": toCSI(it)})
 }
 

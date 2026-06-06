@@ -1,6 +1,9 @@
 package core
 
-import "net/http"
+import (
+	"log/slog"
+	"net/http"
+)
 
 // Server is the common interface every service's *Server satisfies. It lets the
 // unified binary treat all mock services uniformly, and each service asserts
@@ -28,6 +31,11 @@ type ServerOptions struct {
 	// The unified binary passes one shared generator to every service so IDs
 	// are globally unique across services, as in the real API.
 	IDGen *IDGenerator
+	// Logger, when non-nil, is the base logger the service tags with its own
+	// name (service=<name>) for every request and operation log line, so the
+	// unified binary's interleaved output identifies the originating service.
+	// When nil the service falls back to slog.Default().
+	Logger *slog.Logger
 }
 
 // ServiceConfig is the common interface every service's Config satisfies. It

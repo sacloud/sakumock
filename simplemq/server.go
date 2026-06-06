@@ -1,6 +1,7 @@
 package simplemq
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -26,6 +27,10 @@ type Config struct {
 	// in-memory store honors it; the SQLite store keeps its own (it resumes IDs
 	// from persisted data).
 	idGen *core.IDGenerator
+
+	// logger, when non-nil, is the base logger injected by the unified binary
+	// via NewServer; nil means the server falls back to slog.Default().
+	logger *slog.Logger
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -49,6 +54,7 @@ func (c Config) ListenAddr() string { return c.Addr }
 // NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
+	c.logger = opts.Logger
 	return NewHandler(c)
 }
 
@@ -67,12 +73,18 @@ type Server struct {
 	strict      bool
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
+	logger      *slog.Logger
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
 // If cfg.APIKey is non-empty, the server validates that incoming requests use this key.
 func NewHandler(cfg Config) (*Server, error) {
-	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.Database)
+	base := cfg.logger
+	if base == nil {
+		base = slog.Default()
+	}
+	logger := base.With("service", cfg.Name())
+	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.Database, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +93,7 @@ func NewHandler(cfg Config) (*Server, error) {
 		apiKey:  cfg.APIKey,
 		strict:  cfg.Strict,
 		latency: cfg.Latency,
+		logger:  logger,
 		rateLimiter: core.NewRateLimiter(
 			cfg.RateLimit,
 			core.WithRateLimitWindow(cfg.RateLimitWindow),

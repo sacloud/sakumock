@@ -1,7 +1,6 @@
 package secretmanager
 
 import (
-	"log/slog"
 	"net/http"
 	"time"
 )
@@ -87,7 +86,7 @@ func (s *Server) handleCreateVault(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v := s.store.CreateVault(req.Vault.Name, req.Vault.KmsKeyID, req.Vault.Description, req.Vault.Tags)
-	slog.Debug("vault created", "vault_id", v.ID, "name", v.Name)
+	s.logger.Debug("vault created", "vault_id", v.ID, "name", v.Name)
 	writeJSON(w, http.StatusCreated, wrappedVault{Vault: toVaultJSON(v)})
 }
 

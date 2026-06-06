@@ -61,7 +61,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 	s.mux.ServeHTTP(rw, r)
-	slog.Info("request",
+	s.logger.Info("request",
 		"method", r.Method,
 		"path", r.URL.Path,
 		"status", rw.statusCode,
@@ -105,7 +105,7 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	if s.exec != "" {
 		go s.runExec(rec)
 	}
-	slog.Debug("notification message accepted", "id", id, "message_id", rec.ID)
+	s.logger.Debug("notification message accepted", "id", id, "message_id", rec.ID)
 	writeJSON(w, http.StatusAccepted, sendMessageResponse{IsOk: true})
 }
 
@@ -127,10 +127,10 @@ func (s *Server) runExec(rec MessageRecord) {
 		"SAKUMOCK_CREATED_AT="+rec.CreatedAt.Format(time.RFC3339Nano),
 	)
 	if err := cmd.Run(); err != nil {
-		slog.Warn("exec failed", "message_id", rec.ID, "error", err)
+		s.logger.Warn("exec failed", "message_id", rec.ID, "error", err)
 		return
 	}
-	slog.Debug("exec done", "message_id", rec.ID)
+	s.logger.Debug("exec done", "message_id", rec.ID)
 }
 
 func (s *Server) handleInspectMessages(w http.ResponseWriter, r *http.Request) {

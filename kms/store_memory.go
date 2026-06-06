@@ -22,14 +22,20 @@ type MemoryStore struct {
 	ids  *core.IDGenerator
 	// encryption key material per key ID per version (version -> 32-byte AES key)
 	keyMaterial map[string]map[int][]byte
+	logger      *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore.
-func NewMemoryStore() *MemoryStore {
+// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
+// logger used for operation logs; nil falls back to the default.
+func NewMemoryStore(logger *slog.Logger) *MemoryStore {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &MemoryStore{
 		keys:        make(map[string]*KeyRecord),
 		ids:         core.NewIDGenerator(core.DefaultIDBase),
 		keyMaterial: make(map[string]map[int][]byte),
+		logger:      logger,
 	}
 }
 
@@ -95,7 +101,7 @@ func (s *MemoryStore) Create(name, description, keyOrigin string, tags []string)
 	}
 	s.keys[id] = k
 	s.generateKeyMaterial(id, 1)
-	slog.Debug("key created", "id", id, "name", name)
+	s.logger.Debug("key created", "id", id, "name", name)
 	return *k, nil
 }
 
@@ -114,7 +120,7 @@ func (s *MemoryStore) Update(id, name, description string, tags []string) (KeyRe
 	}
 	k.Tags = tags
 	k.ModifiedAt = time.Now()
-	slog.Debug("key updated", "id", id, "name", name)
+	s.logger.Debug("key updated", "id", id, "name", name)
 	return *k, nil
 }
 
@@ -127,7 +133,7 @@ func (s *MemoryStore) Delete(id string) error {
 	}
 	delete(s.keys, id)
 	delete(s.keyMaterial, id)
-	slog.Debug("key deleted", "id", id)
+	s.logger.Debug("key deleted", "id", id)
 	return nil
 }
 
@@ -145,7 +151,7 @@ func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {
 	k.LatestVersion++
 	k.ModifiedAt = time.Now()
 	s.generateKeyMaterial(id, k.LatestVersion)
-	slog.Debug("key rotated", "id", id, "version", k.LatestVersion)
+	s.logger.Debug("key rotated", "id", id, "version", k.LatestVersion)
 	return *k, nil
 }
 
@@ -159,7 +165,7 @@ func (s *MemoryStore) ChangeStatus(id, status string) error {
 	}
 	k.Status = status
 	k.ModifiedAt = time.Now()
-	slog.Debug("key status changed", "id", id, "status", status)
+	s.logger.Debug("key status changed", "id", id, "status", status)
 	return nil
 }
 

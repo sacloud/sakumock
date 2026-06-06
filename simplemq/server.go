@@ -20,6 +20,12 @@ type Config struct {
 	RateLimitWindow   time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"SIMPLEMQ_RATE_LIMIT_WINDOW"`
 	Strict            bool          `help:"Strict mode: the data plane only accepts queues created via the control plane, authenticated with the queue's issued API key (from rotate-apikey). Mutually exclusive with --api-key." env:"SIMPLEMQ_STRICT" xor:"auth"`
 	Debug             bool          `help:"Enable debug mode" env:"SIMPLEMQ_DEBUG" default:"false"`
+
+	// idGen, when non-nil, is the resource ID generator injected by the unified
+	// binary via NewServer; nil means the store creates its own. Only the
+	// in-memory store honors it; the SQLite store keeps its own (it resumes IDs
+	// from persisted data).
+	idGen *core.IDGenerator
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -41,7 +47,10 @@ func (Config) Name() string { return "simplemq" }
 func (c Config) ListenAddr() string { return c.Addr }
 
 // NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
-func (c Config) NewServer() (core.Server, error) { return NewHandler(c) }
+func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
+	c.idGen = opts.IDGen
+	return NewHandler(c)
+}
 
 // Compile-time checks that the service satisfies the core interfaces.
 var (
@@ -79,6 +88,11 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
+	}
+	if cfg.idGen != nil {
+		if ms, ok := s.store.(*MemoryStore); ok {
+			ms.ids = cfg.idGen
+		}
 	}
 	s.mux = s.buildMux()
 	return s, nil

@@ -46,9 +46,16 @@ func (c *AllCmd) configs() []core.ServiceConfig {
 // build constructs every service's server. On error it closes the servers it
 // already created so no store is leaked.
 func (c *AllCmd) build() ([]serviceInstance, error) {
+	// Share one ID generator across all services so resource IDs are globally
+	// unique like the real API, instead of each store counting from the same
+	// base and minting the same ID for different resource types — which is
+	// confusing when reading Terraform output. Injected through the interface,
+	// so adding a service needs no change here.
+	opts := core.ServerOptions{IDGen: core.NewIDGenerator(core.DefaultIDBase)}
+
 	var instances []serviceInstance
 	for _, cfg := range c.configs() {
-		srv, err := cfg.NewServer()
+		srv, err := cfg.NewServer(opts)
 		if err != nil {
 			for _, i := range instances {
 				i.server.Close()

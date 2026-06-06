@@ -43,9 +43,6 @@ func (c *Command) Run(ctx context.Context) error {
 		"debug", c.Debug,
 	)
 	slog.Info("to use with kms-api-go SDK",
-		"SAKURA_ENDPOINTS_KMS", "http://"+c.Addr,
-		"SAKURA_ACCESS_TOKEN", "dummy",
-		"SAKURA_ACCESS_TOKEN_SECRET", "dummy",
-	)
+		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }

@@ -9,6 +9,7 @@ require (
 	github.com/sacloud/sakumock/secretmanager v0.0.6
 	github.com/sacloud/sakumock/simplemq v0.0.6
 	github.com/sacloud/sakumock/simplenotification v0.0.4
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

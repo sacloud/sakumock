@@ -42,10 +42,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"debug", c.Debug,
 	)
-	slog.Info("to use with sakura-secrets-cli",
-		"SAKURA_API_ROOT_URL", "http://"+c.Addr,
-		"SAKURA_ACCESS_TOKEN", "dummy",
-		"SAKURA_ACCESS_TOKEN_SECRET", "dummy",
-	)
+	slog.Info("to use with secretmanager-api-go SDK",
+		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }

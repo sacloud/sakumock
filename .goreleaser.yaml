@@ -47,6 +47,9 @@ release:
   github:
     owner: sacloud
     name: sakumock
-  # tagpr creates the GitHub Release with its generated notes; only upload the
-  # binaries to it, leaving the release body untouched.
+  # tagpr creates the GitHub Release as a draft with its generated notes;
+  # GoReleaser attaches the binaries to that draft and publishes it. The draft
+  # is required because GitHub immutable releases freeze a published release's
+  # assets, so assets must be added before publishing.
   mode: keep-existing
+  use_existing_draft: true

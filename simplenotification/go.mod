@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/sacloud/saclient-go v0.3.7
-	github.com/sacloud/sakumock/core v0.0.2
+	github.com/sacloud/sakumock/core v0.0.4
 	github.com/sacloud/simple-notification-api-go v0.3.1
 )
 

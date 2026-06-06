@@ -47,6 +47,8 @@ github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/sacloud/sakumock/core v0.0.2 h1:LiXgGmnBVSjrZYuFEvUeuPpNQZG5ecz6Y/dgkusNDno=
 github.com/sacloud/sakumock/core v0.0.2/go.mod h1:x3Kj0RMR0/RWluKzNnPNDJqs0vpNZirzpert26hYJno=
+github.com/sacloud/sakumock/core v0.0.4 h1:bHJyL3jGnYpitUtuTU41gJqbaa+kO9Xp2TytV//ooAg=
+github.com/sacloud/sakumock/core v0.0.4/go.mod h1:x3Kj0RMR0/RWluKzNnPNDJqs0vpNZirzpert26hYJno=
 github.com/sacloud/simplemq-api-go v0.5.0 h1:B1NVpzAhQyjPeCgZoneiLq2DzHIoQIZHTrOluLUfnB8=
 github.com/sacloud/simplemq-api-go v0.5.0/go.mod h1:G3Uy/sOTBIpSossAE0g4AzTX1R7cxRbwvwYRDdgzOe0=
 github.com/segmentio/asm v1.2.1 h1:DTNbBqs57ioxAD4PrArqftgypG4/qNpXoJx8TVXxPR0=

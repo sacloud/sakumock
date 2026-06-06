@@ -66,6 +66,8 @@ github.com/sacloud/saclient-go v0.3.5 h1:cgMNAapY4xu34uMjeAEYkPnsDjLSvfR0GF+nYKS
 github.com/sacloud/saclient-go v0.3.5/go.mod h1:43p2uetaKVpKo9vnCl8tcGvEPCyXoBEQHLavMbmcIes=
 github.com/sacloud/sakumock/core v0.0.2 h1:LiXgGmnBVSjrZYuFEvUeuPpNQZG5ecz6Y/dgkusNDno=
 github.com/sacloud/sakumock/core v0.0.2/go.mod h1:x3Kj0RMR0/RWluKzNnPNDJqs0vpNZirzpert26hYJno=
+github.com/sacloud/sakumock/core v0.0.4 h1:bHJyL3jGnYpitUtuTU41gJqbaa+kO9Xp2TytV//ooAg=
+github.com/sacloud/sakumock/core v0.0.4/go.mod h1:x3Kj0RMR0/RWluKzNnPNDJqs0vpNZirzpert26hYJno=
 github.com/sacloud/secretmanager-api-go v0.4.0 h1:gvvpR4pCJAbBNCPu0v7Ka+tXZ1wjkPm9p5muQcDRVK8=
 github.com/sacloud/secretmanager-api-go v0.4.0/go.mod h1:pPzHaNrqlXAOMNBq4WbrO5ktP+iHfDLzlzR4wOE+nWM=
 github.com/segmentio/asm v1.2.0 h1:9BQrFxC+YOHJlTlHGkTrFWf59nbL3XnCoFLTwDCI7ys=

@@ -43,10 +43,9 @@ func (c *serviceConfigs) configs() []core.ServiceConfig {
 type AllCmd struct {
 	serviceConfigs
 
-	Config       configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
-	Debug        bool           `help:"Enable debug logging for all services"`
-	ListenHost   string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
-	WriteEnvFile string         `name:"write-env-file" type:"path" placeholder:"PATH" help:"Write client environment variables (service endpoints + dummy credentials) to this dotenv file for your SDK / Terraform client to load. To emit them for a client on another host (e.g. a container), use the 'env' subcommand instead."`
+	Config     configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
+	Debug      bool           `help:"Enable debug logging for all services"`
+	ListenHost string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
 }
 
 // serviceInstance pairs a service's config with its running server.
@@ -98,16 +97,6 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 	return instances, nil
 }
 
-// clientEnvVars assembles every service's endpoint overrides plus the shared
-// dummy credentials, in a stable order.
-func clientEnvVars(cfgs []core.ServiceConfig) []core.EnvVar {
-	var vars []core.EnvVar
-	for _, cfg := range cfgs {
-		vars = append(vars, cfg.ClientEnv()...)
-	}
-	return append(vars, core.DummyCredentialEnv()...)
-}
-
 func (c *AllCmd) debug() bool {
 	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug
 }
@@ -127,22 +116,11 @@ func (c *AllCmd) Run(ctx context.Context) error {
 		}
 	}()
 
-	if c.WriteEnvFile != "" {
-		if err := core.WriteEnvFile(c.WriteEnvFile, clientEnvVars(c.configs())); err != nil {
-			return fmt.Errorf("write env file: %w", err)
-		}
-	}
-
 	slog.Info("sakumock all starting", "version", Version)
 	for _, i := range instances {
 		slog.Info("starting service", "service", i.cfg.Name(), "addr", c.bindAddr(i.cfg.ListenAddr()))
 	}
-	if c.WriteEnvFile != "" {
-		slog.Info("wrote client env file", "path", c.WriteEnvFile,
-			"load_with", "set -a; source "+c.WriteEnvFile+"; set +a")
-	} else {
-		slog.Info("pass --write-env-file <path> to emit a dotenv file for your SDK / Terraform client")
-	}
+	slog.Info("run `sakumock env` to emit a dotenv file (endpoints + dummy credentials) for your SDK / Terraform client")
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

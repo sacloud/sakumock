@@ -70,26 +70,25 @@ Each per-service flag maps to a key by stripping the service prefix: `--simplemq
 
 ### Connect your application
 
-`sakumock all` can write the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs into a dotenv file, so you never hand-copy endpoints:
+The `sakumock env` subcommand prints the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs as a dotenv file, so you never hand-copy endpoints. It starts no server, so you can run it before (or independently of) `sakumock all`:
 
 ```bash
-sakumock all --write-env-file ./sakumock.env
+sakumock env > ./sakumock.env
 
 # In the shell that runs your SDK / Terraform:
 set -a; source ./sakumock.env; set +a
 terraform apply
 ```
 
-The generated file sets each service's `SAKURA_ENDPOINTS_*` override plus dummy
+The file sets each service's `SAKURA_ENDPOINTS_*` override plus dummy
 credentials. The dummy credentials also act as a safety net: a request to an API
 that sakumock does not mock reaches the real endpoint but fails authentication
 instead of touching your account.
 
-`--write-env-file` is for a client on the same host (the endpoints point at the
-listen address). When the client reaches sakumock over the network — most
-importantly from a container — use the `env` subcommand instead: it prints the
-same dotenv to stdout (or `--output FILE`) without starting any server, and
-`--host` substitutes the host the client actually uses (keeping the port):
+By default the endpoints point at each service's listen address. When the client
+reaches sakumock over the network — most importantly from a container — pass
+`--host` to substitute the host the client actually uses (the port is kept), and
+`--output FILE` to write a file where shell redirection is unavailable:
 
 ```bash
 # Endpoints pointing at a host reachable as `localhost`

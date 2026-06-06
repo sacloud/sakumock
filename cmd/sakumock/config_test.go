@@ -34,21 +34,26 @@ func writeFile(t *testing.T, name, content string) string {
 }
 
 func TestConfigFileYAML(t *testing.T) {
-	path := writeFile(t, "sakumock.yaml", "kms:\n  latency: 5s\nsimplemq:\n  addr: 127.0.0.1:29080\n  rate-limit-window: 2s\n")
+	// Both YAML extensions go through the same parser.
+	for _, name := range []string{"sakumock.yaml", "sakumock.yml"} {
+		t.Run(name, func(t *testing.T) {
+			path := writeFile(t, name, "kms:\n  latency: 5s\nsimplemq:\n  addr: 127.0.0.1:29080\n  rate-limit-window: 2s\n")
 
-	all := parseAll(t, "--config", path)
-	if all.Kms.Latency != 5*time.Second {
-		t.Errorf("kms latency = %v, want 5s", all.Kms.Latency)
-	}
-	if all.Simplemq.Addr != "127.0.0.1:29080" {
-		t.Errorf("simplemq addr = %q, want 127.0.0.1:29080", all.Simplemq.Addr)
-	}
-	if all.Simplemq.RateLimitWindow != 2*time.Second {
-		t.Errorf("simplemq rate-limit-window = %v, want 2s", all.Simplemq.RateLimitWindow)
-	}
-	// A service not mentioned keeps its default.
-	if all.Secretmanager.Addr != "127.0.0.1:18082" {
-		t.Errorf("secretmanager addr = %q, want default", all.Secretmanager.Addr)
+			all := parseAll(t, "--config", path)
+			if all.Kms.Latency != 5*time.Second {
+				t.Errorf("kms latency = %v, want 5s", all.Kms.Latency)
+			}
+			if all.Simplemq.Addr != "127.0.0.1:29080" {
+				t.Errorf("simplemq addr = %q, want 127.0.0.1:29080", all.Simplemq.Addr)
+			}
+			if all.Simplemq.RateLimitWindow != 2*time.Second {
+				t.Errorf("simplemq rate-limit-window = %v, want 2s", all.Simplemq.RateLimitWindow)
+			}
+			// A service not mentioned keeps its default.
+			if all.Secretmanager.Addr != "127.0.0.1:18082" {
+				t.Errorf("secretmanager addr = %q, want default", all.Secretmanager.Addr)
+			}
+		})
 	}
 }
 

@@ -16,41 +16,44 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
 | [monitoringsuite](monitoringsuite/) | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
 
-New services should use the next available port in sequence (18085, 18086, ...).
-
 ## Quick Start
 
 ### Install
 
-Download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page, or install with Go:
+Install with [mise](https://mise.jdx.dev/), which fetches the prebuilt binary straight from the GitHub Releases:
 
 ```bash
-go install github.com/sacloud/sakumock/cmd/sakumock@latest
+# Install globally (latest release)
+mise use -g github:sacloud/sakumock@latest
 ```
+
+Or pin a version in your project's `mise.toml`:
+
+```toml
+[tools]
+"github:sacloud/sakumock" = "0.2.1"
+```
+
+Alternatively, download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page.
 
 ### Run
 
-```bash
-# Run every service together in one process (recommended)
-sakumock all
+Run every service together in one process. This is the usual way to use sakumock:
 
-# ...or run a single service as a subcommand
-sakumock simplemq &
-sakumock secretmanager &
-sakumock kms &
-sakumock simplenotification &
-sakumock monitoringsuite &
+```bash
+sakumock all
 ```
 
-Run `sakumock --help` to list services, and `sakumock <service> --help` (or `sakumock all --help`) for flags. Under `all`, per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
+Run `sakumock all --help` for flags. Per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
 
-Instead of passing many flags, `sakumock all` can read a config file (`--config`, YAML or JSON by extension) with options grouped per service. CLI flags override the file:
+Instead of passing many flags, `sakumock all` can read a config file (`--config`, YAML or JSON by extension) with options grouped per service:
 
 ```yaml
 # sakumock.yaml
 simplemq:
   addr: 127.0.0.1:28080
   database: /var/lib/sakumock/mq.db
+  message-expire: 96h
 kms:
   latency: 5s
 ```
@@ -58,6 +61,8 @@ kms:
 ```bash
 sakumock all --config sakumock.yaml
 ```
+
+Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
 
 ### Connect your application
 
@@ -95,6 +100,20 @@ export SAKURA_ENDPOINTS_MONITORING_SUITE=http://localhost:18084
 export SAKURA_ACCESS_TOKEN=dummy
 export SAKURA_ACCESS_TOKEN_SECRET=dummy
 ```
+
+### Run a single service
+
+You can also run any service on its own as a subcommand (same flags, without the service prefix):
+
+```bash
+sakumock simplemq &
+sakumock secretmanager &
+sakumock kms &
+sakumock simplenotification &
+sakumock monitoringsuite &
+```
+
+Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
 
 ### Use as a library in tests
 

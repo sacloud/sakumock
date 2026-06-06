@@ -86,6 +86,7 @@ func NewHandler(cfg Config) (*Server, error) {
 		base = slog.Default()
 	}
 	s.logger = base.With("service", cfg.Name())
+	s.store.setLogger(s.logger)
 	s.mux = s.buildMux()
 	return s, nil
 }

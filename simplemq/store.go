@@ -2,6 +2,7 @@ package simplemq
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 )
 
@@ -55,6 +56,10 @@ type Store interface {
 	CountMessages(id string, now time.Time) (int, error)
 	RotateAPIKey(id, newKey string, now time.Time) (storedQueue, error)
 	ClearMessages(id string) error
+
+	// setLogger sets the service-tagged logger the store uses for operation
+	// logs; the unified binary injects it so store logs identify their service.
+	setLogger(*slog.Logger)
 
 	Close() error
 }

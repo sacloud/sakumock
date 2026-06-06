@@ -1,6 +1,9 @@
 package secretmanager
 
-import "time"
+import (
+	"log/slog"
+	"time"
+)
 
 // Vault is a SecretManager vault: the control-plane resource that holds secrets.
 type Vault struct {
@@ -33,6 +36,10 @@ type Store interface {
 	Create(vaultID, name, value string) (int, error)
 	Unveil(vaultID, name string, version int) (value string, actualVersion int, err error)
 	Delete(vaultID, name string) error
+
+	// setLogger sets the service-tagged logger the store uses for operation
+	// logs; the unified binary injects it so store logs identify their service.
+	setLogger(*slog.Logger)
 
 	Close() error
 }

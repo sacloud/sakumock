@@ -48,6 +48,7 @@ type SQLiteStore struct {
 	ids               *core.IDGenerator
 	done              chan struct{}
 	closeOnce         sync.Once
+	logger            *slog.Logger
 }
 
 // NewSQLiteStore opens (or creates) the SQLite database at path and returns a Store.
@@ -81,17 +82,21 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 	ids := core.NewIDGenerator(core.DefaultIDBase)
 	ids.Observe(strconv.FormatInt(maxID, 10))
 
-	slog.Info("sqlite store opened", "path", path)
 	s := &SQLiteStore{
 		db:                db,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
 		ids:               ids,
 		done:              make(chan struct{}),
+		logger:            slog.Default(),
 	}
+	s.logger.Info("sqlite store opened", "path", path)
 	go s.compactLoop()
 	return s, nil
 }
+
+// setLogger sets the service-tagged logger used for operation logs.
+func (s *SQLiteStore) setLogger(l *slog.Logger) { s.logger = l }
 
 func (s *SQLiteStore) allocateID() string {
 	return s.ids.Next()
@@ -137,7 +142,7 @@ func (s *SQLiteStore) Send(queueName, content string, now time.Time) (storedMess
 	query := `INSERT INTO messages (id, queue_name, content, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)`
 	args := []any{msg.ID, queueName, msg.Content, msg.CreatedAt.UnixMilli(), msg.UpdatedAt.UnixMilli(), msg.ExpiresAt.UnixMilli()}
 	err := s.withTx(context.Background(), func(tx *sql.Tx) error {
-		slog.Debug("sqlite exec", "sql", query, "args", args)
+		s.logger.Debug("sqlite exec", "sql", query, "args", args)
 		_, err := tx.Exec(query, args...)
 		return err
 	})
@@ -162,7 +167,7 @@ func (s *SQLiteStore) Receive(queueName string, now time.Time) (msg storedMessag
 		 )
 		 RETURNING id, content, created_at, updated_at, expires_at, acquired_at, visibility_timeout_at`
 		args := []any{nowMilli, nowMilli, visibilityTimeoutAtMilli, queueName, nowMilli, nowMilli}
-		slog.Debug("sqlite query", "sql", query, "args", args)
+		s.logger.Debug("sqlite query", "sql", query, "args", args)
 		row := tx.QueryRow(query, args...)
 
 		var createdAt, updatedAt, expiresAt, acquiredAt, visibilityTimeoutAt int64
@@ -198,7 +203,7 @@ func (s *SQLiteStore) ExtendTimeout(queueName, id string, now time.Time) (msg st
 	args := []any{visibilityTimeoutAtMilli, nowMilli, queueName, id}
 
 	err := s.withTx(context.Background(), func(tx *sql.Tx) error {
-		slog.Debug("sqlite query", "sql", query, "args", args)
+		s.logger.Debug("sqlite query", "sql", query, "args", args)
 		row := tx.QueryRow(query, args...)
 
 		var createdAt, updatedAt, expiresAt, acquiredAt, visibilityTimeoutAt int64
@@ -226,7 +231,7 @@ func (s *SQLiteStore) Delete(queueName, id string) error {
 	query := `DELETE FROM messages WHERE queue_name = ? AND id = ?`
 	args := []any{queueName, id}
 	return s.withTx(context.Background(), func(tx *sql.Tx) error {
-		slog.Debug("sqlite exec", "sql", query, "args", args)
+		s.logger.Debug("sqlite exec", "sql", query, "args", args)
 		result, err := tx.Exec(query, args...)
 		if err != nil {
 			return fmt.Errorf("failed to delete message: %w", err)
@@ -252,9 +257,9 @@ func (s *SQLiteStore) compactLoop() {
 		case now := <-ticker.C:
 			query := `DELETE FROM messages WHERE expires_at <= ?`
 			args := []any{now.UnixMilli()}
-			slog.Debug("sqlite compact", "sql", query, "args", args)
+			s.logger.Debug("sqlite compact", "sql", query, "args", args)
 			if _, err := s.db.Exec(query, args...); err != nil {
-				slog.Error("sqlite compact failed", "err", err)
+				s.logger.Error("sqlite compact failed", "err", err)
 			}
 		}
 	}

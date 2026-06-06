@@ -68,6 +68,14 @@ sakumock all --config sakumock.yaml
 
 Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
 
+#### Environment variables
+
+Every per-service setting also has an environment variable, which is the most convenient way to configure the mock in a container. The names are `<SERVICE>_<SETTING>` (e.g. `KMS_LATENCY`, `SIMPLEMQ_RATE_LIMIT`, `MONITORINGSUITE_DEBUG`); each flag's exact variable is shown in `sakumock all --help` as `($VAR)`. They apply under `sakumock all` just as they do for the standalone subcommands:
+
+```bash
+KMS_LATENCY=200ms SIMPLEMQ_RATE_LIMIT=10 sakumock all
+```
+
 ### Connect your application
 
 The `sakumock env` subcommand prints the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs as a dotenv file, so you never hand-copy endpoints. It starts no server, so you can run it before (or independently of) `sakumock all`:
@@ -136,6 +144,14 @@ A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Con
 ```bash
 docker run --rm \
   -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 \
+  ghcr.io/sacloud/sakumock:latest
+```
+
+Configure the mock's behavior with the per-service environment variables (see [Environment variables](#environment-variables)) — handier than flags in a container:
+
+```bash
+docker run --rm -p 18081:18081 \
+  -e KMS_LATENCY=200ms -e KMS_RATE_LIMIT=10 \
   ghcr.io/sacloud/sakumock:latest
 ```
 

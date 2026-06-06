@@ -9,6 +9,12 @@ services:
   sakumock:
     image: ghcr.io/sacloud/sakumock:latest
     # The default command runs every service bound to 0.0.0.0.
+    # Configure each service with its `<SERVICE>_<SETTING>` env vars (the most
+    # convenient way in a container); `sakumock all --help` lists them as ($VAR).
+    environment:
+      KMS_LATENCY: 200ms # add 200ms of latency to every KMS response
+      SIMPLEMQ_RATE_LIMIT: "10" # 10 requests/sec per queue
+      MONITORINGSUITE_DEBUG: "true"
     ports: # optional: only needed to reach the services from the host
       - "18080:18080" # simplemq
       - "18081:18081" # kms

@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.0.5](https://github.com/sacloud/sakumock/compare/core/v0.0.4...core/v0.0.5) - 2026-06-06
+- chore: bump core dependency to v0.0.4 in all services by @fujiwara in https://github.com/sacloud/sakumock/pull/78
+- chore: bump service dependencies to their latest releases by @fujiwara in https://github.com/sacloud/sakumock/pull/79
+- ci: publish releases via a draft so assets attach under immutable releases by @fujiwara in https://github.com/sacloud/sakumock/pull/80
+- Add Monitoring Suite mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/82
+- Tag every log line with the originating service name by @fujiwara in https://github.com/sacloud/sakumock/pull/85
+
 ## [v0.2.1](https://github.com/sacloud/sakumock/compare/v0.2.0...v0.2.1) - 2026-06-06
 - ci: publish releases via a draft so assets attach under immutable releases by @fujiwara in https://github.com/sacloud/sakumock/pull/80
 

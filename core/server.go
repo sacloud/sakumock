@@ -19,6 +19,17 @@ type Server interface {
 	Close()
 }
 
+// ServerOptions carries shared dependencies the unified binary injects into
+// every service when it builds them. Adding a field here lets a new shared
+// dependency reach all services without changing the ServiceConfig interface
+// or touching per-service code.
+type ServerOptions struct {
+	// IDGen, when non-nil, is the resource ID generator the service should use.
+	// The unified binary passes one shared generator to every service so IDs
+	// are globally unique across services, as in the real API.
+	IDGen *IDGenerator
+}
+
 // ServiceConfig is the common interface every service's Config satisfies. It
 // lets the unified binary build and describe every service uniformly, without
 // hard-coding per-service names, addresses, or endpoint variables. Each service
@@ -31,6 +42,6 @@ type ServiceConfig interface {
 	// ClientEnv returns the SAKURA_ENDPOINTS_* override(s) a client sets to
 	// reach this mock, derived from the listen address.
 	ClientEnv() []EnvVar
-	// NewServer builds the service's mock server.
-	NewServer() (Server, error)
+	// NewServer builds the service's mock server with the given shared options.
+	NewServer(opts ServerOptions) (Server, error)
 }

@@ -15,6 +15,10 @@ type Config struct {
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"KMS_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"KMS_RATE_LIMIT_WINDOW"`
 	Debug           bool          `help:"Enable debug mode" env:"KMS_DEBUG" default:"false"`
+
+	// idGen, when non-nil, is the resource ID generator injected by the unified
+	// binary via NewServer; nil means the store creates its own.
+	idGen *core.IDGenerator
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -32,7 +36,10 @@ func (Config) Name() string { return "kms" }
 func (c Config) ListenAddr() string { return c.Addr }
 
 // NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
-func (c Config) NewServer() (core.Server, error) { return NewHandler(c) }
+func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
+	c.idGen = opts.IDGen
+	return NewHandler(c)
+}
 
 // Compile-time checks that the service satisfies the core interfaces.
 var (
@@ -61,6 +68,9 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
+	}
+	if cfg.idGen != nil {
+		s.store.ids = cfg.idGen
 	}
 	s.mux = s.buildMux()
 	return s, nil

@@ -40,6 +40,54 @@ archives:
 checksum:
   name_template: checksums.txt
 
+# Multi-platform container image pushed to ghcr.io. Each entry builds a
+# single-arch image from the prebuilt binary (the Dockerfile only COPYs it, so
+# no emulation is needed), and docker_manifests combines them into one
+# multi-arch tag that `docker pull` resolves per host architecture. (The stable
+# dockers/docker_manifests blocks are used rather than the experimental
+# dockers_v2, since CI pins GoReleaser to `~> v2` where these remain supported.)
+dockers:
+  - id: sakumock-amd64
+    ids: [sakumock]
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile
+    use: buildx
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-amd64"
+      - "ghcr.io/sacloud/sakumock:latest-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.source=https://github.com/sacloud/sakumock"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+  - id: sakumock-arm64
+    ids: [sakumock]
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile
+    use: buildx
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-arm64"
+      - "ghcr.io/sacloud/sakumock:latest-arm64"
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.source=https://github.com/sacloud/sakumock"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+
+docker_manifests:
+  - name_template: "ghcr.io/sacloud/sakumock:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-amd64"
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/sacloud/sakumock:latest"
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:latest-amd64"
+      - "ghcr.io/sacloud/sakumock:latest-arm64"
+
 changelog:
   disable: true
 

@@ -46,13 +46,14 @@ sakumock all
 
 Run `sakumock all --help` for flags. Per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
 
-Instead of passing many flags, `sakumock all` can read a config file (`--config`, YAML or JSON by extension) with options grouped per service. CLI flags override the file:
+Instead of passing many flags, `sakumock all` can read a config file (`--config`, YAML or JSON by extension) with options grouped per service:
 
 ```yaml
 # sakumock.yaml
 simplemq:
   addr: 127.0.0.1:28080
   database: /var/lib/sakumock/mq.db
+  message-expire: 96h
 kms:
   latency: 5s
 ```
@@ -60,6 +61,8 @@ kms:
 ```bash
 sakumock all --config sakumock.yaml
 ```
+
+Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
 
 ### Connect your application
 

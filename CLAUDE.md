@@ -72,4 +72,5 @@ Sequential from 18080. Next available: 18084.
 - Logging: `log/slog` (Info for requests, Debug for operations)
 - CLI: `alecthomas/kong` for flag parsing
 - Tests: use the real SAKURA Cloud SDK client against `NewTestServer`
+- End-to-end Terraform test: `test/terraform/` (root module) drives the real `sakumock all` binary with the `sacloud/sakura` provider through a full apply → plan(no-diff) → destroy for one resource per service. It is behind the `terraform` build tag (so normal `go test ./...` skips it) and `t.Skip`s when the `terraform` binary is absent; run it with `go test -tags terraform ./test/terraform/`. CI runs it in the `terraform-integration` job (fetches the provider from the registry). A new service's resource should be added to `test/terraform/main.tf`.
 - SDK endpoint: `SAKURA_ENDPOINTS_<SERVICE_KEY>` environment variable

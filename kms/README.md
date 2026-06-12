@@ -26,7 +26,7 @@ sakumock-kms
 | `--rate-limit-window` | `KMS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `KMS_DEBUG` | `false` | Enable debug mode |
 
-## Use with kms-api-go SDK
+## Use with the kms SDK
 
 ```bash
 export SAKURA_ENDPOINTS_KMS=http://localhost:18081

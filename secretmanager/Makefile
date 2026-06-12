@@ -4,7 +4,7 @@ OPENAPI_FILES := openapi-fixed.json
 
 .PHONY: clean test openapi
 
-sakumock-secretmanager: go.* *.go cmd/sakumock-secretmanager/*.go
+sakumock-secretmanager: ../go.* *.go cmd/sakumock-secretmanager/*.go
 	go build -o $@ ./cmd/sakumock-secretmanager
 
 clean:

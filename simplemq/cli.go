@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -36,7 +37,7 @@ func (c *Command) Run(ctx context.Context) error {
 	defer h.Close()
 
 	slog.Info("sakumock-simplemq starting",
-		"version", Version,
+		"version", sakumock.Version,
 		"addr", c.Addr,
 		"api_key", apiKeyHint(c.APIKey),
 		"visibility_timeout", c.VisibilityTimeout,

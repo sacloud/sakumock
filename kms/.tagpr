@@ -1,8 +1,0 @@
-[tagpr]
-	releaseBranch = main
-	versionFile = kms/version.go
-	tagPrefix = kms/
-	vPrefix = true
-	majorLabels = sacloud-major
-	minorLabels = sacloud-minor
-	changelogFile = kms/CHANGELOG.md

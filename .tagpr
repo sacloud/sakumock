@@ -1,9 +1,10 @@
 [tagpr]
 	releaseBranch = main
-	versionFile = cmd/sakumock/version.go
+	versionFile = version.go
 	vPrefix = true
-	# The unified binary uses bare version tags (vX.Y.Z, no tagPrefix). The
-	# per-service modules keep their own prefixed tags via .github/workflows/tagpr.yml.
+	# The repository is a single Go module released as one unit with bare
+	# version tags (vX.Y.Z). Historical per-service tags (e.g. kms/v0.1.0)
+	# predate the module consolidation.
 	# tagpr creates the GitHub Release as a DRAFT with auto-generated notes
 	# (categorized via .github/release.yml); GoReleaser then uploads the binaries
 	# to that release with release.mode=keep-existing and publishes it. A draft

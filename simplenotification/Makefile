@@ -4,7 +4,7 @@ OPENAPI_FILES := openapi.yaml
 
 .PHONY: clean test openapi
 
-sakumock-simplenotification: go.* *.go cmd/sakumock-simplenotification/*.go
+sakumock-simplenotification: ../go.* *.go cmd/sakumock-simplenotification/*.go
 	go build -o $@ ./cmd/sakumock-simplenotification
 
 clean:

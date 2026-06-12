@@ -28,9 +28,9 @@ sakumock-monitoringsuite
 | `--rate-limit-window` | `MONITORINGSUITE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `MONITORINGSUITE_DEBUG` | `false` | Enable debug mode |
 
-## Use with the monitoring-suite SDK
+## Use with sacloud-sdk-go
 
-The SDK reads the `SAKURA_ENDPOINTS_MONITORING_SUITE` override (service key `monitoring_suite`):
+The [sacloud-sdk-go](https://github.com/sacloud/sacloud-sdk-go) `api/monitoring-suite` client reads the `SAKURA_ENDPOINTS_MONITORING_SUITE` override (service key `monitoring_suite`):
 
 ```bash
 export SAKURA_ENDPOINTS_MONITORING_SUITE=http://localhost:18084

@@ -46,7 +46,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, " per queue"),
 		"debug", c.Debug,
 	)
-	slog.Info("to use with the simplemq SDK or simplemq-cli",
+	slog.Info("to use with sacloud-sdk-go or simplemq-cli",
 		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }

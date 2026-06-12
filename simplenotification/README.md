@@ -50,7 +50,9 @@ sakumock-simplenotification --exec 'notify-send "sakura notification ($SAKUMOCK_
 sakumock-simplenotification --exec 'jq -Rs "{text:.}" | curl -sS -X POST -H "content-type: application/json" -d @- "$SLACK_WEBHOOK"'
 ```
 
-## Use with the simple-notification SDK
+## Use with sacloud-sdk-go
+
+The [sacloud-sdk-go](https://github.com/sacloud/sacloud-sdk-go) `api/simple-notification` client reads the `SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION` override:
 
 ```bash
 export SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=http://localhost:18083

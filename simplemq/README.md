@@ -49,10 +49,11 @@ sakumock-simplemq --rate-limit 10
 sakumock-simplemq --rate-limit 100 --rate-limit-window 1m
 ```
 
-## Use with the simplemq SDK or simplemq-cli
+## Use with sacloud-sdk-go or simplemq-cli
 
-Both the data plane (message) and control plane (queue) APIs are served by the same
-mock process, so point both endpoint overrides at it:
+The [sacloud-sdk-go](https://github.com/sacloud/sacloud-sdk-go) `api/simplemq` client and
+simplemq-cli read the endpoint overrides below. Both the data plane (message) and control
+plane (queue) APIs are served by the same mock process, so point both overrides at it:
 
 ```bash
 export SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://localhost:18080

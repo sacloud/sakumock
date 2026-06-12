@@ -15,6 +15,7 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [kms](kms/) | 18081 | `github.com/sacloud/sakumock/kms` | KMS key management API |
 | [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
 | [monitoringsuite](monitoringsuite/) | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
+| [eventbus](eventbus/) | 18085 | `github.com/sacloud/sakumock/eventbus` | EventBus control-plane API |
 
 ## Quick Start
 
@@ -133,6 +134,7 @@ sakumock secretmanager &
 sakumock kms &
 sakumock simplenotification &
 sakumock monitoringsuite &
+sakumock eventbus &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
@@ -143,7 +145,7 @@ A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Con
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 \
   ghcr.io/sacloud/sakumock:latest
 ```
 

@@ -1,6 +1,6 @@
 # sakumock/simplenotification
 
-A Simple Notification compatible mock server for local development and testing. It implements only the message-sending endpoint of the [SAKURA Cloud Simple Notification API](https://github.com/sacloud/simple-notification-api-go) with in-memory storage. Destination groups, routing, and history APIs are out of scope — this mock focuses on letting applications exercise notification dispatch in tests.
+A Simple Notification compatible mock server for local development and testing. It implements only the message-sending endpoint of the [SAKURA Cloud Simple Notification API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/simple-notification) with in-memory storage. Destination groups, routing, and history APIs are out of scope — this mock focuses on letting applications exercise notification dispatch in tests.
 
 ## Install
 
@@ -50,7 +50,7 @@ sakumock-simplenotification --exec 'notify-send "sakura notification ($SAKUMOCK_
 sakumock-simplenotification --exec 'jq -Rs "{text:.}" | curl -sS -X POST -H "content-type: application/json" -d @- "$SLACK_WEBHOOK"'
 ```
 
-## Use with simple-notification-api-go SDK
+## Use with the simple-notification SDK
 
 ```bash
 export SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=http://localhost:18083

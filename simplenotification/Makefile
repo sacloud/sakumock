@@ -1,4 +1,5 @@
-OPENAPI_MODULE := github.com/sacloud/simple-notification-api-go
+OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
+OPENAPI_SUBDIR := api/simple-notification/openapi
 OPENAPI_FILES := openapi.yaml
 
 .PHONY: clean test openapi
@@ -19,5 +20,5 @@ openapi:
 	$(eval MOD_VERSION := $(shell go list -m -f '{{.Version}}' $(OPENAPI_MODULE)))
 	$(eval MOD_DIR := $(shell go env GOMODCACHE)/$(OPENAPI_MODULE)@$(MOD_VERSION))
 	mkdir -p openapi
-	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/openapi/$(f) openapi/$(f);)
-	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION)"
+	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
+	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"

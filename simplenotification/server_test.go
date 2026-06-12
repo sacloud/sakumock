@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sacloud/saclient-go"
-	sdk "github.com/sacloud/simple-notification-api-go"
-	v1 "github.com/sacloud/simple-notification-api-go/apis/v1"
+	sdk "github.com/sacloud/sacloud-sdk-go/api/simple-notification"
+	v1 "github.com/sacloud/sacloud-sdk-go/api/simple-notification/apis/v1"
+	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
 	"github.com/sacloud/sakumock/simplenotification"
 )

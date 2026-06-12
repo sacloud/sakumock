@@ -34,7 +34,11 @@ Or pin a version in your project's `mise.toml`:
 "github:sacloud/sakumock" = "0.2.1"
 ```
 
-Alternatively, download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page.
+Alternatively, download a prebuilt binary from the [Releases](https://github.com/sacloud/sakumock/releases) page, or use the container image (see [Run with Docker](#run-with-docker)):
+
+```bash
+docker pull ghcr.io/sacloud/sakumock:latest
+```
 
 ### Run
 
@@ -64,22 +68,40 @@ sakumock all --config sakumock.yaml
 
 Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
 
-### Connect your application
+#### Environment variables
 
-`sakumock all` can write the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs into a dotenv file, so you never hand-copy endpoints:
+Every per-service setting also has an environment variable, which is the most convenient way to configure the mock in a container. The names are `<SERVICE>_<SETTING>` (e.g. `KMS_LATENCY`, `SIMPLEMQ_RATE_LIMIT`, `MONITORINGSUITE_DEBUG`); each flag's exact variable is shown in `sakumock all --help` as `($VAR)`. They apply under `sakumock all` just as they do for the standalone subcommands:
 
 ```bash
-sakumock all --write-env-file ./sakumock.env
+KMS_LATENCY=200ms SIMPLEMQ_RATE_LIMIT=10 sakumock all
+```
+
+### Connect your application
+
+The `sakumock env` subcommand prints the environment variables your client (SAKURA Cloud SDK or the Terraform provider) needs as a dotenv file, so you never hand-copy endpoints. It starts no server, so you can run it before (or independently of) `sakumock all`:
+
+```bash
+sakumock env > ./sakumock.env
 
 # In the shell that runs your SDK / Terraform:
 set -a; source ./sakumock.env; set +a
 terraform apply
 ```
 
-The generated file sets each service's `SAKURA_ENDPOINTS_*` override plus dummy
+The file sets each service's `SAKURA_ENDPOINTS_*` override plus dummy
 credentials. The dummy credentials also act as a safety net: a request to an API
 that sakumock does not mock reaches the real endpoint but fails authentication
 instead of touching your account.
+
+By default the endpoints point at each service's listen address. When the client
+reaches sakumock over the network — most importantly from a container — pass
+`--host` to substitute the host the client actually uses (the port is kept), and
+`--output FILE` to write a file where shell redirection is unavailable:
+
+```bash
+# Endpoints pointing at a host reachable as `localhost`
+sakumock env --host localhost > sakumock.env
+```
 
 Or set them by hand:
 
@@ -114,6 +136,34 @@ sakumock monitoringsuite &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
+
+### Run with Docker
+
+A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Container Registry. Its default command runs every service bound to `0.0.0.0`, so published ports are reachable from the host:
+
+```bash
+docker run --rm \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 \
+  ghcr.io/sacloud/sakumock:latest
+```
+
+Configure the mock's behavior with the per-service environment variables (see [Environment variables](#environment-variables)) — handier than flags in a container:
+
+```bash
+docker run --rm -p 18081:18081 \
+  -e KMS_LATENCY=200ms -e KMS_RATE_LIMIT=10 \
+  ghcr.io/sacloud/sakumock:latest
+```
+
+Writing an env file *inside* the container is not useful: a file there is invisible to a client on the host, and the in-container listen host is not how the client reaches the service. Instead, generate the client env with the `env` subcommand, telling it the host the client uses (the host shell does the redirection):
+
+```bash
+docker run --rm ghcr.io/sacloud/sakumock:latest env --host localhost > sakumock.env
+set -a; source ./sakumock.env; set +a
+terraform apply
+```
+
+For docker compose, run `env` as a oneshot that writes the file into a shared volume (the image has no shell, so use `--output` rather than `>`) and have your app load it. See [`examples/compose.yaml`](examples/compose.yaml) for a complete example.
 
 ### Use as a library in tests
 

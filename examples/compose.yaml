@@ -1,0 +1,46 @@
+# Example: run sakumock with docker compose alongside an SDK / Terraform client.
+#
+# The `sakumock-env` oneshot writes the client environment (endpoints pointing
+# at the `sakumock` service name + dummy credentials) into a shared volume; the
+# app loads it before running its client. Because the app reaches sakumock over
+# the compose network by service name, no published ports are required for it —
+# the `ports` below only expose the services to the host.
+services:
+  sakumock:
+    image: ghcr.io/sacloud/sakumock:latest
+    # The default command runs every service bound to 0.0.0.0.
+    # Configure each service with its `<SERVICE>_<SETTING>` env vars (the most
+    # convenient way in a container); `sakumock all --help` lists them as ($VAR).
+    environment:
+      KMS_LATENCY: 200ms # add 200ms of latency to every KMS response
+      SIMPLEMQ_RATE_LIMIT: "10" # 10 requests/sec per queue
+      MONITORINGSUITE_DEBUG: "true"
+    ports: # optional: only needed to reach the services from the host
+      - "18080:18080" # simplemq
+      - "18081:18081" # kms
+      - "18082:18082" # secretmanager
+      - "18083:18083" # simplenotification
+      - "18084:18084" # monitoringsuite
+
+  # Renders the client env into the shared volume, then exits. It runs no
+  # server, so it does not depend on `sakumock` being up. --output is used
+  # because the image has no shell for `>` redirection.
+  sakumock-env:
+    image: ghcr.io/sacloud/sakumock:latest
+    command: ["env", "--host", "sakumock", "--output", "/env/sakumock.env"]
+    volumes:
+      - sakumock-env:/env
+
+  # Your application / Terraform runner. Replace the image and command.
+  app:
+    image: alpine
+    depends_on:
+      sakumock-env:
+        condition: service_completed_successfully
+    volumes:
+      - sakumock-env:/env
+    # Load the env, then run your client (here it just prints the variables).
+    command: ["sh", "-c", "set -a; . /env/sakumock.env; set +a; env | grep SAKURA"]
+
+volumes:
+  sakumock-env:

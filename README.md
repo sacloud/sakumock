@@ -129,7 +129,7 @@ defer srv.Close()
 
 ## Module Conventions
 
-Each service module must follow these conventions:
+Each service package must follow these conventions:
 
 ### Public API
 
@@ -147,7 +147,7 @@ Each service module must follow these conventions:
 
 ### Structure
 
-Each module is an independent Go module (`go.mod`) under its own subdirectory with:
+Each service is a package under its own subdirectory with:
 
 - `store.go` — `Store` interface and domain types
 - `store_memory.go` — In-memory `Store` implementation
@@ -159,7 +159,7 @@ Each module is an independent Go module (`go.mod`) under its own subdirectory wi
 - `Makefile` — build, test, install targets
 - `README.md` — usage and API documentation
 
-The unified `sakumock` binary lives in the repository-root module at `cmd/sakumock`; it imports each service's `Command` and registers it as a subcommand. Shared CLI plumbing (graceful shutdown, logging, the serve loop) lives in the `core` module.
+The unified `sakumock` binary lives at `cmd/sakumock`; it imports each service's `Command` and registers it as a subcommand. Shared CLI plumbing (graceful shutdown, logging, the serve loop) lives in the `core` package.
 
 ### Port Allocation
 

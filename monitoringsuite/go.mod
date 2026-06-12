@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/google/uuid v1.6.0
-	github.com/sacloud/sacloud-sdk-go v0.0.1-0.20260601234651-2b1a2993d397
+	github.com/sacloud/sacloud-sdk-go v0.0.1-beta.2
 	github.com/sacloud/sakumock/core v0.0.4
 )
 

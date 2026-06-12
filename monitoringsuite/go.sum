@@ -56,8 +56,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
 github.com/rogpeppe/go-internal v1.14.1/go.mod h1:MaRKkUm5W0goXpeCfT7UZI6fk/L7L7so1lCWt35ZSgc=
-github.com/sacloud/sacloud-sdk-go v0.0.1-0.20260601234651-2b1a2993d397 h1:H2cX8g+f2GoIj5gVH9/eD67p62YqKkJYLyYpPmLfIGU=
-github.com/sacloud/sacloud-sdk-go v0.0.1-0.20260601234651-2b1a2993d397/go.mod h1:nEoCmGgGzak+nx6PeQ1zkr5LiRhUWwwCb7kSig11210=
+github.com/sacloud/sacloud-sdk-go v0.0.1-beta.2 h1:aYN2S6belr8beyScK3ryPuekxLAxPS3WeCdppts1Wxk=
+github.com/sacloud/sacloud-sdk-go v0.0.1-beta.2/go.mod h1:nEoCmGgGzak+nx6PeQ1zkr5LiRhUWwwCb7kSig11210=
 github.com/sacloud/sakumock/core v0.0.4 h1:bHJyL3jGnYpitUtuTU41gJqbaa+kO9Xp2TytV//ooAg=
 github.com/sacloud/sakumock/core v0.0.4/go.mod h1:x3Kj0RMR0/RWluKzNnPNDJqs0vpNZirzpert26hYJno=
 github.com/segmentio/asm v1.2.1 h1:DTNbBqs57ioxAD4PrArqftgypG4/qNpXoJx8TVXxPR0=

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/kms"
 	"github.com/sacloud/sakumock/monitoringsuite"
@@ -110,7 +111,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 		}
 	}
 
-	slog.Info("sakumock all starting", "version", Version)
+	slog.Info("sakumock all starting", "version", sakumock.Version)
 	for _, i := range instances {
 		slog.Info("starting service", "service", i.cfg.Name(), "addr", i.cfg.ListenAddr())
 	}

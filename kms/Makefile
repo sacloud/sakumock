@@ -4,7 +4,7 @@ OPENAPI_FILES := openapi.json
 
 .PHONY: clean test openapi
 
-sakumock-kms: go.* *.go cmd/sakumock-kms/*.go
+sakumock-kms: ../go.* *.go cmd/sakumock-kms/*.go
 	go build -o $@ ./cmd/sakumock-kms
 
 clean:

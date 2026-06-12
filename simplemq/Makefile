@@ -4,7 +4,7 @@ OPENAPI_FILES := message.yaml queue.yaml
 
 .PHONY: clean test openapi
 
-sakumock-simplemq: go.* *.go cmd/sakumock-simplemq/*.go
+sakumock-simplemq: ../go.* *.go cmd/sakumock-simplemq/*.go
 	go build -o $@ ./cmd/sakumock-simplemq
 
 clean:

@@ -12,6 +12,7 @@ func newTestEnvCmd() *EnvCmd {
 	c.Secretmanager.Addr = "127.0.0.1:18082"
 	c.Simplenotification.Addr = "127.0.0.1:18083"
 	c.Monitoringsuite.Addr = "127.0.0.1:18084"
+	c.Eventbus.Addr = "127.0.0.1:18085"
 	return c
 }
 
@@ -25,6 +26,7 @@ func TestEnvCmdDefaultHost(t *testing.T) {
 	for _, want := range []string{
 		"SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081",
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://127.0.0.1:18080",
+		"SAKURA_ENDPOINTS_EVENTBUS=http://127.0.0.1:18085/", // trailing slash: see eventbus.Config.ClientEnv
 		"SAKURA_ACCESS_TOKEN=dummy",
 		"SAKURA_ACCESS_TOKEN_SECRET=dummy",
 	} {
@@ -46,6 +48,7 @@ func TestEnvCmdHostRewrite(t *testing.T) {
 	for _, want := range []string{
 		"SAKURA_ENDPOINTS_KMS=http://sakumock:18081",
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://sakumock:18080",
+		"SAKURA_ENDPOINTS_EVENTBUS=http://sakumock:18085/", // trailing slash survives the host rewrite
 	} {
 		if !strings.Contains(rendered, want) {
 			t.Errorf("env missing %q\n%s", want, rendered)

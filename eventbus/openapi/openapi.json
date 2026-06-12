@@ -1,0 +1,1006 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "EventBus さくらのクラウドAPI",
+    "contact": {
+      "url": "https://help.sakura.ad.jp/contact/"
+    },
+    "description": "---\nCopyright SAKURA internet Inc.\n\n# はじめに\n\n「EventBus」は、さくらのクラウド上でイベント駆動型の処理を実現するためのサービスです。\nEventBusのリソース（実行設定・スケジュール）を作成・削除するには、さくらのクラウド コントロールパネルか下記APIを利用します。\n詳細は[EventBus クラウドマニュアル](https://manual.sakura.ad.jp/cloud/appliance/eventbus/index.html)を参照してください。\n\n# 基本的な使い方\n## APIキーの発行\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。\nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n<div class=\"warning\">\n  <b>操作マニュアル</b><br />\n  <ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## APIエンドポイント\nhttps://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1"
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1",
+      "description": "さくらのクラウドAPIエンドポイント"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/commonserviceitem": {
+      "get": {
+        "summary": "実行設定・スケジュール・トリガーの一覧取得",
+        "operationId": "getCommonServiceItems",
+        "description": "Provider.Classでeventbusschedule、eventbustriggerまたはeventbusprocessconfigurationを指定してフィルタ可能。\nクエリパラメータに下記のようにフィルタを設定することでスケジュール、トリガーまたは実行設定のリソースのみを取得できます\n`/commonserviceitem?{\"Filter\":{\"Provider.Class\":\"eventbusschedule\"}}`\n`/commonserviceitem?{\"Filter\":{\"Provider.Class\":\"eventbustrigger\"}}`\n`/commonserviceitem?{\"Filter\":{\"Provider.Class\":\"eventbusprocessconfiguration\"}}`\n",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "CommonServiceItems"
+                  ],
+                  "properties": {
+                    "From": {
+                      "type": "integer"
+                    },
+                    "Count": {
+                      "type": "integer"
+                    },
+                    "Total": {
+                      "type": "integer"
+                    },
+                    "CommonServiceItems": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CommonServiceItem"
+                      }
+                    },
+                    "is_ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "is_fatal": true,
+                  "serial": "749ad39e1eea340c4d75bf5a4dd4bd11",
+                  "status": "400 Bad Request",
+                  "error_code": "bad_request",
+                  "error_msg": "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "is_fatal": true,
+                  "serial": "749ad39e1eea340c4d75bf5a4dd4bd11",
+                  "status": "401 Unauthorized",
+                  "error_code": "unauthorized",
+                  "error_msg": "error-unauthorized"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "実行設定・スケジュール・トリガーの作成",
+        "operationId": "createCommonServiceItem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommonServiceItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "CommonServiceItem"
+                  ],
+                  "properties": {
+                    "CommonServiceItem": {
+                      "$ref": "#/components/schemas/CommonServiceItem"
+                    },
+                    "Success": {
+                      "type": "boolean"
+                    },
+                    "is_ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "is_fatal": true,
+                  "serial": "749ad39e1eea340c4d75bf5a4dd4bd11",
+                  "status": "400 Bad Request",
+                  "error_code": "bad_request",
+                  "error_msg": "不適切な要求です。パラメータの指定誤り、入力規則違反です。入力内容をご確認ください。"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "is_fatal": true,
+                  "serial": "749ad39e1eea340c4d75bf5a4dd4bd11",
+                  "status": "401 Unauthorized",
+                  "error_code": "unauthorized",
+                  "error_msg": "error-unauthorized"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "リソース名の重複、及びリソース作成数上限の超過",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "is_fatal": true,
+                  "serial": "749ad39e1eea340c4d75bf5a4dd4bd11",
+                  "status": "409 Conflict",
+                  "error_code": "limit_count_in_account",
+                  "error_msg": "要求を受け付けできません。プロジェクトあたりのリソース数上限により、リソースの割り当てに失敗しました。"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/commonserviceitem/{id}": {
+      "get": {
+        "summary": "実行設定・スケジュール・トリガーの取得",
+        "operationId": "getCommonServiceItem",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/resourceIdPathParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "CommonServiceItem"
+                  ],
+                  "properties": {
+                    "CommonServiceItem": {
+                      "$ref": "#/components/schemas/CommonServiceItem"
+                    },
+                    "is_ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "リソースが存在しない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "実行設定・スケジュール・トリガーの更新",
+        "operationId": "updateCommonServiceItem",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/resourceIdPathParam"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommonServiceItemRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "CommonServiceItem"
+                  ],
+                  "properties": {
+                    "CommonServiceItem": {
+                      "$ref": "#/components/schemas/CommonServiceItem"
+                    },
+                    "Success": {
+                      "type": "boolean"
+                    },
+                    "is_ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "リソースが存在しない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "実行設定・スケジュール・トリガーの削除",
+        "operationId": "deleteCommonServiceItem",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/resourceIdPathParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "CommonServiceItem"
+                  ],
+                  "properties": {
+                    "CommonServiceItem": {
+                      "$ref": "#/components/schemas/CommonServiceItem"
+                    },
+                    "Success": {
+                      "type": "boolean"
+                    },
+                    "is_ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "リソースが存在しない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/commonserviceitem/{id}/eventbus/processconfiguration/set-secret": {
+      "put": {
+        "summary": "実行設定のSecret設定",
+        "operationId": "setProcessConfigurationSecret",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/resourceIdPathParam"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSecretRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "process": {
+                      "type": "object",
+                      "properties": {
+                        "result": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "is_ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "リソースが存在しない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "APIキーを利用したBasic認証"
+      }
+    },
+    "parameters": {
+      "resourceIdPathParam": {
+        "in": "path",
+        "name": "id",
+        "description": "キューのリソースID",
+        "schema": {
+          "type": "string"
+        },
+        "required": true
+      }
+    },
+    "schemas": {
+      "CommonServiceItem": {
+        "type": "object",
+        "required": [
+          "ID",
+          "Name",
+          "Settings",
+          "SettingsHash",
+          "Availability",
+          "CreatedAt",
+          "ModifiedAt",
+          "Provider",
+          "Tags"
+        ],
+        "properties": {
+          "ID": {
+            "type": "string",
+            "description": "リソースID"
+          },
+          "Name": {
+            "type": "string",
+            "description": "リソース名"
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "Settings": {
+            "$ref": "#/components/schemas/Settings"
+          },
+          "SettingsHash": {
+            "type": "string"
+          },
+          "Status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "ServiceClass": {
+            "type": "string",
+            "nullable": true
+          },
+          "Availability": {
+            "type": "string"
+          },
+          "CreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ModifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Provider": {
+            "$ref": "#/components/schemas/Provider"
+          },
+          "Icon": {
+            "$ref": "#/components/schemas/Icon"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Settings": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ProcessConfigurationSettings"
+          },
+          {
+            "$ref": "#/components/schemas/ScheduleSettings"
+          },
+          {
+            "$ref": "#/components/schemas/TriggerSettings"
+          }
+        ],
+        "description": "実行設定(ProcessConfiguration)、トリガー(Trigger)またはスケジュール(Schedule)用設定"
+      },
+      "ProcessConfigurationSettings": {
+        "type": "object",
+        "required": [
+          "Destination",
+          "Parameters"
+        ],
+        "properties": {
+          "Destination": {
+            "type": "string",
+            "enum": [
+              "simplenotification",
+              "simplemq",
+              "autoscale"
+            ],
+            "description": "ジョブの宛先（simplenotification/simplemq/autoscale）"
+          },
+          "Parameters": {
+            "type": "string",
+            "description": "Destinationごとのパラメータ（group_id, message, queue_name, content等）"
+          }
+        }
+      },
+      "ScheduleSettings": {
+        "type": "object",
+        "required": [
+          "ProcessConfigurationID",
+          "StartsAt"
+        ],
+        "properties": {
+          "ProcessConfigurationID": {
+            "type": "string",
+            "description": "実行設定ID"
+          },
+          "RecurringStep": {
+            "type": "integer",
+            "description": "実行間隔"
+          },
+          "RecurringUnit": {
+            "type": "string",
+            "enum": [
+              "min",
+              "hour",
+              "day"
+            ],
+            "description": "実行間隔単位"
+          },
+          "Crontab": {
+            "type": "string",
+            "description": "crontab形式"
+          },
+          "StartsAt": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "スケジュール開始時刻（エポックミリ秒）\nリクエスト時はintegerで指定する必要があります。\nレスポンスはstringで返却されます。"
+          }
+        }
+      },
+      "TriggerSettings": {
+        "type": "object",
+        "properties": {
+          "Source": {
+            "type": "string"
+          },
+          "Types": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "Conditions": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "discriminator": {
+                "propertyName": "Op",
+                "mapping": {
+                  "eq": "#/components/schemas/TriggerConditionEq",
+                  "in": "#/components/schemas/TriggerConditionIn"
+                }
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TriggerConditionEq"
+                },
+                {
+                  "$ref": "#/components/schemas/TriggerConditionIn"
+                }
+              ]
+            }
+          },
+          "ProcessConfigurationID": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "Source",
+          "ProcessConfigurationID"
+        ]
+      },
+      "TriggerConditionEq": {
+        "type": "object",
+        "required": [
+          "Key",
+          "Op",
+          "Values"
+        ],
+        "properties": {
+          "Key": {
+            "type": "string",
+            "pattern": "^(?!data$)[a-z0-9]{1,20}$"
+          },
+          "Op": {
+            "type": "string",
+            "enum": [
+              "eq"
+            ]
+          },
+          "Values": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TriggerConditionIn": {
+        "type": "object",
+        "required": [
+          "Key",
+          "Op",
+          "Values"
+        ],
+        "properties": {
+          "Key": {
+            "type": "string",
+            "pattern": "^(?!data$)[a-z0-9]{1,20}$"
+          },
+          "Op": {
+            "type": "string",
+            "enum": [
+              "in"
+            ]
+          },
+          "Values": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "Success": {
+            "type": "boolean"
+          },
+          "Message": {
+            "type": "string"
+          },
+          "UpdatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "Provider": {
+        "type": "object",
+        "required": [
+          "Class"
+        ],
+        "properties": {
+          "ID": {
+            "type": "integer"
+          },
+          "Class": {
+            "type": "string",
+            "enum": [
+              "eventbusprocessconfiguration",
+              "eventbusschedule",
+              "eventbustrigger"
+            ]
+          },
+          "Name": {
+            "type": "string"
+          },
+          "ServiceClass": {
+            "type": "string"
+          }
+        }
+      },
+      "Icon": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "ID": {
+            "type": "string"
+          },
+          "URL": {
+            "type": "string"
+          },
+          "Name": {
+            "type": "string"
+          },
+          "Scope": {
+            "type": "string"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateCommonServiceItemRequest": {
+        "type": "object",
+        "required": [
+          "CommonServiceItem"
+        ],
+        "properties": {
+          "CommonServiceItem": {
+            "type": "object",
+            "required": [
+              "Name",
+              "Settings",
+              "Provider"
+            ],
+            "properties": {
+              "Name": {
+                "type": "string",
+                "description": "リソース名"
+              },
+              "Description": {
+                "type": "string",
+                "nullable": true
+              },
+              "Settings": {
+                "$ref": "#/components/schemas/Settings"
+              },
+              "Provider": {
+                "$ref": "#/components/schemas/Provider"
+              },
+              "Icon": {
+                "$ref": "#/components/schemas/Icon"
+              },
+              "Tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UpdateCommonServiceItemRequest": {
+        "type": "object",
+        "required": [
+          "CommonServiceItem"
+        ],
+        "properties": {
+          "CommonServiceItem": {
+            "type": "object",
+            "properties": {
+              "Name": {
+                "type": "string",
+                "description": "リソース名"
+              },
+              "Description": {
+                "type": "string",
+                "nullable": true
+              },
+              "Settings": {
+                "$ref": "#/components/schemas/Settings"
+              },
+              "Provider": {
+                "$ref": "#/components/schemas/Provider"
+              },
+              "Icon": {
+                "$ref": "#/components/schemas/Icon"
+              },
+              "Tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "is_fatal": {
+            "type": "boolean"
+          },
+          "serial": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "error_code": {
+            "type": "string"
+          },
+          "error_msg": {
+            "type": "string"
+          }
+        }
+      },
+      "SetSecretRequest": {
+        "type": "object",
+        "required": [
+          "Secret"
+        ],
+        "properties": {
+          "Secret": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SacloudAPISecret"
+              },
+              {
+                "$ref": "#/components/schemas/SimpleMQSecret"
+              }
+            ],
+            "description": "設定するシークレット値"
+          }
+        }
+      },
+      "SacloudAPISecret": {
+        "type": "object",
+        "required": [
+          "AccessToken",
+          "AccessTokenSecret"
+        ],
+        "properties": {
+          "AccessToken": {
+            "type": "string",
+            "description": "さくらのクラウドのアクセストークン"
+          },
+          "AccessTokenSecret": {
+            "type": "string",
+            "description": "さくらのクラウドのアクセストークンシークレット"
+          }
+        },
+        "example": {
+          "AccessToken": "アクセストークン",
+          "AccessTokenSecret": "アクセストークンシークレット"
+        }
+      },
+      "SimpleMQSecret": {
+        "type": "object",
+        "required": [
+          "APIKey"
+        ],
+        "properties": {
+          "APIKey": {
+            "type": "string",
+            "description": "SimpleMQのキューのAPIキー"
+          }
+        }
+      }
+    }
+  }
+}

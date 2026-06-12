@@ -17,6 +17,7 @@ func newTestAllCmd() *AllCmd {
 	c.Secretmanager.Addr = "127.0.0.1:18082"
 	c.Simplenotification.Addr = "127.0.0.1:18083"
 	c.Monitoringsuite.Addr = "127.0.0.1:18084"
+	c.Eventbus.Addr = "127.0.0.1:18085"
 	return c
 }
 
@@ -31,7 +32,7 @@ func TestAllBuild(t *testing.T) {
 		}
 	}()
 
-	if got, want := len(services), 5; got != want {
+	if got, want := len(services), 6; got != want {
 		t.Fatalf("got %d services, want %d", got, want)
 	}
 	if services[0].cfg.Name() != "simplemq" || len(services[0].cfg.ClientEnv()) != 2 {

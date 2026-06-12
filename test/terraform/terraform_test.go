@@ -42,13 +42,14 @@ func TestTerraformEndToEnd(t *testing.T) {
 	// fixed defaults, so the test never collides with — or accidentally talks
 	// to — a process already listening on those ports. The chosen address for
 	// each service is passed via its prefixed --<service>-addr flag.
-	addrs := []string{freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t)}
+	addrs := []string{freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t)}
 	addrFlags := []string{
 		"--simplemq-addr", addrs[0],
 		"--kms-addr", addrs[1],
 		"--secretmanager-addr", addrs[2],
 		"--simplenotification-addr", addrs[3],
 		"--monitoringsuite-addr", addrs[4],
+		"--eventbus-addr", addrs[5],
 	}
 
 	// Write the client dotenv with the `env` subcommand (no server needed); the

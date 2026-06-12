@@ -49,7 +49,7 @@ sakumock-simplemq --rate-limit 10
 sakumock-simplemq --rate-limit 100 --rate-limit-window 1m
 ```
 
-## Use with simplemq-api-go SDK or simplemq-cli
+## Use with the simplemq SDK or simplemq-cli
 
 Both the data plane (message) and control plane (queue) APIs are served by the same
 mock process, so point both endpoint overrides at it:

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	simplemqsdk "github.com/sacloud/sacloud-sdk-go/api/simplemq"
+	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/message"
+	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/queue"
 	"github.com/sacloud/sakumock/simplemq"
-	simplemqsdk "github.com/sacloud/simplemq-api-go"
-	"github.com/sacloud/simplemq-api-go/apis/v1/message"
-	"github.com/sacloud/simplemq-api-go/apis/v1/queue"
 )
 
 type testQueueSecuritySource struct {

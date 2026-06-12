@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/message"
 	"github.com/sacloud/sakumock/simplemq"
-	"github.com/sacloud/simplemq-api-go/apis/v1/message"
 )
 
 func init() {

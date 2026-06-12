@@ -1,7 +1,7 @@
 name: release
 
 # Releases the unified `sakumock` binary. tagpr maintains a release PR for the
-# root module (bare vX.Y.Z tags); when that PR is merged, tagpr creates the tag
+# repository (bare vX.Y.Z tags); when that PR is merged, tagpr creates the tag
 # and GoReleaser builds the binaries and creates the GitHub Release in the same
 # job. Running GoReleaser in the same run avoids the GITHUB_TOKEN limitation
 # where a tag pushed by the token does not trigger a new workflow.
@@ -34,8 +34,8 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      # GoReleaser builds in workspace mode (go.work) so the released binary
-      # reflects the source of every service at the tagged commit.
+      # The repository is a single Go module, so the released binary reflects
+      # the source of every service at the tagged commit.
       - uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7.2.2
         if: steps.tagpr.outputs.tag != ''
         with:

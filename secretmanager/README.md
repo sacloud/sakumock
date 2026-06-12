@@ -35,7 +35,7 @@ sakumock-secretmanager --latency 500ms
 sakumock-secretmanager --rate-limit 100 --rate-limit-window 1m
 ```
 
-## Use with secretmanager-api-go SDK / sakura-secrets-cli
+## Use with the secretmanager SDK / sakura-secrets-cli
 
 ```bash
 export SAKURA_ENDPOINTS_SECRETMANAGER=http://localhost:18082

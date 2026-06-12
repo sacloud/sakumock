@@ -4,9 +4,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/sacloud/saclient-go"
-	sm "github.com/sacloud/secretmanager-api-go"
-	v1 "github.com/sacloud/secretmanager-api-go/apis/v1"
+	sm "github.com/sacloud/sacloud-sdk-go/api/secretmanager"
+	v1 "github.com/sacloud/sacloud-sdk-go/api/secretmanager/apis/v1"
+	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
 	"github.com/sacloud/sakumock/secretmanager"
 )

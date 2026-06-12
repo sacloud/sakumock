@@ -42,7 +42,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"debug", c.Debug,
 	)
-	slog.Info("to use with secretmanager-api-go SDK",
+	slog.Info("to use with the secretmanager SDK",
 		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }

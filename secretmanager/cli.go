@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -36,13 +37,13 @@ func (c *Command) Run(ctx context.Context) error {
 	defer h.Close()
 
 	slog.Info("sakumock-secretmanager starting",
-		"version", Version,
+		"version", sakumock.Version,
 		"addr", c.Addr,
 		"latency", c.Latency,
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"debug", c.Debug,
 	)
-	slog.Info("to use with secretmanager-api-go SDK",
+	slog.Info("to use with sacloud-sdk-go",
 		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -36,7 +37,7 @@ func (c *Command) Run(ctx context.Context) error {
 	defer h.Close()
 
 	slog.Info("sakumock-simplemq starting",
-		"version", Version,
+		"version", sakumock.Version,
 		"addr", c.Addr,
 		"api_key", apiKeyHint(c.APIKey),
 		"visibility_timeout", c.VisibilityTimeout,
@@ -46,7 +47,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, " per queue"),
 		"debug", c.Debug,
 	)
-	slog.Info("to use with simplemq-api-go SDK or simplemq-cli",
+	slog.Info("to use with sacloud-sdk-go or simplemq-cli",
 		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
 	return core.Serve(ctx, c.Addr, h)
 }

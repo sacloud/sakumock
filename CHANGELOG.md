@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.0](https://github.com/sacloud/sakumock/compare/v0.2.1...v0.3.0) - 2026-06-12
+- Add Monitoring Suite mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/82
+- Tag every log line with the originating service name by @fujiwara in https://github.com/sacloud/sakumock/pull/85
+- Add root/test-terraform Makefiles and refresh README by @fujiwara in https://github.com/sacloud/sakumock/pull/91
+- Consolidate into a single Go module by @fujiwara in https://github.com/sacloud/sakumock/pull/94
+- Migrate to sacloud-sdk-go and consolidate into a single Go module by @fujiwara in https://github.com/sacloud/sakumock/pull/93
+- Provide a multi-platform container image on ghcr.io by @fujiwara in https://github.com/sacloud/sakumock/pull/95
+
 ## [v0.2.1](https://github.com/sacloud/sakumock/compare/v0.2.0...v0.2.1) - 2026-06-06
 - ci: publish releases via a draft so assets attach under immutable releases by @fujiwara in https://github.com/sacloud/sakumock/pull/80
 

@@ -2,7 +2,7 @@
 
 An Object Storage compatible mock server for local development and testing. It implements the **control plane** of the [SAKURA Cloud Object Storage API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/object-storage) — sites (clusters), buckets, the per-site account and its access keys, permissions and their access keys, and bucket sub-resources (encryption, replication, plan, usage/quota/penalty) — with in-memory storage.
 
-The **S3-compatible data plane is out of scope**: this mock only models the management API (bucket/account/permission lifecycle) so applications and Terraform can exercise Object Storage CRUD in tests. It does not store objects or speak the S3 protocol.
+The control plane does not store objects or speak the S3 protocol itself. An **optional S3-compatible data plane** can be enabled (`--enable-data-plane`), which sakumock serves by launching an external [versitygw](https://github.com/versity/versitygw) process — see [Data plane (S3)](#data-plane-s3) below.
 
 ## Install
 
@@ -27,6 +27,14 @@ sakumock-objectstorage
 | `--rate-limit` | `OBJECT_STORAGE_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoints (requests per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `OBJECT_STORAGE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `OBJECT_STORAGE_DEBUG` | `false` | Enable debug mode |
+| `--enable-data-plane` | `OBJECT_STORAGE_ENABLE_DATA_PLANE` | `false` | Serve the S3-compatible data plane via an external versitygw process |
+| `--data-plane-addr` | `OBJECT_STORAGE_DATA_PLANE_ADDR` | `127.0.0.1:18186` | Listen address for the S3 data plane |
+| `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses a temp dir removed on shutdown |
+| `--data-plane-access-key` | `OBJECT_STORAGE_DATA_PLANE_ACCESS_KEY` | `sakumock` | Root access key the S3 data plane accepts |
+| `--data-plane-secret-key` | `OBJECT_STORAGE_DATA_PLANE_SECRET_KEY` | `sakumocksecret` | Root secret key the S3 data plane accepts |
+| `--data-plane-region` | `OBJECT_STORAGE_DATA_PLANE_REGION` | `jp-north-1` | Region the S3 data plane signs/validates requests for |
+
+(Under the unified binary these are prefixed, e.g. `--objectstorage-enable-data-plane`.)
 
 ## Use with sacloud-sdk-go
 
@@ -100,3 +108,30 @@ Behavior notes:
 - Resource IDs (bucket `resource_id`, account `resource_id`, permission `id`) are minted from the shared [`core.IDGenerator`](../core/id.go), so under `sakumock all` they are globally unique across services as on the real platform.
 - Bucket deletion is idempotent: deleting a missing bucket still returns `204` (the spec defines no `404` for it), matching Terraform's expectation that deleting an already-gone resource is not an error.
 - Bucket usage/quota/penalty return representative placeholder values, and metering returns no billing items, since the mock keeps no usage history.
+
+## Data plane (S3)
+
+The S3-compatible object API (PUT/GET/DELETE objects, multipart, …) is **not** reimplemented. Instead, with `--enable-data-plane`, sakumock launches an external [versitygw](https://github.com/versity/versitygw) process backed by a local POSIX directory and manages its lifecycle (start on serve, graceful stop on shutdown). versitygw is **not bundled** — it would bloat the released single binary and the distroless image — so it must be installed on `PATH`; if it is not found, the data plane is simply disabled and the control plane keeps running.
+
+```bash
+# install versitygw (https://github.com/versity/versitygw), then:
+sakumock objectstorage --enable-data-plane
+# or under the unified binary:
+sakumock all --objectstorage-enable-data-plane
+```
+
+The integration is **loose**:
+
+- **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw.
+- **A single fixed root credential** (`--data-plane-access-key` / `--data-plane-secret-key`) authenticates S3 requests. Control-plane access keys and permissions are **not** enforced on the data plane.
+
+Point your S3 client at the data plane address with those credentials and the configured region:
+
+```bash
+aws --endpoint-url http://127.0.0.1:18186 \
+  --region jp-north-1 \
+  s3 cp ./file.txt s3://my-bucket/file.txt
+# (AWS_ACCESS_KEY_ID=sakumock AWS_SECRET_ACCESS_KEY=sakumocksecret)
+```
+
+Note: the SAKURA Terraform provider's `sakura_object_storage_object` resource uses an S3 client with TLS forced on, so reaching this plain-HTTP data plane from that specific resource needs versitygw served over TLS; SDK/CLI/application clients (where you control the endpoint and TLS) work over HTTP.

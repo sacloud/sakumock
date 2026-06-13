@@ -244,6 +244,7 @@ func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, fmt.Sprintf("bucket %q already exists", name))
 		return
 	}
+	s.dataPlane.createBucket(name)
 	writeJSON(w, http.StatusCreated, map[string]any{"data": bucketToJSON(b)})
 }
 
@@ -251,7 +252,9 @@ func (s *Server) handleDeleteBucket(w http.ResponseWriter, r *http.Request) {
 	// The spec defines no 404 for bucket deletion, so treat it as idempotent:
 	// deleting a missing bucket still returns 204 (matching Terraform's expectation
 	// that a delete of an already-gone resource is not an error).
-	s.store.DeleteBucket(r.PathValue("name"))
+	name := r.PathValue("name")
+	s.store.DeleteBucket(name)
+	s.dataPlane.deleteBucket(name)
 	w.WriteHeader(http.StatusNoContent)
 }
 

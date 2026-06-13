@@ -36,6 +36,35 @@ func TestEnvCmdDefaultHost(t *testing.T) {
 			t.Errorf("env missing %q\n%s", want, rendered)
 		}
 	}
+	// The data plane is off by default, so no AWS_* vars are emitted.
+	if strings.Contains(rendered, "AWS_") {
+		t.Errorf("unexpected AWS_* vars while data plane disabled\n%s", rendered)
+	}
+}
+
+func TestEnvCmdDataPlane(t *testing.T) {
+	c := newTestEnvCmd()
+	c.Objectstorage.EnableDataPlane = true
+	c.Objectstorage.DataPlaneAddr = "127.0.0.1:18186"
+	c.Objectstorage.DataPlaneAccessKey = "sakumock"
+	c.Objectstorage.DataPlaneSecretKey = "sakumocksecret"
+	c.Objectstorage.DataPlaneRegion = "jp-north-1"
+
+	vars, err := c.clientEnv()
+	if err != nil {
+		t.Fatalf("clientEnv: %v", err)
+	}
+	rendered := strings.Join(envLines(vars), "\n")
+	for _, want := range []string{
+		"AWS_ENDPOINT_URL_S3=http://127.0.0.1:18186",
+		"AWS_ACCESS_KEY_ID=sakumock",
+		"AWS_SECRET_ACCESS_KEY=sakumocksecret",
+		"AWS_DEFAULT_REGION=jp-north-1",
+	} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("data plane env missing %q\n%s", want, rendered)
+		}
+	}
 }
 
 func TestEnvCmdHostRewrite(t *testing.T) {

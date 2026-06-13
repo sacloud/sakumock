@@ -125,13 +125,17 @@ The integration is **loose**:
 - **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw.
 - **A single fixed root credential** (`--data-plane-access-key` / `--data-plane-secret-key`) authenticates S3 requests. Control-plane access keys and permissions are **not** enforced on the data plane.
 
-Point your S3 client at the data plane address with those credentials and the configured region:
+When the data plane is enabled, the startup log and `sakumock env` emit the `AWS_*` variables an aws-cli / aws-sdk client needs (`AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`). Load them and use any S3 client without passing `--endpoint-url`:
 
 ```bash
-aws --endpoint-url http://127.0.0.1:18186 \
-  --region jp-north-1 \
-  s3 cp ./file.txt s3://my-bucket/file.txt
-# (AWS_ACCESS_KEY_ID=sakumock AWS_SECRET_ACCESS_KEY=sakumocksecret)
+# `env` is a subcommand of the unified binary, so the flag is prefixed:
+sakumock env --objectstorage-enable-data-plane > sakumock.env
+set -a; source sakumock.env; set +a
+
+aws s3 ls
+aws s3 cp ./file.txt s3://my-bucket/file.txt
 ```
+
+(`AWS_ENDPOINT_URL_S3` and `AWS_DEFAULT_REGION` are honored by both aws-cli and aws-sdk-go-v2.)
 
 Note: the SAKURA Terraform provider's `sakura_object_storage_object` resource uses an S3 client with TLS forced on, so reaching this plain-HTTP data plane from that specific resource needs versitygw served over TLS; SDK/CLI/application clients (where you control the endpoint and TLS) work over HTTP.

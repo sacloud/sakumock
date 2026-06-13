@@ -45,5 +45,9 @@ func (c *Command) Run(ctx context.Context) error {
 	)
 	slog.Info("to use with sacloud-sdk-go",
 		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
+	if h.dataPlane != nil {
+		slog.Info("to use the S3 data plane with aws-cli / aws-sdk",
+			core.LogArgs(c.ExtraClientEnv())...)
+	}
 	return core.Serve(ctx, c.Addr, h)
 }

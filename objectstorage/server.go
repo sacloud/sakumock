@@ -46,6 +46,23 @@ func (c Config) ClientEnv() []core.EnvVar {
 	}
 }
 
+// ExtraClientEnv returns the AWS_* environment variables an aws-cli / aws-sdk
+// client uses to reach the S3 data plane, or nil when the data plane is
+// disabled. It satisfies core.ClientEnvExtender so `sakumock env` includes them.
+// AWS_ENDPOINT_URL_S3 and AWS_DEFAULT_REGION are honored by both aws-cli and
+// aws-sdk-go-v2.
+func (c Config) ExtraClientEnv() []core.EnvVar {
+	if !c.EnableDataPlane {
+		return nil
+	}
+	return []core.EnvVar{
+		{Key: "AWS_ENDPOINT_URL_S3", Value: "http://" + c.DataPlaneAddr},
+		{Key: "AWS_ACCESS_KEY_ID", Value: c.DataPlaneAccessKey},
+		{Key: "AWS_SECRET_ACCESS_KEY", Value: c.DataPlaneSecretKey},
+		{Key: "AWS_DEFAULT_REGION", Value: c.DataPlaneRegion},
+	}
+}
+
 // Name returns the service's short name.
 func (Config) Name() string { return "objectstorage" }
 

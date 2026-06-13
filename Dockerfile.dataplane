@@ -1,0 +1,36 @@
+# Variant image that bundles the external versitygw S3 gateway and enables the
+# Object Storage data plane by default (see Dockerfile for the lean,
+# control-plane-only image).
+#
+# versitygw is COPYed from its official multi-arch image rather than downloaded:
+# buildx resolves that image for the build's target platform, so the matching
+# architecture is selected automatically and the final stage stays COPY-only (no
+# download, checksum, or emulation). The image is pinned by digest for
+# reproducibility and integrity; the :v1.5.0 tag is kept for readability.
+ARG VERSITYGW_IMAGE=ghcr.io/versity/versitygw:v1.5.0@sha256:713e139d78e018d2dfe6b503cb2c257fd23818212f70ca55d5aa5b8e52c76554
+
+FROM ${VERSITYGW_IMAGE} AS versitygw
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY sakumock /sakumock
+COPY --from=versitygw /usr/local/bin/versitygw /usr/local/bin/versitygw
+
+# Enable the S3 data plane by default and bind it on all interfaces so the
+# published port is reachable from the host. PATH must include versitygw so
+# sakumock can locate it. Objects live under /home/nonroot/data (writable by the
+# distroless nonroot uid, so sakumock creates it at startup); mount a volume
+# there to persist them.
+ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    TMPDIR=/home/nonroot \
+    OBJECT_STORAGE_ENABLE_DATA_PLANE=true \
+    OBJECT_STORAGE_DATA_PLANE_ADDR=0.0.0.0:28086 \
+    OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data
+
+# One port per service (see the service table in README) plus the S3 data plane
+# (28086). EXPOSE is documentation only — publish the ports you need with `-p`.
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 28086
+
+ENTRYPOINT ["/sakumock"]
+# Run every service bound to 0.0.0.0 so published ports are reachable from
+# outside the container.
+CMD ["all", "--listen-host", "0.0.0.0"]

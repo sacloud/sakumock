@@ -163,6 +163,17 @@ docker run --rm \
   ghcr.io/sacloud/sakumock:latest
 ```
 
+A second tag, `:latest-dataplane` (and `:<version>-dataplane`), bundles the [versitygw](https://github.com/versity/versitygw) S3 gateway and enables the Object Storage S3 data plane by default (`OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`). The default image does not include versitygw, so use this tag when you need the S3 data plane:
+
+```bash
+docker run --rm \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 \
+  -p 28086:28086 \
+  ghcr.io/sacloud/sakumock:latest-dataplane
+```
+
+Objects are stored under `/home/nonroot/data`; mount a volume there to persist them. The image runs as a non-root user (uid 65532), so prefer a **named volume** (`-v sakumock-data:/home/nonroot/data`, which inherits the right ownership) — a bind-mounted host directory must be writable by uid 65532 or the data plane fails to start.
+
 Configure the mock's behavior with the per-service environment variables (see [Environment variables](#environment-variables)) — handier than flags in a container:
 
 ```bash

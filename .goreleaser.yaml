@@ -77,6 +77,39 @@ dockers:
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
       - "--label=org.opencontainers.image.licenses=Apache-2.0"
+  # Variant image bundling versitygw with the Object Storage data plane enabled
+  # (Dockerfile.dataplane). versitygw is fetched per arch in a build stage that
+  # runs on the build platform, so arm64 still needs no emulation.
+  - id: sakumock-dataplane-amd64
+    ids: [sakumock]
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile.dataplane
+    use: buildx
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-dataplane-amd64"
+      - "ghcr.io/sacloud/sakumock:latest-dataplane-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.source=https://github.com/sacloud/sakumock"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
+  - id: sakumock-dataplane-arm64
+    ids: [sakumock]
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile.dataplane
+    use: buildx
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-dataplane-arm64"
+      - "ghcr.io/sacloud/sakumock:latest-dataplane-arm64"
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.source=https://github.com/sacloud/sakumock"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
 
 docker_manifests:
   - name_template: "ghcr.io/sacloud/sakumock:{{ .Version }}"
@@ -87,6 +120,14 @@ docker_manifests:
     image_templates:
       - "ghcr.io/sacloud/sakumock:latest-amd64"
       - "ghcr.io/sacloud/sakumock:latest-arm64"
+  - name_template: "ghcr.io/sacloud/sakumock:{{ .Version }}-dataplane"
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-dataplane-amd64"
+      - "ghcr.io/sacloud/sakumock:{{ .Version }}-dataplane-arm64"
+  - name_template: "ghcr.io/sacloud/sakumock:latest-dataplane"
+    image_templates:
+      - "ghcr.io/sacloud/sakumock:latest-dataplane-amd64"
+      - "ghcr.io/sacloud/sakumock:latest-dataplane-arm64"
 
 changelog:
   disable: true

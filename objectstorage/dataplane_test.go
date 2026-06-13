@@ -4,6 +4,8 @@ import (
 	"io"
 	"net"
 	"os/exec"
+	"slices"
+	"sort"
 	"strings"
 	"testing"
 
@@ -62,6 +64,45 @@ func bucketListed(t *testing.T, c *s3.Client, name string) bool {
 	return false
 }
 
+func putObject(t *testing.T, c *s3.Client, bucket, key, body string) {
+	t.Helper()
+	if _, err := c.PutObject(t.Context(), &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   strings.NewReader(body),
+	}); err != nil {
+		t.Fatalf("PutObject %s/%s: %v", bucket, key, err)
+	}
+}
+
+func getObjectBody(t *testing.T, c *s3.Client, bucket, key string) string {
+	t.Helper()
+	out, err := c.GetObject(t.Context(), &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(key)})
+	if err != nil {
+		t.Fatalf("GetObject %s/%s: %v", bucket, key, err)
+	}
+	defer out.Body.Close()
+	data, err := io.ReadAll(out.Body)
+	if err != nil {
+		t.Fatalf("read %s/%s: %v", bucket, key, err)
+	}
+	return string(data)
+}
+
+func listObjectKeys(t *testing.T, c *s3.Client, bucket string) []string {
+	t.Helper()
+	out, err := c.ListObjectsV2(t.Context(), &s3.ListObjectsV2Input{Bucket: aws.String(bucket)})
+	if err != nil {
+		t.Fatalf("ListObjectsV2 %s: %v", bucket, err)
+	}
+	keys := make([]string, 0, len(out.Contents))
+	for _, o := range out.Contents {
+		keys = append(keys, aws.ToString(o.Key))
+	}
+	sort.Strings(keys)
+	return keys
+}
+
 // TestDataPlaneErrorsWhenVersitygwAbsent verifies that requesting the data plane
 // without versitygw on PATH is a hard error rather than a silent no-op: the user
 // opted in explicitly, so NewHandler must fail. Emptying PATH makes the lookup
@@ -95,44 +136,53 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 	ctx := t.Context()
 	fed, site := newClients(t, srv.TestURL())
 	bucketOp := sdk.NewBucketOp(fed, site)
-	const bucketName = "tf-test-bucket"
+	const bucketA, bucketB = "tf-test-bucket-a", "tf-test-bucket-b"
 
-	// Create via the control plane; it must appear as an S3 bucket.
-	if _, err := bucketOp.Create(ctx, &sdk.BucketCreateParams{Bucket: bucketName, SiteId: testSiteID}); err != nil {
-		t.Fatal(err)
+	// Create two buckets via the control plane; both must appear as S3 buckets.
+	for _, name := range []string{bucketA, bucketB} {
+		if _, err := bucketOp.Create(ctx, &sdk.BucketCreateParams{Bucket: name, SiteId: testSiteID}); err != nil {
+			t.Fatalf("create %s: %v", name, err)
+		}
 	}
 	s3c := newS3Client(addr)
-	if !bucketListed(t, s3c, bucketName) {
-		t.Fatalf("control-plane bucket %q not visible over the S3 data plane", bucketName)
+	if !bucketListed(t, s3c, bucketA) || !bucketListed(t, s3c, bucketB) {
+		t.Fatalf("control-plane buckets not both visible over the S3 data plane")
 	}
 
-	// Put and get an object through the S3 data plane.
-	const key, body = "hello.txt", "hello sakumock"
-	if _, err := s3c.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-		Body:   strings.NewReader(body),
-	}); err != nil {
-		t.Fatalf("PutObject: %v", err)
+	// The same key holds different content in each bucket, and one object exists
+	// only in bucket A — verifying objects are stored per bucket, not shared.
+	const sharedKey = "shared.txt"
+	putObject(t, s3c, bucketA, sharedKey, "content-a")
+	putObject(t, s3c, bucketB, sharedKey, "content-b")
+	putObject(t, s3c, bucketA, "only-a.txt", "only-in-a")
+
+	if got := getObjectBody(t, s3c, bucketA, sharedKey); got != "content-a" {
+		t.Errorf("bucket A %s = %q, want %q", sharedKey, got, "content-a")
 	}
-	got, err := s3c.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(bucketName), Key: aws.String(key)})
-	if err != nil {
-		t.Fatalf("GetObject: %v", err)
-	}
-	defer got.Body.Close()
-	data, err := io.ReadAll(got.Body)
-	if err != nil {
-		t.Fatalf("read object body: %v", err)
-	}
-	if string(data) != body {
-		t.Errorf("object body = %q, want %q", data, body)
+	if got := getObjectBody(t, s3c, bucketB, sharedKey); got != "content-b" {
+		t.Errorf("bucket B %s = %q, want %q", sharedKey, got, "content-b")
 	}
 
-	// Delete via the control plane; the bucket must disappear from the data plane.
-	if err := bucketOp.Delete(ctx, bucketName); err != nil {
+	// Each bucket lists only its own objects.
+	if got, want := listObjectKeys(t, s3c, bucketA), []string{"only-a.txt", sharedKey}; !slices.Equal(got, want) {
+		t.Errorf("bucket A keys = %v, want %v", got, want)
+	}
+	if got, want := listObjectKeys(t, s3c, bucketB), []string{sharedKey}; !slices.Equal(got, want) {
+		t.Errorf("bucket B keys = %v, want %v", got, want)
+	}
+
+	// Deleting bucket A via the control plane removes only A from the data plane;
+	// bucket B and its object are untouched.
+	if err := bucketOp.Delete(ctx, bucketA); err != nil {
 		t.Fatal(err)
 	}
-	if bucketListed(t, s3c, bucketName) {
-		t.Errorf("bucket %q still visible over the S3 data plane after control-plane delete", bucketName)
+	if bucketListed(t, s3c, bucketA) {
+		t.Errorf("bucket A still visible over the S3 data plane after control-plane delete")
+	}
+	if !bucketListed(t, s3c, bucketB) {
+		t.Errorf("bucket B should remain after deleting bucket A")
+	}
+	if got := getObjectBody(t, s3c, bucketB, sharedKey); got != "content-b" {
+		t.Errorf("bucket B %s after deleting A = %q, want %q", sharedKey, got, "content-b")
 	}
 }

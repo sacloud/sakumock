@@ -1,0 +1,50 @@
+# Variant image that bundles the external versitygw S3 gateway and enables the
+# Object Storage data plane by default (see Dockerfile for the lean,
+# control-plane-only image).
+#
+# The versitygw binary is fetched per target architecture in a build stage that
+# runs on the build platform ($BUILDPLATFORM), so no emulation is needed: like
+# the base image, the final stage only COPYs prebuilt binaries.
+ARG VERSITYGW_VERSION=v1.5.0
+
+FROM --platform=$BUILDPLATFORM alpine:3 AS fetch
+ARG VERSITYGW_VERSION
+ARG TARGETARCH
+RUN set -eu; \
+    apk add --no-cache curl ca-certificates tar >/dev/null; \
+    case "$TARGETARCH" in \
+      amd64) varch=x86_64 ;; \
+      arm64) varch=arm64 ;; \
+      *) echo "unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/versitygw.tar.gz \
+      "https://github.com/versity/versitygw/releases/download/${VERSITYGW_VERSION}/versitygw_${VERSITYGW_VERSION}_Linux_${varch}.tar.gz"; \
+    mkdir -p /tmp/vg /out; \
+    tar xzf /tmp/versitygw.tar.gz -C /tmp/vg; \
+    cp /tmp/vg/*/versitygw /out/versitygw; \
+    chmod 0755 /out/versitygw; \
+    mkdir -p /out/data && chown 65532:65532 /out/data
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY sakumock /sakumock
+COPY --from=fetch /out/versitygw /usr/local/bin/versitygw
+COPY --from=fetch --chown=65532:65532 /out/data /data
+
+# Enable the S3 data plane by default and bind it on all interfaces so the
+# published port is reachable from the host. Objects live under /data; mount a
+# volume there to persist them. PATH must include versitygw so sakumock can
+# locate it; TMPDIR points at the writable /data.
+ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    TMPDIR=/data \
+    OBJECT_STORAGE_ENABLE_DATA_PLANE=true \
+    OBJECT_STORAGE_DATA_PLANE_ADDR=0.0.0.0:28086 \
+    OBJECT_STORAGE_DATA_PLANE_DIR=/data
+
+# One port per service (see the service table in README) plus the S3 data plane
+# (28086). EXPOSE is documentation only — publish the ports you need with `-p`.
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 28086
+
+ENTRYPOINT ["/sakumock"]
+# Run every service bound to 0.0.0.0 so published ports are reachable from
+# outside the container.
+CMD ["all", "--listen-host", "0.0.0.0"]

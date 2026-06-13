@@ -1,0 +1,53 @@
+package objectstorage
+
+import (
+	"context"
+	"log/slog"
+	"os"
+
+	"github.com/sacloud/sakumock"
+	"github.com/sacloud/sakumock/core"
+)
+
+// Command is the CLI command for the Object Storage mock server. It embeds
+// Config so the same struct works both as a standalone binary (flat flags) and
+// as a subcommand of the unified sakumock binary.
+type Command struct {
+	Config
+	Routes bool `help:"List supported HTTP routes and exit"`
+}
+
+// Run starts the Object Storage mock server and serves until ctx is canceled.
+func (c *Command) Run(ctx context.Context) error {
+	if c.Routes {
+		h, err := NewHandler(Config{})
+		if err != nil {
+			return err
+		}
+		defer h.Close()
+		return core.PrintRoutes(os.Stdout, h.Routes())
+	}
+
+	core.SetupLogger(c.Debug)
+
+	h, err := NewHandler(c.Config)
+	if err != nil {
+		return err
+	}
+	defer h.Close()
+
+	slog.Info("sakumock-objectstorage starting",
+		"version", sakumock.Version,
+		"addr", c.Addr,
+		"latency", c.Latency,
+		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
+		"debug", c.Debug,
+	)
+	slog.Info("to use with sacloud-sdk-go",
+		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
+	if h.dataPlane != nil {
+		slog.Info("to use the S3 data plane with aws-cli / aws-sdk",
+			core.LogArgs(c.ExtraClientEnv())...)
+	}
+	return core.Serve(ctx, c.Addr, h)
+}

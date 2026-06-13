@@ -14,6 +14,16 @@ type EnvVar struct {
 	Value string
 }
 
+// ClientEnvExtender is an optional interface a ServiceConfig may implement to
+// contribute extra client environment variables beyond the SAKURA_ENDPOINTS_*
+// overrides returned by ClientEnv — for example the AWS_* variables an aws-cli /
+// aws-sdk client needs to reach a data plane served by an external tool. These
+// are emitted verbatim (not subject to the env command's --host URL rewriting),
+// so they may carry non-URL values such as credentials.
+type ClientEnvExtender interface {
+	ExtraClientEnv() []EnvVar
+}
+
 // DummyCredentialEnv returns the placeholder credential variables every mock
 // accepts. The SAKURA Cloud SDK requires them to be set, but the mock does not
 // validate them, so any client reaching a mock endpoint authenticates while a

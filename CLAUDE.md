@@ -48,7 +48,9 @@ There is no per-service version: every binary reports `sakumock.Version` from th
 
 ### Port allocation
 
-Sequential from 18080. Next available: 18086. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus.)
+Control-plane ports are sequential from 18080. Next available: 18087. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage.)
+
+A service that also exposes a separate **data plane** (e.g. objectstorage's S3 API served by an external versitygw process) listens on its **control-plane port + 10000** (objectstorage: 18086 → 28086). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
 
 ### Resource ID generation
 
@@ -74,6 +76,7 @@ Sequential from 18080. Next available: 18086. (18080 simplemq, 18081 kms, 18082 
 
 - Logging: `log/slog` (Info for requests, Debug for operations)
 - CLI: `alecthomas/kong` for flag parsing
+- JSON request/response bodies: define a named struct with `json:"..."` tags for any shape whose fields are known and fixed — including shapes used only once. Reserve `map[string]any` for genuinely dynamic or undetermined structures (e.g. settings/icon passed through verbatim). Factor a shared type when the same shape appears in more than one place (e.g. a `{"data": ...}` envelope, or a key shape reused across resources) rather than repeating a map literal. Structs make field/type mistakes a compile error and document the contract.
 - Tests: use the real SAKURA Cloud SDK client against `NewTestServer`
 - End-to-end Terraform test: `test/terraform/` (root module) drives the real `sakumock all` binary with the `sacloud/sakura` provider through a full apply → plan(no-diff) → destroy for one resource per service. It is behind the `terraform` build tag (so normal `go test ./...` skips it) and `t.Skip`s when the `terraform` binary is absent; run it with `go test -tags terraform ./test/terraform/`. CI runs it in the `terraform-integration` job (fetches the provider from the registry). A new service's resource should be added to `test/terraform/main.tf`.
 - SDK endpoint: `SAKURA_ENDPOINTS_<SERVICE_KEY>` environment variable

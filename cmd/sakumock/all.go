@@ -13,6 +13,7 @@ import (
 	"github.com/sacloud/sakumock/eventbus"
 	"github.com/sacloud/sakumock/kms"
 	"github.com/sacloud/sakumock/monitoringsuite"
+	"github.com/sacloud/sakumock/objectstorage"
 	"github.com/sacloud/sakumock/secretmanager"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
@@ -32,11 +33,12 @@ type serviceConfigs struct {
 	Simplenotification simplenotification.Config `embed:"" prefix:"simplenotification-"`
 	Monitoringsuite    monitoringsuite.Config    `embed:"" prefix:"monitoringsuite-"`
 	Eventbus           eventbus.Config           `embed:"" prefix:"eventbus-"`
+	Objectstorage      objectstorage.Config      `embed:"" prefix:"objectstorage-"`
 }
 
 // configs lists every service in start order.
 func (c *serviceConfigs) configs() []core.ServiceConfig {
-	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus}
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage}
 }
 
 // AllCmd runs every mock service together in a single process, each on its own
@@ -101,7 +103,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 }
 
 func (c *AllCmd) debug() bool {
-	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug
+	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug
 }
 
 // Run starts every mock service and serves until ctx is canceled. If one

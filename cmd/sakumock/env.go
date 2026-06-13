@@ -42,6 +42,12 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 			}
 			vars = append(vars, e)
 		}
+		// Extra client env (e.g. AWS_* for a data plane) is emitted verbatim:
+		// it may carry non-URL values and points at a process not affected by
+		// --host (the data plane binds its own configured address).
+		if ext, ok := cfg.(core.ClientEnvExtender); ok {
+			vars = append(vars, ext.ExtraClientEnv()...)
+		}
 	}
 	return append(vars, core.DummyCredentialEnv()...), nil
 }

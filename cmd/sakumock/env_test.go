@@ -13,6 +13,7 @@ func newTestEnvCmd() *EnvCmd {
 	c.Simplenotification.Addr = "127.0.0.1:18083"
 	c.Monitoringsuite.Addr = "127.0.0.1:18084"
 	c.Eventbus.Addr = "127.0.0.1:18085"
+	c.Objectstorage.Addr = "127.0.0.1:18086"
 	return c
 }
 
@@ -27,11 +28,39 @@ func TestEnvCmdDefaultHost(t *testing.T) {
 		"SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081",
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://127.0.0.1:18080",
 		"SAKURA_ENDPOINTS_EVENTBUS=http://127.0.0.1:18085/", // trailing slash: see eventbus.Config.ClientEnv
+		"SAKURA_ENDPOINTS_OBJECT_STORAGE=http://127.0.0.1:18086",
 		"SAKURA_ACCESS_TOKEN=dummy",
 		"SAKURA_ACCESS_TOKEN_SECRET=dummy",
 	} {
 		if !strings.Contains(rendered, want) {
 			t.Errorf("env missing %q\n%s", want, rendered)
+		}
+	}
+	// The data plane is off by default, so no AWS_* vars are emitted.
+	if strings.Contains(rendered, "AWS_") {
+		t.Errorf("unexpected AWS_* vars while data plane disabled\n%s", rendered)
+	}
+}
+
+func TestEnvCmdDataPlane(t *testing.T) {
+	c := newTestEnvCmd()
+	c.Objectstorage.EnableDataPlane = true
+	c.Objectstorage.DataPlaneAddr = "127.0.0.1:28086"
+	c.Objectstorage.DataPlaneRegion = "jp-north-1"
+
+	vars, err := c.clientEnv()
+	if err != nil {
+		t.Fatalf("clientEnv: %v", err)
+	}
+	rendered := strings.Join(envLines(vars), "\n")
+	for _, want := range []string{
+		"AWS_ENDPOINT_URL_S3=http://127.0.0.1:28086",
+		"AWS_ACCESS_KEY_ID=sakumock",
+		"AWS_SECRET_ACCESS_KEY=sakumocksecret",
+		"AWS_DEFAULT_REGION=jp-north-1",
+	} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("data plane env missing %q\n%s", want, rendered)
 		}
 	}
 }

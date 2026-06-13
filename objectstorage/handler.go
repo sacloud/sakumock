@@ -12,6 +12,22 @@ import (
 
 // ---- JSON request/response types (field names match the OpenAPI spec) ----
 
+// dataResponse is the { "data": ... } envelope the object storage API wraps most
+// of its responses in.
+type dataResponse struct {
+	Data any `json:"data"`
+}
+
+// errorResponse is the API's error shape: {"error":{"code","message"}}.
+type errorResponse struct {
+	Error errorBody `json:"error"`
+}
+
+type errorBody struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type planJSON struct {
 	Type             string `json:"type"`
 	ServiceClassPath string `json:"service_class_path"`
@@ -29,19 +45,88 @@ type bucketListItemJSON struct {
 	Plan       planJSON `json:"plan"`
 }
 
+// accountData is the per-site root account representation.
+type accountData struct {
+	ResourceID string `json:"resource_id"`
+	Code       string `json:"code"`
+	CreatedAt  string `json:"created_at"`
+}
+
+// accessKeyData is an account or permission access key (both share this shape).
+// Secret is only present when the key was just created — the real API never
+// returns it on reads — and omitempty keeps it absent rather than empty, which
+// the spec's secret pattern would reject.
+type accessKeyData struct {
+	ID        string `json:"id"`
+	Secret    string `json:"secret,omitempty"`
+	CreatedAt string `json:"created_at"`
+}
+
+// bucketControlData grants a permission read/write access to a bucket.
+type bucketControlData struct {
+	BucketName string `json:"bucket_name"`
+	CanRead    bool   `json:"can_read"`
+	CanWrite   bool   `json:"can_write"`
+	CreatedAt  string `json:"created_at"`
+}
+
+// permissionData is a permission with its bucket controls.
+type permissionData struct {
+	ID             int64               `json:"id"`
+	DisplayName    string              `json:"display_name"`
+	BucketControls []bucketControlData `json:"bucket_controls"`
+	CreatedAt      string              `json:"created_at"`
+}
+
+// encryptionData is a bucket's server-side encryption configuration.
+type encryptionData struct {
+	KMSKeyID     string `json:"kms_key_id"`
+	ConfiguredAt string `json:"configured_at"`
+}
+
+// replicationData is a bucket's replication configuration; source and dest reuse
+// the bucket representation.
+type replicationData struct {
+	SourceBucket bucketJSON `json:"source_bucket"`
+	DestBucket   bucketJSON `json:"dest_bucket"`
+	ConfigStatus string     `json:"config_status"`
+	CreatedAt    string     `json:"created_at"`
+}
+
+// bucketMetrics is the {num_objects_per_bucket, amount_gib_per_bucket} shape
+// shared by the bucket usage and quota responses.
+type bucketMetrics struct {
+	NumObjects int     `json:"num_objects_per_bucket"`
+	AmountGiB  float64 `json:"amount_gib_per_bucket"`
+}
+
+// bucketPlanSummary and contractData are the plan/contract shapes shared by the
+// get-plan and change-plan responses.
+type bucketPlanSummary struct {
+	Type             string `json:"type"`
+	ServiceClassPath string `json:"service_class_path"`
+	ClusterID        string `json:"cluster_id"`
+}
+
+type contractData struct {
+	ResourceID string `json:"resource_id"`
+	Status     string `json:"status"`
+	CreatedAt  string `json:"created_at"`
+}
+
 type clusterInfo struct {
-	ID              string
-	Region          string
-	DisplayName     string
-	DisplayNameJa   string
-	DisplayNameEnUS string
-	ControlPanelURL string
-	EndpointBase    string
-	S3Endpoint      string
-	IAMEndpoint     string
-	APIZone         []string
-	StorageZone     []string
-	PlanFamily      string
+	ID              string   `json:"id"`
+	Region          string   `json:"region"`
+	DisplayName     string   `json:"display_name"`
+	DisplayNameJa   string   `json:"display_name_ja"`
+	DisplayNameEnUS string   `json:"display_name_en_us"`
+	ControlPanelURL string   `json:"control_panel_url"`
+	EndpointBase    string   `json:"endpoint_base"`
+	S3Endpoint      string   `json:"s3_endpoint"`
+	IAMEndpoint     string   `json:"iam_endpoint"`
+	APIZone         []string `json:"api_zone"`
+	StorageZone     []string `json:"storage_zone"`
+	PlanFamily      string   `json:"plan_family"`
 }
 
 // clusters are the static object storage sites the real API exposes.
@@ -76,23 +161,6 @@ var clusters = []clusterInfo{
 		APIZone:         []string{"is1a", "is1b"}, StorageZone: []string{"is1a", "is1b"},
 		PlanFamily: "archive",
 	},
-}
-
-func (c clusterInfo) toJSON() map[string]any {
-	return map[string]any{
-		"id":                 c.ID,
-		"region":             c.Region,
-		"display_name":       c.DisplayName,
-		"display_name_ja":    c.DisplayNameJa,
-		"display_name_en_us": c.DisplayNameEnUS,
-		"control_panel_url":  c.ControlPanelURL,
-		"endpoint_base":      c.EndpointBase,
-		"s3_endpoint":        c.S3Endpoint,
-		"iam_endpoint":       c.IAMEndpoint,
-		"api_zone":           c.APIZone,
-		"storage_zone":       c.StorageZone,
-		"plan_family":        c.PlanFamily,
-	}
 }
 
 func findCluster(id string) (clusterInfo, bool) {
@@ -175,12 +243,7 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 // The SDK reads error.code to classify the failure (e.g. saclient.IsNotFoundError
 // checks for 404), so the body's code must mirror the HTTP status.
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]any{
-		"error": map[string]any{
-			"code":    status,
-			"message": msg,
-		},
-	})
+	writeJSON(w, status, errorResponse{Error: errorBody{Code: status, Message: msg}})
 }
 
 func parsePermissionID(s string) (int64, bool) {
@@ -194,11 +257,7 @@ func parsePermissionID(s string) (int64, bool) {
 // ---- Federation handlers (/fed/v1) ----
 
 func (s *Server) handleListClusters(w http.ResponseWriter, _ *http.Request) {
-	data := make([]map[string]any, len(clusters))
-	for i, c := range clusters {
-		data[i] = c.toJSON()
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, dataResponse{Data: clusters})
 }
 
 func (s *Server) handleGetCluster(w http.ResponseWriter, r *http.Request) {
@@ -207,7 +266,7 @@ func (s *Server) handleGetCluster(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "cluster not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": c.toJSON()})
+	writeJSON(w, http.StatusOK, dataResponse{Data: c})
 }
 
 type createBucketRequest struct {
@@ -245,7 +304,7 @@ func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.dataPlane.createBucket(name)
-	writeJSON(w, http.StatusCreated, map[string]any{"data": bucketToJSON(b)})
+	writeJSON(w, http.StatusCreated, dataResponse{Data: bucketToJSON(b)})
 }
 
 func (s *Server) handleDeleteBucket(w http.ResponseWriter, r *http.Request) {
@@ -258,16 +317,19 @@ func (s *Server) handleDeleteBucket(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (s *Server) replicationJSON(b Bucket) map[string]any {
-	dest := map[string]any{"name": b.Replication.DestBucket, "cluster_id": "", "plan": planJSON{}}
+// buildReplicationData builds the replication response for a bucket with a
+// replication config set. The destination's cluster/plan are filled in when the
+// destination bucket is known to the mock; otherwise only its name is set.
+func (s *Server) buildReplicationData(b Bucket) replicationData {
+	dest := bucketJSON{Name: b.Replication.DestBucket}
 	if db, ok := s.store.GetBucket(b.Replication.DestBucket); ok {
-		dest = map[string]any{"name": db.Name, "cluster_id": db.ClusterID, "plan": planJSON{Type: db.PlanType, ServiceClassPath: db.ServiceClassPath}}
+		dest = bucketToJSON(db)
 	}
-	return map[string]any{
-		"source_bucket": map[string]any{"name": b.Name, "cluster_id": b.ClusterID, "plan": planJSON{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath}},
-		"dest_bucket":   dest,
-		"config_status": b.Replication.ConfigStatus,
-		"created_at":    rfc3339(b.Replication.CreatedAt),
+	return replicationData{
+		SourceBucket: bucketToJSON(b),
+		DestBucket:   dest,
+		ConfigStatus: b.Replication.ConfigStatus,
+		CreatedAt:    rfc3339(b.Replication.CreatedAt),
 	}
 }
 
@@ -277,7 +339,7 @@ func (s *Server) handleGetReplication(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "replication configuration not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": s.replicationJSON(b)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: s.buildReplicationData(b)})
 }
 
 func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
@@ -298,7 +360,7 @@ func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": s.replicationJSON(b)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: s.buildReplicationData(b)})
 }
 
 func (s *Server) handleDeleteReplication(w http.ResponseWriter, r *http.Request) {
@@ -326,7 +388,7 @@ func (s *Server) handleReplicableTargets(w http.ResponseWriter, r *http.Request)
 	if data == nil {
 		data = []bucketJSON{}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 // ---- Site bucket handlers (/{site}/v2) ----
@@ -341,16 +403,16 @@ func (s *Server) handleListBuckets(w http.ResponseWriter, r *http.Request) {
 			Plan:       planJSON{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath},
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 // ---- Account handlers ----
 
-func accountJSON(a Account) map[string]any {
-	return map[string]any{
-		"resource_id": a.ResourceID,
-		"code":        a.Code,
-		"created_at":  rfc3339(a.CreatedAt),
+func toAccountData(a Account) accountData {
+	return accountData{
+		ResourceID: a.ResourceID,
+		Code:       a.Code,
+		CreatedAt:  rfc3339(a.CreatedAt),
 	}
 }
 
@@ -360,7 +422,7 @@ func (s *Server) handleGetAccount(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": accountJSON(a)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toAccountData(a)})
 }
 
 func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -369,7 +431,7 @@ func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, "account already exists")
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"data": accountJSON(a)})
+	writeJSON(w, http.StatusCreated, dataResponse{Data: toAccountData(a)})
 }
 
 func (s *Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
@@ -380,19 +442,16 @@ func (s *Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// accountKeyJSON renders an access key. showSecret controls whether the secret
-// is included: the real API returns it only when the key is created. On reads
-// the secret field is omitted entirely (rather than sent empty) because the
-// spec's SecretAccessKey pattern rejects an empty string.
-func accountKeyJSON(k AccountKey, showSecret bool) map[string]any {
-	m := map[string]any{
-		"id":         k.ID,
-		"created_at": rfc3339(k.CreatedAt),
-	}
+// toAccountKeyData renders an access key. showSecret controls whether the secret
+// is included: the real API returns it only when the key is created, so reads
+// omit it (accessKeyData.Secret is omitempty, which the spec's pattern requires
+// — an empty secret string would fail validation).
+func toAccountKeyData(k AccountKey, showSecret bool) accessKeyData {
+	d := accessKeyData{ID: k.ID, CreatedAt: rfc3339(k.CreatedAt)}
 	if showSecret {
-		m["secret"] = k.Secret
+		d.Secret = k.Secret
 	}
-	return m
+	return d
 }
 
 func (s *Server) handleListAccountKeys(w http.ResponseWriter, r *http.Request) {
@@ -401,11 +460,11 @@ func (s *Server) handleListAccountKeys(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
-	data := make([]map[string]any, len(keys))
+	data := make([]accessKeyData, len(keys))
 	for i, k := range keys {
-		data[i] = accountKeyJSON(k, false)
+		data[i] = toAccountKeyData(k, false)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 func (s *Server) handleCreateAccountKey(w http.ResponseWriter, r *http.Request) {
@@ -414,7 +473,7 @@ func (s *Server) handleCreateAccountKey(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"data": accountKeyJSON(k, true)})
+	writeJSON(w, http.StatusCreated, dataResponse{Data: toAccountKeyData(k, true)})
 }
 
 func (s *Server) handleGetAccountKey(w http.ResponseWriter, r *http.Request) {
@@ -423,7 +482,7 @@ func (s *Server) handleGetAccountKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": accountKeyJSON(k, false)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toAccountKeyData(k, false)})
 }
 
 func (s *Server) handleDeleteAccountKey(w http.ResponseWriter, r *http.Request) {
@@ -453,31 +512,31 @@ func (b permissionBody) toControls() []BucketControl {
 	return controls
 }
 
-func permissionJSON(p Permission) map[string]any {
-	controls := make([]map[string]any, len(p.BucketControls))
+func toPermissionData(p Permission) permissionData {
+	controls := make([]bucketControlData, len(p.BucketControls))
 	for i, c := range p.BucketControls {
-		controls[i] = map[string]any{
-			"bucket_name": c.BucketName,
-			"can_read":    c.CanRead,
-			"can_write":   c.CanWrite,
-			"created_at":  rfc3339(c.CreatedAt),
+		controls[i] = bucketControlData{
+			BucketName: c.BucketName,
+			CanRead:    c.CanRead,
+			CanWrite:   c.CanWrite,
+			CreatedAt:  rfc3339(c.CreatedAt),
 		}
 	}
-	return map[string]any{
-		"id":              p.ID,
-		"display_name":    p.DisplayName,
-		"bucket_controls": controls,
-		"created_at":      rfc3339(p.CreatedAt),
+	return permissionData{
+		ID:             p.ID,
+		DisplayName:    p.DisplayName,
+		BucketControls: controls,
+		CreatedAt:      rfc3339(p.CreatedAt),
 	}
 }
 
 func (s *Server) handleListPermissions(w http.ResponseWriter, r *http.Request) {
 	perms := s.store.ListPermissions(r.PathValue("site"))
-	data := make([]map[string]any, len(perms))
+	data := make([]permissionData, len(perms))
 	for i, p := range perms {
-		data[i] = permissionJSON(p)
+		data[i] = toPermissionData(p)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 func (s *Server) handleCreatePermission(w http.ResponseWriter, r *http.Request) {
@@ -491,7 +550,7 @@ func (s *Server) handleCreatePermission(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	p := s.store.CreatePermission(r.PathValue("site"), req.DisplayName, req.toControls())
-	writeJSON(w, http.StatusCreated, map[string]any{"data": permissionJSON(p)})
+	writeJSON(w, http.StatusCreated, dataResponse{Data: toPermissionData(p)})
 }
 
 func (s *Server) handleGetPermission(w http.ResponseWriter, r *http.Request) {
@@ -505,7 +564,7 @@ func (s *Server) handleGetPermission(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": permissionJSON(p)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toPermissionData(p)})
 }
 
 func (s *Server) handleUpdatePermission(w http.ResponseWriter, r *http.Request) {
@@ -524,7 +583,7 @@ func (s *Server) handleUpdatePermission(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": permissionJSON(p)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toPermissionData(p)})
 }
 
 func (s *Server) handleDeletePermission(w http.ResponseWriter, r *http.Request) {
@@ -540,15 +599,12 @@ func (s *Server) handleDeletePermission(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func permissionKeyJSON(k PermissionKey, showSecret bool) map[string]any {
-	m := map[string]any{
-		"id":         k.ID,
-		"created_at": rfc3339(k.CreatedAt),
-	}
+func toPermissionKeyData(k PermissionKey, showSecret bool) accessKeyData {
+	d := accessKeyData{ID: k.ID, CreatedAt: rfc3339(k.CreatedAt)}
 	if showSecret {
-		m["secret"] = k.Secret
+		d.Secret = k.Secret
 	}
-	return m
+	return d
 }
 
 func (s *Server) handleListPermissionKeys(w http.ResponseWriter, r *http.Request) {
@@ -562,11 +618,11 @@ func (s *Server) handleListPermissionKeys(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	data := make([]map[string]any, len(keys))
+	data := make([]accessKeyData, len(keys))
 	for i, k := range keys {
-		data[i] = permissionKeyJSON(k, false)
+		data[i] = toPermissionKeyData(k, false)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": data})
+	writeJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 func (s *Server) handleCreatePermissionKey(w http.ResponseWriter, r *http.Request) {
@@ -580,7 +636,7 @@ func (s *Server) handleCreatePermissionKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]any{"data": permissionKeyJSON(k, true)})
+	writeJSON(w, http.StatusCreated, dataResponse{Data: toPermissionKeyData(k, true)})
 }
 
 func (s *Server) handleGetPermissionKey(w http.ResponseWriter, r *http.Request) {
@@ -594,7 +650,7 @@ func (s *Server) handleGetPermissionKey(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": permissionKeyJSON(k, false)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toPermissionKeyData(k, false)})
 }
 
 func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Request) {
@@ -613,14 +669,12 @@ func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Reques
 // ---- Site status / plans / quota / metering ----
 
 func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{
-			"accept_new":  true,
-			"message":     "",
-			"started_at":  rfc3339(time.Now()),
-			"status_code": map[string]any{"id": 1, "status": "available"},
-		},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: map[string]any{
+		"accept_new":  true,
+		"message":     "",
+		"started_at":  rfc3339(time.Now()),
+		"status_code": map[string]any{"id": 1, "status": "available"},
+	}})
 }
 
 func (s *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
@@ -629,45 +683,38 @@ func (s *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
 	if c, ok := findCluster(site); ok && c.PlanFamily == "archive" {
 		planType = "archive"
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": []map[string]any{
-			{
-				"service_class_path": "objectstorage/" + site + "/bucket",
-				"type":               planType,
-				"cluster_id":         site,
-				"capacity_gib":       20000,
-				"fee":                map[string]any{"for_month": 1980, "monthly": 7200, "daily": 360, "hourly": 36},
-			},
+	writeJSON(w, http.StatusOK, dataResponse{Data: []map[string]any{
+		{
+			"service_class_path": "objectstorage/" + site + "/bucket",
+			"type":               planType,
+			"cluster_id":         site,
+			"capacity_gib":       20000,
+			"fee":                map[string]any{"for_month": 1980, "monthly": 7200, "daily": 360, "hourly": 36},
 		},
-	})
+	}})
 }
 
 func (s *Server) handleQuota(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{
-			"num_root_keys":              1,
-			"num_buckets":                1000,
-			"num_permissions":            1000,
-			"num_keys_per_permission":    1,
-			"num_buckets_per_permission": 1000,
-			"num_objects_per_bucket":     10000000,
-			"amount_gib_per_bucket":      10240,
-		},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: map[string]any{
+		"num_root_keys":              1,
+		"num_buckets":                1000,
+		"num_permissions":            1000,
+		"num_keys_per_permission":    1,
+		"num_buckets_per_permission": 1000,
+		"num_objects_per_bucket":     10000000,
+		"amount_gib_per_bucket":      10240,
+	}})
 }
 
 func (s *Server) handleBucketMetering(w http.ResponseWriter, _ *http.Request) {
 	// The mock keeps no usage history, so it reports no billing items.
-	writeJSON(w, http.StatusOK, map[string]any{"data": []map[string]any{}})
+	writeJSON(w, http.StatusOK, dataResponse{Data: []map[string]any{}})
 }
 
 // ---- Bucket sub-resources (encryption / penalty / usage / quota / plan) ----
 
-func encryptionJSON(e *Encryption) map[string]any {
-	return map[string]any{
-		"kms_key_id":    e.KMSKeyID,
-		"configured_at": rfc3339(e.ConfiguredAt),
-	}
+func toEncryptionData(e *Encryption) encryptionData {
+	return encryptionData{KMSKeyID: e.KMSKeyID, ConfiguredAt: rfc3339(e.ConfiguredAt)}
 }
 
 func (s *Server) handleGetEncryption(w http.ResponseWriter, r *http.Request) {
@@ -676,7 +723,7 @@ func (s *Server) handleGetEncryption(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "encryption configuration not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": encryptionJSON(b.Encryption)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toEncryptionData(b.Encryption)})
 }
 
 func (s *Server) handlePutEncryption(w http.ResponseWriter, r *http.Request) {
@@ -697,7 +744,7 @@ func (s *Server) handlePutEncryption(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": encryptionJSON(b.Encryption)})
+	writeJSON(w, http.StatusOK, dataResponse{Data: toEncryptionData(b.Encryption)})
 }
 
 func (s *Server) handleDeleteEncryption(w http.ResponseWriter, r *http.Request) {
@@ -713,12 +760,10 @@ func (s *Server) handleBucketPenalty(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{
-			"num_objects_per_bucket": map[string]any{"val": 0, "quota": 10000000, "is_applied": false},
-			"amount_gib_per_bucket":  map[string]any{"val": 0, "quota": 10240, "is_applied": false},
-		},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: map[string]any{
+		"num_objects_per_bucket": map[string]any{"val": 0, "quota": 10000000, "is_applied": false},
+		"amount_gib_per_bucket":  map[string]any{"val": 0, "quota": 10240, "is_applied": false},
+	}})
 }
 
 func (s *Server) handleBucketUsage(w http.ResponseWriter, r *http.Request) {
@@ -726,9 +771,7 @@ func (s *Server) handleBucketUsage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{"num_objects_per_bucket": 0, "amount_gib_per_bucket": 0},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: bucketMetrics{NumObjects: 0, AmountGiB: 0}})
 }
 
 func (s *Server) handleBucketQuota(w http.ResponseWriter, r *http.Request) {
@@ -736,9 +779,7 @@ func (s *Server) handleBucketQuota(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{"num_objects_per_bucket": 10000000, "amount_gib_per_bucket": 10240},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: bucketMetrics{NumObjects: 10000000, AmountGiB: 10240}})
 }
 
 func (s *Server) handleGetBucketPlan(w http.ResponseWriter, r *http.Request) {
@@ -747,20 +788,13 @@ func (s *Server) handleGetBucketPlan(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{
-			"plan": map[string]any{
-				"type":               b.PlanType,
-				"service_class_path": b.ServiceClassPath,
-				"cluster_id":         b.ClusterID,
-			},
-			"contract": map[string]any{
-				"resource_id": b.ResourceID,
-				"status":      "active",
-				"created_at":  rfc3339(b.CreatedAt),
-			},
-		},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: struct {
+		Plan     bucketPlanSummary `json:"plan"`
+		Contract contractData      `json:"contract"`
+	}{
+		Plan:     bucketPlanSummary{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath, ClusterID: b.ClusterID},
+		Contract: contractData{ResourceID: b.ResourceID, Status: "active", CreatedAt: rfc3339(b.CreatedAt)},
+	}})
 }
 
 func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
@@ -788,15 +822,13 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 	s.store.DeleteBucket(name)
 	nb, _ := s.store.CreateBucket(name, b.ClusterID, req.NewPlan.Type, req.NewPlan.ServiceClassPath)
 	now := rfc3339(time.Now())
-	writeJSON(w, http.StatusOK, map[string]any{
-		"data": map[string]any{
-			"previous_contract": map[string]any{"resource_id": prevResourceID, "status": "terminated", "created_at": rfc3339(b.CreatedAt)},
-			"new_contract":      map[string]any{"resource_id": nb.ResourceID, "status": "active", "created_at": now},
-			"plan": map[string]any{
-				"type":               nb.PlanType,
-				"service_class_path": nb.ServiceClassPath,
-				"cluster_id":         nb.ClusterID,
-			},
-		},
-	})
+	writeJSON(w, http.StatusOK, dataResponse{Data: struct {
+		PreviousContract contractData      `json:"previous_contract"`
+		NewContract      contractData      `json:"new_contract"`
+		Plan             bucketPlanSummary `json:"plan"`
+	}{
+		PreviousContract: contractData{ResourceID: prevResourceID, Status: "terminated", CreatedAt: rfc3339(b.CreatedAt)},
+		NewContract:      contractData{ResourceID: nb.ResourceID, Status: "active", CreatedAt: now},
+		Plan:             bucketPlanSummary{Type: nb.PlanType, ServiceClassPath: nb.ServiceClassPath, ClusterID: nb.ClusterID},
+	}})
 }

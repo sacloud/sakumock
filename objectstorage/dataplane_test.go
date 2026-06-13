@@ -62,20 +62,15 @@ func bucketListed(t *testing.T, c *s3.Client, name string) bool {
 	return false
 }
 
-// TestDataPlaneDisabledWhenVersitygwAbsent verifies that requesting the data
-// plane without versitygw on PATH degrades gracefully: the control plane still
-// builds and serves. Emptying PATH makes the lookup fail regardless of whether
-// versitygw is installed, so this runs everywhere.
-func TestDataPlaneDisabledWhenVersitygwAbsent(t *testing.T) {
+// TestDataPlaneErrorsWhenVersitygwAbsent verifies that requesting the data plane
+// without versitygw on PATH is a hard error rather than a silent no-op: the user
+// opted in explicitly, so NewHandler must fail. Emptying PATH makes the lookup
+// fail regardless of whether versitygw is installed, so this runs everywhere.
+func TestDataPlaneErrorsWhenVersitygwAbsent(t *testing.T) {
 	t.Setenv("PATH", "")
 
-	srv := objectstorage.NewTestServer(objectstorage.Config{EnableDataPlane: true})
-	defer srv.Close()
-
-	fed, site := newClients(t, srv.TestURL())
-	bucketOp := sdk.NewBucketOp(fed, site)
-	if _, err := bucketOp.Create(t.Context(), &sdk.BucketCreateParams{Bucket: "no-data-plane", SiteId: testSiteID}); err != nil {
-		t.Fatalf("control plane should work without a data plane: %v", err)
+	if _, err := objectstorage.NewHandler(objectstorage.Config{EnableDataPlane: true}); err == nil {
+		t.Fatal("expected NewHandler to error when --enable-data-plane is set but versitygw is absent")
 	}
 }
 

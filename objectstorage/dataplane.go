@@ -38,18 +38,16 @@ type dataPlane struct {
 	logger  *slog.Logger
 }
 
-// startDataPlane launches versitygw with a POSIX backend. It returns (nil, nil)
-// when versitygw is not on PATH, so the data plane simply stays off without
-// failing the control plane — the same best-effort policy as the terraform e2e
-// skipping when terraform is absent. The same nil result is returned when the
-// process starts but never begins listening, so a broken data plane never takes
-// the control plane down.
+// startDataPlane launches versitygw with a POSIX backend. It returns an error
+// when versitygw is not on PATH or never starts listening: --enable-data-plane
+// is an explicit opt-in, so silently running without the data plane the user
+// asked for would be a trap. (This differs from the terraform e2e skipping when
+// terraform is absent, which is optional test tooling rather than a requested
+// feature.)
 func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	path, err := exec.LookPath(versitygwBinary)
 	if err != nil {
-		logger.Warn("data plane requested but versitygw not found in PATH; data plane disabled. Install versitygw (https://github.com/versity/versitygw) to enable it",
-			"binary", versitygwBinary)
-		return nil, nil
+		return nil, fmt.Errorf("data plane enabled but %s not found in PATH; install it (https://github.com/versity/versitygw) or omit --enable-data-plane", versitygwBinary)
 	}
 
 	dir := cfg.DataPlaneDir
@@ -103,9 +101,8 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	}()
 
 	if err := waitListen(cfg.DataPlaneAddr, 10*time.Second); err != nil {
-		logger.Error("versitygw did not start listening; data plane disabled", "addr", cfg.DataPlaneAddr, "error", err)
 		d.Close()
-		return nil, nil
+		return nil, fmt.Errorf("data plane: versitygw did not start listening on %s: %w", cfg.DataPlaneAddr, err)
 	}
 
 	logger.Info("data plane (S3) started",

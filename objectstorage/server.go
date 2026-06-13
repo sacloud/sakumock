@@ -123,6 +123,7 @@ func NewHandler(cfg Config) (*Server, error) {
 	if cfg.EnableDataPlane {
 		dp, err := startDataPlane(cfg, logger)
 		if err != nil {
+			s.store.Close()
 			return nil, err
 		}
 		s.dataPlane = dp

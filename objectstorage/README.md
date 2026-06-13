@@ -111,7 +111,7 @@ Behavior notes:
 
 ## Data plane (S3)
 
-The S3-compatible object API (PUT/GET/DELETE objects, multipart, …) is **not** reimplemented. Instead, with `--enable-data-plane`, sakumock launches an external [versitygw](https://github.com/versity/versitygw) process backed by a local POSIX directory and manages its lifecycle (start on serve, graceful stop on shutdown). versitygw is **not bundled** — it would bloat the released single binary and the distroless image — so it must be installed on `PATH`; if it is not found, the data plane is simply disabled and the control plane keeps running.
+The S3-compatible object API (PUT/GET/DELETE objects, multipart, …) is **not** reimplemented. Instead, with `--enable-data-plane`, sakumock launches an external [versitygw](https://github.com/versity/versitygw) process backed by a local POSIX directory and manages its lifecycle (start on serve, graceful stop on shutdown). versitygw is **not bundled** — it would bloat the released single binary and the distroless image — so it must be installed on `PATH`. Because `--enable-data-plane` is an explicit opt-in, sakumock **fails to start** if versitygw is not found or does not come up, rather than silently running without the data plane you asked for.
 
 ```bash
 # install versitygw (https://github.com/versity/versitygw), then:

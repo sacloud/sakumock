@@ -7,7 +7,8 @@
 # the base image, the final stage only COPYs prebuilt binaries.
 ARG VERSITYGW_VERSION=v1.5.0
 
-FROM --platform=$BUILDPLATFORM alpine:3 AS fetch
+# alpine is pinned by digest for reproducible builds (bump deliberately).
+FROM --platform=$BUILDPLATFORM alpine:3@sha256:a2d49ea686c2adfe3c992e47dc3b5e7fa6e6b5055609400dc2acaeb241c829f4 AS fetch
 ARG VERSITYGW_VERSION
 ARG TARGETARCH
 RUN set -eu; \
@@ -17,10 +18,14 @@ RUN set -eu; \
       arm64) varch=arm64 ;; \
       *) echo "unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL -o /tmp/versitygw.tar.gz \
-      "https://github.com/versity/versitygw/releases/download/${VERSITYGW_VERSION}/versitygw_${VERSITYGW_VERSION}_Linux_${varch}.tar.gz"; \
+    asset="versitygw_${VERSITYGW_VERSION}_Linux_${varch}.tar.gz"; \
+    base="https://github.com/versity/versitygw/releases/download/${VERSITYGW_VERSION}"; \
+    cd /tmp; \
+    curl -fsSL -o "$asset" "${base}/${asset}"; \
+    curl -fsSL -o checksums.txt "${base}/checksums.txt"; \
+    grep " ${asset}\$" checksums.txt | sha256sum -c -; \
     mkdir -p /tmp/vg /out; \
-    tar xzf /tmp/versitygw.tar.gz -C /tmp/vg; \
+    tar xzf "$asset" -C /tmp/vg; \
     cp /tmp/vg/*/versitygw /out/versitygw; \
     chmod 0755 /out/versitygw; \
     mkdir -p /out/data && chown 65532:65532 /out/data

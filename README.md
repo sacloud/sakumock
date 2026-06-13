@@ -95,6 +95,14 @@ credentials. The dummy credentials also act as a safety net: a request to an API
 that sakumock does not mock reaches the real endpoint but fails authentication
 instead of touching your account.
 
+Pass `--export` to prefix every line with `export `, so the output can be
+sourced directly (e.g. with [direnv](https://direnv.net/) or a plain shell)
+without `set -a`:
+
+```bash
+sakumock env --export > .envrc   # or: source <(sakumock env --export)
+```
+
 By default the endpoints point at each service's listen address. When the client
 reaches sakumock over the network — most importantly from a container — pass
 `--host` to substitute the host the client actually uses (the port is kept), and

@@ -22,6 +22,7 @@ services:
       - "18083:18083" # simplenotification
       - "18084:18084" # monitoringsuite
       - "18085:18085" # eventbus
+      - "18086:18086" # objectstorage
 
   # Renders the client env into the shared volume, then exits. It runs no
   # server, so it does not depend on `sakumock` being up. --output is used

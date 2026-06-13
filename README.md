@@ -16,6 +16,7 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
 | [monitoringsuite](monitoringsuite/) | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
 | [eventbus](eventbus/) | 18085 | `github.com/sacloud/sakumock/eventbus` | EventBus control-plane API |
+| [objectstorage](objectstorage/) | 18086 | `github.com/sacloud/sakumock/objectstorage` | Object Storage control-plane API (no S3 data plane) |
 
 ## Quick Start
 
@@ -118,6 +119,10 @@ export SAKURA_ENDPOINTS_KMS=http://localhost:18081
 export SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=http://localhost:18083
 # Monitoring Suite
 export SAKURA_ENDPOINTS_MONITORING_SUITE=http://localhost:18084
+# EventBus
+export SAKURA_ENDPOINTS_EVENTBUS=http://localhost:18085/
+# Object Storage (control plane only; no S3 data plane)
+export SAKURA_ENDPOINTS_OBJECT_STORAGE=http://localhost:18086
 
 # Dummy credentials (required by SDK, not validated by mock)
 export SAKURA_ACCESS_TOKEN=dummy
@@ -135,6 +140,7 @@ sakumock kms &
 sakumock simplenotification &
 sakumock monitoringsuite &
 sakumock eventbus &
+sakumock objectstorage &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
@@ -145,7 +151,7 @@ A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Con
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 \
   ghcr.io/sacloud/sakumock:latest
 ```
 

@@ -12,6 +12,7 @@ import (
 	"github.com/sacloud/sakumock/eventbus"
 	"github.com/sacloud/sakumock/kms"
 	"github.com/sacloud/sakumock/monitoringsuite"
+	"github.com/sacloud/sakumock/objectstorage"
 	"github.com/sacloud/sakumock/secretmanager"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
@@ -29,6 +30,7 @@ type CLI struct {
 	Simplenotification simplenotification.Command `cmd:"" name:"simplenotification" help:"Simple Notification mock server"`
 	Monitoringsuite    monitoringsuite.Command    `cmd:"" name:"monitoringsuite" help:"Monitoring Suite mock server"`
 	Eventbus           eventbus.Command           `cmd:"" name:"eventbus" help:"EventBus mock server"`
+	Objectstorage      objectstorage.Command      `cmd:"" name:"objectstorage" help:"Object Storage mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

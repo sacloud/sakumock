@@ -48,7 +48,7 @@ There is no per-service version: every binary reports `sakumock.Version` from th
 
 ### Port allocation
 
-Sequential from 18080. Next available: 18086. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus.)
+Sequential from 18080. Next available: 18087. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage.)
 
 ### Resource ID generation
 

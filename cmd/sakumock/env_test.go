@@ -13,6 +13,7 @@ func newTestEnvCmd() *EnvCmd {
 	c.Simplenotification.Addr = "127.0.0.1:18083"
 	c.Monitoringsuite.Addr = "127.0.0.1:18084"
 	c.Eventbus.Addr = "127.0.0.1:18085"
+	c.Objectstorage.Addr = "127.0.0.1:18086"
 	return c
 }
 
@@ -27,6 +28,7 @@ func TestEnvCmdDefaultHost(t *testing.T) {
 		"SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081",
 		"SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://127.0.0.1:18080",
 		"SAKURA_ENDPOINTS_EVENTBUS=http://127.0.0.1:18085/", // trailing slash: see eventbus.Config.ClientEnv
+		"SAKURA_ENDPOINTS_OBJECT_STORAGE=http://127.0.0.1:18086",
 		"SAKURA_ACCESS_TOKEN=dummy",
 		"SAKURA_ACCESS_TOKEN_SECRET=dummy",
 	} {

@@ -1,0 +1,3740 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.5.0",
+    "title": "さくらのオブジェクトストレージ APIドキュメント",
+    "contact": {
+      "name": "SAKURA internet Inc."
+    },
+    "license": {
+      "name": "Copyright(C) 2021-2022 SAKURA internet Inc. all rights reserved."
+    },
+    "x-logo": {
+      "url": "logo.svg",
+      "altText": "さくらのオブジェクトストレージ：APIドキュメント"
+    },
+    "description": "\n---\n\n「さくらのオブジェクトストレージ」が提供するAPIの利用方法とサンプルを公開しております。\n\nJSON 形式の OpenAPI 仕様は、以下の URL からダウンロードしてください。\n\n<ul><li><a href=\"https://manual.sakura.ad.jp/cloud/objectstorage/api/api-json.json\">JSON形式でダウンロード</a></li></ul>\n\n# 基本的な使い方\n\n## APIキーの発行\n\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。\nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n\n<div class=\"warning\">\n<b>操作マニュアル</b><br />\n<ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## 入力パラメータ\n\nAPIの入力には送信先URLに対して、いくつかのヘッダーとAPIキーを送信します。\n\n* APIのURLは以下の2つが存在します。※ 各APIの使い分けは後述します。\n  * `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/(エンドポイント)`\n  * `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/(エンドポイント)`\n* 認証方式はHTTP Basic認証です。APIキーのアクセストークンをユーザーID、アクセストークンシークレットをパスワードとして指定します。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     'https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters'\n```\n\n## 出力結果と応答コード（HTTPステータスコード）\n\nAPIからの結果は、「応答コード（HTTPステータスコード）」と、「JSON形式(UTF-8)の結果」として出力されます。\n\n応答コードは、リクエストが成功したのか、失敗したのか大まかな情報を判断することができるもので、例えば失敗したときには、なぜこのような結果になったのかなど、具体的な情報は応答コードと主に返された本文を見ることで把握することができます。\n\n| 結果                                | 応答コード/status   |\n|-------------------------------------|---------------------|\n| 成功（要求を受け付けた）             | 2xx                 |\n| 失敗（要求が受け付けられなかった）  | 4xx, 5xx            |\n\n```\n# 出力結果サンプル（レスポンスヘッダ）\nHTTP/1.1 200 OK\nServer: nginx\nDate: Tue, 16 Nov 2021 12:39:48 GMT\nContent-Type: application/json; charset=UTF-8\nContent-Length: 443\nConnection: keep-alive\nStatus: 200 OK\nPragma: no-cache\nCache-Control: no-cache\nX-Sakura-Proxy-Microtime: 66245\nX-Sakura-Proxy-Decode-Microtime: 62\nX-Sakura-Content-Length: 443\nX-Sakura-Serial: 86ab6c743f72aa5ea6f17e254fd5f803\nX-Content-Type-Options: nosniff\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: DENY\nX-Sakura-Encode-Microtime: 260\nVary: Accept-Encoding\n```\n\n```\n# 出力結果サンプル（レスポンスボディー）\n{\n  \"error\": {\n    \"code\": 404,\n    \"errors\": [\n      {\n        \"domain\": \"fed.objectstorage.sacloud\",\n        \"location\": \"clusters\",\n        \"location_type\": \"path_parameter\",\n        \"message\": \"Cluster was not found\",\n        \"reason\": \"not_found\"\n      }\n    ],\n    \"message\": \"Cluster was not found\",\n    \"trace_id\": \"0f36837633984f3fc8871f515e8efa24\"\n  }\n}\n```\n\n# 利用例\n\n## 1.接続先サイト一覧の取得\n\nさくらのオブジェクトストレージを利用するには、まずバケット作成先となる**サイト**を取得・選択します。\n\nサイト一覧を取得するには、以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     'https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters'\n```\n\n実行結果として、サイトのリストが返却されます。\n\n```\n# 出力結果サンプル\n{\n  \"data\": [\n    {\n      \"api_zone\": [],\n      \"control_panel_url\": \"https://secure.sakura.ad.jp/objectstorage/\",\n      \"display_name_en_us\": \"Ishikari Site #1\",\n      \"display_name_ja\": \"石狩第1サイト\",\n      \"display_name\": \"石狩第1サイト\",\n      \"display_order\": 1,\n      \"endpoint_base\": \"isk01.sakurastorage.jp\",\n      \"id\": \"isk01\",\n      \"region\": \"jp-north-1\",\n      \"s3_endpoint\": \"s3.isk01.sakurastorage.jp\",\n      \"s3_endpoint_for_control_panel\": \"s3.cp.isk01.sakurastorage.jp\",\n      \"storage_zone\": []\n    }\n  ]\n}\n```\n\n得られたサイトID（上記の`id`フィールド）を確認します。これは後続の利用例で使用します。\n\n## 2.サイトアカウントの作成\n\n上記のサイトから利用したいサイトIDを選択し（ここではisk01を選択することにします）、**サイトアカウント**を作成します。\n\nサイトアカウントとは、サイトを利用するための独立したアカウントであり、サイトアカウント作成・削除による料金の発生はございません。\nなお、すでにサイトアカウントを作成済みの場合は、再度サイトアカウントの作成は不要です。\n\nサイトアカウントを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/account\n```\n\nサイトアカウントの作成が完了すると、選択したサイトにて\n\n* バケットの作成・削除\n* アクセスキーの発行・削除\n* パーミッションキーの発行・削除\n\nなどの操作が可能になります。\n\n## 3.バケットの作成・削除\n\n選択したサイトにてサイトアカウントを作成後、**バケット**の作成・削除が可能です。\n\nバケットを作成するには以下のような入力を行います。\nこの時、選択したサイト（ここではisk01とします）をリクエストボディーに入れ、作成したいバケット名をパスパラメータに入れる必要があります。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PUT \\\n     -d '{\"cluster_id\": \"isk01\"}' \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/buckets/sample\n```\n\n上記で作成したバケットを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     -d '{\"cluster_id\": \"isk01\"}' \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/buckets/sample\n```\n\n## 4.アクセスキーの発行・削除\n\n選択したサイトにてサイトアカウントを作成後、**アクセスキー**の発行・削除が可能です。\n\nアクセスキーを発行するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/account/keys\n```\n\nコマンド結果には以下のフィールドが含まれます。\n\n* `created_at` : 作成日時\n* `id` : アクセスキーID\n* `secret` : シークレットアクセスキー\n\n```\n# 出力結果サンプル\n{\n  \"data\": {\n    \"created_at\": \"2021-11-04T07:42:41.121418479Z\",\n    \"id\": \"XPJK4SC9883N91RHR253\",\n    \"secret\": \"jqRaUo5l+EiEYqP8wos9exbmFfq4/vG8CLPYI2XN\"\n  }\n}\n```\n\n上記で作成したアクセスキーを削除するには以下のような入力を行います。\nこの時、削除したいアクセスキーIDをパスパラメータに入れる必要があります。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/account/keys/XPJK4SC9883N91RHR253\n```\n\n## 5.パーミッション及びパーミッションアクセスキーの発行・削除\n\n選択したサイトにてサイトアカウントを作成後且つバケットが1つ以上ある場合、**パーミッション**の発行・削除が可能です。\n\nパーミッションを作成するには以下のような入力を行います。\nこの時、パーミッション名、パーミッションで制御したいバケットとそれに対する操作をリクエストボディーに入れる必要があります。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '{\"display_name\": \"sample_permission\", \"bucket_controls\": [{\"bucket_name\": \"sample\", \"can_read\": true, \"can_write\": true}]}' \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/permissions\n```\n\n作成が完了すると、パーミッションIDが含まれたレスポンスを受け取ります。\n```\n# 出力サンプル\n{\n  \"data\": {\n    \"bucket_controls\": [\n      {\n        \"bucket_name\":\"sample\",\n        \"can_read\":true,\n        \"can_write\":true,\n        \"created_at\":\"2021-11-11T13:36:08.767118492Z\"\n      }\n    ],\n    \"created_at\":\"2021-11-11T13:36:08.690384415Z\",\n    \"display_name\":\"sample_permission\",\n    \"id\":619\n  }\n}\n```\n\nこのパーミッションのアクセスキーを発行するには以下のような入力を行います。\nこの時、パーミッション作成時に発行されたID（ここでは619とします）をパスパラメータに含める必要があります。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/permissions/619/keys\n```\n\nコマンド結果には以下のフィールドが含まれます。\n\n* `created_at` : 作成日時\n* `id` : アクセスキーID\n* `secret` : シークレットアクセスキー\n\n```\n# 出力結果サンプル\n{\n  \"data\": {\n    \"created_at\": \"2021-11-04T07:42:41.121418479Z\",\n    \"id\": \"XPJK4SC9883N91RHR253\",\n    \"secret\": \"jqRaUo5l+EiEYqP8wos9exbmFfq4/vG8CLPYI2XN\"\n  }\n}\n```\n\nパーミッションアクセスキーを削除するには以下のような入力を行います。\nこの時、パーミッションアクセスキー発行時に出力されたIDをパスパラメータに含める必要があります。\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/permissions/619/keys/XPJK4SC9883N91RHR253\n```\n\nパーミッションを削除するには以下のような入力を行います。\nこの時、パーミッション作成時に発行されたID（ここでは619とします）をパスパラメータに含める必要があります。\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2/permissions/619\n```\n----"
+  },
+  "paths": {
+    "/clusters": {
+      "get": {
+        "operationId": "getClusters",
+        "tags": [
+          "サイト"
+        ],
+        "servers": [
+          {
+            "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1"
+          }
+        ],
+        "summary": "サイト一覧の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "responses": {
+          "200": {
+            "description": "サイト一覧の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handler.listClustersRes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{id}": {
+      "get": {
+        "operationId": "getCluster",
+        "tags": [
+          "サイト"
+        ],
+        "servers": [
+          {
+            "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1"
+          }
+        ],
+        "summary": "サイトの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "description": "サイトID",
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "サイトの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handler.getClusterRes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "サイトが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets": {
+      "get": {
+        "operationId": "listBuckets",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケット一覧の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "バケット一覧の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}": {
+      "put": {
+        "operationId": "createBucket",
+        "tags": [
+          "バケット"
+        ],
+        "servers": [
+          {
+            "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1"
+          }
+        ],
+        "summary": "バケットの作成",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/handler.PutBucketReqBody"
+              }
+            }
+          },
+          "description": "作成したいバケット情報",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "バケット作成に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handler.putBucketRes"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "バケット名が不正です",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "サイトアカウントが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "同名バケットがすでに存在する、または制限値の上限に達したためバケット作成ができません",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteBucket",
+        "tags": [
+          "バケット"
+        ],
+        "servers": [
+          {
+            "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1"
+          }
+        ],
+        "summary": "バケットの削除",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "バケット削除に成功しました"
+          },
+          "400": {
+            "description": "バケット名が不正です",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "バケットに関係するリソースが残っています、先にそれらのリソースを削除する必要があります",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/replication": {
+      "get": {
+        "operationId": "getBucketReplication",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケットのレプリケーション設定の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "レプリケーション設定の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handler.getReplicationRes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postBucketReplication",
+        "tags": [
+          "バケット"
+        ],
+        "servers": [
+          {
+            "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1"
+          }
+        ],
+        "summary": "バケットのレプリケーション設定の作成",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dest_bucket"
+                ],
+                "properties": {
+                  "dest_bucket": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "レプリケーション設定の作成に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handler.postReplicationRes"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエストです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteBucketReplication",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "レプリケーション設定の削除",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "レプリケーション設定の削除に成功しました"
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/replicable-targets": {
+      "get": {
+        "operationId": "getBucketReplicableTargets",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケットのレプリケーション設定可能なディスティネーションバケットを取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/clusters` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1/clusters`\nとなります。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "レプリケーション設定可能なディスティネーションバケットの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/handler.getReplicableTargetsRes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/encryption": {
+      "get": {
+        "operationId": "getBucketEncryption",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケット暗号化設定の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "バケット暗号化設定の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/handler.EncryptionConfigRes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putBucketEncryption",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケット暗号化設定の作成（KMSキー指定）",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/handler.EncryptionConfigReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "暗号化設定の作成に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/handler.EncryptionConfigRes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエストです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteBucketEncryption",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケット暗号化設定の削除（無効化）",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "バケット名"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "バケット暗号化設定の削除に成功しました"
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/plan": {
+      "get": {
+        "operationId": "getBucketPlan",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "現在のプランを取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "description": "バケット名",
+            "schema": {
+              "$ref": "#/components/schemas/BucketName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "現在のプランを取得しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PlanWithContract"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "バケット名が不正です",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putBucketPlan",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "プラン変更を実行",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "description": "バケット名",
+            "schema": {
+              "$ref": "#/components/schemas/BucketName"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanChangeReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "プラン変更が完了しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PlanChangeResBody"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエストです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "コンフリクト（同時再契約、無効な状態遷移など）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/penalty": {
+      "get": {
+        "operationId": "getBucketPenalty",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケットのペナルティ状況を取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "description": "バケット名",
+            "schema": {
+              "$ref": "#/components/schemas/BucketName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "バケットのペナルティ状況を取得しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketPenalty"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーが発生しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/usage": {
+      "get": {
+        "operationId": "getBucketUsage",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケットの使用量を取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "description": "バケット名",
+            "schema": {
+              "$ref": "#/components/schemas/BucketName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "バケットの使用量を取得しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketUsage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーが発生しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/buckets/{name}/quota": {
+      "get": {
+        "operationId": "getBucketQuota",
+        "tags": [
+          "バケット"
+        ],
+        "summary": "バケットの制限値を取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "description": "バケット名",
+            "schema": {
+              "$ref": "#/components/schemas/BucketName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "バケットの制限値を取得しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketQuota"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不正なリクエストです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "指定したバケットが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーが発生しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account": {
+      "get": {
+        "operationId": "getAccount",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "サイトアカウントの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "サイトアカウントが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAccount",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントの作成",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "201": {
+            "description": "サイトアカウントの作成に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "新規のサイトアカウント作成が拒否されました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error403"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "サイトアカウントはすでに作成済みです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAccount",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントの削除",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "204": {
+            "description": "サイトアカウントの削除に成功しました"
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "サイトアカウントに関係するリソースが残っています、先にそれらのリソースを削除する必要があります",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/keys": {
+      "get": {
+        "operationId": "getAccountKeys",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントのアクセスキーの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "サイトアカウントのアクセスキーの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/accountKeys"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "サイトアカウントが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAccountKey",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントのアクセスキーの発行",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "201": {
+            "description": "サイトアカウントのアクセスキーの発行に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/accountKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "サイトアカウントが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "サイトアカウントのアクセスキーが上限に達しています",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/keys/{id}": {
+      "get": {
+        "operationId": "getAccountKey",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントのアクセスキーの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "アクセスキーID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "サイトアカウントのアクセスキーの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/accountKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "アクセスキーが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAccountKey",
+        "tags": [
+          "サイトアカウント"
+        ],
+        "summary": "サイトアカウントのアクセスキーの削除",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "アクセスキーID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "サイトアカウントのアクセスキーの削除に成功しました"
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permissions": {
+      "get": {
+        "operationId": "getPermissions",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッション一覧の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "パーミッション一覧の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Permissions"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPermission",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションの作成",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [],
+        "requestBody": {
+          "description": "どのバケットを制御するかを定義します。",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionBucketControlsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "パーミッションの作成に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Permission"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "あなたが所有者でない、または存在しないバケットが指定されています",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "制御対象のバケットの数が上限を超えています。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permissions/{id}": {
+      "get": {
+        "operationId": "getPermission",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "パーミッションの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Permission"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "パーミッションが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updatePermission",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションの更新",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。\n\n**注意**： 本APIは指定したパーミッションIDの内容を全て置き換えます。\nそのため、一部のバケットの権限を変更したい場合であっても、本パーミッションIDが管理する全てのバケットに関する情報も合わせて送る必要があります。\n\n例えば、パーミッションID`1`が管理するバケットが下記の内容であるとします（パーミッションID`1`をGETした際の内容を示しています）。\n```\n{\n  \"data\": {\n    \"bucket_controls\": [\n      {\n        \"bucket_name\": \"your-bucket-name-001\",\n        \"can_read\": false,\n        \"can_write\": false,\n        \"created_at\": \"2021-01-01T12:59:59.371074+09:00\"\n      },\n      {\n        \"bucket_name\": \"your-bucket-name-002\",\n        \"can_read\": false,\n        \"can_write\": false,\n        \"created_at\": \"2021-01-01T12:59:59.371074+09:00\"\n      }\n    ]\n    \"created_at\": \"2021-01-01T12:59:59.371074+09:00\"\n    \"display_name\": \"your-permission-001\",\n    \"id\": 1\n  },\n}\n```\nこの内、`your-bucket-name-002`の読み込み及び書き込み権限だけを許可したい場合は下記のようなリクエストボディーを送る必要があります。\n```\n{\n  \"id\": 1,\n  \"display_name\": \"your-permission-001\",\n  \"bucket_controls\": [\n    {\n      \"bucket_name\": \"your-bucket-name-001\",\n      \"can_read\": false,\n      \"can_write\": false,\n    },\n    {\n      \"bucket_name\": \"your-bucket-name-002\",\n      \"can_read\": true,\n      \"can_write\": true,\n    }\n  ]\n}\n```\n\n実際にリクエストを送る際には上記の内容を`data.json`というファイルに保存し、以下のような入力を行います。\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PUT \\\n     -d @data.json \\\nhttps://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/permissions/1\n```",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          }
+        ],
+        "requestBody": {
+          "description": "どのバケットを制御するかを定義します。",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PermissionBucketControlsBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "パーミッションの更新に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Permission"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "あなたが所有者でない、または存在しないバケットが指定されています",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "制御対象のバケットの数が上限を超えています。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePermission",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションの削除",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "パーミッションの削除に成功しました"
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permissions/{id}/keys": {
+      "get": {
+        "operationId": "getPermissionKeys",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションが保有するアクセスキー一覧の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "パーミッションが保有するアクセスキー一覧の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionKeys"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "パーミッションが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createPermissionKey",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションのアクセスキーの発行",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "パーミッションのアクセスキーの発行に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "パーミッションが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "制御対象のバケットの数が上限を超えています。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error409"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permissions/{id}/keys/{key_id}": {
+      "get": {
+        "operationId": "getPermissionKey",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションが保有するアクセスキーの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          },
+          {
+            "name": "key_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションが保有するアクセスキーID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "パーミッションが保有するアクセスキーの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "パーミッションが保有するアクセスキーが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePermissionKey",
+        "tags": [
+          "パーミッション"
+        ],
+        "summary": "パーミッションが保有するアクセスキーの削除",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションID"
+          },
+          {
+            "name": "key_id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "パーミッションが保有するアクセスキーID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "パーミッションが保有するアクセスキーの削除に成功しました"
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "パーミッションが保有するアクセスキーが見つかりませんでした",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error404"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "operationId": "getStatus",
+        "tags": [
+          "ステータス"
+        ],
+        "summary": "サイトのステータスの取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "サイトのステータスの取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plans": {
+      "get": {
+        "operationId": "getPlans",
+        "tags": [
+          "プラン"
+        ],
+        "summary": "利用可能なプランの一覧取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "プランの一覧の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlanItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quota": {
+      "get": {
+        "operationId": "getQuota",
+        "tags": [
+          "全体制限値"
+        ],
+        "summary": "全体制限値の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。",
+        "responses": {
+          "200": {
+            "description": "全体制限値の取得に成功しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Quota"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metering/buckets/{name}": {
+      "get": {
+        "operationId": "getBucketMetering",
+        "tags": [
+          "メータリング履歴"
+        ],
+        "summary": "バケット使用量の取得",
+        "description": "アクセス先ベースURL: `https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/`\n\n上記アクセス先ベースURLと右ペインのパスを組み合わせたものがアクセス先URLになります。\n例えば、右ペインのパスが `/account` の場合、アクセス先URLは、\n`https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/（サイト名）/v2/account`\nとなります。\n\nなお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。\n\n指定したバケットの使用量を、指定した月範囲で取得します。\n取得できるデータは月次集計データとなり、日次や時間毎の詳細なデータは取得できません。\nまた、指定した月においてバケットの使用が無かった場合でも、ゼロ埋めされたデータが返却されます。",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "description": "バケット名",
+            "schema": {
+              "$ref": "#/components/schemas/BucketName"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2022-03-01"
+            },
+            "description": "範囲の開始月",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2022-08-01"
+            },
+            "description": "範囲の終了月",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（ゼロ埋めされたレコードを含む場合があります）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BucketBillingItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "無効な範囲または範囲が広すぎます",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証に失敗しました",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error401"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "不明なエラーです",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDefault"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/tky01/v2"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/arc02/v2"
+    }
+  ],
+  "security": [
+    {
+      "BasicAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BasicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "[クラウドコントロールパネル](https://secure.sakura.ad.jp/cloud/)で発行したAPIキーを利用します。\n\n `アクセストークン(UUID)` を「ユーザーID」、`アクセストークンシークレット` を「パスワード」として指定します。"
+      }
+    },
+    "schemas": {
+      "handler.PutBucketReqBody": {
+        "type": "object",
+        "required": [
+          "cluster_id"
+        ],
+        "properties": {
+          "cluster_id": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "object",
+            "nullable": true,
+            "description": "If not specified, the bucket will be created as \"standard\".",
+            "properties": {
+              "type": {
+                "$ref": "#/components/schemas/model.PlanType"
+              },
+              "service_class_path": {
+                "$ref": "#/components/schemas/ServiceClassPath"
+              }
+            }
+          }
+        }
+      },
+      "handler.EncryptionConfigReqBody": {
+        "type": "object",
+        "required": [
+          "kms_key_id"
+        ],
+        "properties": {
+          "kms_key_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResourceID"
+              }
+            ]
+          }
+        }
+      },
+      "handler.EncryptionConfigRes": {
+        "type": "object",
+        "properties": {
+          "kms_key_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResourceID"
+              }
+            ]
+          },
+          "configured_at": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatedAt"
+              }
+            ]
+          }
+        }
+      },
+      "handler.getClusterRes": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/model.Cluster"
+          }
+        }
+      },
+      "handler.listClustersRes": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "If use a pointer type, braek output",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.Cluster"
+            }
+          }
+        }
+      },
+      "handler.putBucketRes": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/model.Bucket"
+          }
+        }
+      },
+      "handler.postReplicationRes": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/model.Replication"
+          }
+        },
+        "example": {
+          "data": {
+            "source_bucket": {
+              "name": "my-bucket",
+              "cluster_id": "isk01",
+              "plan": {
+                "type": "",
+                "service_class_path": ""
+              }
+            },
+            "dest_bucket": {
+              "name": "my-bucket-replica",
+              "cluster_id": "tky01",
+              "plan": {
+                "type": "",
+                "service_class_path": ""
+              }
+            },
+            "config_status": "created",
+            "created_at": "2024-01-01T12:00:00+09:00"
+          }
+        }
+      },
+      "handler.getReplicationRes": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/model.Replication"
+          }
+        },
+        "example": {
+          "data": {
+            "source_bucket": {
+              "name": "my-bucket",
+              "cluster_id": "isk01",
+              "plan": {
+                "type": "",
+                "service_class_path": ""
+              }
+            },
+            "dest_bucket": {
+              "name": "my-bucket-replica",
+              "cluster_id": "tky01",
+              "plan": {
+                "type": "",
+                "service_class_path": ""
+              }
+            },
+            "config_status": "created",
+            "created_at": "2024-01-01T12:00:00+09:00"
+          }
+        }
+      },
+      "handler.getReplicableTargetsRes": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.Bucket"
+            }
+          }
+        }
+      },
+      "model.Bucket": {
+        "type": "object",
+        "properties": {
+          "cluster_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "$ref": "#/components/schemas/model.PlanType"
+              },
+              "service_class_path": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "example": {
+          "cluster_id": "isk01",
+          "name": "my-bucket",
+          "plan": {
+            "type": "standard",
+            "service_class_path": "objectstorage/isk01/bucket"
+          }
+        }
+      },
+      "model.Cluster": {
+        "type": "object",
+        "properties": {
+          "api_zone": {
+            "description": "API Servers Zones",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "is1b"
+            ]
+          },
+          "control_panel_url": {
+            "description": "URL of Control Panel",
+            "type": "string",
+            "example": "secure.sakura.ad.jp/objectstorage/isk01"
+          },
+          "display_name_en_us": {
+            "description": "Display Name (en-us)",
+            "type": "string",
+            "example": "Ishikari Cluster #1"
+          },
+          "display_name_ja": {
+            "description": "Display Name (ja)",
+            "type": "string",
+            "example": "石狩第1サイト"
+          },
+          "display_name": {
+            "description": "Display Name (Depending on Accept-Language)",
+            "type": "string",
+            "example": "石狩第1サイト"
+          },
+          "display_order": {
+            "description": "Display Order (Can be ignored)",
+            "type": "integer",
+            "example": 1
+          },
+          "endpoint_base": {
+            "description": "Endpoint Base of Cluster",
+            "type": "string",
+            "example": "isk01.objectstorage.sakurastorage.jp"
+          },
+          "iam_endpoint": {
+            "description": "URL of IAM-compat API",
+            "type": "string",
+            "example": "iam.isk01.objectstorage.sakurastorage.jp"
+          },
+          "iam_endpoint_for_control_panel": {
+            "description": "URL of IAM-compat API (w/ resigning)",
+            "type": "string",
+            "example": "iam.cp.isk01.objectstorage.sakurastorage.jp"
+          },
+          "id": {
+            "type": "string",
+            "example": "isk01"
+          },
+          "region": {
+            "type": "string",
+            "example": "jp-north-1"
+          },
+          "s3_endpoint": {
+            "description": "URL of S3-compat API",
+            "type": "string",
+            "example": "s3.isk01.objectstorage.sakurastorage.jp"
+          },
+          "s3_endpoint_for_control_panel": {
+            "description": "URL of S3-compat API (w/ resigning)",
+            "type": "string",
+            "example": "s3.cp.isk01.objectstorage.sakurastorage.jp"
+          },
+          "storage_zone": {
+            "description": "Storage Servers Zones",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "is1a",
+              "is1b"
+            ]
+          },
+          "plan_family": {
+            "type": "string",
+            "description": "Pricing/behavior family of the cluster.",
+            "enum": [
+              "standard",
+              "archive"
+            ],
+            "example": "standard"
+          }
+        }
+      },
+      "model.PlanType": {
+        "type": "string",
+        "description": "Plan type enum",
+        "enum": [
+          "standard",
+          "archive"
+        ],
+        "example": "archive"
+      },
+      "model.Replication": {
+        "type": "object",
+        "required": [
+          "source_bucket",
+          "dest_bucket",
+          "config_status",
+          "created_at"
+        ],
+        "properties": {
+          "source_bucket": {
+            "type": "object",
+            "description": "Source bucket info",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "cluster_id": {
+                "type": "string"
+              },
+              "plan": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "$ref": "#/components/schemas/model.PlanType"
+                  },
+                  "service_class_path": {
+                    "$ref": "#/components/schemas/ServiceClassPath"
+                  }
+                }
+              }
+            },
+            "example": {
+              "name": "my-bucket",
+              "cluster_id": "isk01",
+              "plan": {
+                "type": "standard",
+                "service_class_path": "objectstorage/isk01/bucket"
+              }
+            }
+          },
+          "dest_bucket": {
+            "type": "object",
+            "description": "Destination bucket info",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "cluster_id": {
+                "type": "string"
+              },
+              "plan": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "$ref": "#/components/schemas/model.PlanType"
+                  },
+                  "service_class_path": {
+                    "$ref": "#/components/schemas/ServiceClassPath"
+                  }
+                }
+              }
+            },
+            "example": {
+              "name": "my-bucket-replica",
+              "cluster_id": "tky01",
+              "plan": {
+                "type": "standard",
+                "service_class_path": "objectstorage/isk01/bucket"
+              }
+            }
+          },
+          "config_status": {
+            "type": "string",
+            "enum": [
+              "creating",
+              "created"
+            ],
+            "description": "creating=federation→cluster applying / created=cluster applied"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlanChangeReqBody": {
+        "type": "object",
+        "required": [
+          "previous_contract",
+          "new_plan"
+        ],
+        "properties": {
+          "previous_contract": {
+            "type": "object",
+            "properties": {
+              "resource_id": {
+                "description": "Current contract resource ID. This is for validation to avoid recontracting from an unexpected state.\n",
+                "$ref": "#/components/schemas/ResourceID"
+              }
+            }
+          },
+          "new_plan": {
+            "type": "object",
+            "required": [
+              "type",
+              "service_class_path"
+            ],
+            "description": "New plan to recontract to.",
+            "properties": {
+              "type": {
+                "$ref": "#/components/schemas/model.PlanType"
+              },
+              "service_class_path": {
+                "$ref": "#/components/schemas/ServiceClassPath"
+              }
+            }
+          }
+        }
+      },
+      "PlanChangeResBody": {
+        "type": "object",
+        "properties": {
+          "previous_contract": {
+            "$ref": "#/components/schemas/ContractSummary"
+          },
+          "new_contract": {
+            "$ref": "#/components/schemas/ContractSummary"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanSummary"
+          }
+        }
+      },
+      "ContractSummary": {
+        "type": "object",
+        "properties": {
+          "resource_id": {
+            "type": "string",
+            "example": "113200009999"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "terminated"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "PlanSummary": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/model.PlanType"
+          },
+          "service_class_path": {
+            "$ref": "#/components/schemas/ServiceClassPath"
+          },
+          "cluster_id": {
+            "type": "string",
+            "example": "isk01",
+            "description": "Cluster ID to which this plan applies. In the response of /buckets/{name}/plan, this always matches bucket.cluster_id (redundant, read-only).\n"
+          },
+          "capacity_gib": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Only archive is enabled (capacity resolved from the service class path)",
+            "example": 2000
+          }
+        }
+      },
+      "PlanWithContract": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/PlanSummary"
+          },
+          "contract": {
+            "$ref": "#/components/schemas/ContractSummary"
+          }
+        }
+      },
+      "PlanItem": {
+        "type": "object",
+        "properties": {
+          "service_class_path": {
+            "$ref": "#/components/schemas/ServiceClassPath"
+          },
+          "type": {
+            "$ref": "#/components/schemas/model.PlanType"
+          },
+          "cluster_id": {
+            "type": "string",
+            "example": "isk01"
+          },
+          "capacity_gib": {
+            "type": "integer",
+            "example": 20000
+          },
+          "fee": {
+            "type": "object",
+            "description": "Fee information (tax included)",
+            "nullable": true,
+            "properties": {
+              "for_month": {
+                "type": "integer",
+                "example": 1980
+              },
+              "monthly": {
+                "type": "integer",
+                "example": 7200
+              },
+              "daily": {
+                "type": "integer",
+                "example": 360
+              },
+              "hourly": {
+                "type": "integer",
+                "example": 36
+              }
+            }
+          }
+        }
+      },
+      "ServiceClassPath": {
+        "type": "string",
+        "description": "Plan identifier (service class path). Attributes such as capacity are resolved by the server based on this value.",
+        "example": "objectstorage/arc02/bucket/2t"
+      },
+      "BucketUsage": {
+        "description": "Bucket usage",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "num_objects_per_bucket": {
+                "type": "integer",
+                "example": 10000000
+              },
+              "amount_gib_per_bucket": {
+                "type": "number",
+                "format": "float",
+                "example": 10240
+              }
+            }
+          }
+        }
+      },
+      "BucketList": {
+        "description": "Bucket list",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BucketName"
+                    }
+                  ]
+                },
+                "resource_id": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResourceID"
+                    }
+                  ]
+                },
+                "plan": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "$ref": "#/components/schemas/model.PlanType"
+                    },
+                    "service_class_path": {
+                      "$ref": "#/components/schemas/ServiceClassPath"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BucketPenalty": {
+        "description": "Bucket penalty",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "num_objects_per_bucket": {
+                "type": "object",
+                "properties": {
+                  "val": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 614.25366
+                  },
+                  "quota": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 10240
+                  },
+                  "is_applied": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "amount_gib_per_bucket": {
+                "type": "object",
+                "properties": {
+                  "val": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 10002495
+                  },
+                  "quota": {
+                    "type": "integer",
+                    "example": 10000000
+                  },
+                  "is_applied": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BucketQuota": {
+        "description": "Bucket quota",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "num_objects_per_bucket": {
+                "type": "integer",
+                "example": 10000000
+              },
+              "amount_gib_per_bucket": {
+                "type": "number",
+                "format": "float",
+                "example": 10240
+              }
+            }
+          }
+        }
+      },
+      "Quota": {
+        "description": "Quota",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "num_root_keys": {
+                "type": "integer",
+                "example": 1
+              },
+              "num_buckets": {
+                "type": "integer",
+                "example": 20
+              },
+              "num_permissions": {
+                "type": "integer",
+                "example": 30
+              },
+              "num_keys_per_permission": {
+                "type": "integer",
+                "example": 1
+              },
+              "num_buckets_per_permission": {
+                "type": "integer",
+                "example": 20
+              },
+              "num_objects_per_bucket": {
+                "type": "integer",
+                "example": 10000000
+              },
+              "amount_gib_per_bucket": {
+                "type": "number",
+                "format": "float",
+                "example": 10240
+              }
+            }
+          }
+        }
+      },
+      "BucketBillingItemDetail": {
+        "description": "Charge information",
+        "type": "object",
+        "properties": {
+          "found": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether billing record was found or not. `false` means that bucket was not found, bucket was owned by other accounts, or error on metering."
+          },
+          "usage": {
+            "type": "number",
+            "format": "double",
+            "example": 1100,
+            "description": "Usage for calculating charge"
+          },
+          "charge": {
+            "type": "integer",
+            "example": 456,
+            "description": "Amount billed including tax"
+          },
+          "is_closing": {
+            "type": "boolean",
+            "example": true,
+            "description": "Result of monthly closing or not"
+          },
+          "from": {
+            "type": "string",
+            "format": "date",
+            "example": "2022-08-01",
+            "description": "The first day of metering range"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "example": "2022-08-31",
+            "description": "The last day of metering range"
+          }
+        }
+      },
+      "BucketBillingItem": {
+        "description": "Bucket usage and charge for metering",
+        "type": "object",
+        "properties": {
+          "year_month": {
+            "type": "string",
+            "example": "2022-08",
+            "description": "集計対象の年月"
+          },
+          "basic": {
+            "$ref": "#/components/schemas/BucketBillingItemDetail",
+            "description": "基本料金"
+          },
+          "storage_usage": {
+            "$ref": "#/components/schemas/BucketBillingItemDetail",
+            "description": "ストレージ使用量"
+          },
+          "num_objects": {
+            "$ref": "#/components/schemas/BucketBillingItemDetail",
+            "description": "オブジェクト数"
+          },
+          "num_transactions": {
+            "$ref": "#/components/schemas/BucketBillingItemDetail",
+            "description": "トランザクション数"
+          },
+          "transfer_amount": {
+            "$ref": "#/components/schemas/BucketBillingItemDetail",
+            "description": "転送量"
+          }
+        }
+      },
+      "PermissionID": {
+        "description": "Permission ID",
+        "type": "integer",
+        "format": "int64",
+        "example": 123
+      },
+      "PermissionKeyID": {
+        "description": "Permission Key ID",
+        "type": "string",
+        "example": "AKIAIOSFODNN7EXAMPLE"
+      },
+      "ResourceID": {
+        "description": "Resource ID",
+        "type": "string",
+        "pattern": "\\d{1,12}",
+        "example": "123456789012"
+      },
+      "Code": {
+        "description": "Code",
+        "type": "string",
+        "example": "abc01234@foo@isk01"
+      },
+      "CreatedAt": {
+        "description": "Created at",
+        "type": "string",
+        "format": "date-time",
+        "example": "2020-01-11T01:11:23.123456+09:00"
+      },
+      "BucketName": {
+        "description": "バケット名",
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9\\-]{2,}",
+        "example": "Abcdefg1235-"
+      },
+      "CanRead": {
+        "description": "The flag to read bucket contents",
+        "type": "boolean",
+        "example": true
+      },
+      "CanWrite": {
+        "description": "The flag to write bucket contents",
+        "type": "boolean",
+        "example": true
+      },
+      "DisplayName": {
+        "description": "Display name",
+        "type": "string",
+        "pattern": "^.+$",
+        "example": "abc012345-"
+      },
+      "AccessKeyID": {
+        "description": "Access key ID",
+        "type": "string",
+        "pattern": "^[\\w\\d\\/]{1,40}$",
+        "example": "abcdefABCDEF0123456789"
+      },
+      "SecretAccessKey": {
+        "description": "Secret Access key",
+        "type": "string",
+        "pattern": "^[\\w\\d\\/+=]{1,40}$",
+        "example": "/NOTICE==EXISTS+ONLY+WHEN+JUST+CREATED/"
+      },
+      "accountKeys": {
+        "description": "Root user access keys",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/AccessKeyID"
+                    }
+                  ]
+                },
+                "secret": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SecretAccessKey"
+                    }
+                  ]
+                },
+                "created_at": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CreatedAt"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "accountKey": {
+        "description": "Root user access key",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AccessKeyID"
+                  }
+                ]
+              },
+              "secret": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SecretAccessKey"
+                  }
+                ]
+              },
+              "created_at": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreatedAt"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "BucketControls": {
+        "description": "Bucket controls",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "bucket_name": {
+              "$ref": "#/components/schemas/BucketName"
+            },
+            "can_read": {
+              "$ref": "#/components/schemas/CanRead"
+            },
+            "can_write": {
+              "$ref": "#/components/schemas/CanWrite"
+            },
+            "created_at": {
+              "$ref": "#/components/schemas/CreatedAt"
+            }
+          }
+        }
+      },
+      "PermissionSecret": {
+        "description": "Permission secret key",
+        "type": "string",
+        "pattern": "^[\\w\\d\\/+=]{1,40}$",
+        "example": "/NOTICE==EXISTS+ONLY+WHEN+JUST+CREATED/"
+      },
+      "Account": {
+        "description": "Account info",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "resource_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ResourceID"
+                  }
+                ]
+              },
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Code"
+                  }
+                ]
+              },
+              "created_at": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreatedAt"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Permissions": {
+        "description": "Permission",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PermissionID"
+                    }
+                  ]
+                },
+                "display_name": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/DisplayName"
+                    }
+                  ]
+                },
+                "bucket_controls": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BucketControls"
+                    }
+                  ]
+                },
+                "created_at": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CreatedAt"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Permission": {
+        "description": "Permission",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PermissionID"
+                  }
+                ]
+              },
+              "display_name": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DisplayName"
+                  }
+                ]
+              },
+              "bucket_controls": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/BucketControls"
+                  }
+                ]
+              },
+              "created_at": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreatedAt"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "PermissionBucketControlsBody": {
+        "description": "Request body for bucket controls for Permission",
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DisplayName"
+              }
+            ]
+          },
+          "bucket_controls": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BucketControls"
+              }
+            ]
+          }
+        }
+      },
+      "PermissionKeys": {
+        "description": "Permission Key",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PermissionKeyID"
+                    }
+                  ]
+                },
+                "secret": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PermissionSecret"
+                    }
+                  ]
+                },
+                "created_at": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CreatedAt"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "PermissionKey": {
+        "description": "Permission Key",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PermissionKeyID"
+                  }
+                ]
+              },
+              "secret": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PermissionSecret"
+                  }
+                ]
+              },
+              "created_at": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreatedAt"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Status": {
+        "description": "Status",
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "data type",
+            "type": "object",
+            "properties": {
+              "accept_new": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "some extra info"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2020-01-11T01:11:23.123456+09:00"
+              },
+              "status_code": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "available"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorCode": {
+        "description": "エラーコード。\n",
+        "type": "integer",
+        "format": "int32"
+      },
+      "ErrorMessage": {
+        "description": "エラー発生時のメッセージ内容。\nこのメッセージはエラーを発生させたアプリケーションのメッセージをそのまま含む場合がある。\n",
+        "type": "string"
+      },
+      "ErrorTraceId": {
+        "description": "X-Sakura-Internal-Serial-ID\n",
+        "type": "string"
+      },
+      "ErrorsDomain": {
+        "description": "どのサービスで発生したエラーかを判別する。\nマイクロサービス名に加えてクラスター名を含む文字列が入ることを想定している。\n",
+        "type": "string"
+      },
+      "ErrorsLocation": {
+        "description": "エラー発生箇所。\nどのリソースなのか（どのリソースを操作した時に発生したものなのか）、\nどのパラメータなのかといった情報。\n",
+        "type": "string"
+      },
+      "ErrorsLocationType": {
+        "description": "エラーの発生箇所の種類。\nHTTPヘッダなのかHTTPパラメータなのか、\nS3バケットなのかといったlocationの種別情報。\n",
+        "type": "string"
+      },
+      "ErrorsMessage": {
+        "description": "エラー発生時のメッセージ内容。\nこのメッセージはエラーを発生させたアプリケーションのメッセージをそのまま含む場合がある。\n",
+        "type": "string"
+      },
+      "ErrorsReason": {
+        "description": "なぜそのエラーが発生したかがわかる情報。\nエラーメッセージの原因やエラー解決のためのヒントも含む場合がある。\n",
+        "type": "string"
+      },
+      "Errors": {
+        "description": "認証に関するエラーについて詳細なエラー内容を表示する。\n",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorsDomain"
+                }
+              ],
+              "example": "{federaton,cluster}-api-objectstorage.sacloud"
+            },
+            "location": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorsLocation"
+                }
+              ],
+              "example": "String"
+            },
+            "location_type": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorsLocationType"
+                }
+              ],
+              "example": "String"
+            },
+            "message": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorsMessage"
+                }
+              ],
+              "example": "XXXX failed."
+            },
+            "reason": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorsReason"
+                }
+              ],
+              "example": "XXXX is wrong. Should set valid parameters."
+            }
+          }
+        }
+      },
+      "Error400": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "error 400",
+            "type": "object",
+            "properties": {
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorCode"
+                  }
+                ],
+                "example": 400
+              },
+              "message": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                ],
+                "example": "Invalid parameters."
+              },
+              "trace_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorTraceId"
+                  }
+                ],
+                "example": "0f36837633984f3fc8871f515e8efa24"
+              },
+              "errors": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Errors"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Error401": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "error 401",
+            "type": "object",
+            "properties": {
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorCode"
+                  }
+                ],
+                "example": 401
+              },
+              "message": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                ],
+                "example": "Authentication failed."
+              },
+              "trace_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorTraceId"
+                  }
+                ],
+                "example": "0f36837633984f3fc8871f515e8efa24"
+              },
+              "errors": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Errors"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Error403": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "error 403",
+            "type": "object",
+            "properties": {
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorCode"
+                  }
+                ],
+                "example": 403
+              },
+              "message": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                ],
+                "example": "XXXX creation denied."
+              },
+              "trace_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorTraceId"
+                  }
+                ],
+                "example": "0f36837633984f3fc8871f515e8efa24"
+              },
+              "errors": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Errors"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Error404": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "error 404",
+            "type": "object",
+            "properties": {
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorCode"
+                  }
+                ],
+                "example": 404
+              },
+              "message": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                ],
+                "example": "XXXX does not exist."
+              },
+              "trace_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorTraceId"
+                  }
+                ],
+                "example": "0f36837633984f3fc8871f515e8efa24"
+              },
+              "errors": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Errors"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Error409": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "error 409",
+            "type": "object",
+            "properties": {
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorCode"
+                  }
+                ],
+                "example": 409
+              },
+              "message": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                ],
+                "example": "XXXX already created."
+              },
+              "trace_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorTraceId"
+                  }
+                ],
+                "example": "0f36837633984f3fc8871f515e8efa24"
+              },
+              "errors": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Errors"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "ErrorDefault": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "error 500",
+            "type": "object",
+            "properties": {
+              "code": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorCode"
+                  }
+                ],
+                "example": 500
+              },
+              "message": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorMessage"
+                  }
+                ],
+                "example": "unknown error occurred."
+              },
+              "trace_id": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ErrorTraceId"
+                  }
+                ],
+                "example": "0f36837633984f3fc8871f515e8efa24"
+              },
+              "errors": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Errors"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "サイト",
+      "description": "サイトに関する情報"
+    },
+    {
+      "name": "バケット",
+      "description": "バケットに関する情報"
+    },
+    {
+      "name": "サイトアカウント",
+      "description": "サイトアカウントに関する情報"
+    },
+    {
+      "name": "パーミッション",
+      "description": "パーミッションに関する情報"
+    },
+    {
+      "name": "ステータス",
+      "description": "ステータスに関する情報"
+    }
+  ]
+}

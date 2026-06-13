@@ -45,7 +45,7 @@ func TestEnvCmdDefaultHost(t *testing.T) {
 func TestEnvCmdDataPlane(t *testing.T) {
 	c := newTestEnvCmd()
 	c.Objectstorage.EnableDataPlane = true
-	c.Objectstorage.DataPlaneAddr = "127.0.0.1:18186"
+	c.Objectstorage.DataPlaneAddr = "127.0.0.1:28086"
 	c.Objectstorage.DataPlaneAccessKey = "sakumock"
 	c.Objectstorage.DataPlaneSecretKey = "sakumocksecret"
 	c.Objectstorage.DataPlaneRegion = "jp-north-1"
@@ -56,7 +56,7 @@ func TestEnvCmdDataPlane(t *testing.T) {
 	}
 	rendered := strings.Join(envLines(vars), "\n")
 	for _, want := range []string{
-		"AWS_ENDPOINT_URL_S3=http://127.0.0.1:18186",
+		"AWS_ENDPOINT_URL_S3=http://127.0.0.1:28086",
 		"AWS_ACCESS_KEY_ID=sakumock",
 		"AWS_SECRET_ACCESS_KEY=sakumocksecret",
 		"AWS_DEFAULT_REGION=jp-north-1",

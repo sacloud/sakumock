@@ -21,7 +21,7 @@ type Config struct {
 	// external versitygw process (looked up on PATH) backed by a local POSIX
 	// directory; see dataplane.go. It is off by default and never bundled.
 	EnableDataPlane    bool   `help:"Serve the S3-compatible data plane via an external versitygw process (must be installed on PATH; disabled if not found)" env:"OBJECT_STORAGE_ENABLE_DATA_PLANE" default:"false"`
-	DataPlaneAddr      string `help:"Listen address for the S3 data plane (versitygw)" env:"OBJECT_STORAGE_DATA_PLANE_ADDR" default:"127.0.0.1:18186"`
+	DataPlaneAddr      string `help:"Listen address for the S3 data plane (versitygw)" env:"OBJECT_STORAGE_DATA_PLANE_ADDR" default:"127.0.0.1:28086"`
 	DataPlaneDir       string `help:"Backend directory for the S3 data plane; empty uses a temporary directory removed on shutdown" env:"OBJECT_STORAGE_DATA_PLANE_DIR"`
 	DataPlaneAccessKey string `help:"Root access key the S3 data plane accepts" env:"OBJECT_STORAGE_DATA_PLANE_ACCESS_KEY" default:"sakumock"`
 	DataPlaneSecretKey string `help:"Root secret key the S3 data plane accepts" env:"OBJECT_STORAGE_DATA_PLANE_SECRET_KEY" default:"sakumocksecret"`

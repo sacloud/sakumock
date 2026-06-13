@@ -28,7 +28,7 @@ sakumock-objectstorage
 | `--rate-limit-window` | `OBJECT_STORAGE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `OBJECT_STORAGE_DEBUG` | `false` | Enable debug mode |
 | `--enable-data-plane` | `OBJECT_STORAGE_ENABLE_DATA_PLANE` | `false` | Serve the S3-compatible data plane via an external versitygw process |
-| `--data-plane-addr` | `OBJECT_STORAGE_DATA_PLANE_ADDR` | `127.0.0.1:18186` | Listen address for the S3 data plane |
+| `--data-plane-addr` | `OBJECT_STORAGE_DATA_PLANE_ADDR` | `127.0.0.1:28086` | Listen address for the S3 data plane (control-plane port + 10000) |
 | `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses a temp dir removed on shutdown |
 | `--data-plane-access-key` | `OBJECT_STORAGE_DATA_PLANE_ACCESS_KEY` | `sakumock` | Root access key the S3 data plane accepts |
 | `--data-plane-secret-key` | `OBJECT_STORAGE_DATA_PLANE_SECRET_KEY` | `sakumocksecret` | Root secret key the S3 data plane accepts |

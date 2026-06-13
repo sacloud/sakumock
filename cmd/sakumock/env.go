@@ -24,6 +24,7 @@ type EnvCmd struct {
 
 	Host   string         `placeholder:"HOST" help:"Host the client uses to reach sakumock, substituted into every endpoint URL (the port is kept). E.g. 'localhost' for a published container port, or the compose service name. Defaults to each service's configured address."`
 	Output string         `name:"output" short:"o" type:"path" placeholder:"PATH" help:"Write the dotenv to this file instead of stdout. Use it where shell redirection is unavailable, e.g. a compose oneshot on the (shell-less) container image."`
+	Export bool           `help:"Prefix every line with 'export ' so the output can be sourced directly (e.g. with direnv or a plain shell)."`
 	Config configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file (same format as 'all --config')"`
 }
 
@@ -60,9 +61,9 @@ func (c *EnvCmd) Run(_ context.Context) error {
 		return err
 	}
 	if c.Output != "" {
-		return core.WriteEnvFile(c.Output, vars)
+		return core.WriteEnvFile(c.Output, vars, c.Export)
 	}
-	fmt.Print(core.RenderEnvFile(vars))
+	fmt.Print(core.RenderEnvFile(vars, c.Export))
 	return nil
 }
 

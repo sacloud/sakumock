@@ -85,12 +85,10 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 
 	addr := freeLoopbackAddr(t)
 	srv := objectstorage.NewTestServer(objectstorage.Config{
-		EnableDataPlane:    true,
-		DataPlaneAddr:      addr,
-		DataPlaneDir:       t.TempDir(),
-		DataPlaneAccessKey: dataPlaneAccessKey,
-		DataPlaneSecretKey: dataPlaneSecretKey,
-		DataPlaneRegion:    dataPlaneRegion,
+		EnableDataPlane: true,
+		DataPlaneAddr:   addr,
+		DataPlaneDir:    t.TempDir(),
+		DataPlaneRegion: dataPlaneRegion,
 	})
 	defer srv.Close()
 

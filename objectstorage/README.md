@@ -30,9 +30,9 @@ sakumock-objectstorage
 | `--enable-data-plane` | `OBJECT_STORAGE_ENABLE_DATA_PLANE` | `false` | Serve the S3-compatible data plane via an external versitygw process |
 | `--data-plane-addr` | `OBJECT_STORAGE_DATA_PLANE_ADDR` | `127.0.0.1:28086` | Listen address for the S3 data plane (control-plane port + 10000) |
 | `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses a temp dir removed on shutdown |
-| `--data-plane-access-key` | `OBJECT_STORAGE_DATA_PLANE_ACCESS_KEY` | `sakumock` | Root access key the S3 data plane accepts |
-| `--data-plane-secret-key` | `OBJECT_STORAGE_DATA_PLANE_SECRET_KEY` | `sakumocksecret` | Root secret key the S3 data plane accepts |
 | `--data-plane-region` | `OBJECT_STORAGE_DATA_PLANE_REGION` | `jp-north-1` | Region the S3 data plane signs/validates requests for |
+
+The data plane's root credentials are fixed development defaults (access key `sakumock`, secret key `sakumocksecret`) — not configurable, like the dummy SAKURA credentials.
 
 (Under the unified binary these are prefixed, e.g. `--objectstorage-enable-data-plane`.)
 
@@ -123,7 +123,7 @@ sakumock all --objectstorage-enable-data-plane
 The integration is **loose**:
 
 - **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw.
-- **A single fixed root credential** (`--data-plane-access-key` / `--data-plane-secret-key`) authenticates S3 requests. Control-plane access keys and permissions are **not** enforced on the data plane.
+- **A single fixed root credential** (access key `sakumock`, secret key `sakumocksecret`) authenticates S3 requests. Control-plane access keys and permissions are **not** enforced on the data plane.
 
 When the data plane is enabled, the startup log and `sakumock env` emit the `AWS_*` variables an aws-cli / aws-sdk client needs (`AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`). Load them and use any S3 client without passing `--endpoint-url`:
 

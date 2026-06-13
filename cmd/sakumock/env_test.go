@@ -46,8 +46,6 @@ func TestEnvCmdDataPlane(t *testing.T) {
 	c := newTestEnvCmd()
 	c.Objectstorage.EnableDataPlane = true
 	c.Objectstorage.DataPlaneAddr = "127.0.0.1:28086"
-	c.Objectstorage.DataPlaneAccessKey = "sakumock"
-	c.Objectstorage.DataPlaneSecretKey = "sakumocksecret"
 	c.Objectstorage.DataPlaneRegion = "jp-north-1"
 
 	vars, err := c.clientEnv()

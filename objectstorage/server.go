@@ -20,12 +20,10 @@ type Config struct {
 	// Data plane (S3-compatible API) options. The data plane is served by an
 	// external versitygw process (looked up on PATH) backed by a local POSIX
 	// directory; see dataplane.go. It is off by default and never bundled.
-	EnableDataPlane    bool   `help:"Serve the S3-compatible data plane via an external versitygw process (must be installed on PATH; disabled if not found)" env:"OBJECT_STORAGE_ENABLE_DATA_PLANE" default:"false"`
-	DataPlaneAddr      string `help:"Listen address for the S3 data plane (versitygw)" env:"OBJECT_STORAGE_DATA_PLANE_ADDR" default:"127.0.0.1:28086"`
-	DataPlaneDir       string `help:"Backend directory for the S3 data plane; empty uses a temporary directory removed on shutdown" env:"OBJECT_STORAGE_DATA_PLANE_DIR"`
-	DataPlaneAccessKey string `help:"Root access key the S3 data plane accepts" env:"OBJECT_STORAGE_DATA_PLANE_ACCESS_KEY" default:"sakumock"`
-	DataPlaneSecretKey string `help:"Root secret key the S3 data plane accepts" env:"OBJECT_STORAGE_DATA_PLANE_SECRET_KEY" default:"sakumocksecret"`
-	DataPlaneRegion    string `help:"Region the S3 data plane signs/validates requests for" env:"OBJECT_STORAGE_DATA_PLANE_REGION" default:"jp-north-1"`
+	EnableDataPlane bool   `help:"Serve the S3-compatible data plane via an external versitygw process (requires versitygw on PATH; startup fails if it is missing)" env:"OBJECT_STORAGE_ENABLE_DATA_PLANE" default:"false"`
+	DataPlaneAddr   string `help:"Listen address for the S3 data plane (versitygw)" env:"OBJECT_STORAGE_DATA_PLANE_ADDR" default:"127.0.0.1:28086"`
+	DataPlaneDir    string `help:"Backend directory for the S3 data plane; empty uses a temporary directory removed on shutdown" env:"OBJECT_STORAGE_DATA_PLANE_DIR"`
+	DataPlaneRegion string `help:"Region the S3 data plane signs/validates requests for" env:"OBJECT_STORAGE_DATA_PLANE_REGION" default:"jp-north-1"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
 	// binary via NewServer; nil means the store creates its own.
@@ -57,8 +55,8 @@ func (c Config) ExtraClientEnv() []core.EnvVar {
 	}
 	return []core.EnvVar{
 		{Key: "AWS_ENDPOINT_URL_S3", Value: "http://" + c.DataPlaneAddr},
-		{Key: "AWS_ACCESS_KEY_ID", Value: c.DataPlaneAccessKey},
-		{Key: "AWS_SECRET_ACCESS_KEY", Value: c.DataPlaneSecretKey},
+		{Key: "AWS_ACCESS_KEY_ID", Value: dataPlaneRootID},
+		{Key: "AWS_SECRET_ACCESS_KEY", Value: dataPlaneRootValue},
 		{Key: "AWS_DEFAULT_REGION", Value: c.DataPlaneRegion},
 	}
 }
@@ -83,8 +81,9 @@ var (
 )
 
 // Server is a local Object Storage compatible test server. It implements the
-// control plane only (federation and site APIs); the S3-compatible data plane
-// is out of scope.
+// control plane (federation and site APIs) itself; the S3-compatible data plane
+// is not reimplemented but can be served by an external versitygw process this
+// Server starts and manages when Config.EnableDataPlane is set (see dataplane.go).
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux

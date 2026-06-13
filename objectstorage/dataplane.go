@@ -21,6 +21,15 @@ import (
 // --enable-data-plane and must have installed.
 const versitygwBinary = "versitygw"
 
+// Fixed root credentials the bundled data plane (versitygw) accepts. sakumock is
+// a local mock, so these are well-known development defaults rather than real
+// secrets — they are intentionally not configurable, mirroring the fixed dummy
+// SAKURA credentials core.DummyCredentialEnv emits.
+const (
+	dataPlaneRootID    = "sakumock"
+	dataPlaneRootValue = "sakumocksecret"
+)
+
 // dataPlane manages an external versitygw process that serves the S3-compatible
 // data plane backed by a local POSIX directory.
 //
@@ -66,8 +75,8 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	// hard-kill fallback when Close cancels the context.
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, path,
-		"--access", cfg.DataPlaneAccessKey,
-		"--secret", cfg.DataPlaneSecretKey,
+		"--access", dataPlaneRootID,
+		"--secret", dataPlaneRootValue,
 		"--region", cfg.DataPlaneRegion,
 		"--port", cfg.DataPlaneAddr,
 		"posix", dir,
@@ -110,7 +119,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		"addr", cfg.DataPlaneAddr,
 		"dir", dir,
 		"region", cfg.DataPlaneRegion,
-		"access_key", cfg.DataPlaneAccessKey,
+		"access_key", dataPlaneRootID,
 	)
 	return d, nil
 }

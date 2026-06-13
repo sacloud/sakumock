@@ -360,7 +360,8 @@ func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: s.buildReplicationData(b)})
+	// The spec declares 201 for replication creation.
+	writeJSON(w, http.StatusCreated, dataResponse{Data: s.buildReplicationData(b)})
 }
 
 func (s *Server) handleDeleteReplication(w http.ResponseWriter, r *http.Request) {
@@ -880,9 +881,19 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	if req.NewPlan.Type == "" || req.NewPlan.ServiceClassPath == "" {
+		writeError(w, http.StatusBadRequest, "new_plan.type and new_plan.service_class_path are required")
+		return
+	}
 	b, ok := s.store.GetBucket(name)
 	if !ok {
 		writeError(w, http.StatusNotFound, "bucket not found")
+		return
+	}
+	// previous_contract.resource_id guards against recontracting from an
+	// unexpected state, so it must match the bucket's current contract.
+	if req.PreviousContract.ResourceID != b.ResourceID {
+		writeError(w, http.StatusConflict, "previous_contract.resource_id does not match the current contract")
 		return
 	}
 	prevResourceID := b.ResourceID

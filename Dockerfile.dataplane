@@ -2,48 +2,29 @@
 # Object Storage data plane by default (see Dockerfile for the lean,
 # control-plane-only image).
 #
-# The versitygw binary is fetched per target architecture in a build stage that
-# runs on the build platform ($BUILDPLATFORM), so no emulation is needed: like
-# the base image, the final stage only COPYs prebuilt binaries.
-ARG VERSITYGW_VERSION=v1.5.0
+# versitygw is COPYed from its official multi-arch image rather than downloaded:
+# buildx resolves that image for the build's target platform, so the matching
+# architecture is selected automatically and the final stage stays COPY-only (no
+# download, checksum, or emulation). The image is pinned by digest for
+# reproducibility and integrity; the :v1.5.0 tag is kept for readability.
+ARG VERSITYGW_IMAGE=ghcr.io/versity/versitygw:v1.5.0@sha256:713e139d78e018d2dfe6b503cb2c257fd23818212f70ca55d5aa5b8e52c76554
 
-# alpine is pinned by digest for reproducible builds (bump deliberately).
-FROM --platform=$BUILDPLATFORM alpine:3@sha256:a2d49ea686c2adfe3c992e47dc3b5e7fa6e6b5055609400dc2acaeb241c829f4 AS fetch
-ARG VERSITYGW_VERSION
-ARG TARGETARCH
-RUN set -eu; \
-    apk add --no-cache curl ca-certificates tar >/dev/null; \
-    case "$TARGETARCH" in \
-      amd64) varch=x86_64 ;; \
-      arm64) varch=arm64 ;; \
-      *) echo "unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
-    esac; \
-    asset="versitygw_${VERSITYGW_VERSION}_Linux_${varch}.tar.gz"; \
-    base="https://github.com/versity/versitygw/releases/download/${VERSITYGW_VERSION}"; \
-    cd /tmp; \
-    curl -fsSL -o "$asset" "${base}/${asset}"; \
-    curl -fsSL -o checksums.txt "${base}/checksums.txt"; \
-    grep " ${asset}\$" checksums.txt | sha256sum -c -; \
-    mkdir -p /tmp/vg /out; \
-    tar xzf "$asset" -C /tmp/vg; \
-    cp /tmp/vg/*/versitygw /out/versitygw; \
-    chmod 0755 /out/versitygw; \
-    mkdir -p /out/data && chown 65532:65532 /out/data
+FROM ${VERSITYGW_IMAGE} AS versitygw
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY sakumock /sakumock
-COPY --from=fetch /out/versitygw /usr/local/bin/versitygw
-COPY --from=fetch --chown=65532:65532 /out/data /data
+COPY --from=versitygw /usr/local/bin/versitygw /usr/local/bin/versitygw
 
 # Enable the S3 data plane by default and bind it on all interfaces so the
-# published port is reachable from the host. Objects live under /data; mount a
-# volume there to persist them. PATH must include versitygw so sakumock can
-# locate it; TMPDIR points at the writable /data.
+# published port is reachable from the host. PATH must include versitygw so
+# sakumock can locate it. Objects live under /home/nonroot/data (writable by the
+# distroless nonroot uid, so sakumock creates it at startup); mount a volume
+# there to persist them.
 ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    TMPDIR=/data \
+    TMPDIR=/home/nonroot \
     OBJECT_STORAGE_ENABLE_DATA_PLANE=true \
     OBJECT_STORAGE_DATA_PLANE_ADDR=0.0.0.0:28086 \
-    OBJECT_STORAGE_DATA_PLANE_DIR=/data
+    OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data
 
 # One port per service (see the service table in README) plus the S3 data plane
 # (28086). EXPOSE is documentation only — publish the ports you need with `-p`.

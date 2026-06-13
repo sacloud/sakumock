@@ -172,7 +172,7 @@ docker run --rm \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 
-Objects are stored under `/data`; mount a volume there to persist them. The image runs as a non-root user (uid 65532), so prefer a **named volume** (`-v sakumock-data:/data`, which inherits the right ownership) — a bind-mounted host directory must be writable by uid 65532 or the data plane fails to start.
+Objects are stored under `/home/nonroot/data`; mount a volume there to persist them. The image runs as a non-root user (uid 65532), so prefer a **named volume** (`-v sakumock-data:/home/nonroot/data`, which inherits the right ownership) — a bind-mounted host directory must be writable by uid 65532 or the data plane fails to start.
 
 Configure the mock's behavior with the per-service environment variables (see [Environment variables](#environment-variables)) — handier than flags in a container:
 

@@ -668,13 +668,39 @@ func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Reques
 
 // ---- Site status / plans / quota / metering ----
 
+type statusData struct {
+	AcceptNew  bool           `json:"accept_new"`
+	Message    string         `json:"message"`
+	StartedAt  string         `json:"started_at"`
+	StatusCode statusCodeData `json:"status_code"`
+}
+
+type statusCodeData struct {
+	ID     int    `json:"id"`
+	Status string `json:"status"`
+}
+
 func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, dataResponse{Data: map[string]any{
-		"accept_new":  true,
-		"message":     "",
-		"started_at":  rfc3339(time.Now()),
-		"status_code": map[string]any{"id": 1, "status": "available"},
+	writeJSON(w, http.StatusOK, dataResponse{Data: statusData{
+		AcceptNew:  true,
+		StartedAt:  rfc3339(time.Now()),
+		StatusCode: statusCodeData{ID: 1, Status: "available"},
 	}})
+}
+
+type planItemData struct {
+	ServiceClassPath string      `json:"service_class_path"`
+	Type             string      `json:"type"`
+	ClusterID        string      `json:"cluster_id"`
+	CapacityGiB      int         `json:"capacity_gib"`
+	Fee              planFeeData `json:"fee"`
+}
+
+type planFeeData struct {
+	ForMonth int `json:"for_month"`
+	Monthly  int `json:"monthly"`
+	Daily    int `json:"daily"`
+	Hourly   int `json:"hourly"`
 }
 
 func (s *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
@@ -683,32 +709,63 @@ func (s *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
 	if c, ok := findCluster(site); ok && c.PlanFamily == "archive" {
 		planType = "archive"
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: []map[string]any{
+	writeJSON(w, http.StatusOK, dataResponse{Data: []planItemData{
 		{
-			"service_class_path": "objectstorage/" + site + "/bucket",
-			"type":               planType,
-			"cluster_id":         site,
-			"capacity_gib":       20000,
-			"fee":                map[string]any{"for_month": 1980, "monthly": 7200, "daily": 360, "hourly": 36},
+			ServiceClassPath: "objectstorage/" + site + "/bucket",
+			Type:             planType,
+			ClusterID:        site,
+			CapacityGiB:      20000,
+			Fee:              planFeeData{ForMonth: 1980, Monthly: 7200, Daily: 360, Hourly: 36},
 		},
 	}})
 }
 
+type siteQuotaData struct {
+	NumRootKeys             int     `json:"num_root_keys"`
+	NumBuckets              int     `json:"num_buckets"`
+	NumPermissions          int     `json:"num_permissions"`
+	NumKeysPerPermission    int     `json:"num_keys_per_permission"`
+	NumBucketsPerPermission int     `json:"num_buckets_per_permission"`
+	NumObjectsPerBucket     int     `json:"num_objects_per_bucket"`
+	AmountGiBPerBucket      float64 `json:"amount_gib_per_bucket"`
+}
+
 func (s *Server) handleQuota(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, dataResponse{Data: map[string]any{
-		"num_root_keys":              1,
-		"num_buckets":                1000,
-		"num_permissions":            1000,
-		"num_keys_per_permission":    1,
-		"num_buckets_per_permission": 1000,
-		"num_objects_per_bucket":     10000000,
-		"amount_gib_per_bucket":      10240,
+	writeJSON(w, http.StatusOK, dataResponse{Data: siteQuotaData{
+		NumRootKeys:             1,
+		NumBuckets:              1000,
+		NumPermissions:          1000,
+		NumKeysPerPermission:    1,
+		NumBucketsPerPermission: 1000,
+		NumObjectsPerBucket:     10000000,
+		AmountGiBPerBucket:      10240,
 	}})
+}
+
+// bucketBillingItem is the per-bucket metering record. The mock keeps no usage
+// history, so the metering endpoint returns an empty slice of these; the type
+// documents the shape the real API would return.
+type bucketBillingItem struct {
+	YearMonth       string        `json:"year_month"`
+	Basic           billingDetail `json:"basic"`
+	StorageUsage    billingDetail `json:"storage_usage"`
+	NumObjects      billingDetail `json:"num_objects"`
+	NumTransactions billingDetail `json:"num_transactions"`
+	TransferAmount  billingDetail `json:"transfer_amount"`
+}
+
+type billingDetail struct {
+	Found     bool    `json:"found"`
+	Usage     float64 `json:"usage"`
+	Charge    int     `json:"charge"`
+	IsClosing bool    `json:"is_closing"`
+	From      string  `json:"from"`
+	To        string  `json:"to"`
 }
 
 func (s *Server) handleBucketMetering(w http.ResponseWriter, _ *http.Request) {
 	// The mock keeps no usage history, so it reports no billing items.
-	writeJSON(w, http.StatusOK, dataResponse{Data: []map[string]any{}})
+	writeJSON(w, http.StatusOK, dataResponse{Data: []bucketBillingItem{}})
 }
 
 // ---- Bucket sub-resources (encryption / penalty / usage / quota / plan) ----
@@ -755,14 +812,25 @@ func (s *Server) handleDeleteEncryption(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type bucketPenaltyData struct {
+	NumObjectsPerBucket penaltyMetric `json:"num_objects_per_bucket"`
+	AmountGiBPerBucket  penaltyMetric `json:"amount_gib_per_bucket"`
+}
+
+type penaltyMetric struct {
+	Val       float64 `json:"val"`
+	Quota     float64 `json:"quota"`
+	IsApplied bool    `json:"is_applied"`
+}
+
 func (s *Server) handleBucketPenalty(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.store.GetBucket(r.PathValue("name")); !ok {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: map[string]any{
-		"num_objects_per_bucket": map[string]any{"val": 0, "quota": 10000000, "is_applied": false},
-		"amount_gib_per_bucket":  map[string]any{"val": 0, "quota": 10240, "is_applied": false},
+	writeJSON(w, http.StatusOK, dataResponse{Data: bucketPenaltyData{
+		NumObjectsPerBucket: penaltyMetric{Val: 0, Quota: 10000000, IsApplied: false},
+		AmountGiBPerBucket:  penaltyMetric{Val: 0, Quota: 10240, IsApplied: false},
 	}})
 }
 

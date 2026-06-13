@@ -3,6 +3,7 @@ package objectstorage_test
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	sdk "github.com/sacloud/sacloud-sdk-go/api/object-storage"
 	v2 "github.com/sacloud/sacloud-sdk-go/api/object-storage/apis/v2"
@@ -279,6 +280,43 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 	}
 	if _, err := extra.ReadQuota(ctx); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestSiteStatusQuotaPenaltyMetering exercises the read-only site/bucket info
+// endpoints through the SDK, confirming their typed responses decode.
+func TestSiteStatusQuotaPenaltyMetering(t *testing.T) {
+	srv := objectstorage.NewTestServer(objectstorage.Config{})
+	defer srv.Close()
+	fed, site := newClients(t, srv.TestURL())
+	ctx := t.Context()
+
+	statusOp := sdk.NewSiteStatusOp(site)
+	if _, err := statusOp.Read(ctx); err != nil {
+		t.Fatalf("status: %v", err)
+	}
+	if _, err := statusOp.ReadQuota(ctx); err != nil {
+		t.Fatalf("quota: %v", err)
+	}
+
+	planOp := sdk.NewSiteWithPlansOp(fed, site)
+	if plans, err := planOp.ListPlans(ctx); err != nil {
+		t.Fatalf("plans: %v", err)
+	} else if len(plans) == 0 {
+		t.Error("expected at least one plan")
+	}
+
+	bucketOp := sdk.NewBucketOp(fed, site)
+	if _, err := bucketOp.Create(ctx, &sdk.BucketCreateParams{Bucket: "metrics-bucket", SiteId: testSiteID}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := statusOp.ReadBucketMetering(ctx, "metrics-bucket", time.Now().Add(-24*time.Hour), time.Now()); err != nil {
+		t.Fatalf("metering: %v", err)
+	}
+
+	extra := sdk.NewBucketExtraOp(site, fed, "metrics-bucket")
+	if _, err := extra.ReadPenalty(ctx); err != nil {
+		t.Fatalf("penalty: %v", err)
 	}
 }
 

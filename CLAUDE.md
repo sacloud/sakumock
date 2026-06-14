@@ -33,6 +33,17 @@ All services are also aggregated into a single `sakumock` binary (entrypoint `cm
 
 There is no per-service version: every binary reports `sakumock.Version` from the repository-root `version.go` (package `sakumock`), kept in sync with the git tag by tagpr (root `.tagpr`).
 
+### Mock-only endpoints (`/_sakumock/`)
+
+Endpoints that do not exist in the real SAKURA Cloud API — helpers to observe or drive the mock (inspect accepted messages, reset state, inject an event, force a fire) — share one convention so they never collide with the real API surface and are clearly separated in listings:
+
+- **Path**: under the `/_sakumock/` prefix (e.g. `GET /_sakumock/messages`, `POST /_sakumock/events`). The prefix is reserved and never used by a real API path.
+- **Route `Kind`**: `"inspection"` (the real API endpoints use `"api"`). `core.PrintRoutes` groups these under an `Inspection:` heading after the `API:` ones, so `--routes` shows at a glance what is mock-only. This holds even for endpoints that actively drive behavior (not just passive inspection/reset) — keep them all under `inspection` rather than introducing a new kind.
+- **Rate limiting**: mock-only endpoints do not consume rate-limit tokens (they are test/inspection helpers, not part of the simulated API budget).
+- **Naming**: `/_sakumock/<noun>` for state (`/messages`, `/events`); append a verb sub-path for an action on a resource (`/_sakumock/alerts/{id}/fire`).
+
+Precedent: simplenotification exposes `GET`/`DELETE /_sakumock/messages` to list and clear accepted notifications.
+
 ### Unified binary & release
 
 - The unified binary lives at `cmd/sakumock`. Because the repository is a single module, it always compiles against the current source of every service — there are no per-service module versions to pin or bump.

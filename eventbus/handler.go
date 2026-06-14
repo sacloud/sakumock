@@ -37,6 +37,13 @@ var validDestinations = map[string]bool{
 	"autoscale":          true,
 }
 
+// validRecurringUnits is the RecurringUnit enum from the OpenAPI ScheduleSettings.
+var validRecurringUnits = map[string]bool{
+	"min":  true,
+	"hour": true,
+	"day":  true,
+}
+
 type csiProvider struct {
 	Class        string `json:"Class"`
 	Name         string `json:"Name,omitempty"`
@@ -203,6 +210,9 @@ func (s *Server) validateSettings(class string, settings json.RawMessage) string
 		hasRecurring := st.RecurringStep > 0 && st.RecurringUnit != ""
 		if hasCron == hasRecurring {
 			return "Settings must specify exactly one of Crontab or RecurringStep with RecurringUnit"
+		}
+		if hasRecurring && !validRecurringUnits[st.RecurringUnit] {
+			return "Settings.RecurringUnit must be one of min, hour, day"
 		}
 		if hasCron {
 			if _, err := ParseCrontab(st.Crontab); err != nil {

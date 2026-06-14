@@ -88,6 +88,9 @@ func newDataPlane(store Store, logger *slog.Logger, now func() time.Time) *dataP
 // matched ones, returning the deliveries produced.
 func (dp *dataPlane) injectEvent(ev event) []Delivery {
 	raw, _ := json.Marshal(ev)
+	// One event fires all matched triggers at a single instant, so every
+	// resulting delivery shares the same FiredAt.
+	firedAt := dp.now()
 	var fired []Delivery
 	for _, it := range dp.store.ListItems(classTrigger) {
 		st, err := parseTriggerSettings(it.Settings)
@@ -98,7 +101,7 @@ func (dp *dataPlane) injectEvent(ev event) []Delivery {
 		if !triggerMatches(st, ev) {
 			continue
 		}
-		fired = append(fired, dp.fire(it, st.ProcessConfigurationID, raw, dp.now()))
+		fired = append(fired, dp.fire(it, st.ProcessConfigurationID, raw, firedAt))
 	}
 	dp.logger.Debug("event injected", "source", ev.Source, "type", ev.Type, "matched", len(fired))
 	return fired
@@ -273,8 +276,10 @@ func (dp *dataPlane) clearDeliveries() {
 }
 
 // start launches the autonomous scheduler: it ticks once a minute on the wall
-// clock, aligned to the minute, until stop is called. Manual injection and
-// ticking work without it; only this loop is gated by --enable-data-plane.
+// clock until stop is called. The ticks are not aligned to the minute boundary,
+// so a schedule may fire up to ~59s late; this is harmless because each tick
+// fires every boundary in (last tick, now], never missing one. Manual injection
+// and ticking work without it; only this loop is gated by --enable-data-plane.
 func (dp *dataPlane) start() {
 	dp.stop = make(chan struct{})
 	dp.done = make(chan struct{})

@@ -171,6 +171,26 @@ func TestTickFiresRecurringSchedule(t *testing.T) {
 	}
 }
 
+func TestScheduleRejectsInvalidRecurringUnit(t *testing.T) {
+	srv := eventbus.NewTestServer(eventbus.Config{})
+	defer srv.Close()
+	pcID := createProcessConfiguration(t, sdk.NewProcessConfigurationOp(newTestClient(t, srv.TestURL())))
+
+	// Posted raw because the SDK validates the RecurringUnit enum client-side;
+	// this exercises the server's own enum check (min/hour/day).
+	body := `{"CommonServiceItem":{"Name":"s","Provider":{"Class":"eventbusschedule"},` +
+		`"Settings":{"ProcessConfigurationID":"` + pcID + `","StartsAt":1700000000000,` +
+		`"RecurringStep":1,"RecurringUnit":"week"}}}`
+	resp, err := http.Post(srv.TestURL()+"/commonserviceitem", "application/json", bytes.NewBufferString(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid RecurringUnit, got %d", resp.StatusCode)
+	}
+}
+
 func TestClearDeliveries(t *testing.T) {
 	srv := eventbus.NewTestServer(eventbus.Config{})
 	defer srv.Close()

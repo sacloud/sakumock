@@ -20,7 +20,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 
 		// Mock-only data-plane endpoints (not rate-limited, like other inspection helpers).
 		{Route: core.Route{Method: "POST", Path: "/_sakumock/events", Description: "Inject an event and fire matching triggers", Kind: "inspection"}, Handler: s.handleInjectEvent},
-		{Route: core.Route{Method: "POST", Path: "/_sakumock/tick", Description: "Evaluate schedules and fire those due (optional ?at=<epoch-ms>)", Kind: "inspection"}, Handler: s.handleTick},
+		{Route: core.Route{Method: "POST", Path: "/_sakumock/tick", Description: "Evaluate schedules and fire those due (optional ?at=<RFC3339|epoch-seconds>)", Kind: "inspection"}, Handler: s.handleTick},
 		{Route: core.Route{Method: "GET", Path: "/_sakumock/deliveries", Description: "List recorded firings", Kind: "inspection"}, Handler: s.handleListDeliveries},
 		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/deliveries", Description: "Clear recorded firings", Kind: "inspection"}, Handler: s.handleClearDeliveries},
 	}

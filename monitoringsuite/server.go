@@ -32,6 +32,12 @@ type Config struct {
 	// logger, when non-nil, is the base logger injected by the unified binary
 	// via NewServer; nil means the server falls back to slog.Default().
 	logger *slog.Logger
+
+	// tls is the common certificate/key pair the data plane serves HTTPS with
+	// when both files are set; empty means plain HTTP. The standalone binary sets
+	// it from --tls-cert/--tls-key (cli.go) and the unified binary injects it via
+	// NewServer (ServerOptions.TLS).
+	tls core.TLSFiles
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -53,6 +59,7 @@ func (c Config) ListenAddr() string { return c.Addr }
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
+	c.tls = opts.TLS
 	return NewHandler(c)
 }
 

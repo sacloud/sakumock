@@ -34,6 +34,12 @@ type serviceConfigs struct {
 	Monitoringsuite    monitoringsuite.Config    `embed:"" prefix:"monitoringsuite-"`
 	Eventbus           eventbus.Config           `embed:"" prefix:"eventbus-"`
 	Objectstorage      objectstorage.Config      `embed:"" prefix:"objectstorage-"`
+
+	// TLS is one common certificate/key pair applied to every service's listeners
+	// (control plane and data plane). When both files are set, all listeners serve
+	// HTTPS; otherwise plain HTTP. It is a single suite-wide option, not per
+	// service, because every listener runs on the same host (only the port differs).
+	TLS core.TLSFiles `embed:"" prefix:"tls-" envprefix:"SAKUMOCK_TLS_"`
 }
 
 // configs lists every service in start order.
@@ -86,6 +92,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 	opts := core.ServerOptions{
 		IDGen:  core.NewIDGenerator(core.DefaultIDBase),
 		Logger: slog.Default(),
+		TLS:    c.TLS,
 	}
 
 	var instances []serviceInstance
@@ -109,6 +116,9 @@ func (c *AllCmd) debug() bool {
 // Run starts every mock service and serves until ctx is canceled. If one
 // service fails (e.g. its port is in use), the rest are shut down too.
 func (c *AllCmd) Run(ctx context.Context) error {
+	if err := c.TLS.Validate(); err != nil {
+		return err
+	}
 	core.SetupLogger(c.debug())
 
 	instances, err := c.build()
@@ -123,7 +133,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 
 	slog.Info("sakumock all starting", "version", sakumock.Version)
 	for _, i := range instances {
-		slog.Info("starting service", "service", i.cfg.Name(), "addr", c.bindAddr(i.cfg.ListenAddr()))
+		slog.Info("starting service", "service", i.cfg.Name(), "addr", c.bindAddr(i.cfg.ListenAddr()), "scheme", c.TLS.Scheme())
 	}
 	slog.Info("run `sakumock env` to emit a dotenv file (endpoints + dummy credentials) for your SDK / Terraform client")
 
@@ -139,7 +149,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 			// If any service stops (clean shutdown or bind error), cancel the
 			// shared context so the others stop as well.
 			defer cancel()
-			if err := core.Serve(ctx, c.bindAddr(inst.cfg.ListenAddr()), inst.server); err != nil {
+			if err := core.Serve(ctx, c.bindAddr(inst.cfg.ListenAddr()), inst.server, c.TLS); err != nil {
 				errs[idx] = fmt.Errorf("%s: %w", inst.cfg.Name(), err)
 			}
 		}(idx, inst)

@@ -14,7 +14,8 @@ import (
 // subcommand of the unified sakumock binary.
 type Command struct {
 	Config
-	Routes bool `help:"List supported HTTP routes and exit"`
+	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"SIMPLEMQ_TLS_"`
+	Routes bool          `help:"List supported HTTP routes and exit"`
 }
 
 // Run starts the SimpleMQ mock server and serves until ctx is canceled.
@@ -26,6 +27,10 @@ func (c *Command) Run(ctx context.Context) error {
 		}
 		defer h.Close()
 		return core.PrintRoutes(os.Stdout, h.Routes())
+	}
+
+	if err := c.TLS.Validate(); err != nil {
+		return err
 	}
 
 	core.SetupLogger(c.Debug)
@@ -48,8 +53,8 @@ func (c *Command) Run(ctx context.Context) error {
 		"debug", c.Debug,
 	)
 	slog.Info("to use with sacloud-sdk-go or simplemq-cli",
-		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
-	return core.Serve(ctx, c.Addr, h)
+		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
+	return core.Serve(ctx, c.Addr, h, c.TLS)
 }
 
 func apiKeyHint(key string) string {

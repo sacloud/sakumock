@@ -26,6 +26,8 @@ sakumock-secretmanager
 | `--rate-limit` | `SECRETMANAGER_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SECRETMANAGER_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `SECRETMANAGER_DEBUG` | `false` | Enable debug mode |
+| `--tls-cert` | `SECRETMANAGER_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
+| `--tls-key` | `SECRETMANAGER_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 
 ```bash
 # Add 500ms latency to every response (useful for timeout testing)

@@ -35,6 +35,24 @@ func DummyCredentialEnv() []EnvVar {
 	}
 }
 
+// WithTLSScheme upgrades the scheme of http:// endpoint values to https:// when
+// enabled is true, so the emitted client env matches a TLS-served mock. Values
+// that are not http:// URLs (credentials, regions, already-https URLs) pass
+// through unchanged. It returns vars as-is when enabled is false.
+func WithTLSScheme(vars []EnvVar, enabled bool) []EnvVar {
+	if !enabled {
+		return vars
+	}
+	out := make([]EnvVar, len(vars))
+	for i, v := range vars {
+		if rest, ok := strings.CutPrefix(v.Value, "http://"); ok {
+			v.Value = "https://" + rest
+		}
+		out[i] = v
+	}
+	return out
+}
+
 // LogArgs renders env vars as alternating key/value arguments for slog.
 func LogArgs(vars []EnvVar) []any {
 	args := make([]any, 0, len(vars)*2)

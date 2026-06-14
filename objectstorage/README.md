@@ -27,6 +27,8 @@ sakumock-objectstorage
 | `--rate-limit` | `OBJECT_STORAGE_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoints (requests per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `OBJECT_STORAGE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `OBJECT_STORAGE_DEBUG` | `false` | Enable debug mode |
+| `--tls-cert` | `OBJECT_STORAGE_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, both the control plane and the data plane (versitygw, via `--cert`/`--key`) serve HTTPS instead of plain HTTP |
+| `--tls-key` | `OBJECT_STORAGE_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 | `--enable-data-plane` | `OBJECT_STORAGE_ENABLE_DATA_PLANE` | `false` | Serve the S3-compatible data plane via an external versitygw process |
 | `--data-plane-addr` | `OBJECT_STORAGE_DATA_PLANE_ADDR` | `127.0.0.1:28086` | Listen address for the S3 data plane (control-plane port + 10000) |
 | `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses a temp dir removed on shutdown |

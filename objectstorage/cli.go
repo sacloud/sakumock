@@ -14,7 +14,8 @@ import (
 // as a subcommand of the unified sakumock binary.
 type Command struct {
 	Config
-	Routes bool `help:"List supported HTTP routes and exit"`
+	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"OBJECT_STORAGE_TLS_"`
+	Routes bool          `help:"List supported HTTP routes and exit"`
 }
 
 // Run starts the Object Storage mock server and serves until ctx is canceled.
@@ -28,8 +29,16 @@ func (c *Command) Run(ctx context.Context) error {
 		return core.PrintRoutes(os.Stdout, h.Routes())
 	}
 
+	if err := c.TLS.Validate(); err != nil {
+		return err
+	}
+
 	core.SetupLogger(c.Debug)
 
+	// The data plane (versitygw) is started inside NewHandler, so propagate the
+	// common TLS files into Config first (standalone path; the unified binary
+	// injects them via ServerOptions instead).
+	c.Config.tls = c.TLS
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -44,10 +53,10 @@ func (c *Command) Run(ctx context.Context) error {
 		"debug", c.Debug,
 	)
 	slog.Info("to use with sacloud-sdk-go",
-		core.LogArgs(append(c.ClientEnv(), core.DummyCredentialEnv()...))...)
+		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
 	if h.dataPlane != nil {
 		slog.Info("to use the S3 data plane with aws-cli / aws-sdk",
-			core.LogArgs(c.ExtraClientEnv())...)
+			core.LogArgs(core.WithTLSScheme(c.ExtraClientEnv(), c.TLS.Enabled()))...)
 	}
-	return core.Serve(ctx, c.Addr, h)
+	return core.Serve(ctx, c.Addr, h, c.TLS)
 }

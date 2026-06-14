@@ -31,6 +31,8 @@ sakumock-simplemq
 | `--rate-limit-window` | `SIMPLEMQ_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--strict` | `SIMPLEMQ_STRICT` | `false` | Strict mode: the data plane only accepts queues created via the control plane, authenticated with the queue's issued API key (see [Strict mode](#strict-mode)) |
 | `--debug` | `SIMPLEMQ_DEBUG` | `false` | Enable debug mode |
+| `--tls-cert` | `SIMPLEMQ_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
+| `--tls-key` | `SIMPLEMQ_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 
 ```bash
 # Require a specific API key

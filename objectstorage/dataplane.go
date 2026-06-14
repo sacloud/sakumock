@@ -74,13 +74,19 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	// exec.CommandContext + Cancel/WaitDelay gives a graceful SIGTERM with a
 	// hard-kill fallback when Close cancels the context.
 	ctx, cancel := context.WithCancel(context.Background())
-	cmd := exec.CommandContext(ctx, path,
+	args := []string{
 		"--access", dataPlaneRootID,
 		"--secret", dataPlaneRootValue,
 		"--region", cfg.DataPlaneRegion,
 		"--port", cfg.DataPlaneAddr,
-		"posix", dir,
-	)
+	}
+	// versitygw serves the data plane over TLS itself when given a cert/key, so
+	// the common TLS files are passed through rather than terminated by sakumock.
+	if cfg.tls.Enabled() {
+		args = append(args, "--cert", cfg.tls.CertFile, "--key", cfg.tls.KeyFile)
+	}
+	args = append(args, "posix", dir)
+	cmd := exec.CommandContext(ctx, path, args...)
 	cmd.Cancel = func() error { return cmd.Process.Signal(syscall.SIGTERM) }
 	cmd.WaitDelay = 5 * time.Second
 	lw := &logWriter{logger: logger}
@@ -117,6 +123,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	logger.Info("data plane (S3) started",
 		"binary", path,
 		"addr", cfg.DataPlaneAddr,
+		"scheme", cfg.tls.Scheme(),
 		"dir", dir,
 		"region", cfg.DataPlaneRegion,
 		"access_key", dataPlaneRootID,

@@ -16,6 +16,7 @@ import (
 	"sync/atomic"
 
 	"github.com/golang/snappy"
+	"github.com/sacloud/sakumock/core"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
@@ -70,12 +71,13 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		func(m proto.Message) int { return len(m.(*tracepb.TracesData).ResourceSpans) }))
 	dp.server = &http.Server{Handler: mux}
 	go func() {
-		if err := dp.server.Serve(ln); err != nil && err != http.ErrServerClosed {
+		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane server stopped", "error", err)
 		}
 	}()
 	logger.Info("telemetry data plane listening (ingest only)",
 		"addr", ln.Addr().String(),
+		"scheme", cfg.tls.Scheme(),
 		"remote_write", "POST /prometheus/api/v1/write",
 		"otlp_http", "POST /v1/{logs,traces}",
 		"dump_dir", cfg.DataPlaneDumpDir,

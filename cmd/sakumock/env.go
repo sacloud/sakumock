@@ -50,12 +50,19 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 			vars = append(vars, ext.ExtraClientEnv()...)
 		}
 	}
-	return append(vars, core.DummyCredentialEnv()...), nil
+	vars = append(vars, core.DummyCredentialEnv()...)
+	// When TLS is enabled the listeners serve HTTPS, so upgrade endpoint URLs
+	// (control plane and data plane) accordingly; credentials/regions are left
+	// untouched by WithTLSScheme.
+	return core.WithTLSScheme(vars, c.TLS.Enabled()), nil
 }
 
 // Run renders the client env to --output, or to stdout when it is unset. Logs
 // go to stderr (slog default), so the stdout dotenv stays clean for redirection.
 func (c *EnvCmd) Run(_ context.Context) error {
+	if err := c.TLS.Validate(); err != nil {
+		return err
+	}
 	vars, err := c.clientEnv()
 	if err != nil {
 		return err

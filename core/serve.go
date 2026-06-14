@@ -28,8 +28,9 @@ func NotifyContext(parent context.Context) (context.Context, context.CancelFunc)
 }
 
 // Serve runs h on addr until ctx is canceled, then gracefully shuts the server
-// down. It returns nil on a clean shutdown.
-func Serve(ctx context.Context, addr string, h http.Handler) error {
+// down. It serves HTTPS when tls.Enabled() (using its cert/key), otherwise plain
+// HTTP. It returns nil on a clean shutdown.
+func Serve(ctx context.Context, addr string, h http.Handler, tls TLSFiles) error {
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: h,
@@ -38,7 +39,13 @@ func Serve(ctx context.Context, addr string, h http.Handler) error {
 		<-ctx.Done()
 		srv.Shutdown(context.Background())
 	}()
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+	var err error
+	if tls.Enabled() {
+		err = srv.ListenAndServeTLS(tls.CertFile, tls.KeyFile)
+	} else {
+		err = srv.ListenAndServe()
+	}
+	if err != http.ErrServerClosed {
 		return err
 	}
 	return nil

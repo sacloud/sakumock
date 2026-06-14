@@ -36,6 +36,10 @@ type ServerOptions struct {
 	// unified binary's interleaved output identifies the originating service.
 	// When nil the service falls back to slog.Default().
 	Logger *slog.Logger
+	// TLS is the common certificate/key pair every service serves its listeners
+	// (control plane and data plane) with. The unified binary injects one shared
+	// value so all services use the same cert; zero means plain HTTP.
+	TLS TLSFiles
 }
 
 // ServiceConfig is the common interface every service's Config satisfies. It

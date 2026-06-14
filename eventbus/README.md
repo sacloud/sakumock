@@ -1,6 +1,8 @@
 # sakumock/eventbus
 
-An EventBus compatible mock server for local development and testing. It implements the control-plane of the [SAKURA Cloud EventBus API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/eventbus) — process configurations, schedules, and triggers — with in-memory storage. Scheduled or triggered job execution is out of scope: this mock stores the resources so applications and Terraform can exercise EventBus CRUD in tests, but never dispatches jobs to their destinations.
+An EventBus compatible mock server for local development and testing. It implements the control-plane of the [SAKURA Cloud EventBus API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/eventbus) — process configurations, schedules, and triggers — with in-memory storage, so applications and Terraform can exercise EventBus CRUD in tests.
+
+It also has a **data plane** that *fires* those resources: schedules fire on their `Crontab`/recurring interval, and triggers fire on events injected via `POST /_sakumock/events`. Each firing resolves the referenced process configuration and is recorded as a delivery (inspectable via `GET /_sakumock/deliveries`) with the resource's `Status` updated. Actually forwarding a fired job to its destination service (simplemq / simplenotification) over HTTP is a separate layer not yet wired — today a firing is recorded and logged. See [Data plane](#data-plane-firing) below.
 
 ## Install
 
@@ -24,6 +26,7 @@ sakumock-eventbus
 | `--latency` | `EVENTBUS_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `EVENTBUS_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `EVENTBUS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--enable-data-plane` | `EVENTBUS_ENABLE_DATA_PLANE` | `false` | Run the autonomous scheduler that fires schedules on the wall clock. The `/_sakumock` firing endpoints work regardless of this flag |
 | `--debug` | `EVENTBUS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `EVENTBUS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `EVENTBUS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
@@ -58,6 +61,13 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 if secret, ok := srv.Secret(id); ok {
     fmt.Println(string(secret))
 }
+
+// Drive and inspect firing without a live destination service
+http.Post(srv.TestURL()+"/_sakumock/events", "application/json",
+    strings.NewReader(`{"Source":"//monitoringsuite...","Attributes":{"status":"critical"}}`))
+for _, d := range srv.Deliveries() {
+    fmt.Println(d.SourceID, d.Destination, d.Parameters)
+}
 ```
 
 ## API endpoints
@@ -70,14 +80,21 @@ if secret, ok := srv.Secret(id); ok {
 | PUT | `/commonserviceitem/{id}` | Update an item |
 | DELETE | `/commonserviceitem/{id}` | Delete an item |
 | PUT | `/commonserviceitem/{id}/eventbus/processconfiguration/set-secret` | Set the secret of a process configuration |
+| POST | `/_sakumock/events` | Inject an event and fire matching triggers (mock-only) |
+| POST | `/_sakumock/tick` | Evaluate schedules and fire those due, optional `?at=<time>` (mock-only) |
+| GET | `/_sakumock/deliveries` | List recorded firings (mock-only) |
+| DELETE | `/_sakumock/deliveries` | Clear recorded firings (mock-only) |
+
+The `/_sakumock/` endpoints do not exist in the real API; they drive and observe the data plane (see [Data plane](#data-plane-firing)).
 
 Behavior notes:
 
 - `Provider.Class` must be `eventbusprocessconfiguration`, `eventbusschedule`, or `eventbustrigger`; per-class required settings are validated (`Destination`/`Parameters`, `ProcessConfigurationID`/`StartsAt`, `Source`/`ProcessConfigurationID`).
+- A schedule must specify its type — exactly one of `Crontab` or a recurring interval (`RecurringStep` with `RecurringUnit`). The control panel presents these as a mutually exclusive choice, but the OpenAPI marks both optional and cannot express it, so the mock enforces it: a schedule with neither, or with both, fails with `400`.
 - Schedules and triggers must reference an existing process configuration; a create or update pointing at a missing ID fails with `400`.
 - `StartsAt` is accepted as an integer (epoch milliseconds) and returned as a string, matching the real API.
 - Secrets are write-only: `set-secret` stores them, but no API response ever includes them. Test code can read them back with `Server.Secret(id)`.
-- Job execution is not simulated; `Availability` is always `available` and a resource's `Status` is never populated.
+- `Availability` is always `available`. A schedule's or trigger's `Status` is unset until it fires, then reflects the latest firing (see [Data plane](#data-plane-firing)).
 
 ### Crontab schedules
 
@@ -90,10 +107,22 @@ Two points the published spec does not define; the mock's choices are documented
 
 Note: the manual's example table describes `0 0 1 */2 *` as firing in even months, but standard cron semantics for `*/2` in the month field (stepping from the range start, 1) give the odd months 1, 3, 5, 7, 9, 11. The mock follows standard cron semantics.
 
-## TODO: cross-service delivery (data plane)
+## Data plane (firing)
 
-Job execution is not simulated yet. Since sakumock also mocks the delivery targets, the data plane could be implemented within `sakumock all`:
+EventBus has two kinds of event source, and both resolve to the same action — fire the referenced process configuration:
 
-- **Schedule firing → simplemq / simplenotification**: a scheduler loop evaluates `StartsAt` + `RecurringStep`/`RecurringUnit` and `Crontab` (the parser and `Next` already exist, see above) and delivers the process configuration's `Parameters` to the simplemq / simplenotification mock over HTTP. This makes the realistic dev loop work locally: EventBus schedule periodically enqueues → the application consumes the queue. The `autoscale` destination has no mock and would only be logged.
-- **Trigger firing**: monitoringsuite does not evaluate alerts, so trigger events need a simulation endpoint (e.g. a `/_sakumock/` route on monitoringsuite that emits an alert event to eventbus), then eventbus matches `Source`/`Types`/`Conditions` and dispatches the same way. The `//eventbus.sakura.ad.jp/eventlog` source has no event source in sakumock and is out of scope.
-- Wiring: services must not import each other, so delivery goes over HTTP. The unified binary would inject the peer services' endpoints via `core.ServerOptions`; standalone use and tests keep today's CRUD-only behavior. Job results would populate the currently-unused `Status` field, and delivery could require the secret to have been set (as the real service does).
+- **Schedules are time-driven** and self-contained: the mock evaluates a `Crontab` expression or a `RecurringStep`/`RecurringUnit` interval (measured from `StartsAt`) against the clock. With `--enable-data-plane`, a scheduler loop ticks once a minute and fires schedules as their boundaries pass. Regardless of the flag, `POST /_sakumock/tick?at=<time>` forces an evaluation at a chosen time, so tests fire schedules deterministically without waiting on the wall clock. `at` is an RFC3339 timestamp (e.g. `2024-01-01T09:00:00+09:00`) or, for convenience, bare epoch seconds (second resolution is enough since schedules fire at minute granularity); it defaults to now. A schedule fires once for every boundary in the half-open window `(previous tick, at]`.
+- **Triggers are event-driven**: they react to an external event (a monitoringsuite alert, an eventlog entry) the mock cannot observe. Instead, `POST /_sakumock/events` injects an event and the mock matches it against every trigger:
+
+  ```json
+  { "Source": "...", "Type": "...", "Attributes": { "status": "critical" }, "Data": { } }
+  ```
+
+  A trigger fires when `Source` matches exactly, `Type` is among the trigger's `Types` (when set), and every `Condition` (`eq`/`in` over `Attributes`) holds. `Data` is the passthrough payload (the API reserves the `data` key from conditions) and is not used for matching.
+
+Each firing is recorded as a **delivery** — the resolved `Destination` and `Parameters` of the process configuration — and the schedule's or trigger's `Status` is updated. Recorded deliveries are returned by `GET /_sakumock/deliveries` and, in library use, by `Server.Deliveries()`, so a test can assert what fired without a live destination. A firing whose process configuration is missing is recorded with an `Error` and a failed `Status`.
+
+### Not yet implemented
+
+- **HTTP forwarding to destinations**: a firing is recorded and logged, but not yet sent to its `Destination` service. Forwarding the `Parameters` to the simplemq / simplenotification mocks over HTTP (peer endpoints injected via `core.ServerOptions`, authenticating with the process configuration's secret) is the next layer; `autoscale` has no mock and would only be logged.
+- **Real event producers**: trigger events arrive only through `POST /_sakumock/events`. Wiring a producer such as a monitoringsuite alert-fire endpoint that emits events here is intentionally a separate service change. The `//eventbus.sakura.ad.jp/eventlog` source has no producer in sakumock and is out of scope.

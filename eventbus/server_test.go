@@ -315,11 +315,52 @@ func TestScheduleRequiresExistingProcessConfiguration(t *testing.T) {
 			Settings: v1.NewScheduleSettingsSettings(v1.ScheduleSettings{
 				ProcessConfigurationID: "999999999999",
 				StartsAt:               v1.NewInt64ScheduleSettingsStartsAt(1700000000000),
+				Crontab:                v1.NewOptString("*/15 * * * *"),
 			}),
 		},
 	})
 	if err == nil {
 		t.Fatal("expected error creating schedule referencing a missing process configuration")
+	}
+}
+
+func TestScheduleRequiresCronOrRecurring(t *testing.T) {
+	srv := eventbus.NewTestServer(eventbus.Config{})
+	defer srv.Close()
+	client := newTestClient(t, srv.TestURL())
+	pcOp := sdk.NewProcessConfigurationOp(client)
+	scheduleOp := sdk.NewScheduleOp(client)
+
+	pcID := createProcessConfiguration(t, pcOp)
+
+	// A schedule's type is exactly one of Crontab or recurring — the control
+	// panel presents a mutually exclusive choice. Both the empty and the
+	// both-specified cases are rejected, though the OpenAPI marks them optional.
+	cases := map[string]v1.ScheduleSettings{
+		"neither": {
+			ProcessConfigurationID: pcID,
+			StartsAt:               v1.NewInt64ScheduleSettingsStartsAt(1700000000000),
+		},
+		"both": {
+			ProcessConfigurationID: pcID,
+			StartsAt:               v1.NewInt64ScheduleSettingsStartsAt(1700000000000),
+			Crontab:                v1.NewOptString("*/15 * * * *"),
+			RecurringStep:          v1.NewOptInt(1),
+			RecurringUnit:          v1.NewOptScheduleSettingsRecurringUnit(v1.ScheduleSettingsRecurringUnitDay),
+		},
+	}
+	for name, settings := range cases {
+		t.Run(name, func(t *testing.T) {
+			_, err := scheduleOp.Create(t.Context(), v1.CreateCommonServiceItemRequest{
+				CommonServiceItem: v1.CreateCommonServiceItemRequestCommonServiceItem{
+					Name:     "test-schedule",
+					Settings: v1.NewScheduleSettingsSettings(settings),
+				},
+			})
+			if err == nil {
+				t.Fatalf("expected error creating a schedule with %s of Crontab/recurring", name)
+			}
+		})
 	}
 }
 

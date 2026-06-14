@@ -37,6 +37,13 @@ var validDestinations = map[string]bool{
 	"autoscale":          true,
 }
 
+// validRecurringUnits is the RecurringUnit enum from the OpenAPI ScheduleSettings.
+var validRecurringUnits = map[string]bool{
+	"min":  true,
+	"hour": true,
+	"day":  true,
+}
+
 type csiProvider struct {
 	Class        string `json:"Class"`
 	Name         string `json:"Name,omitempty"`
@@ -54,8 +61,17 @@ type csiResponse struct {
 	Availability string          `json:"Availability"`
 	Icon         json.RawMessage `json:"Icon"`
 	Tags         []string        `json:"Tags"`
+	Status       *csiStatus      `json:"Status,omitempty"`
 	CreatedAt    string          `json:"CreatedAt"`
 	ModifiedAt   string          `json:"ModifiedAt"`
+}
+
+// csiStatus is the Status block the API returns once a schedule or trigger has
+// fired. It is omitted entirely until the data plane records an outcome.
+type csiStatus struct {
+	Success   bool   `json:"Success"`
+	Message   string `json:"Message"`
+	UpdatedAt string `json:"UpdatedAt"`
 }
 
 type csiCreateRequest struct {
@@ -89,6 +105,14 @@ func toCSI(it ServiceItem) csiResponse {
 	if tags == nil {
 		tags = []string{}
 	}
+	var status *csiStatus
+	if it.Status != nil {
+		status = &csiStatus{
+			Success:   it.Status.Success,
+			Message:   it.Status.Message,
+			UpdatedAt: it.Status.UpdatedAt.Format(time.RFC3339),
+		}
+	}
 	return csiResponse{
 		ID:           it.ID,
 		Name:         it.Name,
@@ -100,6 +124,7 @@ func toCSI(it ServiceItem) csiResponse {
 		Availability: "available",
 		Icon:         it.Icon,
 		Tags:         tags,
+		Status:       status,
 		CreatedAt:    it.CreatedAt.Format(time.RFC3339),
 		ModifiedAt:   it.ModifiedAt.Format(time.RFC3339),
 	}
@@ -164,6 +189,8 @@ func (s *Server) validateSettings(class string, settings json.RawMessage) string
 			ProcessConfigurationID string          `json:"ProcessConfigurationID"`
 			StartsAt               json.RawMessage `json:"StartsAt"`
 			Crontab                string          `json:"Crontab"`
+			RecurringStep          int             `json:"RecurringStep"`
+			RecurringUnit          string          `json:"RecurringUnit"`
 		}
 		if err := json.Unmarshal(settings, &st); err != nil {
 			return "invalid Settings: " + err.Error()
@@ -174,7 +201,20 @@ func (s *Server) validateSettings(class string, settings json.RawMessage) string
 		if len(st.StartsAt) == 0 || string(st.StartsAt) == "null" {
 			return "Settings.StartsAt is required"
 		}
-		if st.Crontab != "" {
+		// The OpenAPI marks only ProcessConfigurationID and StartsAt as required,
+		// but a schedule's type is exactly one of Crontab or recurring
+		// (RecurringStep + RecurringUnit): the control panel presents them as a
+		// mutually exclusive choice. This rule is not expressible in the spec, so
+		// the mock enforces it (both-or-neither) to match the real API.
+		hasCron := st.Crontab != ""
+		hasRecurring := st.RecurringStep > 0 && st.RecurringUnit != ""
+		if hasCron == hasRecurring {
+			return "Settings must specify exactly one of Crontab or RecurringStep with RecurringUnit"
+		}
+		if hasRecurring && !validRecurringUnits[st.RecurringUnit] {
+			return "Settings.RecurringUnit must be one of min, hour, day"
+		}
+		if hasCron {
 			if _, err := ParseCrontab(st.Crontab); err != nil {
 				return "invalid Settings.Crontab: " + err.Error()
 			}

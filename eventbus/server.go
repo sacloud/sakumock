@@ -16,6 +16,7 @@ type Config struct {
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"EVENTBUS_LATENCY"`
 	RateLimit       float64       `help:"HTTP rate limit on API endpoints (events per --rate-limit-window, 0 disables)" default:"0" env:"EVENTBUS_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"EVENTBUS_RATE_LIMIT_WINDOW"`
+	EnableDataPlane bool          `help:"Run the autonomous scheduler that fires schedules on the wall clock and delivers fired jobs. The /_sakumock firing endpoints work regardless." env:"EVENTBUS_ENABLE_DATA_PLANE" default:"false"`
 	Debug           bool          `help:"Enable debug mode" env:"EVENTBUS_DEBUG" default:"false"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
@@ -61,16 +62,16 @@ var (
 
 // Server is a local EventBus compatible test server.
 //
-// TODO: cross-service delivery (data plane). Schedules and triggers are stored
-// but never fire. Under `sakumock all`, schedule firing (Crontab.Next /
-// RecurringStep) could deliver to the simplemq / simplenotification mocks over
-// HTTP via peer endpoints injected through core.ServerOptions, and a
-// monitoringsuite simulation endpoint could emit alert events for trigger
-// matching. See "TODO: cross-service delivery" in README.md for the plan.
+// The data plane (see dataplane.go) fires schedules on the wall clock and
+// triggers on events injected via /_sakumock/events, recording each firing as a
+// Delivery. Actually forwarding a fired job to its Destination service
+// (simplemq / simplenotification) over HTTP is a separate layer not yet wired;
+// today a firing is recorded and logged.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
 	store       *MemoryStore
+	dataPlane   *dataPlane
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
 	logger      *slog.Logger
@@ -97,6 +98,10 @@ func NewHandler(cfg Config) (*Server, error) {
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
+	}
+	s.dataPlane = newDataPlane(s.store, logger, nil)
+	if cfg.EnableDataPlane {
+		s.dataPlane.start()
 	}
 	s.mux = s.buildMux()
 	return s, nil
@@ -133,5 +138,15 @@ func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()
 	}
+	if s.dataPlane != nil {
+		s.dataPlane.close()
+	}
 	s.store.Close()
+}
+
+// Deliveries returns the firings the data plane has recorded so far, oldest
+// first. Like Secret, it lets tests assert what the mock would deliver without
+// a live destination service.
+func (s *Server) Deliveries() []Delivery {
+	return s.dataPlane.recordedDeliveries()
 }

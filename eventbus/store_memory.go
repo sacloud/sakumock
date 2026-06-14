@@ -37,6 +37,10 @@ func cloneItem(it *ServiceItem) ServiceItem {
 	c.Settings = append(json.RawMessage(nil), it.Settings...)
 	c.Icon = append(json.RawMessage(nil), it.Icon...)
 	c.Secret = append(json.RawMessage(nil), it.Secret...)
+	if it.Status != nil {
+		st := *it.Status
+		c.Status = &st
+	}
 	return c
 }
 
@@ -124,6 +128,21 @@ func (s *MemoryStore) SetSecret(id string, secret json.RawMessage) (ServiceItem,
 	it.Secret = append(json.RawMessage(nil), secret...)
 	it.ModifiedAt = time.Now()
 	s.logger.Debug("secret set", "id", id)
+	return cloneItem(it), true
+}
+
+// SetStatus records the latest firing outcome of a schedule or trigger. Unlike
+// the other mutators it leaves ModifiedAt untouched: Status reflects a run, not
+// a configuration change, so it must not look like the resource was edited.
+func (s *MemoryStore) SetStatus(id string, status ItemStatus) (ServiceItem, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	it, ok := s.items[id]
+	if !ok {
+		return ServiceItem{}, false
+	}
+	st := status
+	it.Status = &st
 	return cloneItem(it), true
 }
 

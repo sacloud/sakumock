@@ -167,12 +167,12 @@ docker run --rm \
   ghcr.io/sacloud/sakumock:latest
 ```
 
-A second tag, `:latest-dataplane` (and `:<version>-dataplane`), bundles the [versitygw](https://github.com/versity/versitygw) S3 gateway and enables the Object Storage S3 data plane by default (`OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`). The default image does not include versitygw, so use this tag when you need the S3 data plane:
+A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every service's data plane by default: the Object Storage S3 data plane (bundling the [versitygw](https://github.com/versity/versitygw) S3 gateway; `OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`) and the Monitoring Suite telemetry ingest data plane (`MONITORINGSUITE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28084`). The default image includes neither, so use this tag when you need a data plane:
 
 ```bash
 docker run --rm \
   -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 \
-  -p 28086:28086 \
+  -p 28084:28084 -p 28086:28086 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 

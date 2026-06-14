@@ -1,6 +1,6 @@
-# Variant image that bundles the external versitygw S3 gateway and enables the
-# Object Storage data plane by default (see Dockerfile for the lean,
-# control-plane-only image).
+# Variant image that bundles the external versitygw S3 gateway and enables every
+# service's data plane by default (Object Storage S3 + Monitoring Suite telemetry
+# ingest; see Dockerfile for the lean, control-plane-only image).
 #
 # versitygw is COPYed from its official multi-arch image rather than downloaded:
 # buildx resolves that image for the build's target platform, so the matching
@@ -15,20 +15,28 @@ FROM gcr.io/distroless/static-debian12:nonroot
 COPY sakumock /sakumock
 COPY --from=versitygw /usr/local/bin/versitygw /usr/local/bin/versitygw
 
-# Enable the S3 data plane by default and bind it on all interfaces so the
-# published port is reachable from the host. PATH must include versitygw so
-# sakumock can locate it. Objects live under /home/nonroot/data (writable by the
-# distroless nonroot uid, so sakumock creates it at startup); mount a volume
-# there to persist them.
+# Enable every service's data plane by default, each bound on all interfaces so
+# the published ports are reachable from the host. PATH must include versitygw so
+# sakumock can locate it (Object Storage S3 data plane). Object Storage objects
+# live under /home/nonroot/data (writable by the distroless nonroot uid, so
+# sakumock creates it at startup); mount a volume there to persist them.
+#
+# Maintenance: every service with a data plane (--enable-data-plane) must be
+# enabled here so this image exposes it by default. When adding such a service,
+# set its <SERVICE>_ENABLE_DATA_PLANE=true and <SERVICE>_DATA_PLANE_ADDR (bound to
+# 0.0.0.0) below, and add its data-plane port to EXPOSE.
 ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     TMPDIR=/home/nonroot \
     OBJECT_STORAGE_ENABLE_DATA_PLANE=true \
     OBJECT_STORAGE_DATA_PLANE_ADDR=0.0.0.0:28086 \
-    OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data
+    OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data \
+    MONITORINGSUITE_ENABLE_DATA_PLANE=true \
+    MONITORINGSUITE_DATA_PLANE_ADDR=0.0.0.0:28084
 
-# One port per service (see the service table in README) plus the S3 data plane
-# (28086). EXPOSE is documentation only — publish the ports you need with `-p`.
-EXPOSE 18080 18081 18082 18083 18084 18085 18086 28086
+# One port per service (see the service table in README) plus the data planes
+# (Monitoring Suite telemetry ingest 28084, Object Storage S3 28086). EXPOSE is
+# documentation only — publish the ports you need with `-p`.
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 28084 28086
 
 ENTRYPOINT ["/sakumock"]
 # Run every service bound to 0.0.0.0 so published ports are reachable from

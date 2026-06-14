@@ -27,6 +27,8 @@ sakumock-monitoringsuite
 | `--rate-limit` | `MONITORINGSUITE_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `MONITORINGSUITE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `MONITORINGSUITE_DEBUG` | `false` | Enable debug mode |
+| `--tls-cert` | `MONITORINGSUITE_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, all listeners (control plane and data plane) serve HTTPS instead of plain HTTP |
+| `--tls-key` | `MONITORINGSUITE_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 | `--enable-data-plane` | `MONITORINGSUITE_ENABLE_DATA_PLANE` | `false` | Serve the telemetry data plane (Prometheus remote-write + OTLP/HTTP); ingest only |
 | `--data-plane-addr` | `MONITORINGSUITE_DATA_PLANE_ADDR` | `127.0.0.1:28084` | Listen address for the data plane (control-plane port + 10000) |
 | `--data-plane-dump-dir` | `MONITORINGSUITE_DATA_PLANE_DUMP_DIR` | (none) | Write each received payload as JSON to this directory; empty disables file dumps. Combine with `--debug` to also log payloads |

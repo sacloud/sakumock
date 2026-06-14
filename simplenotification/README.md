@@ -26,6 +26,8 @@ sakumock-simplenotification
 | `--rate-limit` | `SIMPLENOTIFICATION_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoint (events per `--rate-limit-window`, `0` disables). Inspection endpoints are not limited. Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SIMPLENOTIFICATION_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--debug` | `SIMPLENOTIFICATION_DEBUG` | `false` | Enable debug mode |
+| `--tls-cert` | `SIMPLENOTIFICATION_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
+| `--tls-key` | `SIMPLENOTIFICATION_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 
 ### Per-message exec hook
 

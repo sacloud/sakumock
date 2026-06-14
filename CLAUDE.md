@@ -2,7 +2,7 @@
 
 ## Service Conventions
 
-The repository is a single Go module (`github.com/sacloud/sakumock`); each service is a package under its own subdirectory. Shared building blocks live in the `core/` package at `github.com/sacloud/sakumock/core` — the `Route` type and `PrintRoutes` formatter, the CLI serve helpers (`Serve`, `NotifyContext`, `SetupLogger`, `RateLimitHint`), and the `IDGenerator` for sequential numeric resource IDs (services pass their own base value). Services must not import each other; shared code goes through `core`.
+The repository is a single Go module (`github.com/sacloud/sakumock`); each service is a package under its own subdirectory. Shared building blocks live in the `core/` package at `github.com/sacloud/sakumock/core` — the `Route` type and `PrintRoutes` formatter, the CLI serve helpers (`Serve`, `NotifyContext`, `SetupLogger`, `RateLimitHint`), the common TLS support (`TLSFiles` + `ServeListener` + `WithTLSScheme`, see "TLS" below), and the `IDGenerator` for sequential numeric resource IDs (services pass their own base value). Services must not import each other; shared code goes through `core`.
 
 All services are also aggregated into a single `sakumock` binary (entrypoint `cmd/sakumock`). It exposes each service as a subcommand (`sakumock <service>`) with the same flags as the standalone `sakumock-<service>` binary. Only this unified binary is released as a prebuilt artifact (via GoReleaser); per-service binaries remain `go install`-able. See "Unified binary & release" below.
 
@@ -52,6 +52,14 @@ There is no per-service version: every binary reports `sakumock.Version` from th
 Control-plane ports are sequential from 18080. Next available: 18087. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage.)
 
 A service that also exposes a separate **data plane** listens on its **control-plane port + 10000** (objectstorage's S3 API via versitygw: 18086 → 28086; monitoringsuite's telemetry ingest: 18084 → 28084). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
+
+### TLS
+
+- TLS is a single **common** option, not per-service: one certificate/key pair serves every listener (all control planes and all data planes) over HTTPS, because they all run on the same host and differ only by port. It is enabled only when **both** files are set; otherwise everything stays plain HTTP. Setting **exactly one** is a startup error (`TLSFiles.Validate`, called by each command's `Run`) rather than silently serving plain HTTP.
+- `core.TLSFiles{CertFile, KeyFile}` is the shared type (with `Enabled()`/`Scheme()`). Control planes serve via `core.Serve(ctx, addr, h, tls)` (HTTPS when enabled); in-process data planes serve via `core.ServeListener(srv, ln, tls)`. Embed it in a `Command` with a kong `prefix:"tls-"`/`envprefix:"<SERVICE>_TLS_"` for `--tls-cert`/`--tls-key`.
+- The TLS files reach a service's **data plane** (started inside `NewHandler` from `Config`) through an unexported `Config.tls` field — set by the standalone `cli.go` (`c.Config.tls = c.TLS`) and injected by the unified binary via `core.ServerOptions.TLS` in `NewServer` (same pattern as `idGen`/`logger`). The unified binary exposes one suite-wide `--tls-cert`/`--tls-key` (env `SAKUMOCK_TLS_*`) on `serviceConfigs`, so there are no per-service TLS flags under `sakumock all`/`env`.
+- An **externally served** data plane is handed the same files rather than sakumock terminating TLS: objectstorage passes `--cert`/`--key` to the versitygw subprocess. A new external data plane should do likewise.
+- `core.WithTLSScheme(vars, enabled)` upgrades `http://` endpoint values in the client env to `https://` (credentials/regions untouched), so `cli.go` startup logs and `sakumock env` output reflect a TLS listener. `ClientEnv()`/`ExtraClientEnv()` themselves stay `http://` (single source); the scheme is applied at the edges.
 
 ### Resource ID generation
 

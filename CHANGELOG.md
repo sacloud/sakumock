@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.4.0](https://github.com/sacloud/sakumock/compare/v0.3.0...v0.4.0) - 2026-06-14
+- Add eventbus mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/96
+- Add object storage mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/98
+- Add `sakumock env --export` by @fujiwara in https://github.com/sacloud/sakumock/pull/99
+- Add a versitygw-bundled image with the data plane enabled by @fujiwara in https://github.com/sacloud/sakumock/pull/100
+- Add an optional telemetry data plane to monitoringsuite by @fujiwara in https://github.com/sacloud/sakumock/pull/101
+- Add a common TLS option for all control planes and data planes by @fujiwara in https://github.com/sacloud/sakumock/pull/102
+- Enable the Monitoring Suite data plane in the dataplane image by @fujiwara in https://github.com/sacloud/sakumock/pull/103
+- feat(eventbus): fire schedules and triggers via a data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/104
+
 ## [v0.3.0](https://github.com/sacloud/sakumock/compare/v0.2.1...v0.3.0) - 2026-06-12
 - Add Monitoring Suite mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/82
 - Tag every log line with the originating service name by @fujiwara in https://github.com/sacloud/sakumock/pull/85

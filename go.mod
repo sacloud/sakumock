@@ -7,9 +7,12 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.42.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.103.3
+	github.com/golang/snappy v1.0.0
 	github.com/google/uuid v1.6.0
 	github.com/sacloud/sacloud-sdk-go v0.0.1-beta.2
+	go.opentelemetry.io/proto/otlp v1.10.0
 	golang.org/x/time v0.15.0
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.48.1
 )

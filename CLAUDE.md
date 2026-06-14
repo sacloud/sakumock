@@ -51,7 +51,7 @@ There is no per-service version: every binary reports `sakumock.Version` from th
 
 Control-plane ports are sequential from 18080. Next available: 18087. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage.)
 
-A service that also exposes a separate **data plane** (e.g. objectstorage's S3 API served by an external versitygw process) listens on its **control-plane port + 10000** (objectstorage: 18086 → 28086). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
+A service that also exposes a separate **data plane** listens on its **control-plane port + 10000** (objectstorage's S3 API via versitygw: 18086 → 28086; monitoringsuite's telemetry ingest: 18084 → 28084). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
 
 ### Resource ID generation
 

@@ -11,6 +11,7 @@ import (
 	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/eventbus"
+	"github.com/sacloud/sakumock/iam"
 	"github.com/sacloud/sakumock/kms"
 	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/objectstorage"
@@ -34,6 +35,7 @@ type serviceConfigs struct {
 	Monitoringsuite    monitoringsuite.Config    `embed:"" prefix:"monitoringsuite-"`
 	Eventbus           eventbus.Config           `embed:"" prefix:"eventbus-"`
 	Objectstorage      objectstorage.Config      `embed:"" prefix:"objectstorage-"`
+	Iam                iam.Config                `embed:"" prefix:"iam-"`
 
 	// TLS is one common certificate/key pair applied to every service's listeners
 	// (control plane and data plane). When both files are set, all listeners serve
@@ -44,7 +46,7 @@ type serviceConfigs struct {
 
 // configs lists every service in start order.
 func (c *serviceConfigs) configs() []core.ServiceConfig {
-	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage}
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam}
 }
 
 // AllCmd runs every mock service together in a single process, each on its own
@@ -110,7 +112,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 }
 
 func (c *AllCmd) debug() bool {
-	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug
+	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug
 }
 
 // Run starts every mock service and serves until ctx is canceled. If one

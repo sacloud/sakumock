@@ -10,6 +10,7 @@ import (
 	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/eventbus"
+	"github.com/sacloud/sakumock/iam"
 	"github.com/sacloud/sakumock/kms"
 	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/objectstorage"
@@ -31,6 +32,7 @@ type CLI struct {
 	Monitoringsuite    monitoringsuite.Command    `cmd:"" name:"monitoringsuite" help:"Monitoring Suite mock server"`
 	Eventbus           eventbus.Command           `cmd:"" name:"eventbus" help:"EventBus mock server"`
 	Objectstorage      objectstorage.Command      `cmd:"" name:"objectstorage" help:"Object Storage mock server"`
+	Iam                iam.Command                `cmd:"" name:"iam" help:"IAM mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

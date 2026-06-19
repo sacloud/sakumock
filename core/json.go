@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -21,7 +22,7 @@ func ReadJSON(r *http.Request, v any) error {
 		return err
 	}
 	if len(body) == 0 {
-		return nil
+		return errors.New("empty request body")
 	}
 	return json.Unmarshal(body, v)
 }

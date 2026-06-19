@@ -19,6 +19,7 @@ func newTestAllCmd() *AllCmd {
 	c.Monitoringsuite.Addr = "127.0.0.1:18084"
 	c.Eventbus.Addr = "127.0.0.1:18085"
 	c.Objectstorage.Addr = "127.0.0.1:18086"
+	c.Iam.Addr = "127.0.0.1:18087"
 	return c
 }
 
@@ -33,7 +34,7 @@ func TestAllBuild(t *testing.T) {
 		}
 	}()
 
-	if got, want := len(services), 7; got != want {
+	if got, want := len(services), 8; got != want {
 		t.Fatalf("got %d services, want %d", got, want)
 	}
 	if services[0].cfg.Name() != "simplemq" || len(services[0].cfg.ClientEnv()) != 2 {

@@ -202,7 +202,7 @@ func (s *Server) handleEnableSPKey(w http.ResponseWriter, r *http.Request) {
 	}
 	keyID := r.PathValue("service_principal_key_id")
 	key, ok := s.store.spKeys.get(keyID)
-	if !ok {
+	if !ok || idKey(key.ServicePrincipalID) != spID {
 		writeError(w, http.StatusNotFound, "key not found")
 		return
 	}
@@ -219,7 +219,7 @@ func (s *Server) handleDisableSPKey(w http.ResponseWriter, r *http.Request) {
 	}
 	keyID := r.PathValue("service_principal_key_id")
 	key, ok := s.store.spKeys.get(keyID)
-	if !ok {
+	if !ok || idKey(key.ServicePrincipalID) != spID {
 		writeError(w, http.StatusNotFound, "key not found")
 		return
 	}
@@ -235,10 +235,12 @@ func (s *Server) handleDeleteSPKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	keyID := r.PathValue("service_principal_key_id")
-	if !s.store.spKeys.delete(keyID) {
+	key, ok := s.store.spKeys.get(keyID)
+	if !ok || idKey(key.ServicePrincipalID) != spID {
 		writeError(w, http.StatusNotFound, "key not found")
 		return
 	}
+	s.store.spKeys.delete(keyID)
 	w.WriteHeader(http.StatusNoContent)
 }
 

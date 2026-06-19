@@ -104,6 +104,9 @@ type passwordPolicyState struct {
 }
 
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	s := &MemoryStore{
 		ids:    core.NewIDGenerator(core.DefaultIDBase),
 		logger: logger,
@@ -125,7 +128,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		orgIDPolicy:        nil,
 		projectIAMPolicies: make(map[string][]PolicyBinding),
 		folderIAMPolicies:  make(map[string][]PolicyBinding),
-		servicePolicyRules: json.RawMessage(`{"rules":[]}`),
+		servicePolicyRules: json.RawMessage(`[]`),
 	}
 	s.seedRoles()
 	return s

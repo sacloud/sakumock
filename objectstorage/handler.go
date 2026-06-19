@@ -1,13 +1,12 @@
 package objectstorage
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // ---- JSON request/response types (field names match the OpenAPI spec) ----
@@ -172,9 +171,6 @@ func findCluster(id string) (clusterInfo, bool) {
 	return clusterInfo{}, false
 }
 
-// rfc3339 formats t the way the API renders date-time fields.
-func rfc3339(t time.Time) string { return t.Format(time.RFC3339) }
-
 func bucketToJSON(b Bucket) bucketJSON {
 	return bucketJSON{
 		ClusterID: b.ClusterID,
@@ -216,34 +212,11 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if len(body) == 0 {
-		return nil
-	}
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
-}
-
 // writeError writes the object storage error shape: {"error":{"code","message"}}.
 // The SDK reads error.code to classify the failure (e.g. saclient.IsNotFoundError
 // checks for 404), so the body's code must mirror the HTTP status.
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, errorResponse{Error: errorBody{Code: status, Message: msg}})
+	core.WriteJSON(w, status, errorResponse{Error: errorBody{Code: status, Message: msg}})
 }
 
 func parsePermissionID(s string) (int64, bool) {
@@ -257,7 +230,7 @@ func parsePermissionID(s string) (int64, bool) {
 // ---- Federation handlers (/fed/v1) ----
 
 func (s *Server) handleListClusters(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, dataResponse{Data: clusters})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: clusters})
 }
 
 func (s *Server) handleGetCluster(w http.ResponseWriter, r *http.Request) {
@@ -266,7 +239,7 @@ func (s *Server) handleGetCluster(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "cluster not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: c})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: c})
 }
 
 type createBucketRequest struct {
@@ -277,7 +250,7 @@ type createBucketRequest struct {
 func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	var req createBucketRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -304,7 +277,7 @@ func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.dataPlane.createBucket(name)
-	writeJSON(w, http.StatusCreated, dataResponse{Data: bucketToJSON(b)})
+	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: bucketToJSON(b)})
 }
 
 func (s *Server) handleDeleteBucket(w http.ResponseWriter, r *http.Request) {
@@ -329,7 +302,7 @@ func (s *Server) buildReplicationData(b Bucket) replicationData {
 		SourceBucket: bucketToJSON(b),
 		DestBucket:   dest,
 		ConfigStatus: b.Replication.ConfigStatus,
-		CreatedAt:    rfc3339(b.Replication.CreatedAt),
+		CreatedAt:    core.FormatRFC3339(b.Replication.CreatedAt),
 	}
 }
 
@@ -339,7 +312,7 @@ func (s *Server) handleGetReplication(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "replication configuration not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: s.buildReplicationData(b)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: s.buildReplicationData(b)})
 }
 
 func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
@@ -347,7 +320,7 @@ func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		DestBucket string `json:"dest_bucket"`
 	}
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -361,7 +334,7 @@ func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// The spec declares 201 for replication creation.
-	writeJSON(w, http.StatusCreated, dataResponse{Data: s.buildReplicationData(b)})
+	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: s.buildReplicationData(b)})
 }
 
 func (s *Server) handleDeleteReplication(w http.ResponseWriter, r *http.Request) {
@@ -389,7 +362,7 @@ func (s *Server) handleReplicableTargets(w http.ResponseWriter, r *http.Request)
 	if data == nil {
 		data = []bucketJSON{}
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: data})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 // ---- Site bucket handlers (/{site}/v2) ----
@@ -404,7 +377,7 @@ func (s *Server) handleListBuckets(w http.ResponseWriter, r *http.Request) {
 			Plan:       planJSON{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath},
 		}
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: data})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 // ---- Account handlers ----
@@ -413,7 +386,7 @@ func toAccountData(a Account) accountData {
 	return accountData{
 		ResourceID: a.ResourceID,
 		Code:       a.Code,
-		CreatedAt:  rfc3339(a.CreatedAt),
+		CreatedAt:  core.FormatRFC3339(a.CreatedAt),
 	}
 }
 
@@ -423,7 +396,7 @@ func (s *Server) handleGetAccount(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toAccountData(a)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toAccountData(a)})
 }
 
 func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
@@ -432,7 +405,7 @@ func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, "account already exists")
 		return
 	}
-	writeJSON(w, http.StatusCreated, dataResponse{Data: toAccountData(a)})
+	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: toAccountData(a)})
 }
 
 func (s *Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
@@ -448,7 +421,7 @@ func (s *Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
 // omit it (accessKeyData.Secret is omitempty, which the spec's pattern requires
 // — an empty secret string would fail validation).
 func toAccountKeyData(k AccountKey, showSecret bool) accessKeyData {
-	d := accessKeyData{ID: k.ID, CreatedAt: rfc3339(k.CreatedAt)}
+	d := accessKeyData{ID: k.ID, CreatedAt: core.FormatRFC3339(k.CreatedAt)}
 	if showSecret {
 		d.Secret = k.Secret
 	}
@@ -465,7 +438,7 @@ func (s *Server) handleListAccountKeys(w http.ResponseWriter, r *http.Request) {
 	for i, k := range keys {
 		data[i] = toAccountKeyData(k, false)
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: data})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 func (s *Server) handleCreateAccountKey(w http.ResponseWriter, r *http.Request) {
@@ -474,7 +447,7 @@ func (s *Server) handleCreateAccountKey(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
-	writeJSON(w, http.StatusCreated, dataResponse{Data: toAccountKeyData(k, true)})
+	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: toAccountKeyData(k, true)})
 }
 
 func (s *Server) handleGetAccountKey(w http.ResponseWriter, r *http.Request) {
@@ -483,7 +456,7 @@ func (s *Server) handleGetAccountKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toAccountKeyData(k, false)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toAccountKeyData(k, false)})
 }
 
 func (s *Server) handleDeleteAccountKey(w http.ResponseWriter, r *http.Request) {
@@ -520,14 +493,14 @@ func toPermissionData(p Permission) permissionData {
 			BucketName: c.BucketName,
 			CanRead:    c.CanRead,
 			CanWrite:   c.CanWrite,
-			CreatedAt:  rfc3339(c.CreatedAt),
+			CreatedAt:  core.FormatRFC3339(c.CreatedAt),
 		}
 	}
 	return permissionData{
 		ID:             p.ID,
 		DisplayName:    p.DisplayName,
 		BucketControls: controls,
-		CreatedAt:      rfc3339(p.CreatedAt),
+		CreatedAt:      core.FormatRFC3339(p.CreatedAt),
 	}
 }
 
@@ -537,12 +510,12 @@ func (s *Server) handleListPermissions(w http.ResponseWriter, r *http.Request) {
 	for i, p := range perms {
 		data[i] = toPermissionData(p)
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: data})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 func (s *Server) handleCreatePermission(w http.ResponseWriter, r *http.Request) {
 	var req permissionBody
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -551,7 +524,7 @@ func (s *Server) handleCreatePermission(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	p := s.store.CreatePermission(r.PathValue("site"), req.DisplayName, req.toControls())
-	writeJSON(w, http.StatusCreated, dataResponse{Data: toPermissionData(p)})
+	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: toPermissionData(p)})
 }
 
 func (s *Server) handleGetPermission(w http.ResponseWriter, r *http.Request) {
@@ -565,7 +538,7 @@ func (s *Server) handleGetPermission(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toPermissionData(p)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toPermissionData(p)})
 }
 
 func (s *Server) handleUpdatePermission(w http.ResponseWriter, r *http.Request) {
@@ -575,7 +548,7 @@ func (s *Server) handleUpdatePermission(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var req permissionBody
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -584,7 +557,7 @@ func (s *Server) handleUpdatePermission(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toPermissionData(p)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toPermissionData(p)})
 }
 
 func (s *Server) handleDeletePermission(w http.ResponseWriter, r *http.Request) {
@@ -601,7 +574,7 @@ func (s *Server) handleDeletePermission(w http.ResponseWriter, r *http.Request) 
 }
 
 func toPermissionKeyData(k PermissionKey, showSecret bool) accessKeyData {
-	d := accessKeyData{ID: k.ID, CreatedAt: rfc3339(k.CreatedAt)}
+	d := accessKeyData{ID: k.ID, CreatedAt: core.FormatRFC3339(k.CreatedAt)}
 	if showSecret {
 		d.Secret = k.Secret
 	}
@@ -623,7 +596,7 @@ func (s *Server) handleListPermissionKeys(w http.ResponseWriter, r *http.Request
 	for i, k := range keys {
 		data[i] = toPermissionKeyData(k, false)
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: data})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
 func (s *Server) handleCreatePermissionKey(w http.ResponseWriter, r *http.Request) {
@@ -637,7 +610,7 @@ func (s *Server) handleCreatePermissionKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	writeJSON(w, http.StatusCreated, dataResponse{Data: toPermissionKeyData(k, true)})
+	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: toPermissionKeyData(k, true)})
 }
 
 func (s *Server) handleGetPermissionKey(w http.ResponseWriter, r *http.Request) {
@@ -651,7 +624,7 @@ func (s *Server) handleGetPermissionKey(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toPermissionKeyData(k, false)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toPermissionKeyData(k, false)})
 }
 
 func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Request) {
@@ -682,9 +655,9 @@ type statusCodeData struct {
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, dataResponse{Data: statusData{
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: statusData{
 		AcceptNew:  true,
-		StartedAt:  rfc3339(time.Now()),
+		StartedAt:  core.FormatRFC3339(time.Now()),
 		StatusCode: statusCodeData{ID: 1, Status: "available"},
 	}})
 }
@@ -710,7 +683,7 @@ func (s *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
 	if c, ok := findCluster(site); ok && c.PlanFamily == "archive" {
 		planType = "archive"
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: []planItemData{
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: []planItemData{
 		{
 			ServiceClassPath: "objectstorage/" + site + "/bucket",
 			Type:             planType,
@@ -732,7 +705,7 @@ type siteQuotaData struct {
 }
 
 func (s *Server) handleQuota(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, dataResponse{Data: siteQuotaData{
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: siteQuotaData{
 		NumRootKeys:             1,
 		NumBuckets:              1000,
 		NumPermissions:          1000,
@@ -766,13 +739,13 @@ type billingDetail struct {
 
 func (s *Server) handleBucketMetering(w http.ResponseWriter, _ *http.Request) {
 	// The mock keeps no usage history, so it reports no billing items.
-	writeJSON(w, http.StatusOK, dataResponse{Data: []bucketBillingItem{}})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: []bucketBillingItem{}})
 }
 
 // ---- Bucket sub-resources (encryption / penalty / usage / quota / plan) ----
 
 func toEncryptionData(e *Encryption) encryptionData {
-	return encryptionData{KMSKeyID: e.KMSKeyID, ConfiguredAt: rfc3339(e.ConfiguredAt)}
+	return encryptionData{KMSKeyID: e.KMSKeyID, ConfiguredAt: core.FormatRFC3339(e.ConfiguredAt)}
 }
 
 func (s *Server) handleGetEncryption(w http.ResponseWriter, r *http.Request) {
@@ -781,7 +754,7 @@ func (s *Server) handleGetEncryption(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "encryption configuration not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toEncryptionData(b.Encryption)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toEncryptionData(b.Encryption)})
 }
 
 func (s *Server) handlePutEncryption(w http.ResponseWriter, r *http.Request) {
@@ -789,7 +762,7 @@ func (s *Server) handlePutEncryption(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		KMSKeyID string `json:"kms_key_id"`
 	}
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -802,7 +775,7 @@ func (s *Server) handlePutEncryption(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: toEncryptionData(b.Encryption)})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: toEncryptionData(b.Encryption)})
 }
 
 func (s *Server) handleDeleteEncryption(w http.ResponseWriter, r *http.Request) {
@@ -829,7 +802,7 @@ func (s *Server) handleBucketPenalty(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: bucketPenaltyData{
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: bucketPenaltyData{
 		NumObjectsPerBucket: penaltyMetric{Val: 0, Quota: 10000000, IsApplied: false},
 		AmountGiBPerBucket:  penaltyMetric{Val: 0, Quota: 10240, IsApplied: false},
 	}})
@@ -840,7 +813,7 @@ func (s *Server) handleBucketUsage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: bucketMetrics{NumObjects: 0, AmountGiB: 0}})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: bucketMetrics{NumObjects: 0, AmountGiB: 0}})
 }
 
 func (s *Server) handleBucketQuota(w http.ResponseWriter, r *http.Request) {
@@ -848,7 +821,7 @@ func (s *Server) handleBucketQuota(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: bucketMetrics{NumObjects: 10000000, AmountGiB: 10240}})
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: bucketMetrics{NumObjects: 10000000, AmountGiB: 10240}})
 }
 
 func (s *Server) handleGetBucketPlan(w http.ResponseWriter, r *http.Request) {
@@ -857,12 +830,12 @@ func (s *Server) handleGetBucketPlan(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, dataResponse{Data: struct {
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: struct {
 		Plan     bucketPlanSummary `json:"plan"`
 		Contract contractData      `json:"contract"`
 	}{
 		Plan:     bucketPlanSummary{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath, ClusterID: b.ClusterID},
-		Contract: contractData{ResourceID: b.ResourceID, Status: "active", CreatedAt: rfc3339(b.CreatedAt)},
+		Contract: contractData{ResourceID: b.ResourceID, Status: "active", CreatedAt: core.FormatRFC3339(b.CreatedAt)},
 	}})
 }
 
@@ -877,7 +850,7 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 			ServiceClassPath string `json:"service_class_path"`
 		} `json:"new_plan"`
 	}
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -900,13 +873,13 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 	// Re-create the bucket entry with the new plan to assign a fresh contract ID.
 	s.store.DeleteBucket(name)
 	nb, _ := s.store.CreateBucket(name, b.ClusterID, req.NewPlan.Type, req.NewPlan.ServiceClassPath)
-	now := rfc3339(time.Now())
-	writeJSON(w, http.StatusOK, dataResponse{Data: struct {
+	now := core.FormatRFC3339(time.Now())
+	core.WriteJSON(w, http.StatusOK, dataResponse{Data: struct {
 		PreviousContract contractData      `json:"previous_contract"`
 		NewContract      contractData      `json:"new_contract"`
 		Plan             bucketPlanSummary `json:"plan"`
 	}{
-		PreviousContract: contractData{ResourceID: prevResourceID, Status: "terminated", CreatedAt: rfc3339(b.CreatedAt)},
+		PreviousContract: contractData{ResourceID: prevResourceID, Status: "terminated", CreatedAt: core.FormatRFC3339(b.CreatedAt)},
 		NewContract:      contractData{ResourceID: nb.ResourceID, Status: "active", CreatedAt: now},
 		Plan:             bucketPlanSummary{Type: nb.PlanType, ServiceClassPath: nb.ServiceClassPath, ClusterID: nb.ClusterID},
 	}})

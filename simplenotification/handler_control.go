@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // CommonServiceItem control-plane JSON types. Settings and Icon are passed
@@ -101,7 +103,7 @@ func providerClassFilter(rawQuery string) string {
 
 func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 	var req csiCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -124,7 +126,7 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		Icon:          csi.Icon,
 	})
 	s.logger.Debug("service item created", "id", it.ID, "class", it.ProviderClass)
-	writeJSON(w, http.StatusCreated, map[string]any{"CommonServiceItem": toCSI(it)})
+	core.WriteJSON(w, http.StatusCreated, map[string]any{"CommonServiceItem": toCSI(it)})
 }
 
 func (s *Server) handleListItems(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +136,7 @@ func (s *Server) handleListItems(w http.ResponseWriter, r *http.Request) {
 	for i, it := range items {
 		out[i] = toCSI(it)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"From":               0,
 		"Count":              len(out),
 		"Total":              len(out),
@@ -149,13 +151,13 @@ func (s *Server) handleGetItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "対象が見つかりません。")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"CommonServiceItem": toCSI(it)})
+	core.WriteJSON(w, http.StatusOK, map[string]any{"CommonServiceItem": toCSI(it)})
 }
 
 func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var req csiUpdateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -165,7 +167,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "対象が見つかりません。")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"CommonServiceItem": toCSI(it)})
+	core.WriteJSON(w, http.StatusOK, map[string]any{"CommonServiceItem": toCSI(it)})
 }
 
 func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
@@ -175,5 +177,5 @@ func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "対象が見つかりません。")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"CommonServiceItem": toCSI(it)})
+	core.WriteJSON(w, http.StatusOK, map[string]any{"CommonServiceItem": toCSI(it)})
 }

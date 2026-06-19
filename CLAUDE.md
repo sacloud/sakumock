@@ -78,6 +78,12 @@ A service that also exposes a separate **data plane** listens on its **control-p
 - Mocks generate control-plane resource IDs via `core.IDGenerator` starting at `core.DefaultIDBase` (`990000000000`, the top of the 12-digit space). This keeps mock IDs realistic in length while never colliding with a real resource ID: the global counter would have to grow ~7x to reach the `9xx` band, by which point the 12-digit space would be near exhaustion and real IDs would have grown more digits. So if a test accidentally runs against the real API (e.g. an unset endpoint env var), a mock ID resolves to nothing (404) instead of a live resource.
 - A standalone service counts independently from the same base, so across services two resource types could share a numeric ID. The unified `sakumock all` binary avoids this: it builds every service with one shared `IDGenerator` via `core.ServerOptions{IDGen: ...}` (each service's `NewServer` applies it to the in-memory store), so IDs are globally unique across services as in the real API — important because Terraform output that reused the same ID for different resource types is confusing and can hide a mis-wired reference. Standalone use and tests pass no options and each store generates its own. Data-plane identifiers (e.g. message IDs) are not resource IDs and do not use `IDGenerator`.
 
+### UUID generation
+
+- Use `github.com/google/uuid` for all UUID generation — never hand-roll UUIDs with `crypto/rand` + `fmt.Sprintf`.
+- `uuid.NewString()` for random v4 UUIDs (most cases: SCIM tokens, SP key IDs, etc.).
+- `uuid.NewV7()` when time-ordered UUIDs are needed.
+
 ### Go version policy
 
 - Support one version behind the latest stable Go release (e.g., if Go 1.26 is the latest, use Go 1.25)

@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"strconv"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -161,15 +160,6 @@ func (s *MemoryStore) getPasswordPolicy() passwordPolicyState {
 
 func (s *MemoryStore) Close() error { return nil }
 
-func newUUID() string {
-	var buf [16]byte
-	if _, err := rand.Read(buf[:]); err != nil {
-		panic(fmt.Sprintf("failed to generate UUID: %v", err))
-	}
-	buf[6] = (buf[6] & 0x0f) | 0x40
-	buf[8] = (buf[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
-		buf[0:4], buf[4:6], buf[6:8], buf[8:10], buf[10:16])
-}
+func newUUID() string { return uuid.NewString() }
 
 func idKey(id int) string { return strconv.Itoa(id) }

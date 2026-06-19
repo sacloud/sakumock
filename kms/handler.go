@@ -1,12 +1,10 @@
 package kms
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // JSON types matching the KMS OpenAPI spec.
@@ -140,15 +138,11 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-func formatTime(t time.Time) string {
-	return t.Format(time.RFC3339Nano)
-}
-
 func keyRecordToResponse(k KeyRecord) keyResponse {
 	return keyResponse{
 		ID:            k.ID,
-		CreatedAt:     formatTime(k.CreatedAt),
-		ModifiedAt:    formatTime(k.ModifiedAt),
+		CreatedAt:     core.FormatRFC3339Nano(k.CreatedAt),
+		ModifiedAt:    core.FormatRFC3339Nano(k.ModifiedAt),
 		ServiceClass:  "cloud/kms/key",
 		Name:          k.Name,
 		Description:   k.Description,
@@ -166,7 +160,7 @@ func (s *Server) handleListKeys(w http.ResponseWriter, r *http.Request) {
 		items[i] = keyRecordToResponse(k)
 	}
 	s.logger.Debug("keys listed", "count", len(items))
-	writeJSON(w, http.StatusOK, paginatedKeyList{
+	core.WriteJSON(w, http.StatusOK, paginatedKeyList{
 		Count: len(items),
 		From:  0,
 		Total: len(items),
@@ -176,7 +170,7 @@ func (s *Server) handleListKeys(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateKey(w http.ResponseWriter, r *http.Request) {
 	var req createKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -198,11 +192,11 @@ func (s *Server) handleCreateKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("key created", "id", k.ID, "name", k.Name)
-	writeJSON(w, http.StatusCreated, wrappedCreateKey{
+	core.WriteJSON(w, http.StatusCreated, wrappedCreateKey{
 		Key: createKeyResponse{
 			ID:          k.ID,
-			CreatedAt:   formatTime(k.CreatedAt),
-			ModifiedAt:  formatTime(k.ModifiedAt),
+			CreatedAt:   core.FormatRFC3339Nano(k.CreatedAt),
+			ModifiedAt:  core.FormatRFC3339Nano(k.ModifiedAt),
 			Name:        k.Name,
 			Description: k.Description,
 			KeyOrigin:   k.KeyOrigin,
@@ -218,13 +212,13 @@ func (s *Server) handleReadKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k)})
+	core.WriteJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k)})
 }
 
 func (s *Server) handleUpdateKey(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("resource_id")
 	var req updateKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -233,7 +227,7 @@ func (s *Server) handleUpdateKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k)})
+	core.WriteJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k)})
 }
 
 func (s *Server) handleDeleteKey(w http.ResponseWriter, r *http.Request) {
@@ -257,13 +251,13 @@ func (s *Server) handleRotateKey(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k)})
+	core.WriteJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k)})
 }
 
 func (s *Server) handleChangeStatus(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("resource_id")
 	var req changeStatusRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -282,7 +276,7 @@ func (s *Server) handleChangeStatus(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleScheduleDestruction(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("resource_id")
 	var req scheduleDestructionRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -300,7 +294,7 @@ func (s *Server) handleScheduleDestruction(w http.ResponseWriter, r *http.Reques
 func (s *Server) handleEncrypt(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("resource_id")
 	var req encryptRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -318,7 +312,7 @@ func (s *Server) handleEncrypt(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedKeyCipher{
+	core.WriteJSON(w, http.StatusOK, wrappedKeyCipher{
 		Key: keyCipherResponse{Cipher: ciphertext},
 	})
 }
@@ -326,7 +320,7 @@ func (s *Server) handleEncrypt(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDecrypt(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("resource_id")
 	var req decryptRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -339,31 +333,11 @@ func (s *Server) handleDecrypt(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedKeyPlain{
+	core.WriteJSON(w, http.StatusOK, wrappedKeyPlain{
 		Key: keyPlainResponse{Plain: string(plaintext)},
 	})
 }
 
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
-}
-
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
+	core.WriteJSON(w, status, map[string]string{"error": msg})
 }

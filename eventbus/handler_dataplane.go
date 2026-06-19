@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // Mock-only data-plane endpoints under /_sakumock/ (Kind "inspection"). They do
@@ -15,7 +17,7 @@ import (
 // trigger it matches, returning the resulting deliveries.
 func (s *Server) handleInjectEvent(w http.ResponseWriter, r *http.Request) {
 	var ev event
-	if err := readJSON(r, &ev); err != nil {
+	if err := core.ReadJSON(r, &ev); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -24,7 +26,7 @@ func (s *Server) handleInjectEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fired := s.dataPlane.injectEvent(ev)
-	writeJSON(w, http.StatusOK, deliveriesResponse(fired))
+	core.WriteJSON(w, http.StatusOK, deliveriesResponse(fired))
 }
 
 // handleTick (POST /_sakumock/tick) forces a scheduler evaluation. The optional
@@ -45,7 +47,7 @@ func (s *Server) handleTick(w http.ResponseWriter, r *http.Request) {
 		at = parsed
 	}
 	fired := s.dataPlane.tick(at)
-	writeJSON(w, http.StatusOK, deliveriesResponse(fired))
+	core.WriteJSON(w, http.StatusOK, deliveriesResponse(fired))
 }
 
 // parseTickTime accepts an RFC3339 timestamp or bare epoch seconds.
@@ -62,7 +64,7 @@ func parseTickTime(v string) (time.Time, error) {
 // handleListDeliveries (GET /_sakumock/deliveries) returns every firing the data
 // plane has recorded, oldest first.
 func (s *Server) handleListDeliveries(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, deliveriesResponse(s.dataPlane.recordedDeliveries()))
+	core.WriteJSON(w, http.StatusOK, deliveriesResponse(s.dataPlane.recordedDeliveries()))
 }
 
 // handleClearDeliveries (DELETE /_sakumock/deliveries) discards recorded firings.

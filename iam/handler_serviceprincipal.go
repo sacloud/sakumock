@@ -3,6 +3,8 @@ package iam
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type servicePrincipalJSON struct {
@@ -52,8 +54,8 @@ func spToJSON(r *ServicePrincipalRecord) servicePrincipalJSON {
 		ProjectID:   r.ProjectID,
 		Name:        r.Name,
 		Description: r.Description,
-		CreatedAt:   formatTime(r.CreatedAt),
-		UpdatedAt:   formatTime(r.UpdatedAt),
+		CreatedAt:   core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:   core.FormatRFC3339(r.UpdatedAt),
 	}
 }
 
@@ -64,7 +66,7 @@ func spKeyToJSON(r *ServicePrincipalKeyRecord) spKeyJSON {
 		Status:    r.Status,
 		KeyOrigin: r.KeyOrigin,
 		PublicKey: r.PublicKey,
-		CreatedAt: formatTime(r.CreatedAt),
+		CreatedAt: core.FormatRFC3339(r.CreatedAt),
 	}
 	if r.KeyExpiresAt != "" {
 		j.KeyExpiresAt = &r.KeyExpiresAt
@@ -83,7 +85,7 @@ func (s *Server) handleListServicePrincipals(w http.ResponseWriter, r *http.Requ
 
 func (s *Server) handleCreateServicePrincipal(w http.ResponseWriter, r *http.Request) {
 	var req createServicePrincipalRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -102,7 +104,7 @@ func (s *Server) handleCreateServicePrincipal(w http.ResponseWriter, r *http.Req
 	}
 	s.store.servicePrincipals.set(idKey(rec.ID), rec)
 	s.logger.Debug("service principal created", "id", rec.ID, "name", rec.Name)
-	writeJSON(w, http.StatusCreated, spToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, spToJSON(rec))
 }
 
 func (s *Server) handleReadServicePrincipal(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +114,7 @@ func (s *Server) handleReadServicePrincipal(w http.ResponseWriter, r *http.Reque
 		writeError(w, http.StatusNotFound, "service principal not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, spToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, spToJSON(rec))
 }
 
 func (s *Server) handleUpdateServicePrincipal(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +125,7 @@ func (s *Server) handleUpdateServicePrincipal(w http.ResponseWriter, r *http.Req
 		return
 	}
 	var req updateServicePrincipalRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -132,7 +134,7 @@ func (s *Server) handleUpdateServicePrincipal(w http.ResponseWriter, r *http.Req
 	rec.UpdatedAt = time.Now()
 	s.store.servicePrincipals.set(id, rec)
 	s.logger.Debug("service principal updated", "id", id)
-	writeJSON(w, http.StatusOK, spToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, spToJSON(rec))
 }
 
 func (s *Server) handleDeleteServicePrincipal(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +177,7 @@ func (s *Server) handleUploadSPKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req uploadKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -191,7 +193,7 @@ func (s *Server) handleUploadSPKey(w http.ResponseWriter, r *http.Request) {
 	}
 	s.store.spKeys.set(keyID, rec)
 	s.logger.Debug("SP key uploaded", "sp_id", spID, "key_id", keyID)
-	writeJSON(w, http.StatusCreated, spKeyToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, spKeyToJSON(rec))
 }
 
 func (s *Server) handleEnableSPKey(w http.ResponseWriter, r *http.Request) {
@@ -208,7 +210,7 @@ func (s *Server) handleEnableSPKey(w http.ResponseWriter, r *http.Request) {
 	}
 	key.Status = "enabled"
 	s.store.spKeys.set(keyID, key)
-	writeJSON(w, http.StatusOK, spKeyToJSON(key))
+	core.WriteJSON(w, http.StatusOK, spKeyToJSON(key))
 }
 
 func (s *Server) handleDisableSPKey(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +227,7 @@ func (s *Server) handleDisableSPKey(w http.ResponseWriter, r *http.Request) {
 	}
 	key.Status = "disabled"
 	s.store.spKeys.set(keyID, key)
-	writeJSON(w, http.StatusOK, spKeyToJSON(key))
+	core.WriteJSON(w, http.StatusOK, spKeyToJSON(key))
 }
 
 func (s *Server) handleDeleteSPKey(w http.ResponseWriter, r *http.Request) {
@@ -246,10 +248,10 @@ func (s *Server) handleDeleteSPKey(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleOAuth2Token(w http.ResponseWriter, _ *http.Request) {
 	exp := time.Now().Add(1 * time.Hour)
-	writeJSON(w, http.StatusOK, oauthTokenResponse{
+	core.WriteJSON(w, http.StatusOK, oauthTokenResponse{
 		AccessToken:    "mock-access-token-" + newUUID(),
 		TokenType:      "Bearer",
-		TokenExpiredAt: formatTime(exp),
+		TokenExpiredAt: core.FormatRFC3339(exp),
 		ExpiresIn:      3600,
 	})
 }

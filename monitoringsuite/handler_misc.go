@@ -1,6 +1,10 @@
 package monitoringsuite
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/sacloud/sakumock/core"
+)
 
 // ===== Publishers (read-only) =====
 
@@ -51,7 +55,7 @@ func (s *Server) handleReadPublisher(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "No Publisher matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, publisherToJSON(p, true))
+	core.WriteJSON(w, http.StatusOK, publisherToJSON(p, true))
 }
 
 // ===== Management =====
@@ -71,7 +75,7 @@ type resourcesLimits struct {
 
 func (s *Server) handleGetResourceLimits(w http.ResponseWriter, r *http.Request) {
 	limit := resourceItemLimits{MaxUserCount: 10, MaxUserDedicatedCount: 2}
-	writeJSON(w, http.StatusOK, resourcesLimits{
+	core.WriteJSON(w, http.StatusOK, resourcesLimits{
 		Logs:       limit,
 		Metrics:    limit,
 		Traces:     limit,
@@ -105,12 +109,12 @@ func (s *Server) provisioningResponse() provisioningJSON {
 }
 
 func (s *Server) handleGetProvisioning(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, s.provisioningResponse())
+	core.WriteJSON(w, http.StatusOK, s.provisioningResponse())
 }
 
 func (s *Server) handleInitializeProvisioning(w http.ResponseWriter, r *http.Request) {
 	var req provisioningCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -125,5 +129,5 @@ func (s *Server) handleInitializeProvisioning(w http.ResponseWriter, r *http.Req
 		s.store.provMetrics = ProvisioningExist{SystemExist: req.Metrics.SystemExist, UserExist: req.Metrics.UserExist}
 	}
 	s.store.provMu.Unlock()
-	writeJSON(w, http.StatusCreated, s.provisioningResponse())
+	core.WriteJSON(w, http.StatusCreated, s.provisioningResponse())
 }

@@ -1,13 +1,11 @@
 package monitoringsuite
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // buildMux registers every route from the single-source-of-truth route table.
@@ -42,31 +40,6 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-// --- shared JSON helpers ---
-
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if len(body) == 0 {
-		return nil
-	}
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
-}
-
 // errorResponse mirrors the monitoring-suite error envelope:
 // {"is_ok": false, "status": <code>, "error_code": <text>, "error_msg": <msg>}.
 type errorResponse struct {
@@ -77,7 +50,7 @@ type errorResponse struct {
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, errorResponse{
+	core.WriteJSON(w, status, errorResponse{
 		IsOk:      false,
 		Status:    status,
 		ErrorCode: http.StatusText(status),
@@ -98,7 +71,7 @@ func writePage[T any](w http.ResponseWriter, items []T) {
 	if items == nil {
 		items = []T{}
 	}
-	writeJSON(w, http.StatusOK, paginated[T]{
+	core.WriteJSON(w, http.StatusOK, paginated[T]{
 		Count:   len(items),
 		From:    0,
 		Total:   len(items),
@@ -106,8 +79,6 @@ func writePage[T any](w http.ResponseWriter, items []T) {
 		Results: items,
 	})
 }
-
-func formatTime(t time.Time) string { return t.Format(time.RFC3339Nano) }
 
 func boolPtr(b bool) *bool { return &b }
 
@@ -137,7 +108,7 @@ func projectToJSON(p *Project, wrapped bool) projectJSON {
 		Icon:        nil,
 		AccountID:   p.AccountID,
 		ResourceID:  p.ResourceID,
-		CreatedAt:   formatTime(p.CreatedAt),
+		CreatedAt:   core.FormatRFC3339Nano(p.CreatedAt),
 	}
 	if wrapped {
 		j.IsOk = boolPtr(true)
@@ -168,7 +139,7 @@ func (s *Server) listProjects(w http.ResponseWriter, tbl *table[Project]) {
 
 func (s *Server) createProject(w http.ResponseWriter, r *http.Request, tbl *table[Project]) {
 	var req projectCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -188,7 +159,7 @@ func (s *Server) createProject(w http.ResponseWriter, r *http.Request, tbl *tabl
 		CreatedAt:   now,
 	}
 	tbl.set(idKey(rid), p)
-	writeJSON(w, http.StatusCreated, projectToJSON(p, false))
+	core.WriteJSON(w, http.StatusCreated, projectToJSON(p, false))
 }
 
 func (s *Server) readProject(w http.ResponseWriter, r *http.Request, tbl *table[Project]) {
@@ -197,7 +168,7 @@ func (s *Server) readProject(w http.ResponseWriter, r *http.Request, tbl *table[
 		writeError(w, http.StatusNotFound, "No project matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, projectToJSON(p, true))
+	core.WriteJSON(w, http.StatusOK, projectToJSON(p, true))
 }
 
 func (s *Server) updateProject(w http.ResponseWriter, r *http.Request, tbl *table[Project]) {
@@ -207,7 +178,7 @@ func (s *Server) updateProject(w http.ResponseWriter, r *http.Request, tbl *tabl
 		return
 	}
 	var req projectRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -217,7 +188,7 @@ func (s *Server) updateProject(w http.ResponseWriter, r *http.Request, tbl *tabl
 	if req.Description != nil {
 		p.Description = *req.Description
 	}
-	writeJSON(w, http.StatusOK, projectToJSON(p, true))
+	core.WriteJSON(w, http.StatusOK, projectToJSON(p, true))
 }
 
 func (s *Server) deleteProject(w http.ResponseWriter, r *http.Request, tbl *table[Project]) {

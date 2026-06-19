@@ -3,6 +3,8 @@ package monitoringsuite
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // ===== shared object types =====
@@ -65,7 +67,7 @@ func (s *Server) logStorageToJSON(st *LogStorage, wrapped bool) logStorageJSON {
 		Tags:               st.Tags,
 		Icon:               nil,
 		ExpireDay:          st.ExpireDay,
-		CreatedAt:          formatTime(st.CreatedAt),
+		CreatedAt:          core.FormatRFC3339Nano(st.CreatedAt),
 		Endpoints:          ingesterEndpoints{Ingester: ingesterEndpoint{Address: "logs-ingester.monitoring.local:443"}},
 		AccountID:          st.AccountID,
 		ResourceID:         st.ResourceID,
@@ -107,7 +109,7 @@ func (s *Server) handleListLogStorages(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateLogStorage(w http.ResponseWriter, r *http.Request) {
 	var req logStorageCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -135,7 +137,7 @@ func (s *Server) handleCreateLogStorage(w http.ResponseWriter, r *http.Request) 
 		ServicePrincipalID: req.ServicePrincipalID,
 	}
 	s.store.logStorages.set(idKey(rid), st)
-	writeJSON(w, http.StatusCreated, s.logStorageToJSON(st, false))
+	core.WriteJSON(w, http.StatusCreated, s.logStorageToJSON(st, false))
 }
 
 func (s *Server) handleReadLogStorage(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +146,7 @@ func (s *Server) handleReadLogStorage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "No LogStorage matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, s.logStorageToJSON(st, true))
+	core.WriteJSON(w, http.StatusOK, s.logStorageToJSON(st, true))
 }
 
 func (s *Server) handleUpdateLogStorage(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +156,7 @@ func (s *Server) handleUpdateLogStorage(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var req logStorageRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -167,7 +169,7 @@ func (s *Server) handleUpdateLogStorage(w http.ResponseWriter, r *http.Request) 
 	if req.ServicePrincipalID != nil {
 		st.ServicePrincipalID = req.ServicePrincipalID
 	}
-	writeJSON(w, http.StatusOK, s.logStorageToJSON(st, true))
+	core.WriteJSON(w, http.StatusOK, s.logStorageToJSON(st, true))
 }
 
 func (s *Server) handleDeleteLogStorage(w http.ResponseWriter, r *http.Request) {
@@ -189,12 +191,12 @@ func (s *Server) handleSetLogStorageExpire(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	var req setExpireRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	st.ExpireDay = req.Days
-	writeJSON(w, http.StatusOK, s.logStorageToJSON(st, false))
+	core.WriteJSON(w, http.StatusOK, s.logStorageToJSON(st, false))
 }
 
 // ===== Metrics storage =====
@@ -248,8 +250,8 @@ func (s *Server) metricsStorageToJSON(st *MetricsStorage, wrapped bool) metricsS
 		AccountID:   st.AccountID,
 		ResourceID:  st.ResourceID,
 		Endpoints:   addressEndpoints{Address: "metrics-ingester.monitoring.local:443"},
-		CreatedAt:   formatTime(st.CreatedAt),
-		UpdatedAt:   formatTime(st.UpdatedAt),
+		CreatedAt:   core.FormatRFC3339Nano(st.CreatedAt),
+		UpdatedAt:   core.FormatRFC3339Nano(st.UpdatedAt),
 		Usage:       usage,
 	}
 	if wrapped {
@@ -280,7 +282,7 @@ func (s *Server) handleListMetricsStorages(w http.ResponseWriter, r *http.Reques
 
 func (s *Server) handleCreateMetricsStorage(w http.ResponseWriter, r *http.Request) {
 	var req metricsStorageCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -302,7 +304,7 @@ func (s *Server) handleCreateMetricsStorage(w http.ResponseWriter, r *http.Reque
 		IsSystem:    req.IsSystem,
 	}
 	s.store.metricsStorages.set(idKey(rid), st)
-	writeJSON(w, http.StatusCreated, s.metricsStorageToJSON(st, false))
+	core.WriteJSON(w, http.StatusCreated, s.metricsStorageToJSON(st, false))
 }
 
 func (s *Server) handleReadMetricsStorage(w http.ResponseWriter, r *http.Request) {
@@ -311,7 +313,7 @@ func (s *Server) handleReadMetricsStorage(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusNotFound, "No MetricsStorage matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, s.metricsStorageToJSON(st, true))
+	core.WriteJSON(w, http.StatusOK, s.metricsStorageToJSON(st, true))
 }
 
 func (s *Server) handleUpdateMetricsStorage(w http.ResponseWriter, r *http.Request) {
@@ -321,7 +323,7 @@ func (s *Server) handleUpdateMetricsStorage(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	var req metricsStorageRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -332,7 +334,7 @@ func (s *Server) handleUpdateMetricsStorage(w http.ResponseWriter, r *http.Reque
 		st.Description = *req.Description
 	}
 	st.UpdatedAt = time.Now()
-	writeJSON(w, http.StatusOK, s.metricsStorageToJSON(st, true))
+	core.WriteJSON(w, http.StatusOK, s.metricsStorageToJSON(st, true))
 }
 
 func (s *Server) handleDeleteMetricsStorage(w http.ResponseWriter, r *http.Request) {
@@ -370,7 +372,7 @@ func (s *Server) traceStorageToJSON(st *TraceStorage, wrapped bool) traceStorage
 		Tags:                st.Tags,
 		Icon:                nil,
 		RetentionPeriodDays: st.RetentionPeriodDays,
-		CreatedAt:           formatTime(st.CreatedAt),
+		CreatedAt:           core.FormatRFC3339Nano(st.CreatedAt),
 		Endpoints:           ingesterEndpoints{Ingester: ingesterEndpoint{Address: "traces-ingester.monitoring.local:443"}},
 		AccountID:           st.AccountID,
 		ResourceID:          st.ResourceID,
@@ -409,7 +411,7 @@ func (s *Server) handleListTraceStorages(w http.ResponseWriter, r *http.Request)
 
 func (s *Server) handleCreateTraceStorage(w http.ResponseWriter, r *http.Request) {
 	var req traceStorageCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -436,7 +438,7 @@ func (s *Server) handleCreateTraceStorage(w http.ResponseWriter, r *http.Request
 		ServicePrincipalID:  req.ServicePrincipalID,
 	}
 	s.store.traceStorages.set(idKey(rid), st)
-	writeJSON(w, http.StatusCreated, s.traceStorageToJSON(st, false))
+	core.WriteJSON(w, http.StatusCreated, s.traceStorageToJSON(st, false))
 }
 
 func (s *Server) handleReadTraceStorage(w http.ResponseWriter, r *http.Request) {
@@ -445,7 +447,7 @@ func (s *Server) handleReadTraceStorage(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "No TraceStorage matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, s.traceStorageToJSON(st, true))
+	core.WriteJSON(w, http.StatusOK, s.traceStorageToJSON(st, true))
 }
 
 func (s *Server) handleUpdateTraceStorage(w http.ResponseWriter, r *http.Request) {
@@ -455,7 +457,7 @@ func (s *Server) handleUpdateTraceStorage(w http.ResponseWriter, r *http.Request
 		return
 	}
 	var req traceStorageRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -468,7 +470,7 @@ func (s *Server) handleUpdateTraceStorage(w http.ResponseWriter, r *http.Request
 	if req.ServicePrincipalID != nil {
 		st.ServicePrincipalID = req.ServicePrincipalID
 	}
-	writeJSON(w, http.StatusOK, s.traceStorageToJSON(st, true))
+	core.WriteJSON(w, http.StatusOK, s.traceStorageToJSON(st, true))
 }
 
 func (s *Server) handleDeleteTraceStorage(w http.ResponseWriter, r *http.Request) {
@@ -486,12 +488,12 @@ func (s *Server) handleSetTraceStorageExpire(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var req setExpireRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	st.RetentionPeriodDays = req.Days
-	writeJSON(w, http.StatusOK, s.traceStorageToJSON(st, false))
+	core.WriteJSON(w, http.StatusOK, s.traceStorageToJSON(st, false))
 }
 
 // ===== Access keys (log / metrics / trace) =====
@@ -611,13 +613,13 @@ func (s *Server) handleCreateLogStorageKey(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	var req accessKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	k := newAccessKey(s.store, pid, req.Description)
 	s.store.logKeys.set(k.UID, k)
-	writeJSON(w, http.StatusCreated, logMetricsKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusCreated, logMetricsKeyToJSON(k, true))
 }
 
 func (s *Server) handleReadLogStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -626,7 +628,7 @@ func (s *Server) handleReadLogStorageKey(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusNotFound, "No LogStorageAccessKey matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
 }
 
 func (s *Server) handleUpdateLogStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -636,14 +638,14 @@ func (s *Server) handleUpdateLogStorageKey(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	var req accessKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if req.Description != nil {
 		k.Description = *req.Description
 	}
-	writeJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
 }
 
 func (s *Server) handleDeleteLogStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -675,13 +677,13 @@ func (s *Server) handleCreateMetricsStorageKey(w http.ResponseWriter, r *http.Re
 		return
 	}
 	var req accessKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	k := newAccessKey(s.store, pid, req.Description)
 	s.store.metricsKeys.set(k.UID, k)
-	writeJSON(w, http.StatusCreated, logMetricsKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusCreated, logMetricsKeyToJSON(k, true))
 }
 
 func (s *Server) handleReadMetricsStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -690,7 +692,7 @@ func (s *Server) handleReadMetricsStorageKey(w http.ResponseWriter, r *http.Requ
 		writeError(w, http.StatusNotFound, "No MetricsStorageAccessKey matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
 }
 
 func (s *Server) handleUpdateMetricsStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -700,14 +702,14 @@ func (s *Server) handleUpdateMetricsStorageKey(w http.ResponseWriter, r *http.Re
 		return
 	}
 	var req accessKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if req.Description != nil {
 		k.Description = *req.Description
 	}
-	writeJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusOK, logMetricsKeyToJSON(k, true))
 }
 
 func (s *Server) handleDeleteMetricsStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -739,13 +741,13 @@ func (s *Server) handleCreateTraceStorageKey(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var req accessKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	k := newAccessKey(s.store, pid, req.Description)
 	s.store.traceKeys.set(k.UID, k)
-	writeJSON(w, http.StatusCreated, traceKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusCreated, traceKeyToJSON(k, true))
 }
 
 func (s *Server) handleReadTraceStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -754,7 +756,7 @@ func (s *Server) handleReadTraceStorageKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "No TraceStorageAccessKey matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, traceKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusOK, traceKeyToJSON(k, true))
 }
 
 func (s *Server) handleUpdateTraceStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -764,14 +766,14 @@ func (s *Server) handleUpdateTraceStorageKey(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var req accessKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if req.Description != nil {
 		k.Description = *req.Description
 	}
-	writeJSON(w, http.StatusOK, traceKeyToJSON(k, true))
+	core.WriteJSON(w, http.StatusOK, traceKeyToJSON(k, true))
 }
 
 func (s *Server) handleDeleteTraceStorageKey(w http.ResponseWriter, r *http.Request) {
@@ -796,7 +798,7 @@ func writeStorageStats[T any](w http.ResponseWriter, tbl *table[T], key, kind st
 		writeError(w, http.StatusNotFound, "No "+kind+" matches the given query.")
 		return
 	}
-	writeJSON(w, http.StatusOK, usagesBody{Usages: []any{}})
+	core.WriteJSON(w, http.StatusOK, usagesBody{Usages: []any{}})
 }
 
 func (s *Server) handleLogStorageStatsDaily(w http.ResponseWriter, r *http.Request) {

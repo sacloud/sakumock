@@ -3,6 +3,8 @@ package monitoringsuite
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // ptrOf returns a pointer to a copy of v, for building optional JSON fields.
@@ -49,8 +51,8 @@ func (s *Server) logRoutingToJSON(rt *Routing, wrapped bool) (routingJSON, bool)
 		Publisher:  publisherToJSON(pub, false),
 		Variant:    rt.Variant,
 		LogStorage: ptrOf(s.logStorageToJSON(st, false)),
-		CreatedAt:  formatTime(rt.CreatedAt),
-		UpdatedAt:  formatTime(rt.UpdatedAt),
+		CreatedAt:  core.FormatRFC3339Nano(rt.CreatedAt),
+		UpdatedAt:  core.FormatRFC3339Nano(rt.UpdatedAt),
 	}
 	if wrapped {
 		j.IsOk = boolPtr(true)
@@ -70,7 +72,7 @@ func (s *Server) handleListLogRoutings(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateLogRouting(w http.ResponseWriter, r *http.Request) {
 	var req routingRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -101,7 +103,7 @@ func (s *Server) handleCreateLogRouting(w http.ResponseWriter, r *http.Request) 
 	}
 	s.store.logRoutings.set(rt.UID, rt)
 	j, _ := s.logRoutingToJSON(rt, true)
-	writeJSON(w, http.StatusCreated, j)
+	core.WriteJSON(w, http.StatusCreated, j)
 }
 
 func (s *Server) handleReadLogRouting(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +113,7 @@ func (s *Server) handleReadLogRouting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	j, _ := s.logRoutingToJSON(rt, true)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleUpdateLogRouting(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +123,7 @@ func (s *Server) handleUpdateLogRouting(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var req routingRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -149,7 +151,7 @@ func (s *Server) handleUpdateLogRouting(w http.ResponseWriter, r *http.Request) 
 	}
 	rt.UpdatedAt = time.Now()
 	j, _ := s.logRoutingToJSON(rt, true)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleDeleteLogRouting(w http.ResponseWriter, r *http.Request) {
@@ -178,8 +180,8 @@ func (s *Server) metricsRoutingToJSON(rt *Routing, wrapped bool) (routingJSON, b
 		Publisher:      publisherToJSON(pub, false),
 		Variant:        rt.Variant,
 		MetricsStorage: ptrOf(s.metricsStorageToJSON(st, false)),
-		CreatedAt:      formatTime(rt.CreatedAt),
-		UpdatedAt:      formatTime(rt.UpdatedAt),
+		CreatedAt:      core.FormatRFC3339Nano(rt.CreatedAt),
+		UpdatedAt:      core.FormatRFC3339Nano(rt.UpdatedAt),
 	}
 	if wrapped {
 		j.IsOk = boolPtr(true)
@@ -199,7 +201,7 @@ func (s *Server) handleListMetricsRoutings(w http.ResponseWriter, r *http.Reques
 
 func (s *Server) handleCreateMetricsRouting(w http.ResponseWriter, r *http.Request) {
 	var req routingRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -230,7 +232,7 @@ func (s *Server) handleCreateMetricsRouting(w http.ResponseWriter, r *http.Reque
 	}
 	s.store.metricsRoutings.set(rt.UID, rt)
 	j, _ := s.metricsRoutingToJSON(rt, true)
-	writeJSON(w, http.StatusCreated, j)
+	core.WriteJSON(w, http.StatusCreated, j)
 }
 
 func (s *Server) handleReadMetricsRouting(w http.ResponseWriter, r *http.Request) {
@@ -240,7 +242,7 @@ func (s *Server) handleReadMetricsRouting(w http.ResponseWriter, r *http.Request
 		return
 	}
 	j, _ := s.metricsRoutingToJSON(rt, true)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleUpdateMetricsRouting(w http.ResponseWriter, r *http.Request) {
@@ -250,7 +252,7 @@ func (s *Server) handleUpdateMetricsRouting(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	var req routingRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -278,7 +280,7 @@ func (s *Server) handleUpdateMetricsRouting(w http.ResponseWriter, r *http.Reque
 	}
 	rt.UpdatedAt = time.Now()
 	j, _ := s.metricsRoutingToJSON(rt, true)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleDeleteMetricsRouting(w http.ResponseWriter, r *http.Request) {

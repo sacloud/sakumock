@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -308,7 +306,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 
 func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 	var req csiCreateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -338,7 +336,7 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		Icon:          csi.Icon,
 	})
 	s.logger.Debug("service item created", "id", it.ID, "class", it.ProviderClass)
-	writeJSON(w, http.StatusCreated, map[string]any{
+	core.WriteJSON(w, http.StatusCreated, map[string]any{
 		"CommonServiceItem": toCSI(it),
 		"Success":           true,
 		"is_ok":             true,
@@ -352,7 +350,7 @@ func (s *Server) handleListItems(w http.ResponseWriter, r *http.Request) {
 	for i, it := range items {
 		out[i] = toCSI(it)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"From":               0,
 		"Count":              len(out),
 		"Total":              len(out),
@@ -368,7 +366,7 @@ func (s *Server) handleGetItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "対象が見つかりません。")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"CommonServiceItem": toCSI(it),
 		"is_ok":             true,
 	})
@@ -377,7 +375,7 @@ func (s *Server) handleGetItem(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	var req csiUpdateRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -406,7 +404,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "対象が見つかりません。")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"CommonServiceItem": toCSI(it),
 		"Success":           true,
 		"is_ok":             true,
@@ -420,7 +418,7 @@ func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "対象が見つかりません。")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"CommonServiceItem": toCSI(it),
 		"Success":           true,
 		"is_ok":             true,
@@ -439,7 +437,7 @@ func (s *Server) handleSetSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req setSecretRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -452,7 +450,7 @@ func (s *Server) handleSetSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("process configuration secret set", "id", id)
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"process": map[string]any{"result": "ok"},
 		"is_ok":   true,
 	})
@@ -476,26 +474,6 @@ func validateSecret(secret json.RawMessage) string {
 		return "Secret must contain APIKey, or AccessToken and AccessTokenSecret"
 	}
 	return ""
-}
-
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {

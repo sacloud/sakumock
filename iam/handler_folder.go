@@ -3,6 +3,8 @@ package iam
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type folderJSON struct {
@@ -36,8 +38,8 @@ func folderToJSON(r *FolderRecord) folderJSON {
 		Name:        r.Name,
 		ParentID:    r.ParentID,
 		Description: r.Description,
-		CreatedAt:   formatTime(r.CreatedAt),
-		UpdatedAt:   formatTime(r.UpdatedAt),
+		CreatedAt:   core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:   core.FormatRFC3339(r.UpdatedAt),
 	}
 }
 
@@ -52,7 +54,7 @@ func (s *Server) handleListFolders(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateFolder(w http.ResponseWriter, r *http.Request) {
 	var req createFolderRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -71,7 +73,7 @@ func (s *Server) handleCreateFolder(w http.ResponseWriter, r *http.Request) {
 	}
 	s.store.folders.set(idKey(rec.ID), rec)
 	s.logger.Debug("folder created", "id", rec.ID, "name", rec.Name)
-	writeJSON(w, http.StatusCreated, folderToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, folderToJSON(rec))
 }
 
 func (s *Server) handleReadFolder(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +83,7 @@ func (s *Server) handleReadFolder(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "folder not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, folderToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, folderToJSON(rec))
 }
 
 func (s *Server) handleUpdateFolder(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +94,7 @@ func (s *Server) handleUpdateFolder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req updateFolderRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -103,7 +105,7 @@ func (s *Server) handleUpdateFolder(w http.ResponseWriter, r *http.Request) {
 	rec.UpdatedAt = time.Now()
 	s.store.folders.set(id, rec)
 	s.logger.Debug("folder updated", "id", id)
-	writeJSON(w, http.StatusOK, folderToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, folderToJSON(rec))
 }
 
 func (s *Server) handleDeleteFolder(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +123,7 @@ func (s *Server) handleDeleteFolder(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleMoveFolders(w http.ResponseWriter, r *http.Request) {
 	var req moveFoldersRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -149,7 +151,7 @@ func (s *Server) handleReadFolderIAMPolicy(w http.ResponseWriter, r *http.Reques
 	if bindings == nil {
 		bindings = []PolicyBinding{}
 	}
-	writeJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
+	core.WriteJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
 }
 
 func (s *Server) handleUpdateFolderIAMPolicy(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +161,7 @@ func (s *Server) handleUpdateFolderIAMPolicy(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var req iamPolicyResponse
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -168,5 +170,5 @@ func (s *Server) handleUpdateFolderIAMPolicy(w http.ResponseWriter, r *http.Requ
 	s.store.folderIAMPolicies[id] = bindings
 	s.store.mu.Unlock()
 	s.logger.Debug("folder IAM policy updated", "folder_id", id)
-	writeJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
+	core.WriteJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
 }

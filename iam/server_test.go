@@ -1,5 +1,32 @@
 package iam_test
 
+// TODO: The following routes are not covered by SDK-based tests because the SDK
+// does not yet expose operations for them. Add tests when SDK support arrives.
+//
+//   POST   /compat/users/{user_id}/deactivate-otp
+//   GET    /compat/users/{user_id}/trusted-devices
+//   DELETE /compat/users/{user_id}/trusted-devices/{trusted_device_id}
+//   POST   /compat/users/{user_id}/clear-trusted-devices
+//   GET    /compat/users/{user_id}/security-keys
+//   PUT    /compat/users/{user_id}/security-keys/{security_key_id}
+//   DELETE /compat/users/{user_id}/security-keys/{security_key_id}
+//   POST   /move-projects
+//   POST   /move-folders
+//   GET    /folders/{folder_id}/iam-policy
+//   PUT    /folders/{folder_id}/iam-policy
+//   GET    /organization-iam-policy
+//   PUT    /organization-iam-policy
+//   GET    /organization-auth-conditions
+//   PUT    /organization-auth-conditions
+//   PUT    /sso-profiles/{sso_profile_id}
+//   POST   /service-principals/oauth2/token
+//   POST   /enable-service-policy
+//   POST   /disable-service-policy
+//   GET    /service-policy-status
+//   GET    /organization-service-policy
+//   PUT    /organization-service-policy
+//   GET    /service-policy-rule-templates
+
 import (
 	"testing"
 

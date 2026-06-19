@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type userJSON struct {
@@ -60,8 +62,8 @@ func userToJSON(r *UserRecord) userJSON {
 		Description: r.Description,
 		Otp:         userOtp{Status: "deactivated"},
 		Email:       r.Email,
-		CreatedAt:   formatTime(r.CreatedAt),
-		UpdatedAt:   formatTime(r.UpdatedAt),
+		CreatedAt:   core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:   core.FormatRFC3339(r.UpdatedAt),
 	}
 }
 
@@ -125,7 +127,7 @@ func validatePassword(pw string, policy passwordPolicyState) string {
 
 func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	var req createUserRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -151,7 +153,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	s.store.users.set(idKey(rec.ID), rec)
 	s.logger.Debug("user created", "id", rec.ID, "name", rec.Name)
-	writeJSON(w, http.StatusCreated, userToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, userToJSON(rec))
 }
 
 func (s *Server) handleReadUser(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +163,7 @@ func (s *Server) handleReadUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, userToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, userToJSON(rec))
 }
 
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -172,7 +174,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req updateUserRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -190,7 +192,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	rec.UpdatedAt = time.Now()
 	s.store.users.set(id, rec)
 	s.logger.Debug("user updated", "id", id)
-	writeJSON(w, http.StatusOK, userToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, userToJSON(rec))
 }
 
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +213,7 @@ func (s *Server) handleRegisterEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req registerEmailRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -236,12 +238,12 @@ func (s *Server) handleUnregisterEmail(w http.ResponseWriter, r *http.Request) {
 
 // handleListUserTrustedDevices returns an empty list of trusted devices.
 func (s *Server) handleListUserTrustedDevices(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, []any{})
+	core.WriteJSON(w, http.StatusOK, []any{})
 }
 
 // handleListUserSecurityKeys returns an empty list of security keys.
 func (s *Server) handleListUserSecurityKeys(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, []any{})
+	core.WriteJSON(w, http.StatusOK, []any{})
 }
 
 // handleDeactivateOTP is a no-op that returns 204.
@@ -281,7 +283,7 @@ func (s *Server) handleUpdateSecurityKey(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusNotFound, "user not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{})
+	core.WriteJSON(w, http.StatusOK, map[string]any{})
 }
 
 // handleDeleteSecurityKey is a no-op that returns 204.

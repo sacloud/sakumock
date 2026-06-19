@@ -137,7 +137,7 @@ func (s *Server) handleCreateQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]any{
+	core.WriteJSON(w, http.StatusCreated, map[string]any{
 		"CommonServiceItem": queueToCSI(q),
 		"Success":           true,
 		"is_ok":             true,
@@ -154,7 +154,7 @@ func (s *Server) handleListQueues(w http.ResponseWriter, r *http.Request) {
 	for i, q := range queues {
 		items[i] = queueToCSI(q)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"From":               0,
 		"Count":              len(items),
 		"Total":              len(items),
@@ -174,7 +174,7 @@ func (s *Server) handleGetQueue(w http.ResponseWriter, r *http.Request) {
 		core.WriteStandardError(w, http.StatusInternalServerError, "internal_server_error", err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"CommonServiceItem": queueToCSI(q),
 		"is_ok":             true,
 	})
@@ -215,7 +215,7 @@ func (s *Server) handleConfigQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"CommonServiceItem": queueToCSI(q),
 		"Success":           true,
 		"is_ok":             true,
@@ -244,7 +244,7 @@ func (s *Server) handleDeleteQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"CommonServiceItem": queueToCSI(q),
 		"Success":           true,
 		"is_ok":             true,
@@ -265,7 +265,7 @@ func (s *Server) handleGetMessageCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"SimpleMQ": map[string]any{
 			"result": "success",
 			"count":  count,
@@ -289,7 +289,7 @@ func (s *Server) handleRotateAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"SimpleMQ": map[string]any{
 			"result": "success",
 			"apikey": newKey,
@@ -310,7 +310,7 @@ func (s *Server) handleClearMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
+	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"SimpleMQ": map[string]any{
 			"result": "success",
 		},

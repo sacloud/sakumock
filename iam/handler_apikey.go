@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type projectAPIKeyJSON struct {
@@ -50,8 +52,8 @@ func apiKeyToJSON(r *ProjectAPIKeyRecord) projectAPIKeyJSON {
 		Description: r.Description,
 		AccessToken: r.AccessToken,
 		IAMRoles:    r.IAMRoles,
-		CreatedAt:   formatTime(r.CreatedAt),
-		UpdatedAt:   formatTime(r.UpdatedAt),
+		CreatedAt:   core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:   core.FormatRFC3339(r.UpdatedAt),
 	}
 	if r.ServerResourceID != "" {
 		j.ServerResourceID = &r.ServerResourceID
@@ -81,7 +83,7 @@ func (s *Server) handleListAPIKeys(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	var req createAPIKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -112,7 +114,7 @@ func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 		projectAPIKeyJSON: apiKeyToJSON(rec),
 		AccessTokenSecret: rec.AccessTokenSecret,
 	}
-	writeJSON(w, http.StatusCreated, resp)
+	core.WriteJSON(w, http.StatusCreated, resp)
 }
 
 func (s *Server) handleReadAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +124,7 @@ func (s *Server) handleReadAPIKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "API key not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, apiKeyToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, apiKeyToJSON(rec))
 }
 
 func (s *Server) handleUpdateAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +135,7 @@ func (s *Server) handleUpdateAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req updateAPIKeyRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -147,7 +149,7 @@ func (s *Server) handleUpdateAPIKey(w http.ResponseWriter, r *http.Request) {
 	rec.UpdatedAt = time.Now()
 	s.store.apiKeys.set(id, rec)
 	s.logger.Debug("API key updated", "id", id)
-	writeJSON(w, http.StatusOK, apiKeyToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, apiKeyToJSON(rec))
 }
 
 func (s *Server) handleDeleteAPIKey(w http.ResponseWriter, r *http.Request) {

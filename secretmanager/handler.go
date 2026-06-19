@@ -1,12 +1,10 @@
 package secretmanager
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // JSON request/response types matching the SecretManager OpenAPI spec.
@@ -102,7 +100,7 @@ func (s *Server) handleListSecrets(w http.ResponseWriter, r *http.Request) {
 		items[i] = secretResponse{Name: sec.Name, LatestVersion: sec.LatestVersion}
 	}
 	s.logger.Debug("secrets listed", "vault_id", vaultID, "count", len(items))
-	writeJSON(w, http.StatusOK, paginatedSecretList{
+	core.WriteJSON(w, http.StatusOK, paginatedSecretList{
 		Count:   len(items),
 		From:    0,
 		Total:   len(items),
@@ -113,7 +111,7 @@ func (s *Server) handleListSecrets(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 	vaultID := r.PathValue("vault_resource_id")
 	var req wrappedCreateSecret
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -127,7 +125,7 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("secret created", "vault_id", vaultID, "name", req.Secret.Name, "version", latestVersion)
-	writeJSON(w, http.StatusCreated, wrappedSecret{
+	core.WriteJSON(w, http.StatusCreated, wrappedSecret{
 		Secret: secretResponse{Name: req.Secret.Name, LatestVersion: latestVersion},
 	})
 }
@@ -135,13 +133,13 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDeleteSecret(w http.ResponseWriter, r *http.Request) {
 	vaultID := r.PathValue("vault_resource_id")
 	var req wrappedDeleteSecret
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if err := s.store.Delete(vaultID, req.Secret.Name); err != nil {
 		s.logger.Error("delete failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+		core.WriteJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	}
 	s.logger.Debug("secret deleted", "vault_id", vaultID, "name", req.Secret.Name)
@@ -151,7 +149,7 @@ func (s *Server) handleDeleteSecret(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	vaultID := r.PathValue("vault_resource_id")
 	var req wrappedUnveilRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -162,11 +160,11 @@ func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	value, actualVersion, err := s.store.Unveil(vaultID, req.Secret.Name, version)
 	if err != nil {
 		s.logger.Error("unveil failed", "vault_id", vaultID, "name", req.Secret.Name, "error", err)
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
+		core.WriteJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	}
 	s.logger.Debug("secret unveiled", "vault_id", vaultID, "name", req.Secret.Name, "version", actualVersion)
-	writeJSON(w, http.StatusOK, wrappedUnveilResponse{
+	core.WriteJSON(w, http.StatusOK, wrappedUnveilResponse{
 		Secret: unveilResponse{
 			Name:    req.Secret.Name,
 			Version: &actualVersion,
@@ -175,26 +173,6 @@ func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
-}
-
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
+	core.WriteJSON(w, status, map[string]string{"error": msg})
 }

@@ -3,6 +3,8 @@ package iam
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type groupJSON struct {
@@ -35,8 +37,8 @@ func groupToJSON(r *GroupRecord) groupJSON {
 		ID:          r.ID,
 		Name:        r.Name,
 		Description: r.Description,
-		CreatedAt:   formatTime(r.CreatedAt),
-		UpdatedAt:   formatTime(r.UpdatedAt),
+		CreatedAt:   core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:   core.FormatRFC3339(r.UpdatedAt),
 	}
 }
 
@@ -51,7 +53,7 @@ func (s *Server) handleListGroups(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateGroup(w http.ResponseWriter, r *http.Request) {
 	var req createGroupRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -69,7 +71,7 @@ func (s *Server) handleCreateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	s.store.groups.set(idKey(rec.ID), rec)
 	s.logger.Debug("group created", "id", rec.ID, "name", rec.Name)
-	writeJSON(w, http.StatusCreated, groupToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, groupToJSON(rec))
 }
 
 func (s *Server) handleReadGroup(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +81,7 @@ func (s *Server) handleReadGroup(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "group not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, groupToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, groupToJSON(rec))
 }
 
 func (s *Server) handleUpdateGroup(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +92,7 @@ func (s *Server) handleUpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req createGroupRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -99,7 +101,7 @@ func (s *Server) handleUpdateGroup(w http.ResponseWriter, r *http.Request) {
 	rec.UpdatedAt = time.Now()
 	s.store.groups.set(id, rec)
 	s.logger.Debug("group updated", "id", id)
-	writeJSON(w, http.StatusOK, groupToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, groupToJSON(rec))
 }
 
 func (s *Server) handleDeleteGroup(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +125,7 @@ func (s *Server) handleReadMemberships(w http.ResponseWriter, r *http.Request) {
 	for _, uid := range rec.Members {
 		items = append(items, groupMembershipItem{ID: uid})
 	}
-	writeJSON(w, http.StatusOK, groupMembershipsResponse{CompatUsers: items})
+	core.WriteJSON(w, http.StatusOK, groupMembershipsResponse{CompatUsers: items})
 }
 
 func (s *Server) handleUpdateMemberships(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +136,7 @@ func (s *Server) handleUpdateMemberships(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	var req updateMembershipsRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -150,5 +152,5 @@ func (s *Server) handleUpdateMemberships(w http.ResponseWriter, r *http.Request)
 	for _, uid := range members {
 		items = append(items, groupMembershipItem{ID: uid})
 	}
-	writeJSON(w, http.StatusOK, groupMembershipsResponse{CompatUsers: items})
+	core.WriteJSON(w, http.StatusOK, groupMembershipsResponse{CompatUsers: items})
 }

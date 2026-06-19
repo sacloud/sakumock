@@ -3,6 +3,8 @@ package iam
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type projectJSON struct {
@@ -41,8 +43,8 @@ func projectToJSON(r *ProjectRecord) projectJSON {
 		Description:    r.Description,
 		Status:         r.Status,
 		ParentFolderID: r.ParentFolderID,
-		CreatedAt:      formatTime(r.CreatedAt),
-		UpdatedAt:      formatTime(r.UpdatedAt),
+		CreatedAt:      core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:      core.FormatRFC3339(r.UpdatedAt),
 	}
 }
 
@@ -57,7 +59,7 @@ func (s *Server) handleListProjects(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateProject(w http.ResponseWriter, r *http.Request) {
 	var req createProjectRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -78,7 +80,7 @@ func (s *Server) handleCreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	s.store.projects.set(idKey(rec.ID), rec)
 	s.logger.Debug("project created", "id", rec.ID, "name", rec.Name)
-	writeJSON(w, http.StatusCreated, projectToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, projectToJSON(rec))
 }
 
 func (s *Server) handleReadProject(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +90,7 @@ func (s *Server) handleReadProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "project not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, projectToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, projectToJSON(rec))
 }
 
 func (s *Server) handleUpdateProject(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +101,7 @@ func (s *Server) handleUpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req updateProjectRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -108,7 +110,7 @@ func (s *Server) handleUpdateProject(w http.ResponseWriter, r *http.Request) {
 	rec.UpdatedAt = time.Now()
 	s.store.projects.set(id, rec)
 	s.logger.Debug("project updated", "id", id)
-	writeJSON(w, http.StatusOK, projectToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, projectToJSON(rec))
 }
 
 func (s *Server) handleDeleteProject(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +128,7 @@ func (s *Server) handleDeleteProject(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleMoveProjects(w http.ResponseWriter, r *http.Request) {
 	var req moveProjectsRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -203,7 +205,7 @@ func (s *Server) handleReadProjectIAMPolicy(w http.ResponseWriter, r *http.Reque
 	if bindings == nil {
 		bindings = []PolicyBinding{}
 	}
-	writeJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
+	core.WriteJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
 }
 
 func (s *Server) handleUpdateProjectIAMPolicy(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +215,7 @@ func (s *Server) handleUpdateProjectIAMPolicy(w http.ResponseWriter, r *http.Req
 		return
 	}
 	var req iamPolicyResponse
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -222,5 +224,5 @@ func (s *Server) handleUpdateProjectIAMPolicy(w http.ResponseWriter, r *http.Req
 	s.store.projectIAMPolicies[id] = bindings
 	s.store.mu.Unlock()
 	s.logger.Debug("project IAM policy updated", "project_id", id)
-	writeJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
+	core.WriteJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
 }

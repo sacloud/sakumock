@@ -2,6 +2,8 @@ package iam
 
 import (
 	"net/http"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type iamRoleJSON struct {
@@ -45,7 +47,7 @@ func (s *Server) handleReadIAMRole(w http.ResponseWriter, r *http.Request) {
 	roleID := r.PathValue("iam_role_id")
 	for _, role := range s.store.iamRoles {
 		if role.ID == roleID {
-			writeJSON(w, http.StatusOK, iamRoleJSON{
+			core.WriteJSON(w, http.StatusOK, iamRoleJSON{
 				ID:                      role.ID,
 				Name:                    role.Name,
 				Description:             role.Description,
@@ -74,7 +76,7 @@ func (s *Server) handleReadIDRole(w http.ResponseWriter, r *http.Request) {
 	roleID := r.PathValue("id_role_id")
 	for _, role := range s.store.idRoles {
 		if role.ID == roleID {
-			writeJSON(w, http.StatusOK, idRoleJSON{
+			core.WriteJSON(w, http.StatusOK, idRoleJSON{
 				ID:          role.ID,
 				Name:        role.Name,
 				Description: role.Description,
@@ -92,12 +94,12 @@ func (s *Server) handleReadOrgIAMPolicy(w http.ResponseWriter, _ *http.Request) 
 	if bindings == nil {
 		bindings = []PolicyBinding{}
 	}
-	writeJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
+	core.WriteJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
 }
 
 func (s *Server) handleUpdateOrgIAMPolicy(w http.ResponseWriter, r *http.Request) {
 	var req iamPolicyResponse
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -106,7 +108,7 @@ func (s *Server) handleUpdateOrgIAMPolicy(w http.ResponseWriter, r *http.Request
 	s.store.orgIAMPolicy = bindings
 	s.store.mu.Unlock()
 	s.logger.Debug("organization IAM policy updated")
-	writeJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
+	core.WriteJSON(w, http.StatusOK, iamPolicyResponse{Bindings: bindingsToJSON(bindings)})
 }
 
 func (s *Server) handleReadOrgIDPolicy(w http.ResponseWriter, _ *http.Request) {
@@ -124,12 +126,12 @@ func (s *Server) handleReadOrgIDPolicy(w http.ResponseWriter, _ *http.Request) {
 			Principals: principals,
 		})
 	}
-	writeJSON(w, http.StatusOK, idPolicyResponse{Bindings: out})
+	core.WriteJSON(w, http.StatusOK, idPolicyResponse{Bindings: out})
 }
 
 func (s *Server) handleUpdateOrgIDPolicy(w http.ResponseWriter, r *http.Request) {
 	var req idPolicyResponse
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -159,5 +161,5 @@ func (s *Server) handleUpdateOrgIDPolicy(w http.ResponseWriter, r *http.Request)
 			Principals: principals,
 		})
 	}
-	writeJSON(w, http.StatusOK, idPolicyResponse{Bindings: out})
+	core.WriteJSON(w, http.StatusOK, idPolicyResponse{Bindings: out})
 }

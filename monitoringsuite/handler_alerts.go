@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // alertProject resolves the project addressed by {project_resource_id}, writing
@@ -126,7 +128,7 @@ func (s *Server) handleCreateAlertRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req alertRuleRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -141,7 +143,7 @@ func (s *Server) handleCreateAlertRule(w http.ResponseWriter, r *http.Request) {
 	}
 	req.applyTo(rule)
 	s.store.alertRules.set(rule.UID, rule)
-	writeJSON(w, http.StatusCreated, alertRuleToJSON(rule))
+	core.WriteJSON(w, http.StatusCreated, alertRuleToJSON(rule))
 }
 
 // alertRuleInProject resolves the rule addressed by {uid}, verifying it belongs
@@ -164,7 +166,7 @@ func (s *Server) handleReadAlertRule(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, alertRuleToJSON(rule))
+	core.WriteJSON(w, http.StatusOK, alertRuleToJSON(rule))
 }
 
 func (s *Server) handleUpdateAlertRule(w http.ResponseWriter, r *http.Request) {
@@ -173,12 +175,12 @@ func (s *Server) handleUpdateAlertRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req alertRuleRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	req.applyTo(rule)
-	writeJSON(w, http.StatusOK, alertRuleToJSON(rule))
+	core.WriteJSON(w, http.StatusOK, alertRuleToJSON(rule))
 }
 
 func (s *Server) handleDeleteAlertRule(w http.ResponseWriter, r *http.Request) {
@@ -227,8 +229,8 @@ func (s *Server) logMeasureRuleToJSON(rule *LogMeasureRule) (logMeasureRuleJSON,
 		LogStorage:     s.logStorageToJSON(ls, false),
 		MetricsStorage: s.metricsStorageToJSON(ms, false),
 		Rule:           rule.Rule,
-		CreatedAt:      formatTime(rule.CreatedAt),
-		UpdatedAt:      formatTime(rule.UpdatedAt),
+		CreatedAt:      core.FormatRFC3339Nano(rule.CreatedAt),
+		UpdatedAt:      core.FormatRFC3339Nano(rule.UpdatedAt),
 	}, true
 }
 
@@ -263,7 +265,7 @@ func (s *Server) handleCreateLogMeasureRule(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	var req logMeasureRuleRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -294,7 +296,7 @@ func (s *Server) handleCreateLogMeasureRule(w http.ResponseWriter, r *http.Reque
 	}
 	s.store.logMeasureRules.set(rule.UID, rule)
 	j, _ := s.logMeasureRuleToJSON(rule)
-	writeJSON(w, http.StatusCreated, j)
+	core.WriteJSON(w, http.StatusCreated, j)
 }
 
 // logMeasureRuleInProject resolves the rule addressed by {uid}, verifying it
@@ -318,7 +320,7 @@ func (s *Server) handleReadLogMeasureRule(w http.ResponseWriter, r *http.Request
 		return
 	}
 	j, _ := s.logMeasureRuleToJSON(rule)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleUpdateLogMeasureRule(w http.ResponseWriter, r *http.Request) {
@@ -327,7 +329,7 @@ func (s *Server) handleUpdateLogMeasureRule(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	var req logMeasureRuleRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -348,7 +350,7 @@ func (s *Server) handleUpdateLogMeasureRule(w http.ResponseWriter, r *http.Reque
 	}
 	rule.UpdatedAt = time.Now()
 	j, _ := s.logMeasureRuleToJSON(rule)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleDeleteLogMeasureRule(w http.ResponseWriter, r *http.Request) {
@@ -408,7 +410,7 @@ func (s *Server) handleCreateNotificationTarget(w http.ResponseWriter, r *http.R
 		return
 	}
 	var req notificationTargetRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -424,7 +426,7 @@ func (s *Server) handleCreateNotificationTarget(w http.ResponseWriter, r *http.R
 		Description: derefString(req.Description),
 	}
 	s.store.notificationTargets.set(t.UID, t)
-	writeJSON(w, http.StatusCreated, notificationTargetToJSON(t))
+	core.WriteJSON(w, http.StatusCreated, notificationTargetToJSON(t))
 }
 
 // notificationTargetInProject resolves the target addressed by {uid}, verifying
@@ -447,7 +449,7 @@ func (s *Server) handleReadNotificationTarget(w http.ResponseWriter, r *http.Req
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, notificationTargetToJSON(t))
+	core.WriteJSON(w, http.StatusOK, notificationTargetToJSON(t))
 }
 
 func (s *Server) handleUpdateNotificationTarget(w http.ResponseWriter, r *http.Request) {
@@ -456,7 +458,7 @@ func (s *Server) handleUpdateNotificationTarget(w http.ResponseWriter, r *http.R
 		return
 	}
 	var req notificationTargetRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -469,7 +471,7 @@ func (s *Server) handleUpdateNotificationTarget(w http.ResponseWriter, r *http.R
 	if req.Description != nil {
 		t.Description = *req.Description
 	}
-	writeJSON(w, http.StatusOK, notificationTargetToJSON(t))
+	core.WriteJSON(w, http.StatusOK, notificationTargetToJSON(t))
 }
 
 func (s *Server) handleDeleteNotificationTarget(w http.ResponseWriter, r *http.Request) {
@@ -541,7 +543,7 @@ func (s *Server) handleCreateNotificationRouting(w http.ResponseWriter, r *http.
 		return
 	}
 	var req notificationRoutingRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -569,7 +571,7 @@ func (s *Server) handleCreateNotificationRouting(w http.ResponseWriter, r *http.
 	}
 	s.store.notificationRoutings.set(rt.UID, rt)
 	j, _ := s.notificationRoutingToJSON(rt)
-	writeJSON(w, http.StatusCreated, j)
+	core.WriteJSON(w, http.StatusCreated, j)
 }
 
 // notificationRoutingInProject resolves the routing addressed by {uid}, verifying
@@ -593,7 +595,7 @@ func (s *Server) handleReadNotificationRouting(w http.ResponseWriter, r *http.Re
 		return
 	}
 	j, _ := s.notificationRoutingToJSON(rt)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleUpdateNotificationRouting(w http.ResponseWriter, r *http.Request) {
@@ -602,7 +604,7 @@ func (s *Server) handleUpdateNotificationRouting(w http.ResponseWriter, r *http.
 		return
 	}
 	var req notificationRoutingRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -620,7 +622,7 @@ func (s *Server) handleUpdateNotificationRouting(w http.ResponseWriter, r *http.
 		rt.ResendIntervalMinutes = *req.ResendIntervalMinutes
 	}
 	j, _ := s.notificationRoutingToJSON(rt)
-	writeJSON(w, http.StatusOK, j)
+	core.WriteJSON(w, http.StatusOK, j)
 }
 
 func (s *Server) handleDeleteNotificationRouting(w http.ResponseWriter, r *http.Request) {
@@ -643,7 +645,7 @@ func (s *Server) handleReorderNotificationRoutings(w http.ResponseWriter, r *htt
 		return
 	}
 	var items []reorderItem
-	if err := readJSON(r, &items); err != nil {
+	if err := core.ReadJSON(r, &items); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}

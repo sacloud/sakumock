@@ -223,7 +223,7 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("message sent", "queue", queueName, "message_id", msg.ID)
-	writeJSON(w, http.StatusOK, sendMessageResponse{
+	core.WriteJSON(w, http.StatusOK, sendMessageResponse{
 		Result: "success",
 		Message: newMessageResponse{
 			ID:        msg.ID,
@@ -265,7 +265,7 @@ func (s *Server) handleReceive(w http.ResponseWriter, r *http.Request) {
 			VisibilityTimeoutAt: msg.VisibilityTimeoutAt.UnixMilli(),
 		})
 	}
-	writeJSON(w, http.StatusOK, receiveMessagesResponse{
+	core.WriteJSON(w, http.StatusOK, receiveMessagesResponse{
 		Result:   "success",
 		Messages: messages,
 	})
@@ -291,7 +291,7 @@ func (s *Server) handleExtendTimeout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("timeout extended", "queue", queueName, "message_id", messageID)
-	writeJSON(w, http.StatusOK, singleMessageResponse{
+	core.WriteJSON(w, http.StatusOK, singleMessageResponse{
 		Result: "success",
 		Message: messageResponse{
 			ID:                  msg.ID,
@@ -322,19 +322,13 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("message deleted", "queue", queueName, "message_id", messageID)
-	writeJSON(w, http.StatusOK, successResponse{
+	core.WriteJSON(w, http.StatusOK, successResponse{
 		Result: "success",
 	})
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
-}
-
 func writeError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, errorResponse{
+	core.WriteJSON(w, status, errorResponse{
 		Code:    status,
 		Message: msg,
 	})

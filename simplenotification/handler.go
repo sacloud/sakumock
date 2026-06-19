@@ -1,10 +1,7 @@
 package simplenotification
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -85,7 +82,7 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req sendMessageRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -106,7 +103,7 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		go s.runExec(rec)
 	}
 	s.logger.Debug("notification message accepted", "id", id, "message_id", rec.ID)
-	writeJSON(w, http.StatusAccepted, sendMessageResponse{IsOk: true})
+	core.WriteJSON(w, http.StatusAccepted, sendMessageResponse{IsOk: true})
 }
 
 // runExec spawns the configured shell command for an accepted message.
@@ -144,32 +141,12 @@ func (s *Server) handleInspectMessages(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: rec.CreatedAt.Format(time.RFC3339Nano),
 		}
 	}
-	writeJSON(w, http.StatusOK, inspectMessageList{Messages: out})
+	core.WriteJSON(w, http.StatusOK, inspectMessageList{Messages: out})
 }
 
 func (s *Server) handleResetMessages(w http.ResponseWriter, r *http.Request) {
 	s.store.Reset()
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {

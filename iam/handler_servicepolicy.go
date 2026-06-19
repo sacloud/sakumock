@@ -3,6 +3,8 @@ package iam
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type servicePolicyStatusJSON struct {
@@ -22,19 +24,19 @@ func (s *Server) handleDisableServicePolicy(w http.ResponseWriter, _ *http.Reque
 }
 
 func (s *Server) handleServicePolicyStatus(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, servicePolicyStatusJSON{IsActive: false})
+	core.WriteJSON(w, http.StatusOK, servicePolicyStatusJSON{IsActive: false})
 }
 
 func (s *Server) handleReadOrgServicePolicy(w http.ResponseWriter, _ *http.Request) {
 	s.store.mu.RLock()
 	data := s.store.servicePolicyRules
 	s.store.mu.RUnlock()
-	writeJSON(w, http.StatusOK, servicePolicyRulesResponse{Rules: data})
+	core.WriteJSON(w, http.StatusOK, servicePolicyRulesResponse{Rules: data})
 }
 
 func (s *Server) handleUpdateOrgServicePolicy(w http.ResponseWriter, r *http.Request) {
 	var req servicePolicyRulesResponse
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -42,9 +44,9 @@ func (s *Server) handleUpdateOrgServicePolicy(w http.ResponseWriter, r *http.Req
 	s.store.servicePolicyRules = req.Rules
 	s.store.mu.Unlock()
 	s.logger.Debug("service policy rules updated")
-	writeJSON(w, http.StatusOK, req)
+	core.WriteJSON(w, http.StatusOK, req)
 }
 
 func (s *Server) handleServicePolicyRuleTemplates(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, []any{})
+	core.WriteJSON(w, http.StatusOK, []any{})
 }

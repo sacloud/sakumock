@@ -3,6 +3,8 @@ package iam
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 type organizationJSON struct {
@@ -31,12 +33,12 @@ func (s *Server) handleReadOrganization(w http.ResponseWriter, _ *http.Request) 
 	s.store.mu.RLock()
 	org := s.store.organization
 	s.store.mu.RUnlock()
-	writeJSON(w, http.StatusOK, organizationJSON{ID: org.ID, Name: org.Name})
+	core.WriteJSON(w, http.StatusOK, organizationJSON{ID: org.ID, Name: org.Name})
 }
 
 func (s *Server) handleUpdateOrganization(w http.ResponseWriter, r *http.Request) {
 	var req updateOrgRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -45,14 +47,14 @@ func (s *Server) handleUpdateOrganization(w http.ResponseWriter, r *http.Request
 	org := s.store.organization
 	s.store.mu.Unlock()
 	s.logger.Debug("organization updated", "name", req.Name)
-	writeJSON(w, http.StatusOK, organizationJSON{ID: org.ID, Name: org.Name})
+	core.WriteJSON(w, http.StatusOK, organizationJSON{ID: org.ID, Name: org.Name})
 }
 
 func (s *Server) handleReadPasswordPolicy(w http.ResponseWriter, _ *http.Request) {
 	s.store.mu.RLock()
 	pp := s.store.passwordPolicy
 	s.store.mu.RUnlock()
-	writeJSON(w, http.StatusOK, passwordPolicyJSON{
+	core.WriteJSON(w, http.StatusOK, passwordPolicyJSON{
 		MinLength:        pp.MinLength,
 		RequireUppercase: pp.RequireUppercase,
 		RequireLowercase: pp.RequireLowercase,
@@ -62,7 +64,7 @@ func (s *Server) handleReadPasswordPolicy(w http.ResponseWriter, _ *http.Request
 
 func (s *Server) handleUpdatePasswordPolicy(w http.ResponseWriter, r *http.Request) {
 	var req passwordPolicyJSON
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -75,7 +77,7 @@ func (s *Server) handleUpdatePasswordPolicy(w http.ResponseWriter, r *http.Reque
 	}
 	s.store.mu.Unlock()
 	s.logger.Debug("password policy updated")
-	writeJSON(w, http.StatusOK, req)
+	core.WriteJSON(w, http.StatusOK, req)
 }
 
 func (s *Server) handleReadAuthConditions(w http.ResponseWriter, _ *http.Request) {
@@ -89,7 +91,7 @@ func (s *Server) handleReadAuthConditions(w http.ResponseWriter, _ *http.Request
 
 func (s *Server) handleUpdateAuthConditions(w http.ResponseWriter, r *http.Request) {
 	var raw json.RawMessage
-	if err := readJSON(r, &raw); err != nil {
+	if err := core.ReadJSON(r, &raw); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -103,7 +105,7 @@ func (s *Server) handleUpdateAuthConditions(w http.ResponseWriter, r *http.Reque
 }
 
 func (s *Server) handleAuthContext(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, authContextJSON{
+	core.WriteJSON(w, http.StatusOK, authContextJSON{
 		ResourceID:         1,
 		AuthType:           "apikey",
 		LimitedToProjectID: nil,

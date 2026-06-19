@@ -3,6 +3,8 @@ package secretmanager
 import (
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 // JSON request/response types for the vault control plane, matching the
@@ -63,7 +65,7 @@ func (s *Server) handleListVaults(w http.ResponseWriter, r *http.Request) {
 	for i, v := range vaults {
 		items[i] = toVaultJSON(v)
 	}
-	writeJSON(w, http.StatusOK, paginatedVaultList{
+	core.WriteJSON(w, http.StatusOK, paginatedVaultList{
 		Count:  len(items),
 		From:   0,
 		Total:  len(items),
@@ -73,7 +75,7 @@ func (s *Server) handleListVaults(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCreateVault(w http.ResponseWriter, r *http.Request) {
 	var req wrappedVaultRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -87,7 +89,7 @@ func (s *Server) handleCreateVault(w http.ResponseWriter, r *http.Request) {
 	}
 	v := s.store.CreateVault(req.Vault.Name, req.Vault.KmsKeyID, req.Vault.Description, req.Vault.Tags)
 	s.logger.Debug("vault created", "vault_id", v.ID, "name", v.Name)
-	writeJSON(w, http.StatusCreated, wrappedVault{Vault: toVaultJSON(v)})
+	core.WriteJSON(w, http.StatusCreated, wrappedVault{Vault: toVaultJSON(v)})
 }
 
 func (s *Server) handleGetVault(w http.ResponseWriter, r *http.Request) {
@@ -97,13 +99,13 @@ func (s *Server) handleGetVault(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "vault not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v)})
+	core.WriteJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v)})
 }
 
 func (s *Server) handleUpdateVault(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("vault_resource_id")
 	var req wrappedVaultRequest
-	if err := readJSON(r, &req); err != nil {
+	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -112,7 +114,7 @@ func (s *Server) handleUpdateVault(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "vault not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v)})
+	core.WriteJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v)})
 }
 
 func (s *Server) handleDeleteVault(w http.ResponseWriter, r *http.Request) {

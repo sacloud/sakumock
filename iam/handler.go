@@ -1,12 +1,10 @@
 package iam
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 func (s *Server) buildMux() *http.ServeMux {
@@ -40,29 +38,6 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-func readJSON(r *http.Request, v any) error {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read request body: %w", err)
-	}
-	defer r.Body.Close()
-	if len(body) == 0 {
-		return nil
-	}
-	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to parse JSON: %w", err)
-	}
-	return nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to write response", "error", err)
-	}
-}
-
 type problemDetail struct {
 	Type   string `json:"type"`
 	Status int    `json:"status"`
@@ -71,7 +46,7 @@ type problemDetail struct {
 }
 
 func writeError(w http.ResponseWriter, status int, detail string) {
-	writeJSON(w, status, problemDetail{
+	core.WriteJSON(w, status, problemDetail{
 		Type:   "about:blank",
 		Status: status,
 		Title:  http.StatusText(status),
@@ -90,12 +65,10 @@ func writePage[T any](w http.ResponseWriter, items []T) {
 	if items == nil {
 		items = []T{}
 	}
-	writeJSON(w, http.StatusOK, paginatedList[T]{
+	core.WriteJSON(w, http.StatusOK, paginatedList[T]{
 		Items:    items,
 		Count:    len(items),
 		Next:     nil,
 		Previous: nil,
 	})
 }
-
-func formatTime(t time.Time) string { return t.Format(time.RFC3339) }

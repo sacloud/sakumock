@@ -1,0 +1,2516 @@
+openapi: 3.0.0
+info:
+  version: 1.3.0
+  title: AppRun共用型 APIドキュメント
+  contact:
+    name: SAKURA internet Inc.
+  license:
+    name: Copyright(C) SAKURA internet Inc. all rights reserved.
+  description: "---\n「AppRun共用型」が提供するAPIの利用方法とサンプルを公開しております。\n\n# 基本的な使い方\n\n## APIキーの発行\n\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。  \nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n\n<div class=\"warning\">\n<b>操作マニュアル</b><br />\n<ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## 入力パラメータ\n\nAPIの入力には送信先URLに対して、いくつかのヘッダーとAPIキーを送信します。\n\n* 認証方式はHTTP Basic認証です。APIキーのアクセストークンをユーザーID、アクセストークンシークレットをパスワードとして指定します。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     'https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications'\n```\n\n## 出力結果と応答コード（HTTPステータスコード）\n\nAPIからの結果は、「応答コード（HTTPステータスコード）」と、「JSON形式(UTF-8)の結果」として出力されます。\n\n応答コードは、リクエストが成功したのか、失敗したのか大まかな情報を判断することができるもので、例えば失敗したときには、なぜこのような結果になったのかなど、具体的な情報は応答コードと主に返された本文を見ることで把握することができます。\n\n| 結果                                | 応答コード/status   |\n|-------------------------------------|---------------------|\n| 成功（要求を受け付けた）            | 2xx                 |\n| 失敗（要求が受け付けられなかった）  | 4xx, 5xx            |\n\n```\n# 出力結果サンプル（レスポンスヘッダー）\nHTTP/1.1 200 OK\nServer: nginx\nDate: Tue, 16 Nov 2021 12:39:48 GMT\nContent-Type: application/json; charset=UTF-8\nContent-Length: 443\nConnection: keep-alive\nStatus: 200 OK\nPragma: no-cache\nCache-Control: no-cache\nX-Sakura-Proxy-Microtime: 66245\nX-Sakura-Proxy-Decode-Microtime: 62\nX-Sakura-Content-Length: 443\nX-Sakura-Serial: 86ab6c743f72aa5ea6f17e254fd5f803\nX-Content-Type-Options: nosniff\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: DENY\nX-Sakura-Encode-Microtime: 260\nVary: Accept-Encoding\n```\n\n```\n# 出力結果サンプル（レスポンスボディー）\n{\n  \"error\": {\n    \"code\": 401,\n    \"message\": \"Login Required\",\n    \"errors\": [\n      {\n        \"domain\": \"global\",\n        \"reason\": \"required\",\n        \"message\": \"Login Required\",\n        \"location_type\": \"header\",\n        \"location\": \"Authorization\"\n      }\n    ]\n  }\n}\n```\n\n# 利用例\n\n## 1.ユーザーの作成\n\nAppRun共用型の利用を開始するには**ユーザー**を作成します。\n\nユーザーとは、AppRun共用型を利用するための独立したユーザーであり、ユーザー作成および削除による料金の発生はございません。  \nなお、すでにユーザーを作成済みの場合は、再度ユーザーの作成は不要です。\n\nユーザーを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/user\n```\n\nユーザーの作成が完了すると、\n\n* アプリケーションの作成、更新、削除\n* バージョンの確認、削除\n* トラフィック分散の確認、変更\n\nなどの操作が可能になります。\n\n## 2.アプリケーションの作成、取得、更新、削除\n\nユーザーを作成後、**アプリケーション**の作成、更新、削除が可能になります。\n\nアプリケーションを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"name\": \"Application\",\n  \"timeout_seconds\": 60,\n  \"port\": 8080,\n  \"min_scale\": 0,\n  \"max_scale\": 1,\n  \"scale_target_concurrency\": 100,\n  \"components\": [\n    {\n      \"name\": \"Component01\",\n      \"max_cpu\": \"0.5\",\n      \"max_memory\": \"1Gi\",\n      \"deploy_source\": {\n        \"container_registry\": {\n          \"image\": \"my-app.sakuracr.jp/my-app:latest\"\n        }\n      },\n      \"env\": [\n        {\n          \"key\": \"TARGET\",\n          \"value\": \"World\"\n        }\n      ],\n      \"probe\": {\n        \"http_get\": {\n          \"path\": \"/\",\n          \"port\": 8080,\n          \"headers\": [\n            {\n              \"name\": \"Custom-Header\",\n              \"value\": \"Awesome\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications\n```\n\n上記で作成したアプリケーションを取得するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n上記で作成したアプリケーションを更新するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"components\": [\n    {\n      \"name\": \"Component01 updated\",\n      \"max_cpu\": \"0.5\",\n      \"max_memory\": \"1Gi\",\n      \"deploy_source\": {\n        \"container_registry\": {\n          \"image\": \"my-app.sakuracr.jp/my-app-v2:latest\"\n        }\n      }\n    }\n  ],\n  \"all_traffic_available\": true\n}\n\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PATCH \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n上記で作成したアプリケーションを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n## 3.バージョンの取得、削除\n\nアプリケーションを作成、更新した際、その設定情報をバージョンとして保存します。\n\nバージョンを取得するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/versions/{version_id}\n```\n\n上記で作成したバージョンを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/versions/{version_id}\n```\n\n## 4.トラフィック分散の確認、変更\n\nアプリケーションは指定のバージョンへトラフィックを分散します。\n\nトラフィック分散を確認するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/traffics\n```\n\nトラフィック分散を変更するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n[\n  {\n    \"is_latest_version\": true,\n    \"percent\": 50\n  },\n  {\n    \"version_name\": \"Application-861850d6-8240-7c31-9b69-80ea4466918d-1726726814\",\n    \"percent\": 50\n  }\n]\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PUT \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/traffics\n```\n\n## 5.パケットフィルタの確認、変更\n\nアプリケーションに対してパケットフィルタを指定できます。\n\nパケットフィルタを確認するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/packet_filter\n```\n\nパケットフィルタを変更するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"is_enabled\": true,\n  \"settings\": [\n    {\n      \"from_ip\": \"198.51.100.2\",\n      \"from_ip_prefix_length\": 24\n    }\n  ]\n}\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PATCH \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/packet_filter\n```\n----"
+servers:
+  - url: https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api
+paths:
+  /user:
+    get:
+      operationId: getUser
+      tags:
+        - ユーザー
+      summary: ユーザー情報を取得します。
+      description: ログイン中のユーザー情報を取得します。
+      responses:
+        '200':
+          description: ユーザー情報の取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.getUser'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: AppRun共用型にユーザーが存在しません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    post:
+      operationId: postUser
+      tags:
+        - ユーザー
+      summary: ユーザーを作成します。
+      description: AppRun共用型にユーザーを作成します。
+      responses:
+        '201':
+          description: ユーザーの作成に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.postUser'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '409':
+          description: AppRun共用型にユーザーがすでに存在します。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications:
+    get:
+      operationId: listApplications
+      tags:
+        - アプリケーション
+      summary: アプリケーション一覧を取得します。
+      description: AppRun共用型のアプリケーション一覧を取得します。
+      parameters:
+        - in: query
+          name: page_num
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: 表示したいページ番号
+          required: false
+          example: 20
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: 表示したい1ページあたりのサイズ
+          required: false
+          example: 10
+        - in: query
+          name: sort_field
+          schema:
+            type: string
+            default: created_at
+          description: ソートしたいフィールド名
+          required: false
+          example: created_at
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            default: desc
+            enum:
+              - asc
+              - desc
+          description: ソート順（昇順、降順）
+          required: false
+          example: asc
+      responses:
+        '200':
+          description: アプリケーション一覧の取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.listApplications'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    post:
+      operationId: postApplication
+      tags:
+        - アプリケーション
+      summary: アプリケーションを作成します。
+      description: AppRun共用型にアプリケーションを作成します。
+      requestBody:
+        description: 作成するアプリケーションの情報を入力します。
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/postApplicationBody'
+      responses:
+        '201':
+          description: アプリケーションの作成に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.postApplication'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '409':
+          description: アプリケーションが重複し作成が失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}:
+    get:
+      operationId: getApplication
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      tags:
+        - アプリケーション
+      summary: アプリケーション詳細を取得します。
+      description: AppRun共用型のアプリケーション詳細を取得します。
+      responses:
+        '200':
+          description: アプリケーション詳細の取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.getApplication'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    patch:
+      operationId: patchApplication
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      tags:
+        - アプリケーション
+      summary: アプリケーションを部分的に変更します。
+      description: AppRun共用型のアプリケーションを部分的に変更します。
+      requestBody:
+        description: 部分的に変更するアプリケーションの情報を入力します。
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/patchApplicationBody'
+      responses:
+        '200':
+          description: アプリケーションの変更に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.patchApplication'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '409':
+          description: アプリケーションが重複し作成が失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    delete:
+      operationId: deleteApplication
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      tags:
+        - アプリケーション
+      summary: アプリケーションを削除します。
+      description: AppRun共用型のアプリケーションを削除します。
+      responses:
+        '204':
+          description: アプリケーションの削除に成功しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}/status:
+    get:
+      operationId: getApplicationStatus
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      tags:
+        - アプリケーション
+      summary: アプリケーションステータスを取得します。
+      description: AppRun共用型のアプリケーションステータスを取得します。
+      responses:
+        '200':
+          description: アプリケーションステータスの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.getApplicationStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}/traffics:
+    get:
+      operationId: listApplicationTraffics
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      tags:
+        - トラフィック
+      summary: アプリケーショントラフィック分散を取得します。
+      description: AppRun共用型のアプリケーショントラフィック分散を取得します。
+      responses:
+        '200':
+          description: アプリケーショントラフィック分散の取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.listTraffics'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    put:
+      operationId: putApplicationTraffic
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      tags:
+        - トラフィック
+      summary: アプリケーショントラフィック分散を変更します。
+      description: AppRun共用型のアプリケーショントラフィック分散を変更します。
+      requestBody:
+        description: |
+          トラフィック分散の割合を入力します。
+          version_nameまたはis_latest_versionのどちらかを指定して何％の割合でトラフィックを転送するかを入力します。
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/putTrafficsBody'
+      responses:
+        '200':
+          description: アプリケーショントラフィック分散の変更に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.putTraffics'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}/versions:
+    get:
+      operationId: listApplicationVersions
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: page_num
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: 表示したいページ番号
+          required: false
+          example: 20
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: 表示したい1ページあたりのサイズ
+          required: false
+          example: 10
+        - in: query
+          name: sort_field
+          schema:
+            type: string
+            default: created_at
+          description: ソートしたいフィールド名
+          required: false
+          example: created_at
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            default: desc
+            enum:
+              - asc
+              - desc
+          description: ソート順（昇順、降順）
+          required: false
+          example: asc
+      tags:
+        - バージョン
+      summary: アプリケーションバージョン一覧を取得します。
+      description: AppRun共用型のアプリケーションバージョン一覧を取得します。
+      responses:
+        '200':
+          description: アプリケーションバージョン一覧の取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.listVersions'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションバージョンが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}/versions/{version_id}:
+    get:
+      operationId: getApplicationVersion
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: version_id
+          schema:
+            type: string
+          required: true
+      tags:
+        - バージョン
+      summary: アプリケーションバージョン詳細を取得します。
+      description: AppRun共用型のアプリケーションバージョン詳細を取得します。
+      responses:
+        '200':
+          description: アプリケーションバージョン詳細の取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.getVersion'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションバージョンが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    delete:
+      operationId: deleteApplicationVersion
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: version_id
+          schema:
+            type: string
+          required: true
+      tags:
+        - バージョン
+      summary: アプリケーションバージョンを削除します。
+      description: AppRun共用型のアプリケーションバージョンを削除します。
+      responses:
+        '204':
+          description: アプリケーションバージョンの削除に成功しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションバージョンが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}/versions/{version_id}/status:
+    get:
+      operationId: getApplicationVersionStatus
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: version_id
+          schema:
+            type: string
+          required: true
+      tags:
+        - バージョン
+      summary: アプリケーションバージョンステータスを取得します。
+      description: AppRun共用型のアプリケーションバージョンステータスを取得します。
+      responses:
+        '200':
+          description: アプリケーションバージョンステータスの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.getVersionStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションバージョンが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+  /applications/{id}/packet_filter:
+    get:
+      operationId: getPacketFilter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - パケットフィルタ
+      summary: パケットフィルタを取得します。
+      description: AppRun共用型のパケットフィルタを取得します。
+      responses:
+        '200':
+          description: パケットフィルタの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.getPacketFilter'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+    patch:
+      operationId: patchPacketFilter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      tags:
+        - パケットフィルタ
+      summary: パケットフィルタを部分的に変更します。
+      description: AppRun共用型のパケットフィルタを部分的に変更します。
+      requestBody:
+        required: true
+        description: 部分的に変更するパケットフィルタの情報を入力します。
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/patchPacketFilter'
+      responses:
+        '200':
+          description: パケットフィルタの変更に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/handler.patchPacketFilter'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '401':
+          description: AppRun共用型の認証に失敗しました。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '403':
+          description: AppRun共用型に対する権限がありません。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '404':
+          description: アプリケーションが見つかりませんでした。
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/model.defaultError'
+                  - $ref: '#/components/schemas/model.cloudctrlError'
+components:
+  schemas:
+    handler.getUser:
+      type: object
+      required:
+        - limit
+      properties:
+        limit:
+          type: object
+          required:
+            - application_count
+          properties:
+            application_count:
+              description: プロジェクトで作成できるアプリケーション数の上限
+              type: integer
+              example: 5
+    handler.postUser:
+      type: object
+      required:
+        - limit
+      properties:
+        limit:
+          type: object
+          required:
+            - application_count
+          properties:
+            application_count:
+              description: プロジェクトで作成できるアプリケーション数の上限
+              type: integer
+              example: 5
+    handler.listApplications:
+      type: object
+      required:
+        - meta
+        - data
+      properties:
+        meta:
+          type: object
+          required:
+            - page_num
+            - page_size
+            - object_total
+            - sort_field
+            - sort_order
+          properties:
+            page_num:
+              type: integer
+              example: 1
+            page_size:
+              type: integer
+              example: 100
+            object_total:
+              type: integer
+              example: 1000
+            sort_field:
+              type: string
+              example: created_at
+            sort_order:
+              type: string
+              example: asc
+              enum:
+                - asc
+                - desc
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - name
+              - status
+              - public_url
+              - created_at
+            properties:
+              id:
+                description: アプリケーションID
+                type: string
+                example: u8FXIJ2LVM3wXVyzOEi
+              name:
+                description: アプリケーション名
+                type: string
+                example: アプリケーション1
+              status:
+                description: アプリケーションステータス
+                type: string
+                example: Healthy
+                enum:
+                  - Healthy
+                  - UnHealthy
+                  - Deploying
+              public_url:
+                description: 公開URL
+                type: string
+                example: https://fq1I4vpQkN1YiGp.apprun.sakura.ne.jp
+              created_at:
+                description: 作成日時
+                type: string
+                format: date-time
+    handler.postApplication:
+      type: object
+      required:
+        - id
+        - name
+        - timeout_seconds
+        - port
+        - min_scale
+        - max_scale
+        - components
+        - status
+        - public_url
+        - resource_id
+        - created_at
+      properties:
+        id:
+          description: アプリケーションID
+          type: string
+          example: u8FXIJ2LVM3wXVyzOEi
+        name:
+          description: アプリケーション名
+          type: string
+          example: アプリケーション1
+        timeout_seconds:
+          description: アプリケーションの公開URLにアクセスして、インスタンスが起動してからレスポンスが返るまでの時間制限
+          type: integer
+          example: 60
+          default: 60
+          minimum: 1
+          maximum: 300
+        port:
+          description: アプリケーションがリクエストを待ち受けるポート番号
+          type: integer
+          example: 8080
+          minimum: 1
+          maximum: 65535
+        min_scale:
+          description: アプリケーション全体の最小スケール数
+          type: integer
+          example: 0
+          default: 0
+          minimum: 0
+          maximum: 10
+        max_scale:
+          description: アプリケーション全体の最大スケール数
+          type: integer
+          example: 2
+          default: 10
+          minimum: 1
+          maximum: 10
+        scale_target_concurrency:
+          description: アプリケーションのスケールの閾値の目安となる同時リクエスト数
+          type: integer
+          example: 100
+          default: 100
+          minimum: 50
+          maximum: 200
+        components:
+          description: アプリケーションのコンポーネント情報
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - max_cpu
+              - max_memory
+              - deploy_source
+            properties:
+              name:
+                description: コンポーネント名
+                type: string
+                example: コンポーネント1
+              max_cpu:
+                description: コンポーネントの最大vCPU数
+                type: string
+                example: '0.5'
+              max_memory:
+                description: コンポーネントの最大メモリ
+                type: string
+                example: 1Gi
+              deploy_source:
+                description: コンポーネントを構成するソース
+                type: object
+                properties:
+                  container_registry:
+                    description: コンテナレジストリ
+                    type: object
+                    required:
+                      - image
+                    properties:
+                      image:
+                        description: コンテナイメージ名
+                        type: string
+                        example: apprun-example.sakuracr.jp/helloworld:latest
+                      server:
+                        description: コンテナレジストリの認証に使用するサーバー名
+                        type: string
+                        example: apprun-example.sakuracr.jp
+                      username:
+                        description: コンテナレジストリの認証に使用するユーザー名
+                        type: string
+                        example: apprun
+              env:
+                description: コンポーネントに渡す環境変数
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      description: 環境変数名
+                      type: string
+                      example: MY_ENV
+                    value:
+                      description: 環境変数の値
+                      type: string
+                      example: my_value
+              probe:
+                description: コンポーネントのプローブ設定
+                type: object
+                nullable: true
+                properties:
+                  http_get:
+                    description: HTTP Getプローブタイプ
+                    type: object
+                    required:
+                      - path
+                      - port
+                    nullable: true
+                    properties:
+                      path:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のパス
+                        type: string
+                        example: /healthz
+                      port:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のポート番号
+                        type: integer
+                        example: 8080
+                        minimum: 1
+                        maximum: 65535
+                      headers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: ヘッダーフィールド名
+                              type: string
+                              example: Custom-Header
+                            value:
+                              description: ヘッダーフィールド値
+                              type: string
+                              example: Awesome
+        status:
+          description: アプリケーションステータス
+          type: string
+          example: Healthy
+          enum:
+            - Healthy
+            - UnHealthy
+            - Deploying
+        public_url:
+          description: 公開URL
+          type: string
+          example: https://fq1I4vpQkN1YiGp.apprun.sakura.ne.jp
+        resource_id:
+          description: リソースID
+          type: string
+          example: "100000000000"
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+    handler.getApplication:
+      type: object
+      required:
+        - id
+        - name
+        - timeout_seconds
+        - port
+        - min_scale
+        - max_scale
+        - components
+        - status
+        - public_url
+        - resource_id
+        - created_at
+      properties:
+        id:
+          description: アプリケーションID
+          type: string
+          example: u8FXIJ2LVM3wXVyzOEi
+        name:
+          description: アプリケーション名
+          type: string
+          example: アプリケーション1
+        timeout_seconds:
+          description: アプリケーションの公開URLにアクセスして、インスタンスが起動してからレスポンスが返るまでの時間制限
+          type: integer
+          example: 60
+          default: 60
+          minimum: 1
+          maximum: 300
+        port:
+          description: アプリケーションがリクエストを待ち受けるポート番号
+          type: integer
+          example: 8080
+          minimum: 1
+          maximum: 65535
+        min_scale:
+          description: アプリケーション全体の最小スケール数
+          type: integer
+          example: 0
+          default: 0
+          minimum: 0
+          maximum: 10
+        max_scale:
+          description: アプリケーション全体の最大スケール数
+          type: integer
+          example: 2
+          default: 10
+          minimum: 1
+          maximum: 10
+        scale_target_concurrency:
+          description: アプリケーションのスケールの閾値の目安となる同時リクエスト数
+          type: integer
+          example: 100
+          default: 100
+          minimum: 50
+          maximum: 200
+        components:
+          description: アプリケーションのコンポーネント情報
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - max_cpu
+              - max_memory
+              - deploy_source
+            properties:
+              name:
+                description: コンポーネント名
+                type: string
+                example: コンポーネント1
+              max_cpu:
+                description: コンポーネントの最大vCPU数
+                type: string
+                example: '0.5'
+              max_memory:
+                description: コンポーネントの最大メモリ
+                type: string
+                example: 1Gi
+              deploy_source:
+                description: コンポーネントを構成するソース
+                type: object
+                properties:
+                  container_registry:
+                    description: コンテナレジストリ
+                    type: object
+                    required:
+                      - image
+                    properties:
+                      image:
+                        description: コンテナイメージ名
+                        type: string
+                        example: apprun-example.sakuracr.jp/helloworld:latest
+                      server:
+                        description: コンテナレジストリの認証に使用するサーバー名
+                        type: string
+                        example: apprun-example.sakuracr.jp
+                      username:
+                        description: コンテナレジストリの認証に使用するユーザー名
+                        type: string
+                        example: apprun
+              env:
+                description: コンポーネントに渡す環境変数
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      description: 環境変数名
+                      type: string
+                      example: MY_ENV
+                    value:
+                      description: 環境変数の値
+                      type: string
+                      example: my_value
+              probe:
+                description: コンポーネントのプローブ設定
+                type: object
+                nullable: true
+                properties:
+                  http_get:
+                    description: HTTP Getプローブタイプ
+                    type: object
+                    required:
+                      - path
+                      - port
+                    nullable: true
+                    properties:
+                      path:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のパス
+                        type: string
+                        example: /healthz
+                      port:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のポート番号
+                        type: integer
+                        example: 8080
+                        minimum: 1
+                        maximum: 65535
+                      headers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: ヘッダーフィールド名
+                              type: string
+                              example: Custom-Header
+                            value:
+                              description: ヘッダーフィールド値
+                              type: string
+                              example: Awesome
+        status:
+          description: アプリケーションステータス
+          type: string
+          example: Healthy
+          enum:
+            - Healthy
+            - UnHealthy
+            - Deploying
+        public_url:
+          description: 公開URL
+          type: string
+          example: https://fq1I4vpQkN1YiGp.apprun.sakura.ne.jp
+        resource_id:
+          description: リソースID
+          type: string
+          example: "100000000000"
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+    handler.patchApplication:
+      type: object
+      required:
+        - id
+        - name
+        - timeout_seconds
+        - port
+        - min_scale
+        - max_scale
+        - components
+        - status
+        - public_url
+        - resource_id
+        - updated_at
+      properties:
+        id:
+          description: アプリケーションID
+          type: string
+          example: u8FXIJ2LVM3wXVyzOEi
+        name:
+          description: アプリケーション名
+          type: string
+          example: アプリケーション1
+        timeout_seconds:
+          description: アプリケーションの公開URLにアクセスして、インスタンスが起動してからレスポンスが返るまでの時間制限
+          type: integer
+          example: 60
+          minimum: 1
+          maximum: 300
+        port:
+          description: アプリケーションがリクエストを待ち受けるポート番号
+          type: integer
+          example: 8080
+          minimum: 1
+          maximum: 65535
+        min_scale:
+          description: アプリケーション全体の最小スケール数
+          type: integer
+          example: 0
+          minimum: 0
+          maximum: 10
+        max_scale:
+          description: アプリケーション全体の最大スケール数
+          type: integer
+          example: 2
+          minimum: 1
+          maximum: 10
+        scale_target_concurrency:
+          description: アプリケーションのスケールの閾値の目安となる同時リクエスト数
+          type: integer
+          example: 100
+          minimum: 50
+          maximum: 200
+        components:
+          description: アプリケーションのコンポーネント情報
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - max_cpu
+              - max_memory
+              - deploy_source
+            properties:
+              name:
+                description: コンポーネント名
+                type: string
+                example: コンポーネント1
+              max_cpu:
+                description: コンポーネントの最大vCPU数
+                type: string
+                example: '0.5'
+              max_memory:
+                description: コンポーネントの最大メモリ
+                type: string
+                example: 1Gi
+              deploy_source:
+                description: コンポーネントを構成するソース
+                type: object
+                properties:
+                  container_registry:
+                    description: コンテナレジストリ
+                    type: object
+                    required:
+                      - image
+                    properties:
+                      image:
+                        description: コンテナイメージ名
+                        type: string
+                        example: apprun-example.sakuracr.jp/helloworld:latest
+                      server:
+                        description: コンテナレジストリの認証に使用するサーバー名
+                        type: string
+                        example: apprun-example.sakuracr.jp
+                      username:
+                        description: コンテナレジストリの認証に使用するユーザー名
+                        type: string
+                        example: apprun
+              env:
+                description: コンポーネントに渡す環境変数
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      description: 環境変数名
+                      type: string
+                      example: MY_ENV
+                    value:
+                      description: 環境変数の値
+                      type: string
+                      example: my_value
+              probe:
+                description: コンポーネントのプローブ設定
+                type: object
+                nullable: true
+                properties:
+                  http_get:
+                    description: HTTP Getプローブタイプ
+                    type: object
+                    required:
+                      - path
+                      - port
+                    nullable: true
+                    properties:
+                      path:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のパス
+                        type: string
+                        example: /healthz
+                      port:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のポート番号
+                        type: integer
+                        example: 8080
+                        minimum: 1
+                        maximum: 65535
+                      headers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: ヘッダーフィールド名
+                              type: string
+                              example: Custom-Header
+                            value:
+                              description: ヘッダーフィールド値
+                              type: string
+                              example: Awesome
+        status:
+          description: アプリケーションステータス
+          type: string
+          example: Healthy
+          enum:
+            - Healthy
+            - UnHealthy
+            - Deploying
+        public_url:
+          description: 公開URL
+          type: string
+          example: https://fq1I4vpQkN1YiGp.apprun.sakura.ne.jp
+        resource_id:
+          description: リソースID
+          type: string
+          example: "100000000000"
+        updated_at:
+          description: 更新日時
+          type: string
+          format: date-time
+    handler.getApplicationStatus:
+      type: object
+      x-ogen-name: HandlerGetApplicationOnlyStatus
+      required:
+        - status
+        - message
+      properties:
+        status:
+          description: アプリケーションステータス
+          type: string
+          example: Healthy
+          enum:
+            - Healthy
+            - UnHealthy
+            - Deploying
+        message:
+          description: ステータス失敗時のメッセージ
+          type: string
+          example: Failed to authenticate with the registry
+    handler.listVersions:
+      type: object
+      required:
+        - meta
+        - data
+      properties:
+        meta:
+          type: object
+          required:
+            - page_num
+            - page_size
+            - object_total
+            - sort_field
+            - sort_order
+          properties:
+            page_num:
+              type: integer
+              example: 1
+            page_size:
+              type: integer
+              example: 100
+            object_total:
+              type: integer
+              example: 1000
+            sort_field:
+              type: string
+              example: created_at
+            sort_order:
+              type: string
+              example: asc
+              enum:
+                - asc
+                - desc
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - name
+              - status
+              - created_at
+            properties:
+              id:
+                description: バージョンID
+                type: string
+                example: BIi7jHVWGjg7NaxcK
+              name:
+                description: バージョン名
+                type: string
+                example: version-001
+              status:
+                description: ステータス
+                type: string
+                example: Healthy
+                enum:
+                  - Healthy
+                  - UnHealthy
+                  - Deploying
+              created_at:
+                description: 作成日時
+                type: string
+                format: date-time
+    handler.getVersion:
+      type: object
+      required:
+        - id
+        - name
+        - min_scale
+        - max_scale
+        - timeout_seconds
+        - port
+        - status
+        - created_at
+        - components
+      properties:
+        id:
+          description: バージョンID
+          type: string
+          example: BIi7jHVWGjg7NaxcK
+        name:
+          description: バージョン名
+          type: string
+          example: version-001
+        status:
+          description: バージョンステータス
+          type: string
+          example: Healthy
+          enum:
+            - Healthy
+            - UnHealthy
+            - Deploying
+        timeout_seconds:
+          description: アプリケーションの公開URLにアクセスして、インスタンスが起動してからレスポンスが返るまでの時間制限
+          type: integer
+          example: 60
+          default: 60
+          minimum: 1
+          maximum: 300
+        port:
+          description: アプリケーションがリクエストを待ち受けるポート番号
+          type: integer
+          example: 8080
+          minimum: 1
+          maximum: 65535
+        min_scale:
+          description: バージョンの最小スケール数
+          type: integer
+          example: 0
+          default: 0
+          minimum: 0
+          maximum: 10
+        max_scale:
+          description: バージョンの最大スケール数
+          type: integer
+          example: 2
+          default: 10
+          minimum: 1
+          maximum: 10
+        scale_target_concurrency:
+          description: バージョンのスケールの閾値の目安となる同時リクエスト数
+          type: integer
+          example: 100
+          default: 100
+          minimum: 50
+          maximum: 200
+        components:
+          description: バージョンのコンポーネント情報
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - max_cpu
+              - max_memory
+              - deploy_source
+            properties:
+              name:
+                description: コンポーネント名
+                type: string
+                example: コンポーネント1
+              max_cpu:
+                description: コンポーネントの最大vCPU数
+                type: string
+                example: '0.5'
+              max_memory:
+                description: コンポーネントの最大メモリ
+                type: string
+                example: 1Gi
+              deploy_source:
+                description: コンポーネントを構成するソース
+                type: object
+                properties:
+                  container_registry:
+                    description: コンテナレジストリ
+                    type: object
+                    required:
+                      - image
+                    properties:
+                      image:
+                        description: コンテナイメージ名
+                        type: string
+                        example: apprun-example.sakuracr.jp/helloworld:latest
+                      server:
+                        description: コンテナレジストリの認証に使用するサーバー名
+                        type: string
+                        example: apprun-example.sakuracr.jp
+                      username:
+                        description: コンテナレジストリの認証に使用するユーザー名
+                        type: string
+                        example: apprun
+              env:
+                description: コンポーネントに渡す環境変数
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      description: 環境変数名
+                      type: string
+                      example: MY_ENV
+                    value:
+                      description: 環境変数の値
+                      type: string
+                      example: my_value
+              probe:
+                description: コンポーネントのプローブ設定
+                type: object
+                nullable: true
+                properties:
+                  http_get:
+                    description: HTTP Getプローブタイプ
+                    type: object
+                    required:
+                      - path
+                      - port
+                    nullable: true
+                    properties:
+                      path:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のパス
+                        type: string
+                        example: /healthz
+                      port:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のポート番号
+                        type: integer
+                        example: 8080
+                        minimum: 1
+                        maximum: 65535
+                      headers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: ヘッダーフィールド名
+                              type: string
+                              example: Custom-Header
+                            value:
+                              description: ヘッダーフィールド値
+                              type: string
+                              example: Awesome
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+    handler.getVersionStatus:
+      type: object
+      x-ogen-name: HandlerGetApplicationVersionOnlyStatus
+      required:
+        - status
+        - message
+      properties:
+        status:
+          description: アプリケーションバージョンステータス
+          type: string
+          example: UnHealthy
+          enum:
+            - Healthy
+            - UnHealthy
+            - Deploying
+        message:
+          description: ステータス失敗時のメッセージ
+          type: string
+          example: Failed to authenticate with the registry
+    handler.listTraffics:
+      type: object
+      required:
+        - data
+      properties:
+        meta:
+          type: object
+          nullable: true
+          example: null
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - version_name
+              - is_latest_version
+              - percent
+            properties:
+              version_name:
+                description: バージョン名
+                type: string
+                example: Version1
+              is_latest_version:
+                description: 最新バージョンかどうか
+                type: boolean
+              percent:
+                description: トラフィック分散の割合
+                type: integer
+                example: 100
+    handler.putTraffics:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        meta:
+          type: object
+          nullable: true
+          example: null
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - version_name
+              - is_latest_version
+              - percent
+            properties:
+              version_name:
+                description: バージョン名
+                type: string
+                example: Version1
+              is_latest_version:
+                description: 最新バージョンかどうか
+                type: boolean
+              percent:
+                description: トラフィック分散の割合
+                type: integer
+                example: 100
+    handler.getPacketFilter:
+      type: object
+      required:
+        - is_enabled
+        - settings
+      properties:
+        is_enabled:
+          type: boolean
+          description: 有効フラグ
+          example: true
+        settings:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - from_ip
+              - from_ip_prefix_length
+            properties:
+              from_ip:
+                type: string
+                description: 送信元IPv4アドレス
+                example: 0.0.0.0
+              from_ip_prefix_length:
+                type: integer
+                description: IPv4アドレスprefix長
+                minimum: 0
+                maximum: 32
+                example: 0
+    handler.patchPacketFilter:
+      type: object
+      required:
+        - is_enabled
+        - settings
+      properties:
+        is_enabled:
+          type: boolean
+          description: 有効フラグ
+          example: true
+        settings:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - from_ip
+              - from_ip_prefix_length
+            properties:
+              from_ip:
+                type: string
+                description: 送信元IPv4アドレス
+                example: 0.0.0.0
+              from_ip_prefix_length:
+                type: integer
+                description: IPv4アドレスprefix長
+                example: 0
+    postApplicationBody:
+      type: object
+      required:
+        - name
+        - timeout_seconds
+        - port
+        - min_scale
+        - max_scale
+        - components
+      properties:
+        name:
+          description: アプリケーション名
+          type: string
+          example: アプリケーション1
+          minLength: 1
+          maxLength: 255
+        timeout_seconds:
+          description: アプリケーションの公開URLにアクセスして、インスタンスが起動してからレスポンスが返るまでの時間制限
+          type: integer
+          example: 60
+          default: 60
+          minimum: 1
+          maximum: 300
+        port:
+          description: |
+            アプリケーションがリクエストを待ち受けるポート番号。
+            ただし、8012, 8013, 8022, 9090, 9091, 8008 は予約済みのため設定不可。
+          type: integer
+          example: 8080
+          minimum: 1
+          maximum: 65535
+        min_scale:
+          description: アプリケーション全体の最小スケール数
+          type: integer
+          example: 0
+          default: 0
+          minimum: 0
+          maximum: 10
+        max_scale:
+          description: アプリケーション全体の最大スケール数
+          type: integer
+          example: 2
+          default: 10
+          minimum: 1
+          maximum: 10
+        scale_target_concurrency:
+          description: アプリケーションのスケールの閾値の目安となる同時リクエスト数
+          type: integer
+          example: 100
+          default: 100
+          minimum: 50
+          maximum: 200
+        components:
+          description: アプリケーションのコンポーネント情報
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - max_cpu
+              - max_memory
+              - deploy_source
+            properties:
+              name:
+                description: コンポーネント名
+                type: string
+                example: コンポーネント1
+                minLength: 1
+                maxLength: 255
+              max_cpu:
+                description: コンポーネントの最大vCPU数（メモリとの組み合わせで利用できない値もあります）
+                type: string
+                example: '0.5'
+                enum:
+                  - '0.5'
+                  - '1'
+                  - '2'
+              max_memory:
+                description: コンポーネントの最大メモリ（vCPUとの組み合わせで利用できない値もあります）
+                type: string
+                example: '1Gi'
+                enum:
+                  - '1Gi'
+                  - '2Gi'
+                  - '4Gi'
+              deploy_source:
+                description: コンポーネントを構成するソース
+                type: object
+                properties:
+                  container_registry:
+                    description: コンテナレジストリ
+                    type: object
+                    required:
+                      - image
+                    properties:
+                      image:
+                        description: コンテナイメージ名
+                        type: string
+                        example: apprun-example.sakuracr.jp/helloworld:latest
+                        minLength: 1
+                        maxLength: 128
+                      server:
+                        description: コンテナレジストリのサーバー名（認証が必要な場合は入力してください）
+                        type: string
+                        example: apprun-example.sakuracr.jp
+                        minLength: 1
+                        maxLength: 128
+                        nullable: true
+                      username:
+                        description: コンテナレジストリのユーザー名（認証が必要な場合は入力してください）
+                        type: string
+                        example: apprun
+                        minLength: 1
+                        maxLength: 63
+                        nullable: true
+                      password:
+                        description: コンテナレジストリのパスワード（認証が必要な場合は入力してください）
+                        type: string
+                        example: apprun
+                        minLength: 1
+                        maxLength: 63
+                        nullable: true
+              env:
+                description: コンポーネントに渡す環境変数
+                type: array
+                nullable: true
+                items:
+                  type: object
+                  properties:
+                    key:
+                      description: |
+                        環境変数名。
+                        ただし、K_SERVICE, K_CONFIGURATION, K_REVISION, PORTは予約済みのため設定不可。
+                      type: string
+                      example: MY_ENV
+                    value:
+                      description: 環境変数の値
+                      type: string
+                      example: my_value
+              probe:
+                description: コンポーネントのプローブ設定
+                type: object
+                nullable: true
+                properties:
+                  http_get:
+                    description: HTTP Getプローブタイプ
+                    type: object
+                    required:
+                      - path
+                      - port
+                    nullable: true
+                    properties:
+                      path:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のパス
+                        type: string
+                        example: /healthz
+                      port:
+                        description: |
+                          HTTPサーバーへアクセスしプローブをチェックする際のポート番号。
+                          ただし、8012, 8013, 8022, 9090, 9091, 8008 は予約済みのため設定不可。
+                        type: integer
+                        example: 8080
+                        minimum: 1
+                        maximum: 65535
+                      headers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: ヘッダーフィールド名
+                              type: string
+                              example: Custom-Header
+                            value:
+                              description: ヘッダーフィールド値
+                              type: string
+                              example: Awesome
+    patchApplicationBody:
+      type: object
+      properties:
+        timeout_seconds:
+          description: アプリケーションの公開URLにアクセスして、インスタンスが起動してからレスポンスが返るまでの時間制限
+          type: integer
+          example: 60
+          minimum: 1
+          maximum: 300
+        port:
+          description: |
+            アプリケーションがリクエストを待ち受けるポート番号。
+            ただし、8012, 8013, 8022, 9090, 9091, 8008 は予約済みのため設定不可。
+          type: integer
+          example: 8080
+          minimum: 1
+          maximum: 65535
+        min_scale:
+          description: アプリケーション全体の最小スケール数
+          type: integer
+          example: 0
+          minimum: 0
+          maximum: 10
+        max_scale:
+          description: アプリケーション全体の最大スケール数
+          type: integer
+          example: 2
+          minimum: 1
+          maximum: 10
+        scale_target_concurrency:
+          description: アプリケーションのスケールの閾値の目安となる同時リクエスト数
+          type: integer
+          example: 100
+          minimum: 50
+          maximum: 200
+        components:
+          description: アプリケーションのコンポーネント情報
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - max_cpu
+              - max_memory
+              - deploy_source
+            properties:
+              name:
+                description: コンポーネント名
+                type: string
+                example: コンポーネント1
+                minLength: 1
+                maxLength: 255
+              max_cpu:
+                description: コンポーネントの最大vCPU数（メモリとの組み合わせで利用できない値もあります）
+                type: string
+                example: '0.5'
+                enum:
+                  - '0.5'
+                  - '1'
+                  - '2'
+              max_memory:
+                description: コンポーネントの最大メモリ（vCPUとの組み合わせで利用できない値もあります）
+                type: string
+                example: '1Gi'
+                enum:
+                  - '1Gi'
+                  - '2Gi'
+                  - '4Gi'
+              deploy_source:
+                description: コンポーネントを構成するソース
+                type: object
+                properties:
+                  container_registry:
+                    description: コンテナレジストリ
+                    type: object
+                    required:
+                      - image
+                    properties:
+                      image:
+                        description: コンテナイメージ名
+                        type: string
+                        example: apprun-example.sakuracr.jp/helloworld:latest
+                        minLength: 1
+                        maxLength: 128
+                      server:
+                        description: コンテナレジストリのサーバー名（認証が必要な場合は入力してください）
+                        type: string
+                        example: apprun-example.sakuracr.jp
+                        minLength: 1
+                        maxLength: 128
+                        nullable: true
+                      username:
+                        description: コンテナレジストリのユーザー名（認証が必要な場合は入力してください）
+                        type: string
+                        example: apprun
+                        minLength: 1
+                        maxLength: 63
+                        nullable: true
+                      password:
+                        description: コンテナレジストリのパスワード（認証が必要な場合は入力してください）
+                        type: string
+                        example: apprun
+                        minLength: 1
+                        maxLength: 63
+                        nullable: true
+                      action:
+                        $ref: '#/components/schemas/containerRegistryAction'
+              env:
+                description: コンポーネントに渡す環境変数
+                type: array
+                nullable: true
+                items:
+                  type: object
+                  properties:
+                    key:
+                      description: |
+                        環境変数名。
+                        ただし、K_SERVICE, K_CONFIGURATION, K_REVISION, PORTは予約済みのため設定不可。
+                      type: string
+                      example: MY_ENV
+                    value:
+                      description: 環境変数の値
+                      type: string
+                      example: my_value
+              probe:
+                description: コンポーネントのプローブ設定
+                type: object
+                nullable: true
+                properties:
+                  http_get:
+                    description: HTTP Getプローブタイプ
+                    type: object
+                    required:
+                      - path
+                      - port
+                    nullable: true
+                    properties:
+                      path:
+                        description: HTTPサーバーへアクセスしプローブをチェックする際のパス
+                        type: string
+                        example: /healthz
+                      port:
+                        description: |
+                          HTTPサーバーへアクセスしプローブをチェックする際のポート番号。
+                          ただし、8012, 8013, 8022, 9090, 9091, 8008 は予約済みのため設定不可。
+                        type: integer
+                        example: 8080
+                        minimum: 1
+                        maximum: 65535
+                      headers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              description: ヘッダーフィールド名
+                              type: string
+                              example: Custom-Header
+                            value:
+                              description: ヘッダーフィールド値
+                              type: string
+                              example: Awesome
+        all_traffic_available:
+          description: アプリケーションを最新のバージョンにすべてのトラフィックを割り当てるかどうか
+          type: boolean
+    containerRegistryAction:
+      description: |
+        コンテナレジストリの認証情報の設定方法
+        * new: 指定された認証情報を使用します。
+        * keep: 最新のバージョンで保存された認証情報を使用します。
+      type: string
+      default: new
+      enum:
+        - new
+        - keep
+      nullable: true
+    putTrafficsBody:
+      type: array
+      items:
+        oneOf:
+          - type: object
+            required:
+              - is_latest_version
+              - percent
+            properties:
+              is_latest_version:
+                description: 最新バージョンかどうか
+                type: boolean
+              percent:
+                description: トラフィック分散の割合
+                type: integer
+          - type: object
+            required:
+              - version_name
+              - percent
+            properties:
+              version_name:
+                description: バージョン名
+                type: string
+                example: Version1
+              percent:
+                description: トラフィック分散の割合
+                type: integer
+    patchPacketFilter:
+      type: object
+      properties:
+        is_enabled:
+          type: boolean
+          description: 有効フラグ
+          example: true
+        settings:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - from_ip
+              - from_ip_prefix_length
+            properties:
+              from_ip:
+                type: string
+                description: 送信元IPv4アドレス
+                example: 0.0.0.0
+              from_ip_prefix_length:
+                type: integer
+                description: IPv4アドレスprefix長
+                example: 0
+    model.cloudctrlError:
+      type: object
+      required:
+        - is_fatal
+        - serial
+        - status
+        - error_code
+        - error_msg
+      properties:
+        is_fatal:
+          type: boolean
+          example: true
+        serial:
+          type: string
+          example: 'abcdefghijklmnopqrstuvwxyz0123456789'
+        status:
+          type: string
+          example: '403 Forbidden'
+        error_code:
+          type: string
+          example: 'access_no_permission'
+        error_msg:
+          type: string
+          example: '要求された操作は許可されていません。このユーザに設定されたアクセス権限により、このゾーンまたは機能へのアクセスは禁止されています。'
+    model.defaultError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - errors
+          properties:
+            code:
+              type: integer
+              example: 401
+            message:
+              type: string
+              example: Login Required
+            errors:
+              $ref: '#/components/schemas/model.errors'
+    model.errors:
+      type: array
+      items:
+        type: object
+        required:
+          - domain
+          - reason
+          - message
+          - location_type
+          # - location
+        properties:
+          domain:
+            type: string
+            example: global
+            nullable: true
+          reason:
+            type: string
+            example: required
+            nullable: true
+          message:
+            type: string
+            example: Login Required
+            nullable: true
+          location_type:
+            type: string
+            example: header
+            enum:
+              - header
+              - body
+              - query
+              - parameter
+            nullable: true
+          location:
+            type: string
+            example: Authorization
+            nullable: true
+tags:
+  - name: アプリケーション
+    description: アプリケーションに関する情報

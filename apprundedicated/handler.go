@@ -3,10 +3,12 @@ package apprundedicated
 import (
 	"encoding/json"
 	"math"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -45,6 +47,14 @@ func parsePagination(r *http.Request, defaultMax int) (cursor string, maxItems i
 		}
 	}
 	return
+}
+
+func portOf(addr string) string {
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	return port
 }
 
 // --- JSON types matching SDK schemas ---
@@ -522,7 +532,7 @@ type workerAddrJSON struct {
 	Address string `json:"address"`
 }
 
-func toWorkerNodeDetail(wn *WorkerNode) workerNodeDetailJSON {
+func (s *Server) toWorkerNodeDetail(wn *WorkerNode) workerNodeDetailJSON {
 	nics := make([]workerNICJSON, len(wn.NetworkInterfaces))
 	for i, nic := range wn.NetworkInterfaces {
 		addrs := make([]workerAddrJSON, len(nic.Addresses))
@@ -539,11 +549,39 @@ func toWorkerNodeDetail(wn *WorkerNode) workerNodeDetailJSON {
 		Healthy:            wn.Healthy,
 		Creating:           wn.Creating,
 		Created:            wn.Created,
-		RunningContainers:  []runContainerJSON{},
+		RunningContainers:  s.runningContainersForNode(wn),
 		NetworkInterfaces:  nics,
 		ArchiveVersion:     wn.ArchiveVersion,
 		CreateErrorMessage: wn.CreateErrorMessage,
 	}
+}
+
+func (s *Server) runningContainersForNode(wn *WorkerNode) []runContainerJSON {
+	var containers []runContainerJSON
+	apps, _ := s.store.ListApplications(nil, "", 1000)
+	for _, app := range apps {
+		if app.ClusterID != wn.ClusterID || app.ActiveVersion == nil {
+			continue
+		}
+		v, ok := s.store.ReadVersion(app.ApplicationID, *app.ActiveVersion)
+		if !ok {
+			continue
+		}
+		containers = append(containers, runContainerJSON{
+			ContainerID:        uuid.NewString(),
+			Name:               app.Name,
+			State:              "running",
+			Status:             "Running",
+			Image:              v.Image,
+			StartedAt:          v.Created,
+			ApplicationID:      app.ApplicationID,
+			ApplicationVersion: v.Version,
+		})
+	}
+	if containers == nil {
+		containers = []runContainerJSON{}
+	}
+	return containers
 }
 
 func toWorkerNodeSummary(wn *WorkerNode) workerNodeSummaryJSON {
@@ -658,9 +696,36 @@ type listCertificatesResp struct {
 // Container Placement
 
 type containerPlacementJSON struct {
-	NodeID          string `json:"nodeID"`
-	ContainersStats any    `json:"containersStats"`
-	Desired         any    `json:"desired"`
+	NodeID          string                 `json:"nodeID"`
+	ContainersStats *containersStatsJSON   `json:"containersStats"`
+	Desired         *desiredContainersJSON `json:"desired"`
+}
+
+type containersStatsJSON struct {
+	CollectedAtSec int64                  `json:"collectedAtSec"`
+	Containers     []containerSummaryJSON `json:"containers"`
+}
+
+type containerSummaryJSON struct {
+	ID                 string  `json:"id"`
+	Image              string  `json:"image"`
+	State              string  `json:"state"`
+	Status             string  `json:"status"`
+	CpuUsagePercent    float32 `json:"cpuUsagePercent"`
+	ApplicationID      string  `json:"applicationID"`
+	ApplicationVersion int64   `json:"applicationVersion"`
+}
+
+type desiredContainersJSON struct {
+	Containers []desiredContainerJSON `json:"containers"`
+}
+
+type desiredContainerJSON struct {
+	ApplicationID      string `json:"applicationID"`
+	ApplicationVersion int64  `json:"applicationVersion"`
+	CpuMillis          int64  `json:"cpuMillis"`
+	MemoryMB           int64  `json:"memoryMB"`
+	Image              string `json:"image"`
 }
 
 // --- Handlers ---
@@ -838,6 +903,15 @@ func (s *Server) handleUpdateApplication(w http.ResponseWriter, r *http.Request)
 					env = append(env, core.EnvVar{Key: e.Key, Value: val})
 				}
 				s.docker.StartContainer(id, v.Image, port, env)
+				scheme := "http"
+				if s.tlsEnabled {
+					scheme = "https"
+				}
+				s.logger.Info("container started",
+					"app_id", id,
+					"image", v.Image,
+					"url", scheme+"://"+id+".localhost:"+portOf(s.dataPlaneAddr),
+				)
 			}
 		} else {
 			s.docker.StopContainer(id)
@@ -863,12 +937,57 @@ func (s *Server) handleDeleteApplication(w http.ResponseWriter, r *http.Request)
 
 func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("applicationID")
-	if _, ok := s.store.ReadApplication(id); !ok {
+	app, ok := s.store.ReadApplication(id)
+	if !ok {
 		writeError(w, http.StatusNotFound, "Not Found")
 		return
 	}
+
+	var nodes []containerPlacementJSON
+	if app.ActiveVersion != nil {
+		v, _ := s.store.ReadVersion(id, *app.ActiveVersion)
+		asgs, _ := s.store.ListAutoScalingGroups(app.ClusterID, "", 1000)
+		for _, asg := range asgs {
+			wns, _ := s.store.ListWorkerNodes(app.ClusterID, asg.AutoScalingGroupID, "", 1000)
+			for _, wn := range wns {
+				node := containerPlacementJSON{NodeID: wn.WorkerNodeID}
+				if v != nil {
+					now := time.Now().Unix()
+					node.ContainersStats = &containersStatsJSON{
+						CollectedAtSec: now,
+						Containers: []containerSummaryJSON{
+							{
+								ID:                 uuid.NewString(),
+								Image:              v.Image,
+								State:              "running",
+								Status:             "Running",
+								CpuUsagePercent:    0,
+								ApplicationID:      app.ApplicationID,
+								ApplicationVersion: int64(v.Version),
+							},
+						},
+					}
+					node.Desired = &desiredContainersJSON{
+						Containers: []desiredContainerJSON{
+							{
+								ApplicationID:      app.ApplicationID,
+								ApplicationVersion: int64(v.Version),
+								CpuMillis:          v.CPU,
+								MemoryMB:           v.Memory,
+								Image:              v.Image,
+							},
+						},
+					}
+				}
+				nodes = append(nodes, node)
+			}
+		}
+	}
+	if nodes == nil {
+		nodes = []containerPlacementJSON{}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"nodes": []containerPlacementJSON{},
+		"nodes": nodes,
 	})
 }
 
@@ -1230,7 +1349,7 @@ func (s *Server) handleGetWorkerNode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"workerNode": toWorkerNodeDetail(wn),
+		"workerNode": s.toWorkerNodeDetail(wn),
 	})
 }
 

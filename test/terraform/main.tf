@@ -166,11 +166,11 @@ resource "sakura_iam_project" "test" {
 }
 
 resource "sakura_iam_user" "test" {
-  name               = "sakumock-tf-user"
-  code               = "sakumock-tf-user"
-  password_wo        = "Password12345!"
+  name                = "sakumock-tf-user"
+  code                = "sakumock-tf-user"
+  password_wo         = "Password12345!"
   password_wo_version = 1
-  description        = "description"
+  description         = "description"
 }
 
 resource "sakura_iam_group" "test" {
@@ -252,13 +252,13 @@ resource "sakura_apprun_dedicated_version" "test" {
 }
 
 resource "sakura_apprun_dedicated_auto_scaling_group" "test" {
-  name                     = "sakumock-tf-asg"
-  cluster_id               = sakura_apprun_dedicated_cluster.test.id
-  zone                     = "is1a"
+  name                      = "sakumock-tf-asg"
+  cluster_id                = sakura_apprun_dedicated_cluster.test.id
+  zone                      = "is1a"
   worker_service_class_path = "cloud/apprun/dedicated/worker/1vcpu_2gb"
-  min_nodes                = 1
-  max_nodes                = 3
-  name_servers             = ["210.188.224.10"]
+  min_nodes                 = 1
+  max_nodes                 = 3
+  name_servers              = ["210.188.224.10"]
   interfaces = [{
     interface_index = 0
     upstream        = "shared"

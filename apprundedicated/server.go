@@ -51,14 +51,16 @@ var (
 
 // Server is a local AppRun Dedicated mock server.
 type Server struct {
-	httpServer  *httptest.Server
-	mux         *http.ServeMux
-	store       *MemoryStore
-	latency     time.Duration
-	rateLimiter *core.RateLimiter
-	logger      *slog.Logger
-	docker      *DockerManager
-	dp          *dataPlane
+	httpServer    *httptest.Server
+	mux           *http.ServeMux
+	store         *MemoryStore
+	latency       time.Duration
+	rateLimiter   *core.RateLimiter
+	logger        *slog.Logger
+	docker        *DockerManager
+	dp            *dataPlane
+	dataPlaneAddr string
+	tlsEnabled    bool
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -85,6 +87,8 @@ func NewHandler(cfg Config) (*Server, error) {
 
 	if cfg.EnableDataPlane {
 		s.docker = NewDockerManager(logger)
+		s.dataPlaneAddr = cfg.DataPlaneAddr
+		s.tlsEnabled = cfg.tls.Enabled()
 		dp, err := startDataPlane(cfg, s.docker, s.store, logger)
 		if err != nil {
 			return nil, err

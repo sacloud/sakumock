@@ -189,6 +189,18 @@ func (s *MemoryStore) UpdateApplication(id string, activeVersion *int32) error {
 	app.ActiveVersion = activeVersion
 	if activeVersion == nil {
 		app.DesiredCount = nil
+	} else {
+		for _, v := range s.versions[id] {
+			if v.Version == *activeVersion {
+				switch v.ScalingMode {
+				case "manual":
+					app.DesiredCount = v.FixedScale
+				case "cpu":
+					app.DesiredCount = v.MinScale
+				}
+				break
+			}
+		}
 	}
 	return nil
 }

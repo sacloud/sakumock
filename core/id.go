@@ -3,21 +3,22 @@ package core
 import (
 	"strconv"
 	"sync"
+	"time"
 )
 
-// DefaultIDBase is the starting value for generated resource IDs.
+// DefaultIDBase returns a time-derived starting value for generated resource IDs.
 //
-// Real SAKURA Cloud resource IDs are 12-digit numbers whose allocation counter
-// currently sits in the 11xxxxxxxxxx–12xxxxxxxxxx range. Generating from the top
-// of the 12-digit space (9xxxxxxxxxxx) keeps mock IDs realistic in length while
-// staying clear of real IDs: the counter would have to grow ~7x to reach the
-// 9xx band, by which point the 12-digit space would be near exhaustion and real
-// IDs would almost certainly have grown more digits — so real allocation never
-// reaches here. A mock ID that leaks to the real API (e.g. via a misconfigured
-// endpoint) therefore hits nothing (404) instead of a live resource. The value
-// also has no leading zeros, so it round-trips through clients that parse the ID
-// as an integer.
-const DefaultIDBase int64 = 990000000000
+// The generated base is a 12-digit number of the form 9TTTTTTTTTCC, where T is
+// derived from the current Unix timestamp and CC is a 2-digit counter space
+// (00–99), giving 100 unique IDs per second before overlapping into the next
+// second's range (within a single process, IDs remain unique regardless because
+// the counter is monotonic).
+//
+// The 9xx band stays clear of real SAKURA Cloud IDs (currently in the 11xx–12xx
+// band), so a mock ID that leaks to the real API hits nothing (404).
+func DefaultIDBase() int64 {
+	return 900_000_000_000 + (time.Now().Unix()%1_000_000_000)*100
+}
 
 // IDGenerator hands out sequential numeric resource IDs as decimal strings,
 // resembling the IDs SAKURA Cloud assigns when a resource is created via the
@@ -30,10 +31,10 @@ type IDGenerator struct {
 }
 
 // NewIDGenerator returns a generator whose first ID is base. A base <= 0 falls
-// back to DefaultIDBase.
+// back to DefaultIDBase().
 func NewIDGenerator(base int64) *IDGenerator {
 	if base <= 0 {
-		base = DefaultIDBase
+		base = DefaultIDBase()
 	}
 	return &IDGenerator{next: base}
 }

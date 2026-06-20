@@ -35,7 +35,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		buckets:     make(map[string]*Bucket),
 		accounts:    make(map[string]*Account),
 		permissions: make(map[string]map[int64]*Permission),
-		ids:         core.NewIDGenerator(core.DefaultIDBase),
+		ids:         core.NewIDGenerator(core.DefaultIDBase()),
 		logger:      logger,
 	}
 }

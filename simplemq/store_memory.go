@@ -146,7 +146,7 @@ func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration, logger *
 		queues:            make(map[string]*memoryQueue),
 		queueResources:    make(map[string]*storedQueue),
 		queueByName:       make(map[string]string),
-		ids:               core.NewIDGenerator(core.DefaultIDBase),
+		ids:               core.NewIDGenerator(core.DefaultIDBase()),
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
 		done:              make(chan struct{}),

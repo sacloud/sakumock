@@ -106,7 +106,7 @@ type ProvisioningExist struct {
 // NewMemoryStore creates an empty store seeded with the read-only publishers.
 func NewMemoryStore() *MemoryStore {
 	s := &MemoryStore{
-		ids:                  core.NewIDGenerator(core.DefaultIDBase),
+		ids:                  core.NewIDGenerator(core.DefaultIDBase()),
 		alertProjects:        newTable[Project](),
 		dashboardProjects:    newTable[Project](),
 		logStorages:          newTable[LogStorage](),

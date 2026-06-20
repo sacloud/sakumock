@@ -34,7 +34,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	return &MemoryStore{
 		vaults:       make(map[string]map[string]*secret),
 		vaultRecords: make(map[string]*Vault),
-		ids:          core.NewIDGenerator(core.DefaultIDBase),
+		ids:          core.NewIDGenerator(core.DefaultIDBase()),
 		logger:       logger,
 	}
 }

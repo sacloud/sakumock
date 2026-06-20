@@ -19,8 +19,13 @@ func TestIDGeneratorSequential(t *testing.T) {
 func TestIDGeneratorDefaultBase(t *testing.T) {
 	for _, base := range []int64{0, -1} {
 		g := NewIDGenerator(base)
-		if got := g.Next(); got != strconv.FormatInt(DefaultIDBase, 10) {
-			t.Errorf("base %d: first ID = %q, want %d", base, got, DefaultIDBase)
+		got := g.Next()
+		n, err := strconv.ParseInt(got, 10, 64)
+		if err != nil {
+			t.Fatalf("base %d: first ID %q not numeric: %v", base, got, err)
+		}
+		if n < 900_000_000_000 || n > 999_999_999_999 {
+			t.Errorf("base %d: first ID = %d, want 12-digit number starting with 9", base, n)
 		}
 	}
 }

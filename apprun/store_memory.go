@@ -14,6 +14,7 @@ type MemoryStore struct {
 	mu          sync.RWMutex
 	userCreated bool
 	ids         *core.IDGenerator
+	versionSeq  int
 
 	appVersions   map[string][]*appVersionEntry
 	traffic       map[string][]TrafficItem
@@ -162,6 +163,10 @@ func (s *MemoryStore) UpdateApplication(id string, patch *Application) error {
 	version := s.createVersionLocked(&updated)
 	s.appVersions[id] = append(s.appVersions[id], &appVersionEntry{app: &updated, version: version})
 
+	if len(s.appVersions[id]) > maxVersionsPerApp {
+		s.appVersions[id] = s.appVersions[id][len(s.appVersions[id])-maxVersionsPerApp:]
+	}
+
 	return nil
 }
 
@@ -302,10 +307,11 @@ func (s *MemoryStore) latestApp(id string) *Application {
 }
 
 func (s *MemoryStore) createVersionLocked(app *Application) *Version {
+	s.versionSeq++
 	return &Version{
 		ID:                     uuid.NewString(),
 		AppID:                  app.ID,
-		Name:                   fmt.Sprintf("%s-%s-%d", app.Name, app.ID, app.CreatedAt.Unix()),
+		Name:                   fmt.Sprintf("%s-%s-%d", app.Name, app.ID, s.versionSeq),
 		Status:                 "Healthy",
 		TimeoutSeconds:         app.TimeoutSeconds,
 		Port:                   app.Port,

@@ -2,6 +2,7 @@ package apprun
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -210,6 +211,131 @@ func writeAppError(w http.ResponseWriter, status int, msg string) {
 	})
 }
 
+// Validation constants matching the real AppRun shared service.
+// See https://manual.sakura.ad.jp/cloud/apprun/glossary.html
+
+var reservedPorts = map[int]bool{
+	8008: true, 8012: true, 8013: true, 8022: true, 8443: true, 9090: true, 9091: true,
+}
+
+var reservedEnvKeys = map[string]bool{
+	"K_SERVICE": true, "K_CONFIGURATION": true, "K_REVISION": true, "PORT": true,
+}
+
+const (
+	maxApplications      = 5
+	maxVersionsPerApp    = 5
+	maxComponents        = 1
+	maxEnvVars           = 50
+	maxEnvKeyBytes       = 128
+	maxEnvValueBytes     = 512
+	maxPacketFilterRules = 10
+	maxTrafficVersions   = 4
+	maxScale             = 10
+	maxTimeoutSeconds    = 300
+	maxAppNameLen        = 255
+)
+
+func validateApplication(req *createApplicationRequest) string {
+	if len(req.Name) == 0 || len(req.Name) > maxAppNameLen {
+		return "アプリケーション名は1〜255文字で指定してください。"
+	}
+	if req.Port < 1 || req.Port > 65535 {
+		return "ポート番号は1〜65535の範囲で指定してください。"
+	}
+	if reservedPorts[req.Port] {
+		return fmt.Sprintf("ポート番号 %d は予約されているため使用できません。", req.Port)
+	}
+	if req.TimeoutSeconds < 1 || req.TimeoutSeconds > maxTimeoutSeconds {
+		return "タイムアウトは1〜300秒の範囲で指定してください。"
+	}
+	if req.MinScale < 0 || req.MinScale > maxScale {
+		return "最小スケールは0〜10の範囲で指定してください。"
+	}
+	if req.MaxScale < 0 || req.MaxScale > maxScale {
+		return "最大スケールは0〜10の範囲で指定してください。"
+	}
+	if req.MinScale > req.MaxScale {
+		return "最小スケールは最大スケール以下にしてください。"
+	}
+	if len(req.Components) != maxComponents {
+		return "コンポーネントは1つだけ指定してください。"
+	}
+	if msg := validateComponents(req.Components); msg != "" {
+		return msg
+	}
+	return ""
+}
+
+func validatePatch(req *patchApplicationRequest, current *Application) string {
+	port := current.Port
+	if req.Port != nil {
+		port = *req.Port
+	}
+	if port < 1 || port > 65535 {
+		return "ポート番号は1〜65535の範囲で指定してください。"
+	}
+	if reservedPorts[port] {
+		return fmt.Sprintf("ポート番号 %d は予約されているため使用できません。", port)
+	}
+
+	timeout := current.TimeoutSeconds
+	if req.TimeoutSeconds != nil {
+		timeout = *req.TimeoutSeconds
+	}
+	if timeout < 1 || timeout > maxTimeoutSeconds {
+		return "タイムアウトは1〜300秒の範囲で指定してください。"
+	}
+
+	minS := current.MinScale
+	if req.MinScale != nil {
+		minS = *req.MinScale
+	}
+	maxS := current.MaxScale
+	if req.MaxScale != nil {
+		maxS = *req.MaxScale
+	}
+	if minS < 0 || minS > maxScale {
+		return "最小スケールは0〜10の範囲で指定してください。"
+	}
+	if maxS < 0 || maxS > maxScale {
+		return "最大スケールは0〜10の範囲で指定してください。"
+	}
+	if minS > maxS {
+		return "最小スケールは最大スケール以下にしてください。"
+	}
+
+	if len(req.Components) > maxComponents {
+		return "コンポーネントは1つだけ指定してください。"
+	}
+	if len(req.Components) > 0 {
+		if msg := validateComponents(req.Components); msg != "" {
+			return msg
+		}
+	}
+	return ""
+}
+
+func validateComponents(comps []componentJSON) string {
+	for _, c := range comps {
+		if len(c.Env) > maxEnvVars {
+			return fmt.Sprintf("環境変数は最大%d個までです。", maxEnvVars)
+		}
+		for _, e := range c.Env {
+			if len(e.Key) < 1 || len(e.Key) > maxEnvKeyBytes {
+				return "環境変数のキーは1〜128バイトで指定してください。"
+			}
+			if len(e.Value) < 1 || len(e.Value) > maxEnvValueBytes {
+				return "環境変数の値は1〜512バイトで指定してください。"
+			}
+			if reservedEnvKeys[e.Key] {
+				return fmt.Sprintf("環境変数 %s は予約されているため使用できません。", e.Key)
+			}
+		}
+	}
+	return ""
+}
+
 // Handlers
 
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
@@ -271,6 +397,17 @@ func (s *Server) handlePostApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg := validateApplication(&req); msg != "" {
+		writeAppError(w, http.StatusBadRequest, msg)
+		return
+	}
+
+	apps, _ := s.store.ListApplications(ListParams{PageSize: maxApplications + 1})
+	if len(apps) >= maxApplications {
+		writeAppError(w, http.StatusBadRequest, fmt.Sprintf("アプリケーションは最大%d個までです。", maxApplications))
+		return
+	}
+
 	app := &Application{
 		Name:                   req.Name,
 		TimeoutSeconds:         req.TimeoutSeconds,
@@ -314,6 +451,17 @@ func (s *Server) handlePatchApplication(w http.ResponseWriter, r *http.Request) 
 	var req patchApplicationRequest
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeAppError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	current, ok := s.store.ReadApplication(id)
+	if !ok {
+		writeAppError(w, http.StatusNotFound, "アプリケーションが見つかりませんでした。")
+		return
+	}
+
+	if msg := validatePatch(&req, current); msg != "" {
+		writeAppError(w, http.StatusBadRequest, msg)
 		return
 	}
 
@@ -442,6 +590,32 @@ func (s *Server) handleGetVersion(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDeleteVersion(w http.ResponseWriter, r *http.Request) {
 	appID := r.PathValue("id")
 	versionID := r.PathValue("version_id")
+
+	versions, _ := s.store.ListVersions(appID, ListParams{PageSize: maxVersionsPerApp + 1})
+	if len(versions) <= 1 {
+		writeAppError(w, http.StatusBadRequest, "バージョンが1つしかないため削除できません。")
+		return
+	}
+
+	v, ok := s.store.ReadVersion(appID, versionID)
+	if !ok {
+		writeAppError(w, http.StatusNotFound, "アプリケーションバージョンが見つかりませんでした。")
+		return
+	}
+
+	if versions[0].ID == versionID {
+		writeAppError(w, http.StatusBadRequest, "最新バージョンは削除できません。")
+		return
+	}
+
+	traffic, _ := s.store.GetTraffic(appID)
+	for _, t := range traffic {
+		if t.VersionName == v.Name {
+			writeAppError(w, http.StatusBadRequest, "トラフィック向き先に指定中のバージョンは削除できません。")
+			return
+		}
+	}
+
 	if err := s.store.DeleteVersion(appID, versionID); err != nil {
 		writeAppError(w, http.StatusNotFound, "アプリケーションバージョンが見つかりませんでした。")
 		return
@@ -489,6 +663,11 @@ func (s *Server) handlePutTraffics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(items) > maxTrafficVersions {
+		writeAppError(w, http.StatusBadRequest, fmt.Sprintf("トラフィックは最大%dバージョンまで分散可能です。", maxTrafficVersions))
+		return
+	}
+
 	trafficItems := make([]TrafficItem, len(items))
 	for i, item := range items {
 		trafficItems[i] = TrafficItem{
@@ -521,6 +700,11 @@ func (s *Server) handlePatchPacketFilter(w http.ResponseWriter, r *http.Request)
 	var req packetFilterJSON
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeAppError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if len(req.Settings) > maxPacketFilterRules {
+		writeAppError(w, http.StatusBadRequest, fmt.Sprintf("パケットフィルタルールは最大%d個までです。", maxPacketFilterRules))
 		return
 	}
 

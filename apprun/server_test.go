@@ -2,6 +2,7 @@ package apprun_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	apprunsdk "github.com/sacloud/sacloud-sdk-go/api/apprun"
@@ -170,9 +171,10 @@ func TestVersionLifecycle(t *testing.T) {
 	// Create app (auto-creates version 1)
 	created := createTestApp(ctx, t, appOp)
 
-	// Update app (auto-creates version 2)
+	// Update app (auto-creates version 2) and shift traffic to latest
 	_, err := appOp.Update(ctx, created.ID, &v1.PatchApplicationBody{
-		TimeoutSeconds: v1.NewOptInt(120),
+		TimeoutSeconds:      v1.NewOptInt(120),
+		AllTrafficAvailable: v1.NewOptBool(true),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -187,9 +189,9 @@ func TestVersionLifecycle(t *testing.T) {
 		t.Fatalf("expected 2 versions, got %d", len(versions.Data))
 	}
 
-	// Read version
-	v0 := versions.Data[0]
-	version, err := versionOp.Read(ctx, created.ID, v0.ID)
+	// Read the latest version (Data[0] is newest due to desc sort)
+	latest := versions.Data[0]
+	version, err := versionOp.Read(ctx, created.ID, latest.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +200,7 @@ func TestVersionLifecycle(t *testing.T) {
 	}
 
 	// Read version status
-	vStatus, err := versionOp.ReadStatus(ctx, created.ID, v0.ID)
+	vStatus, err := versionOp.ReadStatus(ctx, created.ID, latest.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,8 +208,9 @@ func TestVersionLifecycle(t *testing.T) {
 		t.Fatalf("expected Healthy, got %s", vStatus.Status)
 	}
 
-	// Delete version
-	if err := versionOp.Delete(ctx, created.ID, v0.ID); err != nil {
+	// Delete the older version (not the latest)
+	older := versions.Data[1]
+	if err := versionOp.Delete(ctx, created.ID, older.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -322,4 +325,112 @@ func TestApplicationNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for non-existent application")
 	}
+}
+
+func TestValidation(t *testing.T) {
+	srv := apprun.NewTestServer(apprun.Config{})
+	defer srv.Close()
+	ctx := t.Context()
+	client := newTestClient(t, srv.TestURL())
+	appOp := apprunsdk.NewApplicationOp(client)
+
+	validComponents := []v1.PostApplicationBodyComponentsItem{
+		{
+			Name:      "web",
+			MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU05,
+			MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
+			DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
+				ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
+					v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+						Image: "nginx:latest",
+					},
+				),
+			},
+		},
+	}
+
+	t.Run("reserved port", func(t *testing.T) {
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "test", TimeoutSeconds: 60, Port: 8443, MinScale: 0, MaxScale: 1,
+			Components: validComponents,
+		})
+		if err == nil {
+			t.Fatal("expected error for reserved port 8443")
+		}
+	})
+
+	t.Run("timeout out of range", func(t *testing.T) {
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "test", TimeoutSeconds: 999, Port: 8080, MinScale: 0, MaxScale: 1,
+			Components: validComponents,
+		})
+		if err == nil {
+			t.Fatal("expected error for timeout > 300")
+		}
+	})
+
+	t.Run("min_scale > max_scale", func(t *testing.T) {
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 5, MaxScale: 2,
+			Components: validComponents,
+		})
+		if err == nil {
+			t.Fatal("expected error for min_scale > max_scale")
+		}
+	})
+
+	t.Run("max_scale out of range", func(t *testing.T) {
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 20,
+			Components: validComponents,
+		})
+		if err == nil {
+			t.Fatal("expected error for max_scale > 10")
+		}
+	})
+
+	t.Run("reserved env key", func(t *testing.T) {
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
+			Components: []v1.PostApplicationBodyComponentsItem{
+				{
+					Name:      "web",
+					MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU05,
+					MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
+					DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
+						ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
+							v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+								Image: "nginx:latest",
+							},
+						),
+					},
+					Env: v1.NewOptNilPostApplicationBodyComponentsItemEnvItemArray([]v1.PostApplicationBodyComponentsItemEnvItem{
+						{Key: v1.NewOptString("PORT"), Value: v1.NewOptString("3000")},
+					}),
+				},
+			},
+		})
+		if err == nil {
+			t.Fatal("expected error for reserved env key PORT")
+		}
+	})
+
+	t.Run("application limit", func(t *testing.T) {
+		for i := range 5 {
+			_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+				Name: fmt.Sprintf("app-%d", i), TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
+				Components: validComponents,
+			})
+			if err != nil {
+				t.Fatalf("create app %d: %v", i, err)
+			}
+		}
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "app-over-limit", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
+			Components: validComponents,
+		})
+		if err == nil {
+			t.Fatal("expected error for exceeding application limit")
+		}
+	})
 }

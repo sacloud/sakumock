@@ -7,7 +7,7 @@ COPY sakumock /sakumock
 
 # One port per service (see the service table in README); EXPOSE is documentation
 # only — publish the ports you need with `-p`.
-EXPOSE 18080 18081 18082 18083 18084
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089
 
 ENTRYPOINT ["/sakumock"]
 # Run every service bound to 0.0.0.0 so published ports are reachable from

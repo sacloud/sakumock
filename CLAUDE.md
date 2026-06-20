@@ -60,7 +60,7 @@ Precedent: simplenotification exposes `GET`/`DELETE /_sakumock/messages` to list
 
 ### Port allocation
 
-Control-plane ports are sequential from 18080. Next available: 18089. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage, 18087 iam, 18088 apprun.)
+Control-plane ports are sequential from 18080. Next available: 18090. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage, 18087 iam, 18088 apprun, 18089 apprundedicated.)
 
 A service that also exposes a separate **data plane** listens on its **control-plane port + 10000** (objectstorage's S3 API via versitygw: 18086 → 28086; monitoringsuite's telemetry ingest: 18084 → 28084; apprun's Docker reverse proxy: 18088 → 28088). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
 
@@ -100,7 +100,7 @@ A service that also exposes a separate **data plane** listens on its **control-p
 
 ### Code style
 
-- Logging: `log/slog` (Info for requests, Debug for operations)
+- Logging: `log/slog`. Per-request logs (`ServeHTTP`) MUST be **Info** level — the mock's purpose is to confirm it is handling requests, so request visibility at Info is intentional. Use Debug for internal operations (store reads/writes, etc.)
 - CLI: `alecthomas/kong` for flag parsing
 - JSON request/response bodies: define a named struct with `json:"..."` tags for any shape whose fields are known and fixed — including shapes used only once. Reserve `map[string]any` for genuinely dynamic or undetermined structures (e.g. settings/icon passed through verbatim). Factor a shared type when the same shape appears in more than one place (e.g. a `{"data": ...}` envelope, or a key shape reused across resources) rather than repeating a map literal. Structs make field/type mistakes a compile error and document the contract.
 - Tests: use the real SAKURA Cloud SDK client against `NewTestServer`

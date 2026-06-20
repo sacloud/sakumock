@@ -1,0 +1,57 @@
+package apprundedicated
+
+import (
+	"context"
+	"log/slog"
+	"os"
+
+	"github.com/sacloud/sakumock"
+	"github.com/sacloud/sakumock/core"
+)
+
+// Command is the CLI command for the AppRun Dedicated mock server.
+type Command struct {
+	Config
+	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"APPRUN_DEDICATED_TLS_"`
+	Routes bool          `help:"List supported HTTP routes and exit"`
+}
+
+// Run starts the AppRun Dedicated mock server and serves until ctx is canceled.
+func (c *Command) Run(ctx context.Context) error {
+	if c.Routes {
+		h, err := NewHandler(Config{})
+		if err != nil {
+			return err
+		}
+		defer h.Close()
+		return core.PrintRoutes(os.Stdout, h.Routes())
+	}
+
+	if err := c.TLS.Validate(); err != nil {
+		return err
+	}
+
+	core.SetupLogger(c.Debug)
+
+	c.Config.tls = c.TLS
+	h, err := NewHandler(c.Config)
+	if err != nil {
+		return err
+	}
+	defer h.Close()
+
+	slog.Info("sakumock-apprundedicated starting",
+		"version", sakumock.Version,
+		"addr", c.Addr,
+		"latency", c.Latency,
+		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
+		"data_plane", c.EnableDataPlane,
+		"debug", c.Debug,
+	)
+	if c.EnableDataPlane {
+		slog.Info("data plane listening", "addr", h.DataPlaneAddr())
+	}
+	slog.Info("to use with sacloud-sdk-go",
+		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
+	return core.Serve(ctx, c.Addr, h, c.TLS)
+}

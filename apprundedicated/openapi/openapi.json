@@ -1,0 +1,4945 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AppRun専有型 API",
+    "version": "1.1.1",
+    "description": "---\n\n「AppRun専有型」が提供するAPIの利用方法とサンプルを公開しております。\n\n# 基本的な使い方\n\n## APIキーの発行\n\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。  \nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n\n<div class=\"warning\">\n  <b>操作マニュアル</b><br />\n  <ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## APIエンドポイント\nhttps://secure.sakura.ad.jp/cloud/api/apprun-dedicated/1.0/\n\n---\n",
+    "contact": {
+      "name": "SAKURA internet Inc."
+    },
+    "license": {
+      "name": "Copyright(C) SAKURA internet Inc. all rights reserved."
+    }
+  },
+  "tags": [
+    {
+      "name": "application"
+    },
+    {
+      "name": "application_version"
+    },
+    {
+      "name": "certificate"
+    },
+    {
+      "name": "cluster"
+    },
+    {
+      "name": "service_class"
+    }
+  ],
+  "paths": {
+    "/applications": {
+      "post": {
+        "operationId": "createApplication",
+        "summary": "新しいアプリケーションの作成",
+        "description": "指定したクラスタに新しいアプリケーションを作成します。1アカウントにつき最大10個まで作成可能です。",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApplicationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApplication"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listApplications",
+        "summary": "アカウント内のアプリケーション一覧の取得",
+        "description": "指定したアカウントに紐づくアプリケーションの一覧を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            },
+            "explode": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "前ページの最後のID。これ以降のデータを取得するためのカーソル。ページネーションに利用します。",
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "description": "1ページあたりの最大取得件数。",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListApplicationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application"
+        ]
+      }
+    },
+    "/applications/{applicationID}": {
+      "get": {
+        "operationId": "getApplication",
+        "summary": "アプリケーションの詳細情報を取得する",
+        "description": "指定したアプリケーションIDの詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application"
+        ]
+      },
+      "put": {
+        "operationId": "updateApplication",
+        "summary": "アプリケーション情報の更新",
+        "description": "アプリケーションのactiveVersionなどを更新します。クラスタの変更はできません。activeVersionを変更すると指定したバージョンがデプロイされます。activeVersionをnullにするとアプリケーションは非アクティブ状態になり､デプロイされなくなります。アプリケーション削除前には activeVersion を null にする必要があります｡",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplication"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApplication",
+        "summary": "アプリケーションの削除",
+        "description": "指定したアプリケーションを削除します。\n\n## 前提条件\n\n- 当該アプリケーションに **アクティブなバージョンが存在しない** こと\n- いずれのワーカーノードでも当該アプリケーションの **コンテナが稼働していない** こと",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application"
+        ]
+      }
+    },
+    "/applications/{applicationID}/containers": {
+      "get": {
+        "operationId": "getApplicationContainers",
+        "summary": "アプリケーションのノードごとのコンテナ配置情報を取得",
+        "description": "指定したアプリケーションの各ワーカーノード上でのコンテナ配置情報を返します。",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationContainersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application"
+        ]
+      }
+    },
+    "/applications/{applicationID}/versions": {
+      "post": {
+        "operationId": "createApplicationVersion",
+        "summary": "アプリケーションバージョンの作成",
+        "description": "アプリケーションバージョンを作成します｡アプリケーションバージョンを作成するだけではノードにデプロイされません｡アプリケーションのアクティブバージョンに指定するとノードにデプロイされます｡",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApplicationVersionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application_version"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApplicationVersion"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listApplicationVersions",
+        "summary": "アプリケーションバージョン一覧の取得",
+        "description": "指定されたアプリケーションのバージョン一覧取得",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "前ページの最後のID。これ以降のデータを取得するためのカーソル。",
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationVersionNumber"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 30
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListApplicationVersionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application_version"
+        ]
+      }
+    },
+    "/applications/{applicationID}/versions/{version}": {
+      "delete": {
+        "operationId": "deleteApplicationVersion",
+        "summary": "アプリケーションバージョンの削除",
+        "description": "現在ノードにデプロイされているバージョンおよびアクティブなバージョンは削除出来ない｡",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationVersionNumber"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application_version"
+        ]
+      },
+      "get": {
+        "operationId": "getApplicationVersion",
+        "summary": "アプリケーションバージョンの詳細取得",
+        "description": "指定されたバージョンの詳細取得",
+        "parameters": [
+          {
+            "name": "applicationID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationID"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ApplicationVersionNumber"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationVersionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "application_version"
+        ]
+      }
+    },
+    "/clusters": {
+      "post": {
+        "operationId": "createCluster",
+        "summary": "クラスタの作成",
+        "description": "新しいクラスタを作成します。作成後にクラスタIDを返します。",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateClusterResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCluster"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listClusters",
+        "summary": "クラスタの一覧の取得",
+        "description": "アカウントに紐づくクラスタの一覧を返します。ページネーションに対応します。",
+        "parameters": [
+          {
+            "name": "lastClusterID",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            },
+            "explode": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "前ページの最後のID。これ以降のデータを取得するためのカーソル。",
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 5,
+              "maximum": 30,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListClusterResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}": {
+      "get": {
+        "operationId": "getCluster",
+        "summary": "クラスタの詳細の取得",
+        "description": "指定したクラスタの詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetClusterResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteCluster",
+        "summary": "クラスタの削除",
+        "description": "指定したクラスタを削除します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      },
+      "put": {
+        "operationId": "updateCluster",
+        "summary": "クラスタの更新",
+        "description": "指定したクラスタの設定を更新します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCluster"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{clusterID}/asg": {
+      "post": {
+        "operationId": "createAutoScalingGroup",
+        "summary": "Auto Scaling Groupの作成",
+        "description": "新しい Auto Scaling Group を作成します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAutoScalingGroupResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAutoScalingGroup"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAutoScalingGroups",
+        "summary": "Auto Scaling Groupの一覧を取得",
+        "description": "クラスタに所属する Auto Scaling Group の一覧を返します。ページネーションに対応します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "lastAutoScalingGroupID",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            },
+            "explode": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "前ページの最後のID。これ以降のデータを取得するためのカーソル。",
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAutoScalingGroupResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}": {
+      "get": {
+        "operationId": "getAutoScalingGroup",
+        "summary": "Auto Scaling Groupの詳細を取得",
+        "description": "指定した Auto Scaling Group の詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAutoScalingGroupResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAutoScalingGroup",
+        "summary": "Auto Scaling Groupの削除",
+        "description": "指定した Auto Scaling Group を削除します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers": {
+      "post": {
+        "operationId": "createLoadBalancer",
+        "summary": "ロードバランサーの作成",
+        "description": "指定したAuto Scaling Groupにロードバランサーを作成します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateLoadBalancerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLoadBalancer"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listLoadBalancers",
+        "summary": "ロードバランサーの一覧を取得",
+        "description": "Auto Scaling Group に属するロードバランサーの一覧を返します。ページネーションに対応します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerID"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 2,
+              "maximum": 30,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLoadBalancersResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}": {
+      "get": {
+        "operationId": "getLoadBalancer",
+        "summary": "ロードバランサーの詳細を取得",
+        "description": "指定したロードバランサーの詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "loadBalancerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLoadBalancerResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteLoadBalancer",
+        "summary": "ロードバランサーを削除する",
+        "description": "指定したロードバランサーを削除します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "loadBalancerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes": {
+      "get": {
+        "operationId": "listLoadBalancerNodes",
+        "summary": "ロードバランサーノードの一覧を取得",
+        "description": "指定したロードバランサーに属するノードの一覧を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "loadBalancerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerID"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerID"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 2,
+              "maximum": 30,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLoadBalancerNodesResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes/{loadBalancerNodeID}": {
+      "get": {
+        "operationId": "getLoadBalancerNode",
+        "summary": "ロードバランサーノードの詳細情報を取得",
+        "description": "指定したロードバランサーノードの詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "loadBalancerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerID"
+            }
+          },
+          {
+            "name": "loadBalancerNodeID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LoadBalancerNodeID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLoadBalancerNodeResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes": {
+      "get": {
+        "operationId": "listWorkerNodes",
+        "summary": "Auto Scaling Group に所属するワーカーノード一覧を取得",
+        "description": "Auto Scaling Group に所属するワーカーノードの一覧を返します。ページネーションに対応します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/WorkerNodeID"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 2,
+              "maximum": 100,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkerNodesResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}": {
+      "get": {
+        "operationId": "getWorkerNode",
+        "summary": "Auto Scaling Group に所属するワーカーノードの詳細を取得",
+        "description": "指定したワーカーノードの詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "workerNodeID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/WorkerNodeID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetWorkerNodeResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}/draining": {
+      "put": {
+        "operationId": "updateWorkerNodeDrainingState",
+        "summary": "ワーカーノードのdraining状態を変更する",
+        "description": "指定したワーカーノードのdraining状態を更新します（draining を有効/無効にします）。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "autoScalingGroupID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AutoScalingGroupID"
+            }
+          },
+          {
+            "name": "workerNodeID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/WorkerNodeID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "cluster"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkerNodeDrainingRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{clusterID}/certificates": {
+      "post": {
+        "operationId": "createCertificate",
+        "summary": "証明書の作成",
+        "description": "新しい証明書を作成します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCertificateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "certificate"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCertificate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listCertificate",
+        "summary": "証明書の一覧を取得",
+        "description": "クラスタ内の証明書一覧を返します。ページネーションに対応します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "lastCertificateID",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CertificateID"
+            },
+            "explode": false
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "前ページの最後のID。これ以降のデータを取得するためのカーソル。",
+            "schema": {
+              "$ref": "#/components/schemas/CertificateID"
+            },
+            "explode": false
+          },
+          {
+            "name": "maxItems",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 5,
+              "maximum": 30,
+              "default": 20
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCertificateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "certificate"
+        ]
+      }
+    },
+    "/clusters/{clusterID}/certificates/{certificateID}": {
+      "get": {
+        "operationId": "getCertificate",
+        "summary": "証明書の詳細を取得",
+        "description": "指定した証明書の詳細情報を返します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "certificateID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CertificateID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCertificateResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "certificate"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteCertificate",
+        "summary": "証明書の削除",
+        "description": "指定した証明書を削除します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "certificateID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CertificateID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "certificate"
+        ]
+      },
+      "put": {
+        "operationId": "updateCertificate",
+        "summary": "証明書の更新",
+        "description": "指定した証明書を更新します。",
+        "parameters": [
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ClusterID"
+            }
+          },
+          {
+            "name": "certificateID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CertificateID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "certificate"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCertificate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service_classes/lb": {
+      "get": {
+        "operationId": "listLbServiceClasses",
+        "summary": "ロードバランササービスクラス一覧",
+        "description": "ロードバランサ用のサービスクラス一覧を返します。",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLbServiceClassResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "service_class"
+        ]
+      }
+    },
+    "/service_classes/worker": {
+      "get": {
+        "operationId": "listWorkerServiceClasses",
+        "summary": "ワーカノードサービスクラス一覧",
+        "description": "ワーカーノード用のサービスクラス一覧を返します。",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkerServiceClassResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "service_class"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "BasicAuth": []
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ApplicationContainerSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "image",
+          "state",
+          "status",
+          "cpuUsagePercent",
+          "applicationID",
+          "applicationVersion"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "コンテナID"
+          },
+          "image": {
+            "type": "string",
+            "description": "イメージ名"
+          },
+          "state": {
+            "type": "string",
+            "description": "State"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status"
+          },
+          "cpuUsagePercent": {
+            "type": "number",
+            "format": "float",
+            "description": "コンテナのCPU使用率(単位: %)"
+          },
+          "applicationID": {
+            "type": "string",
+            "description": "applicationID"
+          },
+          "applicationVersion": {
+            "type": "integer",
+            "format": "int64",
+            "description": "version"
+          }
+        }
+      },
+      "ApplicationContainersStats": {
+        "type": "object",
+        "required": [
+          "collectedAtSec",
+          "containers"
+        ],
+        "properties": {
+          "collectedAtSec": {
+            "type": "integer",
+            "format": "int64",
+            "description": "状態回収日時"
+          },
+          "containers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationContainerSummary"
+            }
+          }
+        }
+      },
+      "ApplicationDesiredContainer": {
+        "type": "object",
+        "required": [
+          "applicationID",
+          "applicationVersion",
+          "cpuMillis",
+          "memoryMB",
+          "image"
+        ],
+        "properties": {
+          "applicationID": {
+            "type": "string",
+            "description": "デプロイするアプリケーションID"
+          },
+          "applicationVersion": {
+            "type": "integer",
+            "format": "int64",
+            "description": "デプロイするアプリケーションのバージョン"
+          },
+          "cpuMillis": {
+            "type": "integer",
+            "format": "int64",
+            "description": "割り当てる CPU(単位: mCPU)"
+          },
+          "memoryMB": {
+            "type": "integer",
+            "format": "int64",
+            "description": "割り当てる メモリ(単位: MB)"
+          },
+          "image": {
+            "type": "string",
+            "description": "デプロイするコンテナのイメージ名"
+          }
+        }
+      },
+      "ApplicationID": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "ApplicationPeekDesiredContainersResponse": {
+        "type": "object",
+        "required": [
+          "containers"
+        ],
+        "properties": {
+          "containers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationDesiredContainer"
+            }
+          }
+        }
+      },
+      "ApplicationVersionDeploymentStatus": {
+        "type": "object",
+        "required": [
+          "version",
+          "image",
+          "activeNodeCount",
+          "created"
+        ],
+        "properties": {
+          "version": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationVersionNumber"
+              }
+            ],
+            "description": "アプリケーションバージョン"
+          },
+          "image": {
+            "type": "string",
+            "maxLength": 512,
+            "example": "nginx:latest"
+          },
+          "activeNodeCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "現在動いているノードの数"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "アプリケーションバージョン作成日時(unixTime in seconds)"
+          }
+        }
+      },
+      "ApplicationVersionNumber": {
+        "type": "integer",
+        "format": "int32",
+        "minimum": 1,
+        "example": 3
+      },
+      "AutoScalingGroupID": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "AutoScalingGroupNodeInterface": {
+        "type": "object",
+        "required": [
+          "interfaceIndex",
+          "upstream",
+          "connectsToLB"
+        ],
+        "properties": {
+          "interfaceIndex": {
+            "type": "integer",
+            "format": "int16",
+            "description": "インターフェース番号。例: eth0→0, eth1→1, eth2→2。0は必須｡重複不可｡"
+          },
+          "upstream": {
+            "type": "string",
+            "description": "sharedにすると共有セグメントに繋がります。ルータ+スイッチ、および共有セグメントにつなげられるのはeth0のみです。",
+            "title": "接続先 switch"
+          },
+          "ipPool": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IpRange"
+            },
+            "maxItems": 20,
+            "description": "IP Pool は最大20個まで指定可能｡アップストリームが 'shared' の場合は指定できません｡それ以外の場合は指定必須です｡",
+            "title": "IP アドレスの割り当て範囲"
+          },
+          "netmaskLen": {
+            "type": "integer",
+            "format": "int16",
+            "minimum": 8,
+            "maximum": 29,
+            "description": "アップストリームが 'shared' の場合､指定できません｡それ以外の場合は指定必須です｡",
+            "title": "ネットマスク長"
+          },
+          "defaultGateway": {
+            "type": "string",
+            "description": "アップストリームが 'shared' の場合､指定できません｡",
+            "title": "デフォルトゲートウェイ"
+          },
+          "packetFilterID": {
+            "type": "string",
+            "description": "パケットフィルターid"
+          },
+          "connectsToLB": {
+            "type": "boolean",
+            "description": "一つのオートスケーリンググループにつき､一つのインターフェースのみがロードバランサー接続対象となる｡接続対象になった場合､そのインターフェースに割り当てられた IP アドレスがロードバランサーのバックエンドとして登録される｡クラスターにロードバランサーポートが設定されている場合､一つのインターフェースが true である必要がある｡",
+            "title": "ロードバランサー接続対象インターフェースかどうか"
+          }
+        }
+      },
+      "CertificateID": {
+        "type": "string",
+        "format": "uuid",
+        "example": "13B9EA83-DDB0-4385-9533-3D693A6A310F"
+      },
+      "ClusterID": {
+        "type": "string",
+        "format": "uuid",
+        "example": "13B9EA83-DDB0-4385-9533-3D693A6A310F"
+      },
+      "CreateApplication": {
+        "type": "object",
+        "required": [
+          "name",
+          "clusterID"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "アプリケーションの名前｡クラスタの中ではユニーク｡英数字とハイフン、アンダースコアのみ使用可能",
+            "example": "bbs"
+          },
+          "clusterID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterID"
+              }
+            ],
+            "description": "デプロイ先クラスタ"
+          }
+        }
+      },
+      "CreateApplicationResponse": {
+        "type": "object",
+        "required": [
+          "application"
+        ],
+        "properties": {
+          "application": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatedApplication"
+              }
+            ],
+            "description": "作成されたアプリケーションの情報"
+          }
+        }
+      },
+      "CreateApplicationVersion": {
+        "type": "object",
+        "required": [
+          "cpu",
+          "memory",
+          "scalingMode",
+          "image",
+          "registryUsername",
+          "registryPassword",
+          "registryPasswordAction",
+          "exposedPorts",
+          "env"
+        ],
+        "properties": {
+          "cpu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 100,
+            "maximum": 64000,
+            "example": 500
+          },
+          "memory": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 128,
+            "maximum": 131072,
+            "example": 1000
+          },
+          "scalingMode": {
+            "$ref": "#/components/schemas/ScalingMode"
+          },
+          "fixedScale": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "minScale": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50,
+            "example": 1
+          },
+          "maxScale": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50,
+            "example": 3
+          },
+          "scaleInThreshold": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 30,
+            "maximum": 70,
+            "example": 30
+          },
+          "scaleOutThreshold": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 50,
+            "maximum": 99,
+            "example": 95
+          },
+          "image": {
+            "type": "string",
+            "maxLength": 512,
+            "example": "nginx:latest"
+          },
+          "cmd": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "description": "コンテナ起動時に実行するコマンドと引数"
+          },
+          "registryUsername": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "registryPassword": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "registryPasswordAction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RegistryPasswordAction"
+              }
+            ],
+            "description": "レジストリパスワードの設定方法"
+          },
+          "exposedPorts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExposedPort"
+            },
+            "maxItems": 5,
+            "description": "アプリケーションが公開するポート番号｡同一クラスタ内で､ポートの重複不可｡"
+          },
+          "env": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateEnvironmentVariable"
+            },
+            "maxItems": 50,
+            "description": "環境変数"
+          }
+        }
+      },
+      "CreateApplicationVersionResponse": {
+        "type": "object",
+        "required": [
+          "applicationVersion"
+        ],
+        "properties": {
+          "applicationVersion": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadApplicationVersionSummary"
+              }
+            ],
+            "description": "作成されたアプリケーションバージョンの情報"
+          }
+        }
+      },
+      "CreateAutoScalingGroup": {
+        "type": "object",
+        "required": [
+          "name",
+          "zone",
+          "workerServiceClassPath",
+          "minNodes",
+          "maxNodes",
+          "interfaces"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "オートスケーリンググループの名前｡クラスタ内でユニーク｡英数字とアンダースコア、ハイフンのみ使用可能"
+          },
+          "zone": {
+            "type": "string",
+            "description": "オートスケーリンググループのゾーン"
+          },
+          "nameServers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IPv4"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "description": "ネームサーバー設定"
+          },
+          "workerServiceClassPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "ワーカーのサービスクラスパス"
+          },
+          "minNodes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "オートスケーリンググループの最小ノード数"
+          },
+          "maxNodes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "オートスケーリンググループの最大ノード数"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoScalingGroupNodeInterface"
+            },
+            "minItems": 1,
+            "maxItems": 5,
+            "title": "ネットワークインターフェース定義"
+          }
+        }
+      },
+      "CreateAutoScalingGroupResponse": {
+        "type": "object",
+        "required": [
+          "autoScalingGroup"
+        ],
+        "properties": {
+          "autoScalingGroup": {
+            "$ref": "#/components/schemas/CreatedAutoScalingGroup"
+          }
+        }
+      },
+      "CreateCertificate": {
+        "type": "object",
+        "required": [
+          "name",
+          "certificatePem",
+          "privatekeyPem"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "description": "証明書の名前｡クラスタ内でユニーク｡英数字、アンダースコア、ハイフン､ドットのみ使用可能"
+          },
+          "certificatePem": {
+            "type": "string",
+            "maxLength": 1000000,
+            "description": "証明書のPEM形式の文字列"
+          },
+          "privatekeyPem": {
+            "type": "string",
+            "maxLength": 1000000,
+            "description": "証明書の秘密鍵のPEM形式の文字列"
+          },
+          "intermediateCertificatePem": {
+            "type": "string",
+            "maxLength": 1000000,
+            "description": "証明書のチェーン証明書のPEM形式の文字列"
+          }
+        }
+      },
+      "CreateCertificateResponse": {
+        "type": "object",
+        "required": [
+          "certificate"
+        ],
+        "properties": {
+          "certificate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatedCertificate"
+              }
+            ],
+            "description": "作成されたクラスターの情報"
+          }
+        }
+      },
+      "CreateCluster": {
+        "type": "object",
+        "required": [
+          "name",
+          "ports",
+          "servicePrincipalID"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "クラスターの名前｡プロジェクト内でユニーク｡英数字、アンダースコア、ハイフンのみ使用可能"
+          },
+          "letsEncryptEmail": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+            "description": "let's encrypt による証明書発行を有効にするにはここにメールアドレスを設定します｡\nlet's encrypt による証明書発行は HTTP-01 Challenge になるため､80 番ポートを HTTP Protocol で外向きに解放する必要があります｡",
+            "title": "let's encrypt のメールアドレス"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateLoadBalancerPort"
+            },
+            "maxItems": 5,
+            "description": "ロードバランサーのポート群"
+          },
+          "servicePrincipalID": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 12,
+            "description": "サービスプリンシパルのID",
+            "example": "123456789012"
+          }
+        }
+      },
+      "CreateClusterResponse": {
+        "type": "object",
+        "required": [
+          "cluster"
+        ],
+        "properties": {
+          "cluster": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatedCluster"
+              }
+            ],
+            "description": "作成されたクラスターの情報"
+          }
+        }
+      },
+      "CreateEnvironmentVariable": {
+        "type": "object",
+        "required": [
+          "key",
+          "secret"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "環境変数の値｡secret が true で､かつ value が指定されていない場合は前のバージョンの値が利用される｡"
+          },
+          "secret": {
+            "type": "boolean",
+            "description": "秘密情報か否か｡true の場合､value を API 等で取得することは出来ない｡"
+          }
+        },
+        "description": "環境変数作成用モデル"
+      },
+      "CreateLoadBalancer": {
+        "type": "object",
+        "required": [
+          "name",
+          "serviceClassPath",
+          "interfaces"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "名称"
+          },
+          "serviceClassPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "ロードバランサーのサービスクラスパス"
+          },
+          "nameServers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IPv4"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "description": "ネームサーバー設定"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoadBalancerInterface"
+            },
+            "minItems": 1,
+            "maxItems": 5,
+            "description": "ロードバランサーのインターフェース"
+          }
+        }
+      },
+      "CreateLoadBalancerPort": {
+        "type": "object",
+        "required": [
+          "port",
+          "protocol"
+        ],
+        "properties": {
+          "port": {
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "外部公開するポート番号｡5950-5959は予約されているため指定不可",
+            "example": 8080
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "http",
+              "https",
+              "tcp"
+            ],
+            "description": "ポートで扱うプロトコル"
+          }
+        }
+      },
+      "CreateLoadBalancerResponse": {
+        "type": "object",
+        "required": [
+          "loadBalancer"
+        ],
+        "properties": {
+          "loadBalancer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreatedLoadBalancer"
+              }
+            ],
+            "description": "作成されたロードバランサーの情報"
+          }
+        },
+        "description": "ロードバランサーを作成するリクエスト",
+        "example": {
+          "loadBalancer": {
+            "loadBalancerID": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        }
+      },
+      "CreatedApplication": {
+        "type": "object",
+        "required": [
+          "applicationID"
+        ],
+        "properties": {
+          "applicationID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationID"
+              }
+            ],
+            "description": "ID",
+            "readOnly": true
+          }
+        }
+      },
+      "CreatedAutoScalingGroup": {
+        "type": "object",
+        "required": [
+          "autoScalingGroupID"
+        ],
+        "properties": {
+          "autoScalingGroupID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoScalingGroupID"
+              }
+            ],
+            "description": "ID"
+          }
+        }
+      },
+      "CreatedCertificate": {
+        "type": "object",
+        "required": [
+          "certificateID"
+        ],
+        "properties": {
+          "certificateID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificateID"
+              }
+            ],
+            "description": "証明書ID"
+          }
+        }
+      },
+      "CreatedCluster": {
+        "type": "object",
+        "required": [
+          "clusterID"
+        ],
+        "properties": {
+          "clusterID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterID"
+              }
+            ],
+            "description": "クラスタID"
+          }
+        }
+      },
+      "CreatedLoadBalancer": {
+        "type": "object",
+        "required": [
+          "loadBalancerID"
+        ],
+        "properties": {
+          "loadBalancerID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerID"
+              }
+            ],
+            "description": "作成されたロードバランサーのID"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "status",
+          "title"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "ExposedPort": {
+        "type": "object",
+        "required": [
+          "targetPort",
+          "loadBalancerPort",
+          "useLetsEncrypt",
+          "healthCheck"
+        ],
+        "properties": {
+          "targetPort": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Port"
+              }
+            ],
+            "description": "アプリケーション内部でリッスンするポート番号｡このポートがホストでリッスンされます｡同一クラスタ内で､ポートの重複不可｡"
+          },
+          "loadBalancerPort": {
+            "type": "integer",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Port"
+              }
+            ],
+            "nullable": true,
+            "description": "公開先となるロードバランサーのポート番号。ロードバランサーに設定しない場合は null を指定する｡"
+          },
+          "useLetsEncrypt": {
+            "type": "boolean",
+            "description": "let's encrypt を利用するかどうか(https の場合のみサポート)"
+          },
+          "host": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5,
+            "description": "- HTTP/HTTPS のロードバランサーポートを利用する場合は **必須**（1〜5件）。\n- TCP または loadBalancerPort = null の場合は **指定不可**。",
+            "title": "ロードバランサーでホスト名ルーティングに使用されるホスト名"
+          },
+          "healthCheck": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HealthCheck"
+              }
+            ],
+            "nullable": true,
+            "description": "ロードバランサーがアプリケーションの正常性を確認するための設定です。ヘルスチェックが有効な場合、指定したパスにアクセスし、HTTPステータスコードが 2xx または 3xx 以外の場合は、そのノードへのトラフィックが停止されます。これにより、異常なノードへのアクセスを自動的に防止できます。",
+            "title": "ヘルスチェックの設定"
+          }
+        }
+      },
+      "GetApplicationContainersResponse": {
+        "type": "object",
+        "required": [
+          "nodes"
+        ],
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NodeContainerPlacementInfo"
+            },
+            "description": "ノードごとのコンテナ配置情報リスト"
+          }
+        },
+        "example": {
+          "nodes": [
+            {
+              "nodeID": "b7e6a1c2-3f4d-4e2a-9b1a-2c3d4e5f6a7b",
+              "containersStats": {
+                "collectedAtSec": 1721203200,
+                "containers": [
+                  {
+                    "id": "container-1",
+                    "image": "nginx:latest",
+                    "state": "running",
+                    "status": "Up 5 minutes",
+                    "cpuUsagePercent": 12.5,
+                    "applicationID": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                    "applicationVersion": 2
+                  }
+                ]
+              },
+              "desired": {
+                "containers": []
+              }
+            },
+            {
+              "nodeID": "c8f7b2d3-4e5f-5a6b-8c2d-3e4f5a6b7c8d",
+              "containersStats": {
+                "collectedAtSec": 1721203200,
+                "containers": []
+              },
+              "desired": {
+                "containers": [
+                  {
+                    "applicationID": "9c858901-8a57-4791-81fe-4c455b099bc9",
+                    "applicationVersion": 1,
+                    "cpuMillis": 250,
+                    "memoryMB": 128,
+                    "image": "redis:alpine"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "GetApplicationResponse": {
+        "type": "object",
+        "required": [
+          "application"
+        ],
+        "properties": {
+          "application": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadApplicationDetail"
+              }
+            ],
+            "description": "アプリケーションの情報"
+          }
+        },
+        "example": {
+          "application": {
+            "applicationID": "A0199B39-B361-45B9-8DF4-FC8BE494D690",
+            "name": "my-app",
+            "clusterID": "13B9EA83-DDB0-4385-9533-3D693A6A310F",
+            "clusterName": "mock-cluster",
+            "activeVersion": 3,
+            "desiredCount": 3,
+            "scalingCooldownSeconds": 300
+          }
+        }
+      },
+      "GetApplicationVersionResponse": {
+        "type": "object",
+        "required": [
+          "applicationVersion"
+        ],
+        "properties": {
+          "applicationVersion": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadApplicationVersionDetail"
+              }
+            ],
+            "description": "アプリケーションのバージョン情報"
+          }
+        },
+        "example": {
+          "applicationVersion": {
+            "version": 3,
+            "cpu": 500,
+            "memory": 500,
+            "scalingMode": "cpu",
+            "minScale": 1,
+            "maxScale": 2,
+            "image": "nginx:2",
+            "registryUsername": null,
+            "registryPassword": null,
+            "exposedPorts": [
+              {
+                "targetPort": 8080,
+                "loadBalancerPort": 80,
+                "useLetsEncrypt": false,
+                "healthCheck": {
+                  "path": "/healthz",
+                  "intervalSeconds": 10,
+                  "timeoutSeconds": 30
+                }
+              },
+              {
+                "targetPort": 8084,
+                "loadBalancerPort": 443,
+                "host": [
+                  "example.com"
+                ],
+                "useLetsEncrypt": true,
+                "healthCheck": {
+                  "path": "/monitoring/l7check",
+                  "intervalSeconds": 10,
+                  "timeoutSeconds": 30
+                }
+              }
+            ],
+            "env": [
+              {
+                "key": "ENV_VAR",
+                "value": "value",
+                "secret": false
+              },
+              {
+                "key": "DB_PASSWORD",
+                "value": "****",
+                "secret": true
+              }
+            ],
+            "activeNodeCount": 1,
+            "created": 1577836800
+          }
+        }
+      },
+      "GetAutoScalingGroupResponse": {
+        "type": "object",
+        "required": [
+          "autoScalingGroup"
+        ],
+        "properties": {
+          "autoScalingGroup": {
+            "$ref": "#/components/schemas/ReadAutoScalingGroupDetail"
+          }
+        },
+        "example": {
+          "autoScalingGroup": {
+            "autoScalingGroupID": "123e4567-e89b-12d3-a456-426614174001",
+            "name": "tokyo-asg",
+            "zone": "tk1b",
+            "minNodes": 2,
+            "maxNodes": 10,
+            "workerNodeCount": 3,
+            "workerServiceClassPath": "cloud/apprun/dedicated/worker/1vcpu_2gb",
+            "deleting": false,
+            "interfaces": [
+              {
+                "interfaceIndex": 1,
+                "netmaskLen": 24,
+                "upstream": "111111111111",
+                "packetFilterID": "pf-123456",
+                "defaultGateway": "192.0.1.1",
+                "connectsToLB": true
+              },
+              {
+                "interfaceIndex": 2,
+                "netmaskLen": 24,
+                "upstream": "111111111112",
+                "connectsToLB": false
+              }
+            ]
+          }
+        }
+      },
+      "GetCertificateResponse": {
+        "type": "object",
+        "required": [
+          "certificate"
+        ],
+        "properties": {
+          "certificate": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadCertificate"
+              }
+            ],
+            "description": "証明書の情報"
+          }
+        },
+        "example": {
+          "certificate": {
+            "certificateID": "83B9EA83-DDB0-4385-9533-3D693A6A310F",
+            "name": "my-certificate",
+            "commonName": "example.com",
+            "subjectAlternativeNames": [
+              "www.example.com",
+              "api.example.com"
+            ],
+            "notBeforeSec": 1577836800,
+            "notAfterSec": 1640995200,
+            "created": 1577836800,
+            "updated": 1577836800
+          }
+        }
+      },
+      "GetClusterResponse": {
+        "type": "object",
+        "required": [
+          "cluster"
+        ],
+        "properties": {
+          "cluster": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadClusterDetail"
+              }
+            ],
+            "description": "クラスターの情報"
+          }
+        },
+        "example": {
+          "cluster": {
+            "clusterID": "13B9EA83-DDB0-4385-9533-3D693A6A310F",
+            "name": "mock-cluster",
+            "hasLetsEncryptEmail": true,
+            "ports": [
+              {
+                "port": 80,
+                "protocol": "http"
+              },
+              {
+                "port": 443,
+                "protocol": "https"
+              }
+            ],
+            "servicePrincipalID": "123456789012",
+            "created": 1577836800
+          }
+        }
+      },
+      "GetLoadBalancerNodeResponse": {
+        "type": "object",
+        "required": [
+          "loadBalancerNode"
+        ],
+        "properties": {
+          "loadBalancerNode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadLoadBalancerNode"
+              }
+            ],
+            "description": "ロードバランサーノードの情報"
+          }
+        },
+        "description": "ロードバランサーノードの詳細取得レスポンス",
+        "example": {
+          "loadBalancerNode": {
+            "loadBalancerNodeID": "550e8400-e29b-41d4-a716-446655440001",
+            "resourceID": "12345678901",
+            "status": "healthy",
+            "interfaces": [
+              {
+                "interfaceIndex": 1,
+                "addresses": [
+                  {
+                    "address": "10.0.0.2/24",
+                    "vip": false
+                  },
+                  {
+                    "address": "10.0.1.2/24",
+                    "vip": true
+                  }
+                ]
+              },
+              {
+                "interfaceIndex": 2,
+                "addresses": [
+                  {
+                    "address": "10.0.2.8/24",
+                    "vip": false
+                  },
+                  {
+                    "address": "10.0.3.4/24",
+                    "vip": true
+                  }
+                ]
+              }
+            ],
+            "archiveVersion": "2025.1014.1",
+            "createErrorMessage": "クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください",
+            "created": 1577836800
+          }
+        }
+      },
+      "GetLoadBalancerResponse": {
+        "type": "object",
+        "required": [
+          "loadBalancer"
+        ],
+        "properties": {
+          "loadBalancer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadLoadBalancerDetail"
+              }
+            ],
+            "description": "ロードバランサーの情報"
+          }
+        },
+        "description": "ロードバランサーの詳細取得レスポンス",
+        "example": {
+          "loadBalancer": {
+            "loadBalancerID": "550e8400-e29b-41d4-a716-446655440000",
+            "name": "example-lb",
+            "serviceClassPath": "cloud/apprun/dedicated/lb/1vcpu_2gb_1",
+            "deleting": false,
+            "interfaces": [
+              {
+                "interfaceIndex": 1,
+                "vip": "192.168.1.100",
+                "netmaskLen": 24,
+                "virtualRouterID": 51,
+                "upstream": "switch1",
+                "packetFilterID": "pf-123456",
+                "defaultGateway": "192.168.1.0/32"
+              },
+              {
+                "interfaceIndex": 2,
+                "netmaskLen": 24,
+                "upstream": "switch2"
+              }
+            ],
+            "created": 1577836800
+          }
+        }
+      },
+      "GetWorkerNodeResponse": {
+        "type": "object",
+        "required": [
+          "workerNode"
+        ],
+        "properties": {
+          "workerNode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReadWorkerNodeDetail"
+              }
+            ],
+            "description": "ワーカーノードの詳細"
+          }
+        },
+        "example": {
+          "workerNode": {
+            "workerNodeID": "123e4567-e89b-12d3-a456-426614174002",
+            "resourceID": "worker-node-01",
+            "draining": false,
+            "healthy": true,
+            "creating": false,
+            "status": "healthy",
+            "created": 1577836800,
+            "runningContainers": [
+              {
+                "containerID": "container-01",
+                "name": "nginx",
+                "state": "running",
+                "status": "running",
+                "image": "nginx:latest",
+                "startedAt": 1577836800,
+                "applicationID": "A0199B39-B361-45B9-8DF4-FC8BE494D690",
+                "applicationVersion": 1
+              },
+              {
+                "containerID": "container-02",
+                "name": "redis",
+                "state": "running",
+                "status": "running",
+                "image": "redis:latest",
+                "startedAt": 1577836800,
+                "applicationID": "A0199B39-B361-45B9-8DF4-FC8BE494D690",
+                "applicationVersion": 1
+              }
+            ],
+            "networkInterfaces": [
+              {
+                "interfaceIndex": 0,
+                "addresses": [
+                  {
+                    "address": "10.0.0.1"
+                  }
+                ]
+              },
+              {
+                "interfaceIndex": 1,
+                "addresses": [
+                  {
+                    "address": "192.168.0.1"
+                  }
+                ]
+              }
+            ],
+            "archiveVersion": "2025.1014.1",
+            "createErrorMessage": "クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください"
+          }
+        }
+      },
+      "HealthCheck": {
+        "type": "object",
+        "required": [
+          "path",
+          "intervalSeconds",
+          "timeoutSeconds"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "ヘルスチェックのパス（HTTP の場合）",
+            "example": "/healthz"
+          },
+          "intervalSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 3,
+            "maximum": 60,
+            "description": "ヘルスチェックの間隔(秒)",
+            "default": 30
+          },
+          "timeoutSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 60,
+            "description": "ヘルスチェックのタイムアウト",
+            "default": 5
+          }
+        }
+      },
+      "IPv4": {
+        "type": "string",
+        "pattern": "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$"
+      },
+      "IpRange": {
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "properties": {
+          "start": {
+            "$ref": "#/components/schemas/IPv4"
+          },
+          "end": {
+            "$ref": "#/components/schemas/IPv4"
+          }
+        }
+      },
+      "ListApplicationResponse": {
+        "type": "object",
+        "required": [
+          "applications"
+        ],
+        "properties": {
+          "applications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadApplicationDetail"
+            },
+            "description": "アプリケーションの一覧"
+          },
+          "nextCursor": {
+            "type": "string",
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "example": {
+          "applications": [
+            {
+              "applicationID": "A0199B39-B361-45B9-8DF4-FC8BE494D690",
+              "name": "my-app",
+              "clusterID": "13B9EA83-DDB0-4385-9533-3D693A6A310F",
+              "clusterName": "mock-cluster",
+              "activeVersion": 3,
+              "desiredCount": 3,
+              "scalingCooldownSeconds": 300
+            }
+          ]
+        }
+      },
+      "ListApplicationVersionResponse": {
+        "type": "object",
+        "required": [
+          "versions"
+        ],
+        "properties": {
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationVersionDeploymentStatus"
+            },
+            "description": "アプリケーションのバージョン一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationVersionNumber"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "example": {
+          "versions": [
+            {
+              "version": 3,
+              "image": "nginx:2",
+              "activeNodeCount": 1,
+              "created": 1577836800
+            },
+            {
+              "version": 2,
+              "image": "nginx:2",
+              "activeNodeCount": 0,
+              "created": 1577836800
+            },
+            {
+              "version": 1,
+              "image": "nginx:1",
+              "activeNodeCount": 0,
+              "created": 1577836800
+            }
+          ]
+        }
+      },
+      "ListAutoScalingGroupResponse": {
+        "type": "object",
+        "required": [
+          "autoScalingGroups"
+        ],
+        "properties": {
+          "autoScalingGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadAutoScalingGroupDetail"
+            },
+            "description": "オートスケーリンググループの一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoScalingGroupID"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "example": {
+          "autoScalingGroups": [
+            {
+              "autoScalingGroupID": "123e4567-e89b-12d3-a456-426614174001",
+              "name": "tokyo-asg",
+              "zone": "tk1b",
+              "minNodes": 2,
+              "maxNodes": 10,
+              "workerNodeCount": 3,
+              "workerServiceClassPath": "cloud/apprun/dedicated/worker/1vcpu_2gb",
+              "deleting": false,
+              "interfaces": [
+                {
+                  "interfaceIndex": 1,
+                  "ipPool": [
+                    {
+                      "start": "192.0.1.0",
+                      "end": "192.0.1.255"
+                    }
+                  ],
+                  "netmaskLen": 24,
+                  "upstream": "111111111111",
+                  "packetFilterID": "pf-123456",
+                  "defaultGateway": "192.0.1.1",
+                  "connectsToLB": true
+                },
+                {
+                  "interfaceIndex": 2,
+                  "ipPool": [
+                    {
+                      "start": "192.0.2.0",
+                      "end": "192.0.2.255"
+                    }
+                  ],
+                  "netmaskLen": 24,
+                  "upstream": "111111111112",
+                  "connectsToLB": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "ListCertificateResponse": {
+        "type": "object",
+        "required": [
+          "certificates"
+        ],
+        "properties": {
+          "certificates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadCertificate"
+            },
+            "description": "証明書の一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificateID"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "example": {
+          "certificates": [
+            {
+              "certificateID": "13B9EA83-DDB0-4385-9533-3D693A6A310F",
+              "name": "example-certificate",
+              "commonName": "example.com",
+              "subjectAlternativeNames": [
+                "www.example.com",
+                "api.example.com"
+              ],
+              "notBeforeSec": 1577836800,
+              "notAfterSec": 1640995200,
+              "created": 1577836800,
+              "updated": 1577836800
+            }
+          ]
+        }
+      },
+      "ListClusterResponse": {
+        "type": "object",
+        "required": [
+          "clusters"
+        ],
+        "properties": {
+          "clusters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadClusterSummary"
+            },
+            "description": "クラスタの一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterID"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "example": {
+          "clusters": [
+            {
+              "clusterID": "13B9EA83-DDB0-4385-9533-3D693A6A310F",
+              "name": "mock-cluster",
+              "created": 1577836800
+            }
+          ]
+        }
+      },
+      "ListLbServiceClassResponse": {
+        "type": "object",
+        "required": [
+          "lbServiceClasses"
+        ],
+        "properties": {
+          "lbServiceClasses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLbServiceClass"
+            },
+            "description": "ロードバランサー用サービスクラスの一覧"
+          }
+        },
+        "example": {
+          "lbServiceClasses": [
+            {
+              "name": "1vCPU / 1GB メモリ * 1 (非冗長構成)",
+              "nodeCount": 1,
+              "path": "cloud/apprun/dedicated/lb/1vcpu_2gb_1"
+            },
+            {
+              "name": "1vCPU / 1GB メモリ * 2 (冗長構成)",
+              "nodeCount": 2,
+              "path": "cloud/apprun/dedicated/lb/1vcpu_2gb_2"
+            },
+            {
+              "name": "4vCPU / 4GB メモリ * 2 (冗長構成)",
+              "nodeCount": 2,
+              "path": "cloud/apprun/dedicated/lb/4vcpu_4gb_2"
+            }
+          ]
+        }
+      },
+      "ListLoadBalancerNodesResponse": {
+        "type": "object",
+        "required": [
+          "loadBalancerNodes"
+        ],
+        "properties": {
+          "loadBalancerNodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLoadBalancerNodeSummary"
+            },
+            "description": "ロードバランサーノードの一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerNodeID"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "description": "ロードバランサーノードの一覧レスポンス",
+        "example": {
+          "loadBalancerNodes": [
+            {
+              "loadBalancerNodeID": "550e8400-e29b-41d4-a716-446655440001",
+              "resourceID": "12345678901",
+              "status": "healthy",
+              "interfaces": [
+                {
+                  "interfaceIndex": 1,
+                  "addresses": [
+                    {
+                      "address": "10.0.0.8/24",
+                      "vip": false
+                    },
+                    {
+                      "address": "10.0.1.2/24",
+                      "vip": true
+                    }
+                  ]
+                },
+                {
+                  "interfaceIndex": 2,
+                  "addresses": [
+                    {
+                      "address": "10.0.2.8/24",
+                      "vip": false
+                    },
+                    {
+                      "address": "10.0.3.4/24",
+                      "vip": true
+                    }
+                  ]
+                }
+              ],
+              "archiveVersion": "2025.1014.1",
+              "created": 1577836800
+            },
+            {
+              "loadBalancerNodeID": "660e8400-e29b-41d4-a716-446655440001",
+              "resourceID": "12345678901",
+              "status": "healthy",
+              "interfaces": [
+                {
+                  "interfaceIndex": 1,
+                  "addresses": [
+                    {
+                      "address": "10.0.0.9/24",
+                      "vip": false
+                    }
+                  ]
+                }
+              ],
+              "createErrorMessage": "クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください",
+              "created": 1577836800
+            }
+          ]
+        }
+      },
+      "ListLoadBalancersResponse": {
+        "type": "object",
+        "required": [
+          "loadBalancers"
+        ],
+        "properties": {
+          "loadBalancers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLoadBalancerSummary"
+            },
+            "description": "ロードバランサーの一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerID"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "description": "ロードバランサーの一覧レスポンス",
+        "example": {
+          "loadBalancers": [
+            {
+              "loadBalancerID": "550e8400-e29b-41d4-a716-446655440000",
+              "name": "example-lb",
+              "serviceClassPath": "cloud/apprun/dedicated/lb/1vcpu_2gb_1",
+              "created": 1577836800,
+              "deleting": false
+            },
+            {
+              "loadBalancerID": "550e8400-e29b-41d4-a716-446655440001",
+              "name": "another-lb",
+              "serviceClassPath": "cloud/apprun/dedicated/lb/1vcpu_2gb_1",
+              "created": 1577836800,
+              "deleting": true
+            }
+          ]
+        }
+      },
+      "ListWorkerNodesResponse": {
+        "type": "object",
+        "required": [
+          "workerNodes"
+        ],
+        "properties": {
+          "workerNodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadWorkerNodeSummary"
+            },
+            "description": "ワーカーノードの一覧"
+          },
+          "nextCursor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkerNodeID"
+              }
+            ],
+            "description": "次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。"
+          }
+        },
+        "example": {
+          "workerNodes": [
+            {
+              "workerNodeID": "123e4567-e89b-12d3-a456-426614174002",
+              "resourceID": "worker-node-01",
+              "draining": false,
+              "status": "healthy",
+              "networkInterfaces": [
+                {
+                  "interfaceIndex": 0,
+                  "addresses": [
+                    {
+                      "address": "192.168.0.1"
+                    }
+                  ]
+                },
+                {
+                  "interfaceIndex": 1,
+                  "addresses": [
+                    {
+                      "address": "10.0.0.8"
+                    }
+                  ]
+                }
+              ],
+              "archiveVersion": "2025.1014.1",
+              "created": 1577836800
+            },
+            {
+              "workerNodeID": "987f6543-e21a-45c3-b123-554433221101",
+              "resourceID": "worker-node-02",
+              "draining": true,
+              "status": "healthy",
+              "networkInterfaces": [
+                {
+                  "interfaceIndex": 0,
+                  "addresses": [
+                    {
+                      "address": "192.168.0.1"
+                    }
+                  ]
+                },
+                {
+                  "interfaceIndex": 1,
+                  "addresses": [
+                    {
+                      "address": "10.0.0.8"
+                    }
+                  ]
+                }
+              ],
+              "archiveVersion": "2025.1014.2",
+              "created": 1577836800
+            },
+            {
+              "workerNodeID": "487f6543-e21a-45c3-b123-554433221101",
+              "resourceID": "worker-node-03",
+              "draining": true,
+              "status": "creating",
+              "networkInterfaces": [
+                {
+                  "interfaceIndex": 0,
+                  "addresses": [
+                    {
+                      "address": "192.168.0.1"
+                    }
+                  ]
+                },
+                {
+                  "interfaceIndex": 1,
+                  "addresses": [
+                    {
+                      "address": "10.0.0.8"
+                    }
+                  ]
+                }
+              ],
+              "archiveVersion": "2025.1014.3",
+              "created": 1577836800,
+              "createErrorMessage": "クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください"
+            }
+          ]
+        }
+      },
+      "ListWorkerServiceClassResponse": {
+        "type": "object",
+        "required": [
+          "workerServiceClasses"
+        ],
+        "properties": {
+          "workerServiceClasses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadWorkerServiceClass"
+            },
+            "description": "ワーカー用サービスクラスの一覧"
+          }
+        },
+        "example": {
+          "workerServiceClasses": [
+            {
+              "name": "1vCPU / 1GB メモリ",
+              "path": "cloud/apprun/dedicated/worker/1vcpu_2gb"
+            },
+            {
+              "name": "2vCPU / 2GB メモリ",
+              "path": "cloud/apprun/dedicated/worker/2vcpu_2gb"
+            },
+            {
+              "name": "2vCPU / 4GB メモリ",
+              "path": "cloud/apprun/dedicated/worker/2vcpu_4gb"
+            },
+            {
+              "name": "4vCPU / 8GB メモリ",
+              "path": "cloud/apprun/dedicated/worker/4vcpu_8gb"
+            }
+          ]
+        }
+      },
+      "LoadBalancerID": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "LoadBalancerInterface": {
+        "type": "object",
+        "required": [
+          "interfaceIndex",
+          "upstream"
+        ],
+        "properties": {
+          "interfaceIndex": {
+            "type": "integer",
+            "format": "int16",
+            "description": "例: eth0→0, eth1→1, eth2→2。0は必須｡重複不可｡",
+            "title": "インターフェース番号"
+          },
+          "upstream": {
+            "type": "string",
+            "description": "接続先 switch"
+          },
+          "ipPool": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IpRange"
+            },
+            "maxItems": 20,
+            "description": "アップストリームが 'shared' の場合､指定できません｡それ以外のときは必須です｡",
+            "title": "IP アドレスの割り当て範囲"
+          },
+          "netmaskLen": {
+            "type": "integer",
+            "format": "int16",
+            "minimum": 8,
+            "maximum": 29,
+            "description": "アップストリームが 'shared' の場合､指定できません｡それ以外のときは必須です｡",
+            "title": "netmask長"
+          },
+          "defaultGateway": {
+            "type": "string",
+            "description": "アップストリームが 'shared' の場合､指定できません｡",
+            "title": "デフォルトゲートウェイ"
+          },
+          "vip": {
+            "type": "string",
+            "pattern": "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+            "description": "アップストリームが 'shared' の場合､指定できません｡",
+            "title": "ロードバランサーの VIP"
+          },
+          "virtualRouterID": {
+            "type": "integer",
+            "format": "int16",
+            "description": "アップストリームが 'shared' の場合､指定できません｡1-255 の値を指定します｡ロードバランサーの VIP を指定した場合は､virtualRouterID の入力は必須です｡",
+            "title": "バーチャルルーターID"
+          },
+          "packetFilterID": {
+            "type": "string",
+            "description": "パケットフィルターid"
+          }
+        }
+      },
+      "LoadBalancerNodeID": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "LoadBalancerNodeStatus": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "unhealthy",
+          "creating",
+          "starting"
+        ],
+        "description": "ロードバランサーノードの状態を表す列挙型"
+      },
+      "NodeContainerPlacementInfo": {
+        "type": "object",
+        "required": [
+          "nodeID",
+          "containersStats",
+          "desired"
+        ],
+        "properties": {
+          "nodeID": {
+            "type": "string",
+            "description": "ノードID"
+          },
+          "containersStats": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationContainersStats"
+              }
+            ],
+            "nullable": true,
+            "description": "現在配置されているコンテナ情報"
+          },
+          "desired": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationPeekDesiredContainersResponse"
+              }
+            ],
+            "nullable": true,
+            "description": "desired(目標配置)情報"
+          }
+        }
+      },
+      "Port": {
+        "type": "integer",
+        "format": "uint16",
+        "minimum": 1,
+        "maximum": 65535,
+        "example": 8443
+      },
+      "ReadApplicationDetail": {
+        "type": "object",
+        "required": [
+          "applicationID",
+          "name",
+          "clusterID",
+          "clusterName",
+          "activeVersion",
+          "desiredCount",
+          "scalingCooldownSeconds"
+        ],
+        "properties": {
+          "applicationID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationID"
+              }
+            ],
+            "description": "ID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "アプリケーションの名前｡クラスタの中ではユニーク｡英数字とハイフン、アンダースコアのみ使用可能",
+            "example": "bbs"
+          },
+          "clusterID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterID"
+              }
+            ],
+            "description": "デプロイ先クラスタ"
+          },
+          "clusterName": {
+            "type": "string",
+            "description": "クラスタ名",
+            "example": "開発用"
+          },
+          "activeVersion": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "利用しているバージョン",
+            "example": 3
+          },
+          "desiredCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "デプロイされているべきコンテナ数｡active_versionが未指定の場合は null｡"
+          },
+          "scalingCooldownSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "description": "スケーリングのクールダウン時間(秒)"
+          }
+        }
+      },
+      "ReadApplicationVersionDetail": {
+        "type": "object",
+        "required": [
+          "version",
+          "cpu",
+          "memory",
+          "scalingMode",
+          "image",
+          "registryUsername",
+          "registryPassword",
+          "activeNodeCount",
+          "created",
+          "exposedPorts",
+          "env"
+        ],
+        "properties": {
+          "version": {
+            "$ref": "#/components/schemas/ApplicationVersionNumber"
+          },
+          "cpu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 100,
+            "maximum": 64000,
+            "example": 500
+          },
+          "memory": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 128,
+            "maximum": 131072,
+            "example": 1000
+          },
+          "scalingMode": {
+            "$ref": "#/components/schemas/ScalingMode"
+          },
+          "fixedScale": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "minScale": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50,
+            "example": 1
+          },
+          "maxScale": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50,
+            "example": 3
+          },
+          "scaleInThreshold": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 30,
+            "maximum": 70,
+            "example": 30
+          },
+          "scaleOutThreshold": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 50,
+            "maximum": 99,
+            "example": 95
+          },
+          "image": {
+            "type": "string",
+            "maxLength": 512,
+            "example": "nginx:latest"
+          },
+          "cmd": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "description": "コンテナ起動時に実行するコマンドと引数"
+          },
+          "registryUsername": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "registryPassword": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "activeNodeCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "現在動いているノードの数"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "アプリケーションバージョン作成日時(unixTime in seconds)"
+          },
+          "exposedPorts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExposedPort"
+            },
+            "maxItems": 5,
+            "description": "アプリケーションが公開するポート番号｡同一クラスタ内で､ポートの重複不可｡"
+          },
+          "env": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadEnvironmentVariable"
+            },
+            "description": "環境変数"
+          }
+        },
+        "example": {
+          "version": 2,
+          "cpu": 500,
+          "memory": 500,
+          "scalingMode": "manual",
+          "fixedScale": 2,
+          "image": "nginx:2",
+          "registryUsername": null,
+          "registryPassword": null,
+          "exposedPorts": [
+            {
+              "targetPort": 8080,
+              "loadBalancerPort": 8080,
+              "useLetsEncrypt": false,
+              "healthCheck": {
+                "path": "/healthz2",
+                "intervalSeconds": 10,
+                "timeoutSeconds": 30
+              }
+            }
+          ],
+          "env": [
+            {
+              "key": "DB_DSN",
+              "value": "postgresql://192.168.0.1:5432/foobar",
+              "secret": false
+            },
+            {
+              "key": "DB_PASSWORD",
+              "value": "****",
+              "secret": true
+            }
+          ],
+          "activeNodeCount": 0,
+          "created": 1577836800
+        }
+      },
+      "ReadApplicationVersionSummary": {
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationVersionNumber"
+              }
+            ],
+            "readOnly": true
+          }
+        }
+      },
+      "ReadAutoScalingGroupDetail": {
+        "type": "object",
+        "required": [
+          "autoScalingGroupID",
+          "name",
+          "zone",
+          "workerServiceClassPath",
+          "minNodes",
+          "maxNodes",
+          "workerNodeCount",
+          "deleting",
+          "interfaces"
+        ],
+        "properties": {
+          "autoScalingGroupID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoScalingGroupID"
+              }
+            ],
+            "description": "ID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "オートスケーリンググループの名前｡クラスタ内でユニーク｡英数字とアンダースコア、ハイフンのみ使用可能"
+          },
+          "zone": {
+            "type": "string",
+            "description": "オートスケーリンググループのゾーン"
+          },
+          "nameServers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IPv4"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "description": "ネームサーバー設定"
+          },
+          "workerServiceClassPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "ワーカーのサービスクラスパス"
+          },
+          "minNodes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "オートスケーリンググループの最小ノード数"
+          },
+          "maxNodes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "オートスケーリンググループの最大ノード数"
+          },
+          "workerNodeCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "現在のワーカーノードの数"
+          },
+          "deleting": {
+            "type": "boolean",
+            "description": "削除中"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoScalingGroupNodeInterface"
+            },
+            "minItems": 1,
+            "maxItems": 5,
+            "description": "ネットワークインターフェース定義"
+          }
+        }
+      },
+      "ReadCertificate": {
+        "type": "object",
+        "required": [
+          "certificateID",
+          "name",
+          "commonName",
+          "subjectAlternativeNames",
+          "notBeforeSec",
+          "notAfterSec",
+          "created",
+          "updated"
+        ],
+        "properties": {
+          "certificateID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificateID"
+              }
+            ],
+            "format": "uuid",
+            "description": "証明書ID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "description": "証明書の名前｡クラスタ内でユニーク｡英数字、アンダースコア、ハイフン､ドットのみ使用可能"
+          },
+          "commonName": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "証明書の共通名"
+          },
+          "subjectAlternativeNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "証明書のサブジェクト代替名(SAN)のリスト"
+          },
+          "notBeforeSec": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "証明書の有効開始日時(unixTime in seconds)"
+          },
+          "notAfterSec": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "証明書の有効終了日時(unixTime in seconds)"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "作成日時"
+          },
+          "updated": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "更新日時"
+          }
+        }
+      },
+      "ReadClusterDetail": {
+        "type": "object",
+        "required": [
+          "name",
+          "clusterID",
+          "ports",
+          "servicePrincipalID",
+          "hasLetsEncryptEmail",
+          "created"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "クラスターの名前｡プロジェクト内でユニーク｡英数字、アンダースコア、ハイフンのみ使用可能"
+          },
+          "clusterID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterID"
+              }
+            ],
+            "description": "クラスタID"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLoadBalancerPort"
+            },
+            "description": "ロードバランサーのポート群"
+          },
+          "servicePrincipalID": {
+            "type": "string",
+            "description": "サービスプリンシパルのID",
+            "example": "123456789012"
+          },
+          "hasLetsEncryptEmail": {
+            "type": "boolean",
+            "description": "let's encrypt 用のメアドが設定済みかどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "クラスター作成日時"
+          }
+        }
+      },
+      "ReadClusterSummary": {
+        "type": "object",
+        "required": [
+          "name",
+          "clusterID",
+          "created"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "description": "クラスターの名前"
+          },
+          "clusterID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterID"
+              }
+            ],
+            "description": "クラスタID"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "作成日時"
+          }
+        }
+      },
+      "ReadEnvironmentVariable": {
+        "type": "object",
+        "required": [
+          "key",
+          "value",
+          "secret"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "value": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 4096,
+            "description": "環境変数の値｡secret が true の場合は null になる｡"
+          },
+          "secret": {
+            "type": "boolean",
+            "description": "秘密情報か否か｡true の場合､value を API 等で取得することは出来ない｡"
+          }
+        },
+        "description": "環境変数の取得レスポンス"
+      },
+      "ReadLbServiceClass": {
+        "type": "object",
+        "required": [
+          "path",
+          "nodeCount",
+          "name"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "サービスクラスのパス"
+          },
+          "nodeCount": {
+            "type": "integer",
+            "format": "int16",
+            "description": "割り当てられるノード数"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "サービスクラスの名前"
+          }
+        }
+      },
+      "ReadLoadBalancerDetail": {
+        "type": "object",
+        "required": [
+          "loadBalancerID",
+          "name",
+          "serviceClassPath",
+          "interfaces",
+          "created",
+          "deleting"
+        ],
+        "properties": {
+          "loadBalancerID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerID"
+              }
+            ],
+            "description": "ロードバランサーID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "名称"
+          },
+          "serviceClassPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "ロードバランサーのサービスクラスパス"
+          },
+          "nameServers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IPv4"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "description": "ネームサーバー設定"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoadBalancerInterface"
+            },
+            "minItems": 1,
+            "maxItems": 5,
+            "description": "ロードバランサーのインターフェース"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "ロードバランサー作成日時"
+          },
+          "deleting": {
+            "type": "boolean",
+            "description": "削除中"
+          }
+        }
+      },
+      "ReadLoadBalancerNode": {
+        "type": "object",
+        "required": [
+          "loadBalancerNodeID",
+          "resourceID",
+          "interfaces",
+          "status",
+          "created"
+        ],
+        "properties": {
+          "loadBalancerNodeID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerNodeID"
+              }
+            ],
+            "description": "ID"
+          },
+          "resourceID": {
+            "type": "string",
+            "nullable": true,
+            "description": "リソースID"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLoadBalancerNodeInterface"
+            },
+            "description": "interface 情報"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerNodeStatus"
+              }
+            ],
+            "description": "ノードの状態"
+          },
+          "archiveVersion": {
+            "type": "string",
+            "description": "ノードにインストールされているアーカイブのバージョン"
+          },
+          "createErrorMessage": {
+            "type": "string",
+            "description": "ノードの作成に関するエラーメッセージ"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "作成日時"
+          }
+        }
+      },
+      "ReadLoadBalancerNodeInterface": {
+        "type": "object",
+        "required": [
+          "interfaceIndex",
+          "addresses"
+        ],
+        "properties": {
+          "interfaceIndex": {
+            "type": "integer",
+            "format": "int16",
+            "minimum": 0,
+            "description": "インターフェース番号｡eth0 なら 0｡eth1 なら 1｡"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLoadBalancerNodeInterfaceAddress"
+            },
+            "description": "ロードバランサーノードのアドレス"
+          }
+        }
+      },
+      "ReadLoadBalancerNodeInterfaceAddress": {
+        "type": "object",
+        "required": [
+          "address",
+          "vip"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "アドレス"
+          },
+          "vip": {
+            "type": "boolean",
+            "description": "VIP かどうか"
+          }
+        }
+      },
+      "ReadLoadBalancerNodeSummary": {
+        "type": "object",
+        "required": [
+          "loadBalancerNodeID",
+          "resourceID",
+          "status",
+          "interfaces",
+          "created"
+        ],
+        "properties": {
+          "loadBalancerNodeID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerNodeID"
+              }
+            ],
+            "description": "ID"
+          },
+          "resourceID": {
+            "type": "string",
+            "nullable": true,
+            "description": "リソースID"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerNodeStatus"
+              }
+            ],
+            "description": "ノードの状態"
+          },
+          "interfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadLoadBalancerNodeInterface"
+            },
+            "description": "interface 情報"
+          },
+          "archiveVersion": {
+            "type": "string",
+            "description": "ノードにインストールされているアーカイブのバージョン"
+          },
+          "createErrorMessage": {
+            "type": "string",
+            "description": "Node作成Jobのエラーメッセージ"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "作成日時"
+          }
+        }
+      },
+      "ReadLoadBalancerPort": {
+        "type": "object",
+        "required": [
+          "port",
+          "protocol"
+        ],
+        "properties": {
+          "port": {
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "外部公開するポート番号｡5950-5959は予約されているため指定不可",
+            "example": 8080
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "http",
+              "https",
+              "tcp"
+            ],
+            "description": "ポートで扱うプロトコル"
+          }
+        }
+      },
+      "ReadLoadBalancerSummary": {
+        "type": "object",
+        "required": [
+          "loadBalancerID",
+          "name",
+          "serviceClassPath",
+          "created",
+          "deleting"
+        ],
+        "properties": {
+          "loadBalancerID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoadBalancerID"
+              }
+            ],
+            "description": "ロードバランサーID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "ロードバランサー名称｡オートスケーリンググループ内でユニーク｡英数字とハイフン、アンダースコアのみ使用可能"
+          },
+          "serviceClassPath": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "ロードバランサーのサービスクラスパス"
+          },
+          "nameServers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IPv4"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "description": "ネームサーバー設定"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "ロードバランサーの作成日時"
+          },
+          "deleting": {
+            "type": "boolean",
+            "description": "削除中"
+          }
+        }
+      },
+      "ReadWorkerNodeDetail": {
+        "type": "object",
+        "required": [
+          "workerNodeID",
+          "resourceID",
+          "draining",
+          "status",
+          "healthy",
+          "creating",
+          "created",
+          "runningContainers",
+          "networkInterfaces"
+        ],
+        "properties": {
+          "workerNodeID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkerNodeID"
+              }
+            ],
+            "description": "ワーカーノードID"
+          },
+          "resourceID": {
+            "type": "string",
+            "nullable": true,
+            "description": "アプライアンスリソースID"
+          },
+          "draining": {
+            "type": "boolean",
+            "description": "Draining 状態かどうか"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkerNodeStatus"
+              }
+            ],
+            "description": "ノード状態"
+          },
+          "healthy": {
+            "type": "boolean",
+            "description": "ヘルシーかどうか"
+          },
+          "creating": {
+            "type": "boolean",
+            "description": "ワーカーノードが作成中かどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "リソース作成日時(unixTime in seconds)"
+          },
+          "runningContainers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RunningContainer"
+            },
+            "description": "実行中コンテナ"
+          },
+          "networkInterfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadWorkerNodeNetworkInterface"
+            },
+            "description": "ネットワークインターフェース情報"
+          },
+          "archiveVersion": {
+            "type": "string",
+            "description": "ノードにインストールされているアーカイブのバージョン"
+          },
+          "createErrorMessage": {
+            "type": "string",
+            "description": "Node作成Jobのエラーメッセージ"
+          }
+        }
+      },
+      "ReadWorkerNodeInterfaceAddress": {
+        "type": "object",
+        "required": [
+          "address"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "アドレス"
+          }
+        }
+      },
+      "ReadWorkerNodeNetworkInterface": {
+        "type": "object",
+        "required": [
+          "interfaceIndex",
+          "addresses"
+        ],
+        "properties": {
+          "interfaceIndex": {
+            "type": "integer",
+            "format": "int16",
+            "minimum": 0,
+            "description": "インターフェース番号｡eth0 なら 0｡eth1 なら 1｡"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadWorkerNodeInterfaceAddress"
+            },
+            "description": "ロードバランサーノードのアドレス"
+          }
+        }
+      },
+      "ReadWorkerNodeSummary": {
+        "type": "object",
+        "required": [
+          "workerNodeID",
+          "resourceID",
+          "draining",
+          "status",
+          "networkInterfaces",
+          "created"
+        ],
+        "properties": {
+          "workerNodeID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkerNodeID"
+              }
+            ],
+            "description": "ワーカーノードID"
+          },
+          "resourceID": {
+            "type": "string",
+            "nullable": true,
+            "description": "アプライアンスリソースID"
+          },
+          "draining": {
+            "type": "boolean",
+            "description": "Draining 状態かどうか"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkerNodeStatus"
+              }
+            ],
+            "description": "ノード状態"
+          },
+          "networkInterfaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadWorkerNodeNetworkInterface"
+            },
+            "description": "ネットワークインターフェース情報"
+          },
+          "archiveVersion": {
+            "type": "string",
+            "description": "ノードにインストールされているアーカイブのバージョン"
+          },
+          "created": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "リソース作成日時(unixTime in seconds)"
+          },
+          "createErrorMessage": {
+            "type": "string",
+            "description": "ノード作成に関するエラーメッセージ"
+          }
+        }
+      },
+      "ReadWorkerServiceClass": {
+        "type": "object",
+        "required": [
+          "path",
+          "name"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "サービスクラスのパス"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "サービスクラスの名前"
+          }
+        }
+      },
+      "RegistryPasswordAction": {
+        "type": "string",
+        "enum": [
+          "keep",
+          "remove",
+          "new"
+        ]
+      },
+      "RunningContainer": {
+        "type": "object",
+        "required": [
+          "containerID",
+          "name",
+          "state",
+          "status",
+          "image",
+          "startedAt",
+          "applicationID",
+          "applicationVersion"
+        ],
+        "properties": {
+          "containerID": {
+            "type": "string",
+            "description": "コンテナID"
+          },
+          "name": {
+            "type": "string",
+            "description": "コンテナ名"
+          },
+          "state": {
+            "type": "string",
+            "description": "コンテナのステート(created, running, restarting, removing, paused, exited, dead のうちいずれか)"
+          },
+          "status": {
+            "type": "string",
+            "description": "コンテナのステータス"
+          },
+          "image": {
+            "type": "string",
+            "description": "コンテナのイメージ"
+          },
+          "startedAt": {
+            "type": "integer",
+            "format": "unixtime",
+            "description": "コンテナの開始日時(unixTime in seconds)"
+          },
+          "applicationID": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationID"
+              }
+            ],
+            "description": "アプリケーションID"
+          },
+          "applicationVersion": {
+            "type": "integer",
+            "format": "int32",
+            "description": "アプリケーションバージョン"
+          }
+        }
+      },
+      "ScalingMode": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "cpu"
+        ]
+      },
+      "UpdateApplication": {
+        "type": "object",
+        "required": [
+          "activeVersion"
+        ],
+        "properties": {
+          "activeVersion": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "利用しているバージョン",
+            "example": 3
+          }
+        }
+      },
+      "UpdateCertificate": {
+        "type": "object",
+        "required": [
+          "name",
+          "certificatePem",
+          "privatekeyPem"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "pattern": "^[a-zA-Z0-9_.-]+$",
+            "description": "証明書の名前｡クラスタ内でユニーク｡英数字、アンダースコア、ハイフン､ドットのみ使用可能"
+          },
+          "certificatePem": {
+            "type": "string",
+            "maxLength": 1000000,
+            "description": "証明書のPEM形式の文字列"
+          },
+          "privatekeyPem": {
+            "type": "string",
+            "maxLength": 1000000,
+            "description": "証明書の秘密鍵のPEM形式の文字列"
+          },
+          "intermediateCertificatePem": {
+            "type": "string",
+            "maxLength": 1000000,
+            "description": "証明書のチェーン証明書のPEM形式の文字列"
+          }
+        }
+      },
+      "UpdateCluster": {
+        "type": "object",
+        "required": [
+          "servicePrincipalID"
+        ],
+        "properties": {
+          "letsEncryptEmail": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+            "description": "let's encrypt による証明書発行を有効にするにはここにメールアドレスを設定します｡\nlet's encrypt による証明書発行は HTTP-01 Challenge になるため､80 番ポートを HTTP Protocol で外向きに解放する必要があります｡",
+            "title": "let's encrypt のメールアドレス"
+          },
+          "servicePrincipalID": {
+            "type": "string",
+            "description": "サービスプリンシパルのID",
+            "example": "123456789012"
+          }
+        }
+      },
+      "UpdateWorkerNodeDrainingRequest": {
+        "type": "object",
+        "required": [
+          "draining"
+        ],
+        "properties": {
+          "draining": {
+            "type": "boolean",
+            "description": "draining状態にするかどうか"
+          }
+        },
+        "description": "ワーカーノードのdraining状態を変更するリクエスト"
+      },
+      "WorkerNodeID": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "WorkerNodeStatus": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "unhealthy",
+          "creating",
+          "starting"
+        ],
+        "description": "ワーカーノードの状態を表す列挙型"
+      }
+    },
+    "securitySchemes": {
+      "BasicAuth": {
+        "type": "http",
+        "scheme": "Basic"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/api/apprun-dedicated/1.0",
+      "description": "AppRun専有型 API エンドポイント",
+      "variables": {}
+    }
+  ]
+}

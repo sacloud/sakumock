@@ -102,7 +102,7 @@ func NewHandler(cfg Config) (*Server, error) {
 	s.mux = s.buildMux()
 
 	if cfg.EnableDataPlane {
-		s.docker = NewDockerManager(logger)
+		s.docker = NewDockerManager(logger, s.store)
 		dp, err := startDataPlane(cfg, s.docker, s.store, logger)
 		if err != nil {
 			return nil, err

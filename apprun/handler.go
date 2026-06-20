@@ -452,10 +452,13 @@ func (s *Server) handlePostApplication(w http.ResponseWriter, r *http.Request) {
 	if s.docker != nil && len(app.Components) > 0 {
 		c := app.Components[0]
 		if c.DeploySource.ContainerRegistry != nil {
-			s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.Env)
+			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.Env); err != nil {
+				s.logger.Error("container start failed", "app_id", app.ID, "error", err)
+			}
 		}
 	}
 
+	app, _ = s.store.ReadApplication(app.ID)
 	core.WriteJSON(w, http.StatusCreated, appToJSON(app))
 }
 
@@ -533,10 +536,13 @@ func (s *Server) handlePatchApplication(w http.ResponseWriter, r *http.Request) 
 		c := app.Components[0]
 		if c.DeploySource.ContainerRegistry != nil {
 			s.docker.StopContainer(app.ID)
-			s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.Env)
+			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.Env); err != nil {
+				s.logger.Error("container start failed", "app_id", app.ID, "error", err)
+			}
 		}
 	}
 
+	app, _ = s.store.ReadApplication(id)
 	core.WriteJSON(w, http.StatusOK, appToPatchJSON(app))
 }
 

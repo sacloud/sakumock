@@ -1,6 +1,6 @@
 # Build artifacts
 /sakumock
-sakumock-*
+/sakumock-*
 
 # Editor / IDE
 .vscode/

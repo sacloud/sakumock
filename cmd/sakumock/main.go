@@ -8,6 +8,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock"
+	"github.com/sacloud/sakumock/apprun"
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/eventbus"
 	"github.com/sacloud/sakumock/iam"
@@ -33,6 +34,7 @@ type CLI struct {
 	Eventbus           eventbus.Command           `cmd:"" name:"eventbus" help:"EventBus mock server"`
 	Objectstorage      objectstorage.Command      `cmd:"" name:"objectstorage" help:"Object Storage mock server"`
 	Iam                iam.Command                `cmd:"" name:"iam" help:"IAM mock server"`
+	Apprun             apprun.Command             `cmd:"" name:"apprun" help:"AppRun mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

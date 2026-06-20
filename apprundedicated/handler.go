@@ -2,6 +2,7 @@ package apprundedicated
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -956,7 +957,7 @@ func (s *Server) handleGetVersion(w http.ResponseWriter, r *http.Request) {
 	appID := r.PathValue("applicationID")
 	versionStr := r.PathValue("version")
 	vnum, err := strconv.Atoi(versionStr)
-	if err != nil {
+	if err != nil || vnum < 1 || vnum > math.MaxInt32 {
 		writeError(w, http.StatusBadRequest, "invalid version number")
 		return
 	}
@@ -974,7 +975,7 @@ func (s *Server) handleDeleteVersion(w http.ResponseWriter, r *http.Request) {
 	appID := r.PathValue("applicationID")
 	versionStr := r.PathValue("version")
 	vnum, err := strconv.Atoi(versionStr)
-	if err != nil {
+	if err != nil || vnum < 1 || vnum > math.MaxInt32 {
 		writeError(w, http.StatusBadRequest, "invalid version number")
 		return
 	}
@@ -1381,6 +1382,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
 	}
-	s.logger.Info("request", "method", r.Method, "path", r.URL.Path)
+	s.logger.Debug("request", "method", r.Method, "path", r.URL.Path)
 	s.mux.ServeHTTP(w, r)
 }

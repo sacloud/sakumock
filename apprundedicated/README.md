@@ -107,7 +107,7 @@ The mock data plane runs plain Docker containers, whereas the real AppRun Dedica
 - **Worker nodes** — created instantly with "healthy" status; no real provisioning
 - **LB nodes** — created instantly with "healthy" status; no real provisioning
 - **Certificates** — PEM is stored and returned, but not used for TLS termination in the data plane
-- **Container placement** — `GET /applications/{id}/containers` returns mock data
+- **Container placement** — `GET /applications/{id}/containers` returns per-worker-node placement derived from the active version and ASG worker nodes (one container per node)
 
 ### Limitations
 

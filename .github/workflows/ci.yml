@@ -28,7 +28,46 @@ jobs:
       - name: Test
         run: go test -v ./...
 
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      objectstorage: ${{ steps.filter.outputs.objectstorage }}
+      monitoringsuite: ${{ steps.filter.outputs.monitoringsuite }}
+      apprun: ${{ steps.filter.outputs.apprun }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Detect changed paths
+        id: filter
+        env:
+          GH_EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "${GH_EVENT_NAME}" = "pull_request" ]; then
+            BASE="${PR_BASE_SHA}"
+          else
+            BASE="${PUSH_BEFORE_SHA}"
+          fi
+          CHANGED=$(git diff --name-only "${BASE}"..HEAD)
+          check_paths() {
+            local name="$1"; shift
+            for pattern in "$@"; do
+              if echo "${CHANGED}" | grep -q "^${pattern}"; then
+                echo "${name}=true" >> "$GITHUB_OUTPUT"
+                return
+              fi
+            done
+            echo "${name}=false" >> "$GITHUB_OUTPUT"
+          }
+          check_paths objectstorage    "objectstorage/" "core/" "go\\.mod" "go\\.sum"
+          check_paths monitoringsuite  "monitoringsuite/" "core/" "go\\.mod" "go\\.sum"
+          check_paths apprun           "apprun/" "core/" "go\\.mod" "go\\.sum"
+
   objectstorage-data-plane:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.objectstorage == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -36,9 +75,6 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      # The object storage data plane is served by an external versitygw process
-      # (see objectstorage/dataplane.go). Install the release binary so the
-      # data plane end-to-end test runs instead of skipping.
       - name: Install versitygw
         env:
           VERSITYGW_VERSION: v1.5.0
@@ -52,6 +88,8 @@ jobs:
         run: go test -run TestDataPlane -v ./objectstorage/
 
   monitoringsuite-data-plane:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.monitoringsuite == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -59,9 +97,6 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      # The telemetry data plane e2e drives the real sacloud-otel-collector (its
-      # sacloud exporter) with telemetrygen as the source. Both must be on PATH;
-      # the test skips when they are absent (install them locally to run it).
       - name: Install sacloud-otel-collector and telemetrygen
         env:
           OTELCOL_VERSION: v0.7.0
@@ -78,6 +113,8 @@ jobs:
         run: go test -tags otelcollector -run TestDataPlaneOtelCollectorE2E -v ./monitoringsuite/
 
   apprun-data-plane:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.apprun == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -85,9 +122,6 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      # The AppRun data plane e2e deploys an nginx container via apprun-cli,
-      # requests the public URL, and verifies a 200 response. Docker is
-      # pre-installed on the runner; apprun-cli is downloaded from its release.
       - name: Install apprun-cli
         env:
           APPRUN_CLI_VERSION: v0.8.0

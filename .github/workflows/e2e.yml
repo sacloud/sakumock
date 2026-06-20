@@ -33,15 +33,11 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      - name: Install versitygw
-        env:
-          VERSITYGW_VERSION: v1.5.0
-        run: |
-          curl -fsSL -o versitygw.tar.gz \
-            "https://github.com/versity/versitygw/releases/download/${VERSITYGW_VERSION}/versitygw_${VERSITYGW_VERSION}_Linux_x86_64.tar.gz"
-          tar xzf versitygw.tar.gz --strip-components=1 --wildcards '*/versitygw'
-          sudo install versitygw /usr/local/bin/versitygw
-          versitygw --version
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4
+        with:
+          mise_toml: |
+            [tools]
+            "ubi:versity/versitygw" = "1.5.0"
       - name: Object storage data plane test
         run: go test -run TestDataPlane -v ./objectstorage/
 
@@ -53,18 +49,16 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      - name: Install sacloud-otel-collector and telemetrygen
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4
+        with:
+          mise_toml: |
+            [tools]
+            "ubi:sacloud/sacloud-otel-collector" = "0.7.0"
+      - name: Install telemetrygen
         env:
-          OTELCOL_VERSION: v0.7.0
           TELEMETRYGEN_VERSION: v0.142.0
         run: |
-          curl -fsSL -o sacloud-otel-collector.tar.gz \
-            "https://github.com/sacloud/sacloud-otel-collector/releases/download/${OTELCOL_VERSION}/sacloud-otel-collector_${OTELCOL_VERSION#v}_linux_amd64.tar.gz"
-          tar xzf sacloud-otel-collector.tar.gz sacloud-otel-collector
-          sudo install sacloud-otel-collector /usr/local/bin/sacloud-otel-collector
-          sacloud-otel-collector --version
           go install "github.com/open-telemetry/opentelemetry-collector-contrib/cmd/telemetrygen@${TELEMETRYGEN_VERSION}"
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - name: Monitoring suite data plane e2e
         run: go test -tags otelcollector -run TestDataPlaneOtelCollectorE2E -v ./monitoringsuite/
 
@@ -76,15 +70,11 @@ jobs:
         with:
           go-version: "1.25"
           cache-dependency-path: go.sum
-      - name: Install apprun-cli
-        env:
-          APPRUN_CLI_VERSION: v0.8.0
-        run: |
-          curl -fsSL -o apprun-cli.tar.gz \
-            "https://github.com/fujiwara/apprun-cli/releases/download/${APPRUN_CLI_VERSION}/apprun-cli_${APPRUN_CLI_VERSION}_linux_amd64.tar.gz"
-          tar xzf apprun-cli.tar.gz apprun-cli
-          sudo install apprun-cli /usr/local/bin/apprun-cli
-          apprun-cli --version
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4
+        with:
+          mise_toml: |
+            [tools]
+            "ubi:fujiwara/apprun-cli" = "0.8.0"
       - name: Pull nginx image
         run: docker pull nginx:latest
       - name: AppRun data plane e2e

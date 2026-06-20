@@ -961,6 +961,12 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 			for _, wn := range wns {
 				node := containerPlacementJSON{NodeID: wn.WorkerNodeID}
 				if v != nil {
+					state := "running"
+					status := "Running"
+					if s.docker != nil && !s.docker.IsRunning(app.ApplicationID) {
+						state = "exited"
+						status = "Exited"
+					}
 					now := time.Now().Unix()
 					node.ContainersStats = &containersStatsJSON{
 						CollectedAtSec: now,
@@ -968,8 +974,8 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 							{
 								ID:                 uuid.NewString(),
 								Image:              v.Image,
-								State:              "running",
-								Status:             "Running",
+								State:              state,
+								Status:             status,
 								CpuUsagePercent:    0,
 								ApplicationID:      app.ApplicationID,
 								ApplicationVersion: int64(v.Version),

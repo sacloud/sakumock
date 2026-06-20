@@ -127,6 +127,7 @@ func parseDockerPort(output string) string {
 
 type dataPlane struct {
 	listener net.Listener
+	server   *http.Server
 	docker   *DockerManager
 	store    *MemoryStore
 	logger   *slog.Logger
@@ -145,9 +146,9 @@ func startDataPlane(cfg Config, docker *DockerManager, store *MemoryStore, logge
 		logger:   logger,
 	}
 
-	srv := &http.Server{Handler: dp.handler()}
+	dp.server = &http.Server{Handler: dp.handler()}
 	go func() {
-		if err := core.ServeListener(srv, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
+		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane serve error", "error", err)
 		}
 	}()
@@ -219,8 +220,8 @@ func (dp *dataPlane) Close() {
 	if dp == nil {
 		return
 	}
-	if dp.listener != nil {
-		dp.listener.Close()
+	if dp.server != nil {
+		dp.server.Close()
 	}
 	if dp.docker != nil {
 		dp.docker.Close()

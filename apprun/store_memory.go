@@ -158,7 +158,6 @@ func (s *MemoryStore) UpdateApplication(id string, patch *Application) error {
 		updated.Components = patch.Components
 	}
 	updated.UpdatedAt = time.Now().UTC().Truncate(time.Second)
-	updated.CreatedAt = updated.UpdatedAt
 
 	version := s.createVersionLocked(&updated)
 	s.appVersions[id] = append(s.appVersions[id], &appVersionEntry{app: &updated, version: version})
@@ -308,6 +307,7 @@ func (s *MemoryStore) latestApp(id string) *Application {
 
 func (s *MemoryStore) createVersionLocked(app *Application) *Version {
 	s.versionSeq++
+	now := time.Now().UTC().Truncate(time.Second)
 	return &Version{
 		ID:                     uuid.NewString(),
 		AppID:                  app.ID,
@@ -319,6 +319,6 @@ func (s *MemoryStore) createVersionLocked(app *Application) *Version {
 		MaxScale:               app.MaxScale,
 		ScaleTargetConcurrency: app.ScaleTargetConcurrency,
 		Components:             app.Components,
-		CreatedAt:              app.CreatedAt,
+		CreatedAt:              now,
 	}
 }

@@ -180,7 +180,7 @@ A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every se
 ```bash
 docker run --rm \
   -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 \
-  -p 28084:28084 -p 28086:28086 \
+  -p 28084:28084 -p 28086:28086 -p 28088:28088 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 

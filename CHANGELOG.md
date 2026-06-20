@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.5.0](https://github.com/sacloud/sakumock/compare/v0.4.0...v0.5.0) - 2026-06-20
+- feat(iam): add IAM mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/105
+- refactor: consolidate JSON/time helpers into core by @fujiwara in https://github.com/sacloud/sakumock/pull/107
+- add .gitignore by @fujiwara in https://github.com/sacloud/sakumock/pull/108
+- feat: add AppRun mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/109
+- docs(iam): add README by @fujiwara in https://github.com/sacloud/sakumock/pull/110
+- feat(apprundedicated): add AppRun Dedicated mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/111
+- refactor(terraform): split main.tf into per-service files by @fujiwara in https://github.com/sacloud/sakumock/pull/112
+- refactor(core): use time-based IDGenerator default base by @fujiwara in https://github.com/sacloud/sakumock/pull/113
+
 ## [v0.4.0](https://github.com/sacloud/sakumock/compare/v0.3.0...v0.4.0) - 2026-06-14
 - Add eventbus mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/96
 - Add object storage mock service by @fujiwara in https://github.com/sacloud/sakumock/pull/98

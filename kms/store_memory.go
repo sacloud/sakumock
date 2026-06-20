@@ -33,7 +33,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	}
 	return &MemoryStore{
 		keys:        make(map[string]*KeyRecord),
-		ids:         core.NewIDGenerator(core.DefaultIDBase),
+		ids:         core.NewIDGenerator(core.DefaultIDBase()),
 		keyMaterial: make(map[string]map[int][]byte),
 		logger:      logger,
 	}

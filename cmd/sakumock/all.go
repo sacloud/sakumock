@@ -96,7 +96,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 	// with its own name (service=<name>), making the interleaved output of all
 	// services in one process attributable to the service that emitted it.
 	opts := core.ServerOptions{
-		IDGen:  core.NewIDGenerator(core.DefaultIDBase),
+		IDGen:  core.NewIDGenerator(core.DefaultIDBase()),
 		Logger: slog.Default(),
 		TLS:    c.TLS,
 	}

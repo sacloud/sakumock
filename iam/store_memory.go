@@ -107,7 +107,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		logger = slog.Default()
 	}
 	s := &MemoryStore{
-		ids:    core.NewIDGenerator(core.DefaultIDBase),
+		ids:    core.NewIDGenerator(core.DefaultIDBase()),
 		logger: logger,
 
 		users:             newTable[UserRecord](),

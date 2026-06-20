@@ -85,7 +85,7 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 	}
 	// Resume from the highest persisted ID, but never below the base so a
 	// fresh database starts at a realistic 12-digit value.
-	ids := core.NewIDGenerator(core.DefaultIDBase)
+	ids := core.NewIDGenerator(core.DefaultIDBase())
 	ids.Observe(strconv.FormatInt(maxID, 10))
 
 	s := &SQLiteStore{

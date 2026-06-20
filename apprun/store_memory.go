@@ -30,7 +30,7 @@ type appVersionEntry struct {
 
 func NewStore(publicURLFunc func(string) string) *MemoryStore {
 	return &MemoryStore{
-		ids:           core.NewIDGenerator(core.DefaultIDBase),
+		ids:           core.NewIDGenerator(core.DefaultIDBase()),
 		appVersions:   make(map[string][]*appVersionEntry),
 		traffic:       make(map[string][]TrafficItem),
 		packetFilters: make(map[string]*PacketFilter),

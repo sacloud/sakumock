@@ -26,7 +26,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	}
 	return &MemoryStore{
 		items:  make(map[string]*ServiceItem),
-		ids:    core.NewIDGenerator(core.DefaultIDBase),
+		ids:    core.NewIDGenerator(core.DefaultIDBase()),
 		logger: logger,
 	}
 }

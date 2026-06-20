@@ -9,8 +9,8 @@ sakumock-*
 # Claude Code
 .claude/
 
-# direnv
-.envrc
+# Environment files
+.env*
 
 # OS
 .DS_Store

@@ -3,4 +3,4 @@ package sakumock
 
 // Version is the version of sakumock, kept in sync with the git tag by tagpr.
 // All services and the unified binary report this single version.
-const Version = "0.5.1"
+const Version = "0.5.2"

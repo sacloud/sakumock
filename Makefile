@@ -1,7 +1,7 @@
 .PHONY: clean test install
 
 sakumock: go.* cmd/sakumock/*.go
-	go build -o $@ ./cmd/sakumock
+	CGO_ENABLED=0 go build -o $@ ./cmd/sakumock
 
 clean:
 	rm -rf sakumock dist/

@@ -39,7 +39,7 @@ jobs:
         with:
           mise_toml: |
             [tools]
-            "ubi:versity/versitygw" = "1.5.0"
+            "github:versity/versitygw" = "1.5.0"
       - name: Object storage data plane test
         run: go test -run TestDataPlane -v ./objectstorage/
 
@@ -55,7 +55,7 @@ jobs:
         with:
           mise_toml: |
             [tools]
-            "ubi:sacloud/sacloud-otel-collector" = "0.7.0"
+            "github:sacloud/sacloud-otel-collector" = "0.7.0"
       - name: Install telemetrygen
         env:
           TELEMETRYGEN_VERSION: v0.142.0
@@ -76,7 +76,7 @@ jobs:
         with:
           mise_toml: |
             [tools]
-            "ubi:fujiwara/apprun-cli" = "0.8.0"
+            "github:fujiwara/apprun-cli" = "0.8.0"
       - name: Pull nginx image
         run: docker pull nginx:latest
       - name: AppRun data plane e2e
@@ -94,7 +94,7 @@ jobs:
         with:
           mise_toml: |
             [tools]
-            "ubi:fujiwara/apprun-dedicated-cli" = "0.1.1"
+            "github:fujiwara/apprun-dedicated-cli" = "0.1.1"
       - name: Pull nginx image
         run: docker pull nginx:latest
       - name: AppRun Dedicated data plane e2e

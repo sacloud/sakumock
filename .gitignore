@@ -1,0 +1,16 @@
+# Build artifacts
+/sakumock
+sakumock-*
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# Environment files
+.env*
+
+# OS
+.DS_Store

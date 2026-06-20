@@ -199,8 +199,8 @@ resource "sakura_apprun_shared" "test" {
   max_scale       = 1
   components = [{
     name       = "app"
-    max_cpu    = "0.1"
-    max_memory = "256Mi"
+    max_cpu    = "0.5"
+    max_memory = "1Gi"
     deploy_source = {
       container_registry = {
         image = "nginx:latest"

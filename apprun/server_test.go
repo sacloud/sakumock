@@ -415,6 +415,29 @@ func TestValidation(t *testing.T) {
 		}
 	})
 
+	t.Run("invalid cpu/memory combination", func(t *testing.T) {
+		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
+			Components: []v1.PostApplicationBodyComponentsItem{
+				{
+					Name:      "web",
+					MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU2,
+					MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
+					DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
+						ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
+							v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+								Image: "nginx:latest",
+							},
+						),
+					},
+				},
+			},
+		})
+		if err == nil {
+			t.Fatal("expected error for invalid cpu/memory combination 2/1Gi")
+		}
+	})
+
 	t.Run("application limit", func(t *testing.T) {
 		for i := range 5 {
 			_, err := appOp.Create(ctx, &v1.PostApplicationBody{

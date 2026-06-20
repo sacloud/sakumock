@@ -60,7 +60,7 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 	out, err := exec.Command("docker", args...).CombinedOutput()
 	if err != nil {
 		dm.logger.Error("failed to start container", "name", name, "error", err, "output", string(out))
-		dm.store.SetApplicationStatus(appID, "Unhealthy")
+		dm.store.SetApplicationStatus(appID, "UnHealthy")
 		return fmt.Errorf("failed to start container: %w", err)
 	}
 	containerID := strings.TrimSpace(string(out))
@@ -68,7 +68,7 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 	portOut, err := exec.Command("docker", "port", containerID, containerPort).CombinedOutput()
 	if err != nil {
 		dm.logger.Error("failed to get container port", "name", name, "error", err, "output", string(portOut))
-		dm.store.SetApplicationStatus(appID, "Unhealthy")
+		dm.store.SetApplicationStatus(appID, "UnHealthy")
 		return fmt.Errorf("failed to get container port: %w", err)
 	}
 	hostPort := parseDockerPort(strings.TrimSpace(string(portOut)))
@@ -82,7 +82,7 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 	if !inspectRunning(containerID) {
 		dm.logger.Error("container exited immediately after start", "name", name)
 		delete(dm.containers, appID)
-		dm.store.SetApplicationStatus(appID, "Unhealthy")
+		dm.store.SetApplicationStatus(appID, "UnHealthy")
 		return fmt.Errorf("container exited immediately")
 	}
 	dm.store.SetApplicationStatus(appID, "Healthy")
@@ -153,7 +153,7 @@ func (dm *DockerManager) checkContainers() {
 		if !inspectRunning(info.containerID) {
 			dm.logger.Info("container exited", "name", "sakumock-apprun-"+appID, "container_id", info.containerID[:12])
 			delete(dm.containers, appID)
-			dm.store.SetApplicationStatus(appID, "Unhealthy")
+			dm.store.SetApplicationStatus(appID, "UnHealthy")
 		}
 	}
 }

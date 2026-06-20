@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.5.2](https://github.com/sacloud/sakumock/compare/v0.5.1...v0.5.2) - 2026-06-20
+- fix(apprun): use correct status enum value UnHealthy by @fujiwara in https://github.com/sacloud/sakumock/pull/117
+
 ## [v0.5.1](https://github.com/sacloud/sakumock/compare/v0.5.0...v0.5.1) - 2026-06-20
 - fix(apprundedicated): pass cmd to docker run by @fujiwara in https://github.com/sacloud/sakumock/pull/115
 - fix(dataplane): bundle Docker CLI for AppRun data planes by @fujiwara in https://github.com/sacloud/sakumock/pull/114

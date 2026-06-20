@@ -567,11 +567,17 @@ func (s *Server) runningContainersForNode(wn *WorkerNode) []runContainerJSON {
 		if !ok {
 			continue
 		}
+		state := "running"
+		status := "Running"
+		if s.docker != nil && !s.docker.IsRunning(app.ApplicationID) {
+			state = "exited"
+			status = "Exited"
+		}
 		containers = append(containers, runContainerJSON{
 			ContainerID:        uuid.NewString(),
 			Name:               app.Name,
-			State:              "running",
-			Status:             "Running",
+			State:              state,
+			Status:             status,
 			Image:              v.Image,
 			StartedAt:          v.Created,
 			ApplicationID:      app.ApplicationID,
@@ -902,16 +908,19 @@ func (s *Server) handleUpdateApplication(w http.ResponseWriter, r *http.Request)
 					}
 					env = append(env, core.EnvVar{Key: e.Key, Value: val})
 				}
-				s.docker.StartContainer(id, v.Image, port, env)
-				scheme := "http"
-				if s.tlsEnabled {
-					scheme = "https"
+				if err := s.docker.StartContainer(id, v.Image, port, env, v.Cmd); err != nil {
+					s.logger.Error("container start failed", "app_id", id, "error", err)
+				} else {
+					scheme := "http"
+					if s.tlsEnabled {
+						scheme = "https"
+					}
+					s.logger.Info("container started",
+						"app_id", id,
+						"image", v.Image,
+						"url", scheme+"://"+id+".localhost:"+portOf(s.dataPlaneAddr),
+					)
 				}
-				s.logger.Info("container started",
-					"app_id", id,
-					"image", v.Image,
-					"url", scheme+"://"+id+".localhost:"+portOf(s.dataPlaneAddr),
-				)
 			}
 		} else {
 			s.docker.StopContainer(id)
@@ -952,6 +961,12 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 			for _, wn := range wns {
 				node := containerPlacementJSON{NodeID: wn.WorkerNodeID}
 				if v != nil {
+					state := "running"
+					status := "Running"
+					if s.docker != nil && !s.docker.IsRunning(app.ApplicationID) {
+						state = "exited"
+						status = "Exited"
+					}
 					now := time.Now().Unix()
 					node.ContainersStats = &containersStatsJSON{
 						CollectedAtSec: now,
@@ -959,8 +974,8 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 							{
 								ID:                 uuid.NewString(),
 								Image:              v.Image,
-								State:              "running",
-								Status:             "Running",
+								State:              state,
+								Status:             status,
 								CpuUsagePercent:    0,
 								ApplicationID:      app.ApplicationID,
 								ApplicationVersion: int64(v.Version),

@@ -295,6 +295,14 @@ func (s *MemoryStore) PatchPacketFilter(appID string, pf *PacketFilter) error {
 	return nil
 }
 
+func (s *MemoryStore) SetApplicationStatus(id, status string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if app := s.latestApp(id); app != nil {
+		app.Status = status
+	}
+}
+
 func (s *MemoryStore) Close() {}
 
 func (s *MemoryStore) latestApp(id string) *Application {

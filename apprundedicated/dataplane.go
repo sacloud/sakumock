@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -21,6 +22,8 @@ type DockerManager struct {
 	mu         sync.RWMutex
 	containers map[string]*containerInfo
 	logger     *slog.Logger
+	cancel     context.CancelFunc
+	done       chan struct{}
 }
 
 type containerInfo struct {
@@ -29,13 +32,18 @@ type containerInfo struct {
 }
 
 func NewDockerManager(logger *slog.Logger) *DockerManager {
-	return &DockerManager{
+	ctx, cancel := context.WithCancel(context.Background())
+	dm := &DockerManager{
 		containers: make(map[string]*containerInfo),
 		logger:     logger,
+		cancel:     cancel,
+		done:       make(chan struct{}),
 	}
+	go dm.monitor(ctx)
+	return dm
 }
 
-func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []core.EnvVar) {
+func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []core.EnvVar, cmd []string) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 
@@ -49,19 +57,20 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 		args = append(args, "-e", e.Key+"="+e.Value)
 	}
 	args = append(args, image)
+	args = append(args, cmd...)
 
 	dm.logger.Info("starting container", "name", name, "image", image, "port", containerPort)
 	out, err := exec.Command("docker", args...).CombinedOutput()
 	if err != nil {
 		dm.logger.Error("failed to start container", "name", name, "error", err, "output", string(out))
-		return
+		return fmt.Errorf("failed to start container: %w", err)
 	}
 	containerID := strings.TrimSpace(string(out))
 
 	portOut, err := exec.Command("docker", "port", containerID, containerPort).CombinedOutput()
 	if err != nil {
 		dm.logger.Error("failed to get container port", "name", name, "error", err, "output", string(portOut))
-		return
+		return fmt.Errorf("failed to get container port: %w", err)
 	}
 	hostPort := parseDockerPort(strings.TrimSpace(string(portOut)))
 	dm.logger.Info("container started", "name", name, "container_id", containerID[:12], "host_port", hostPort)
@@ -70,6 +79,13 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 		containerID: containerID,
 		hostPort:    hostPort,
 	}
+
+	if !inspectRunning(containerID) {
+		dm.logger.Error("container exited immediately after start", "name", name)
+		delete(dm.containers, appID)
+		return fmt.Errorf("container exited immediately")
+	}
+	return nil
 }
 
 func (dm *DockerManager) StopContainer(appID string) {
@@ -102,7 +118,17 @@ func (dm *DockerManager) GetContainerPort(appID string) (string, bool) {
 	return info.hostPort, true
 }
 
+func (dm *DockerManager) IsRunning(appID string) bool {
+	dm.mu.RLock()
+	defer dm.mu.RUnlock()
+	_, ok := dm.containers[appID]
+	return ok
+}
+
 func (dm *DockerManager) Close() {
+	dm.cancel()
+	<-dm.done
+
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 	for appID, info := range dm.containers {
@@ -110,6 +136,40 @@ func (dm *DockerManager) Close() {
 		exec.Command("docker", "rm", "-f", info.containerID).Run()
 	}
 	dm.containers = make(map[string]*containerInfo)
+}
+
+func (dm *DockerManager) monitor(ctx context.Context) {
+	defer close(dm.done)
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			dm.checkContainers()
+		}
+	}
+}
+
+func (dm *DockerManager) checkContainers() {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+
+	for appID, info := range dm.containers {
+		if !inspectRunning(info.containerID) {
+			dm.logger.Info("container exited", "name", "sakumock-apprundedicated-"+appID, "container_id", info.containerID[:12])
+			delete(dm.containers, appID)
+		}
+	}
+}
+
+func inspectRunning(containerID string) bool {
+	out, err := exec.Command("docker", "inspect", "--format", "{{.State.Running}}", containerID).CombinedOutput()
+	if err != nil {
+		return false
+	}
+	return strings.TrimSpace(string(out)) == "true"
 }
 
 func parseDockerPort(output string) string {

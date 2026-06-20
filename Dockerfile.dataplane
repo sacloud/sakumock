@@ -1,25 +1,35 @@
-# Variant image that bundles the external versitygw S3 gateway and enables every
-# service's data plane by default (Object Storage S3 + Monitoring Suite telemetry
-# ingest; see Dockerfile for the lean, control-plane-only image).
+# Variant image that bundles external data-plane dependencies and enables every
+# service's data plane by default (Object Storage S3, Monitoring Suite telemetry
+# ingest, AppRun / AppRun Dedicated Docker reverse proxies; see Dockerfile for
+# the lean, control-plane-only image).
 #
-# versitygw is COPYed from its official multi-arch image rather than downloaded:
-# buildx resolves that image for the build's target platform, so the matching
-# architecture is selected automatically and the final stage stays COPY-only (no
-# download, checksum, or emulation). The image is pinned by digest for
-# reproducibility and integrity; the :v1.5.0 tag is kept for readability.
+# versitygw and the Docker CLI are COPYed from their official multi-arch images
+# rather than downloaded: buildx resolves each image for the build's target
+# platform, so the matching architecture is selected automatically and the final
+# stage stays COPY-only (no download, checksum, or emulation). Images are pinned
+# by digest for reproducibility and integrity; human-readable tags are kept for
+# readability.
 ARG VERSITYGW_IMAGE=ghcr.io/versity/versitygw:v1.5.0@sha256:713e139d78e018d2dfe6b503cb2c257fd23818212f70ca55d5aa5b8e52c76554
+ARG DOCKER_CLI_IMAGE=docker:29-cli@sha256:d14410ab6f87a2b6c14b7150de787cd7b8bb012a8e900966d6d893e9f7fc49b6
 
 FROM ${VERSITYGW_IMAGE} AS versitygw
+FROM ${DOCKER_CLI_IMAGE} AS docker-cli
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY sakumock /sakumock
 COPY --from=versitygw /usr/local/bin/versitygw /usr/local/bin/versitygw
+COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 
 # Enable every service's data plane by default, each bound on all interfaces so
-# the published ports are reachable from the host. PATH must include versitygw so
-# sakumock can locate it (Object Storage S3 data plane). Object Storage objects
-# live under /home/nonroot/data (writable by the distroless nonroot uid, so
-# sakumock creates it at startup); mount a volume there to persist them.
+# the published ports are reachable from the host. PATH must include versitygw
+# and docker so sakumock can locate them (Object Storage S3 data plane; AppRun /
+# AppRun Dedicated Docker data planes). Object Storage objects live under
+# /home/nonroot/data (writable by the distroless nonroot uid, so sakumock creates
+# it at startup); mount a volume there to persist them.
+#
+# AppRun data planes require the host Docker socket to be mounted into the
+# container (-v /var/run/docker.sock:/var/run/docker.sock) and --network host so
+# the reverse proxy can reach the spawned containers. See README for details.
 #
 # Maintenance: every service with a data plane (--enable-data-plane) must be
 # enabled here so this image exposes it by default. When adding such a service,
@@ -32,13 +42,16 @@ ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data \
     MONITORINGSUITE_ENABLE_DATA_PLANE=true \
     MONITORINGSUITE_DATA_PLANE_ADDR=0.0.0.0:28084 \
+    APPRUN_ENABLE_DATA_PLANE=true \
+    APPRUN_DATA_PLANE_ADDR=0.0.0.0:28088 \
     APPRUN_DEDICATED_ENABLE_DATA_PLANE=true \
     APPRUN_DEDICATED_DATA_PLANE_ADDR=0.0.0.0:28089
 
 # One port per service (see the service table in README) plus the data planes
-# (Monitoring Suite telemetry ingest 28084, Object Storage S3 28086). EXPOSE is
+# (Monitoring Suite telemetry ingest 28084, Object Storage S3 28086, AppRun
+# Docker proxy 28088, AppRun Dedicated Docker proxy 28089). EXPOSE is
 # documentation only — publish the ports you need with `-p`.
-EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089 28084 28086 28089
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089 28084 28086 28088 28089
 
 ENTRYPOINT ["/sakumock"]
 # Run every service bound to 0.0.0.0 so published ports are reachable from

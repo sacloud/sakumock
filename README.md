@@ -179,16 +179,41 @@ docker run --rm \
   ghcr.io/sacloud/sakumock:latest
 ```
 
-A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every service's data plane by default: the Object Storage S3 data plane (bundling the [versitygw](https://github.com/versity/versitygw) S3 gateway; `OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`) and the Monitoring Suite telemetry ingest data plane (`MONITORINGSUITE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28084`). The default image includes neither, so use this tag when you need a data plane:
+A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every service's data plane by default: the Object Storage S3 data plane (bundling the [versitygw](https://github.com/versity/versitygw) S3 gateway; `OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`), the Monitoring Suite telemetry ingest data plane (`MONITORINGSUITE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28084`), and the AppRun / AppRun Dedicated Docker data planes (`APPRUN_ENABLE_DATA_PLANE=true` on `0.0.0.0:28088`, `APPRUN_DEDICATED_ENABLE_DATA_PLANE=true` on `0.0.0.0:28089`). The default image includes none of these, so use this tag when you need a data plane:
 
 ```bash
 docker run --rm \
   -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 \
-  -p 28084:28084 -p 28086:28086 -p 28088:28088 -p 28089:28089 \
+  -p 28084:28084 -p 28086:28086 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 
 Objects are stored under `/home/nonroot/data`; mount a volume there to persist them. The image runs as a non-root user (uid 65532), so prefer a **named volume** (`-v sakumock-data:/home/nonroot/data`, which inherits the right ownership) — a bind-mounted host directory must be writable by uid 65532 or the data plane fails to start.
+
+#### AppRun data planes (Docker)
+
+The AppRun and AppRun Dedicated data planes start Docker containers for each deployed application and reverse-proxy traffic to them. This requires the host Docker socket and `--network host`:
+
+```bash
+docker run --rm --network host \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  ghcr.io/sacloud/sakumock:latest-dataplane
+```
+
+- **`-v /var/run/docker.sock:/var/run/docker.sock`** — lets the mock start and stop sibling containers on the host Docker daemon.
+- **`--network host`** — the reverse proxy connects to containers via `127.0.0.1:<port>`, so the mock must share the host's network namespace to reach the published ports. With `--network host` the `-p` flags are unnecessary (all ports are directly accessible).
+- The host Docker socket must be readable by the container's user. Add the host's docker group GID with `--group-add $(stat -c '%g' /var/run/docker.sock)` (or `chmod 666 /var/run/docker.sock` on the host as a less secure alternative).
+
+If you do not need the AppRun data planes, disable them with environment variables to skip the Docker dependency:
+
+```bash
+docker run --rm \
+  -e APPRUN_ENABLE_DATA_PLANE=false \
+  -e APPRUN_DEDICATED_ENABLE_DATA_PLANE=false \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 \
+  -p 28084:28084 -p 28086:28086 \
+  ghcr.io/sacloud/sakumock:latest-dataplane
+```
 
 Configure the mock's behavior with the per-service environment variables (see [Environment variables](#environment-variables)) — handier than flags in a container:
 

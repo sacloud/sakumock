@@ -35,7 +35,7 @@ func NewDockerManager(logger *slog.Logger) *DockerManager {
 	}
 }
 
-func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []core.EnvVar) {
+func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []core.EnvVar, cmd []string) {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 
@@ -49,6 +49,7 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 		args = append(args, "-e", e.Key+"="+e.Value)
 	}
 	args = append(args, image)
+	args = append(args, cmd...)
 
 	dm.logger.Info("starting container", "name", name, "image", image, "port", containerPort)
 	out, err := exec.Command("docker", args...).CombinedOutput()

@@ -902,7 +902,7 @@ func (s *Server) handleUpdateApplication(w http.ResponseWriter, r *http.Request)
 					}
 					env = append(env, core.EnvVar{Key: e.Key, Value: val})
 				}
-				s.docker.StartContainer(id, v.Image, port, env)
+				s.docker.StartContainer(id, v.Image, port, env, v.Cmd)
 				scheme := "http"
 				if s.tlsEnabled {
 					scheme = "https"

@@ -19,6 +19,7 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [objectstorage](objectstorage/) | 18086 | `github.com/sacloud/sakumock/objectstorage` | Object Storage control-plane API (optional S3 data plane via versitygw) |
 | [iam](iam/) | 18087 | `github.com/sacloud/sakumock/iam` | IAM control-plane API |
 | [apprun](apprun/) | 18088 | `github.com/sacloud/sakumock/apprun` | AppRun control-plane API (optional Docker data plane) |
+| [apprundedicated](apprundedicated/) | 18089 | `github.com/sacloud/sakumock/apprundedicated` | AppRun Dedicated control-plane API (optional Docker data plane) |
 
 ## Quick Start
 
@@ -141,6 +142,8 @@ export SAKURA_ENDPOINTS_OBJECT_STORAGE=http://localhost:18086
 export SAKURA_ENDPOINTS_IAM=http://localhost:18087
 # AppRun
 export SAKURA_ENDPOINTS_APPRUN_SHARED=http://localhost:18088
+# AppRun Dedicated
+export SAKURA_ENDPOINTS_APPRUN_DEDICATED=http://localhost:18089
 
 # Dummy credentials (required by SDK, not validated by mock)
 export SAKURA_ACCESS_TOKEN=dummy
@@ -161,6 +164,7 @@ sakumock eventbus &
 sakumock objectstorage &
 sakumock iam &
 sakumock apprun &
+sakumock apprun-dedicated &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
@@ -171,7 +175,7 @@ A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Con
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 \
   ghcr.io/sacloud/sakumock:latest
 ```
 
@@ -179,8 +183,8 @@ A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every se
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 \
-  -p 28084:28084 -p 28086:28086 -p 28088:28088 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 \
+  -p 28084:28084 -p 28086:28086 -p 28088:28088 -p 28089:28089 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 

@@ -31,12 +31,14 @@ ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     OBJECT_STORAGE_DATA_PLANE_ADDR=0.0.0.0:28086 \
     OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data \
     MONITORINGSUITE_ENABLE_DATA_PLANE=true \
-    MONITORINGSUITE_DATA_PLANE_ADDR=0.0.0.0:28084
+    MONITORINGSUITE_DATA_PLANE_ADDR=0.0.0.0:28084 \
+    APPRUN_DEDICATED_ENABLE_DATA_PLANE=true \
+    APPRUN_DEDICATED_DATA_PLANE_ADDR=0.0.0.0:28089
 
 # One port per service (see the service table in README) plus the data planes
 # (Monitoring Suite telemetry ingest 28084, Object Storage S3 28086). EXPOSE is
 # documentation only — publish the ports you need with `-p`.
-EXPOSE 18080 18081 18082 18083 18084 18085 18086 28084 28086
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089 28084 28086 28089
 
 ENTRYPOINT ["/sakumock"]
 # Run every service bound to 0.0.0.0 so published ports are reachable from

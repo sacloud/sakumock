@@ -60,6 +60,23 @@ Run `sakumock all --help` for flags. Per-service flags keep their defaults and a
 
 Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SAKUMOCK_TLS_KEY`) to serve **every** listener over HTTPS — all control planes and data planes share the one cert (they run on the same host, only the port differs). TLS is enabled only when both files are set; otherwise everything stays plain HTTP. The object storage data plane is served by versitygw, which is handed the same cert/key (`--cert`/`--key`) so it terminates TLS itself. Standalone subcommands accept the same `--tls-cert`/`--tls-key` (env `<SERVICE>_TLS_CERT` / `<SERVICE>_TLS_KEY`). `sakumock env` emits `https://` endpoints when TLS is set; with a self-signed cert the client must be told to trust it.
 
+#### Service Link (cross-service forwarding)
+
+Pass `--enable-service-link` (or `SAKUMOCK_ENABLE_SERVICE_LINK=true`) to let services forward requests to each other, just as the real SAKURA Cloud platform does. Currently EventBus forwards fired jobs to their destination service:
+
+| Source | Destination | What happens |
+|---|---|---|
+| EventBus | SimpleMQ | Sends a message to the configured queue |
+| EventBus | SimpleNotification | Sends a notification to the configured group |
+
+Without `--enable-service-link` (the default), firings are recorded but not forwarded — each service works in isolation.
+
+```bash
+sakumock all --enable-service-link
+```
+
+Service link is only available with `sakumock all`; standalone services cannot discover each other's addresses.
+
 Instead of passing many flags, `sakumock all` can read a config file (`--config`, YAML or JSON by extension) with options grouped per service:
 
 ```yaml

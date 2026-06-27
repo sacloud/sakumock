@@ -113,19 +113,19 @@ Calling an unimplemented function returns an error.
 
 The real Workflows API enforces these limits. The mock does **not** enforce most of them (only execution timeout is configurable):
 
-| Limit | Real API | Mock |
-|-------|----------|------|
-| Execution time | 1 year | 10m (configurable via `--execution-timeout`) |
-| Steps per Runbook | 5,000 | No limit |
-| Parallel steps | 100 | No limit |
-| Parallel nesting depth | 2 levels | No limit |
-| Parallel step timeout | 600 seconds | No limit |
-| Switch branches | 50 per switch, 10 switches per Runbook | No limit |
-| Execution memory | 512 KB | No limit |
-| Runbook YAML size | 256 KB | No limit |
-| Expression length | 512 characters | No limit |
-| Step name length | 31 characters | No limit |
-| Execution history retention | 90 days | In-memory (lost on restart) |
+| Limit | Real API | Mock | Enforced |
+|-------|----------|------|----------|
+| Execution time | 1 year | 10m (configurable via `--execution-timeout`) | Yes |
+| Steps per Runbook | 5,000 | 5,000 | Yes |
+| Parallel steps per branch | 100 | 100 | Yes |
+| Parallel nesting depth | 2 levels | 2 levels | Yes |
+| Parallel step timeout | 600 seconds | 600 seconds | Yes |
+| Switch branches | 50 per switch, 10 switches per Runbook | Same | Yes |
+| Runbook YAML size | 256 KB | 256 KB | Yes |
+| Expression length | 512 characters | 512 characters | Yes |
+| Step name length | 31 characters | 31 characters | Yes |
+| Execution memory | 512 KB | — | No |
+| Execution history retention | 90 days | In-memory (lost on restart) | No |
 
 ## Notes on workflow fields
 

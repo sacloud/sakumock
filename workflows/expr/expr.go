@@ -5,7 +5,12 @@ import (
 	"strings"
 )
 
+const MaxExpressionLen = 512
+
 func Eval(expression string, env *Env) (Value, error) {
+	if len(expression) > MaxExpressionLen {
+		return Null, fmt.Errorf("expression length %d exceeds limit %d", len(expression), MaxExpressionLen)
+	}
 	tokens, err := newLexer(expression).tokenize()
 	if err != nil {
 		return Null, fmt.Errorf("lexer: %w", err)

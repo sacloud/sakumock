@@ -234,6 +234,18 @@ func applyPaging[T any](items []T, p pageParams) (paged []T, from int) {
 	return items[start:end], start
 }
 
+func (s *Server) validateRunbook(raw string) error {
+	data := []byte(raw)
+	if err := runbook.ValidateRunbookSize(data); err != nil {
+		return err
+	}
+	rb, err := runbook.Parse(data)
+	if err != nil {
+		return err
+	}
+	return runbook.Validate(rb)
+}
+
 func writeError(w http.ResponseWriter, status int, msg string) {
 	core.WriteJSON(w, status, map[string]any{
 		"is_ok":   false,
@@ -343,6 +355,10 @@ func (s *Server) handleCreateWorkflow(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Runbook == "" {
 		writeError(w, http.StatusBadRequest, "Runbook is required")
+		return
+	}
+	if err := s.validateRunbook(req.Runbook); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -500,6 +516,10 @@ func (s *Server) handleCreateRevision(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Runbook == "" {
 		writeError(w, http.StatusBadRequest, "Runbook is required")
+		return
+	}
+	if err := s.validateRunbook(req.Runbook); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

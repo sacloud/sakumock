@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/sacloud/sakumock/workflows/expr"
 )
@@ -290,6 +291,8 @@ func (r *Runner) execFor(ctx context.Context, env *expr.Env, step *Step) error {
 
 func (r *Runner) execParallel(ctx context.Context, env *expr.Env, step *Step) error {
 	p := step.Parallel
+	ctx, cancel := context.WithTimeout(ctx, ParallelTimeout*time.Second)
+	defer cancel()
 
 	if p.Shared != nil {
 		for k, v := range p.Shared {

@@ -27,7 +27,7 @@ sakumock-workflows
 | `--rate-limit` | `WORKFLOWS_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `WORKFLOWS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--enable-data-plane` | `WORKFLOWS_ENABLE_DATA_PLANE` | `false` | Enable the Runbook execution engine: executions actually run instead of completing immediately |
-| `--execution-timeout` | `WORKFLOWS_EXECUTION_TIMEOUT` | `10m` | Maximum execution time per runbook run (data plane only) |
+| `--execution-timeout` | `WORKFLOWS_EXECUTION_TIMEOUT` | `10m` | Maximum execution time per runbook run (data plane only; real API allows up to 1 year) |
 | `--debug` | `WORKFLOWS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `WORKFLOWS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `WORKFLOWS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
@@ -108,6 +108,24 @@ The `call` step supports the following function groups:
 | `feed.parse` | Not implemented | Parse Atom XML feed |
 
 Calling an unimplemented function returns an error.
+
+## Real API limits (from technical reference)
+
+The real Workflows API enforces these limits. The mock does **not** enforce most of them (only execution timeout is configurable):
+
+| Limit | Real API | Mock |
+|-------|----------|------|
+| Execution time | 1 year | 10m (configurable via `--execution-timeout`) |
+| Steps per Runbook | 5,000 | No limit |
+| Parallel steps | 100 | No limit |
+| Parallel nesting depth | 2 levels | No limit |
+| Parallel step timeout | 600 seconds | No limit |
+| Switch branches | 50 per switch, 10 switches per Runbook | No limit |
+| Execution memory | 512 KB | No limit |
+| Runbook YAML size | 256 KB | No limit |
+| Expression length | 512 characters | No limit |
+| Step name length | 31 characters | No limit |
+| Execution history retention | 90 days | In-memory (lost on restart) |
 
 ## Notes on workflow fields
 

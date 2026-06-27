@@ -578,11 +578,9 @@ func (s *Server) handleDeleteRevisionAlias(w http.ResponseWriter, r *http.Reques
 func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 	workflowID := r.PathValue("id")
 	var req createExecutionRequest
-	if r.ContentLength > 0 {
-		if err := core.ReadJSON(r, &req); err != nil {
-			writeError(w, http.StatusBadRequest, err.Error())
-			return
-		}
+	if err := core.ReadJSON(r, &req); err != nil && err.Error() != "empty request body" {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	input := ExecutionInput{

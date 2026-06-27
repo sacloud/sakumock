@@ -34,6 +34,23 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	}
 }
 
+func copyWorkflow(w *WorkflowRecord) *WorkflowRecord {
+	c := *w
+	c.Tags = make([]Tag, len(w.Tags))
+	copy(c.Tags, w.Tags)
+	return &c
+}
+
+func copyRevision(r *RevisionRecord) *RevisionRecord {
+	c := *r
+	return &c
+}
+
+func copyExecution(e *ExecutionRecord) *ExecutionRecord {
+	c := *e
+	return &c
+}
+
 func (s *MemoryStore) CreateWorkflow(name, description, runbook string, publish, logging bool, tags []Tag, servicePrincipalID, concurrencyMode, revisionAlias string) *WorkflowRecord {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -71,7 +88,7 @@ func (s *MemoryStore) CreateWorkflow(name, description, runbook string, publish,
 	s.revisions[id] = []*RevisionRecord{rev}
 
 	s.logger.Debug("workflow created", "id", id, "name", name)
-	return w
+	return copyWorkflow(w)
 }
 
 func (s *MemoryStore) GetWorkflow(id string) (*WorkflowRecord, bool) {
@@ -79,7 +96,10 @@ func (s *MemoryStore) GetWorkflow(id string) (*WorkflowRecord, bool) {
 	defer s.mu.RUnlock()
 
 	w, ok := s.workflows[id]
-	return w, ok
+	if !ok {
+		return nil, false
+	}
+	return copyWorkflow(w), true
 }
 
 func (s *MemoryStore) ListWorkflows() []*WorkflowRecord {
@@ -88,7 +108,7 @@ func (s *MemoryStore) ListWorkflows() []*WorkflowRecord {
 
 	result := make([]*WorkflowRecord, 0, len(s.workflows))
 	for _, w := range s.workflows {
-		result = append(result, w)
+		result = append(result, copyWorkflow(w))
 	}
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].CreatedAt.Before(result[j].CreatedAt)
@@ -124,7 +144,7 @@ func (s *MemoryStore) UpdateWorkflow(id string, updates WorkflowUpdates) (*Workf
 	}
 	w.UpdatedAt = time.Now()
 	s.logger.Debug("workflow updated", "id", id)
-	return w, true
+	return copyWorkflow(w), true
 }
 
 func (s *MemoryStore) DeleteWorkflow(id string) error {
@@ -182,7 +202,7 @@ func (s *MemoryStore) CreateRevision(workflowID, runbook, alias string) (*Revisi
 	s.revisions[workflowID] = append(s.revisions[workflowID], rev)
 	s.workflows[workflowID].UpdatedAt = now
 	s.logger.Debug("revision created", "workflow_id", workflowID, "revision_id", nextID)
-	return rev, nil
+	return copyRevision(rev), nil
 }
 
 func (s *MemoryStore) GetRevision(workflowID string, revisionID int) (*RevisionRecord, bool) {
@@ -191,7 +211,7 @@ func (s *MemoryStore) GetRevision(workflowID string, revisionID int) (*RevisionR
 
 	for _, r := range s.revisions[workflowID] {
 		if r.RevisionID == revisionID {
-			return r, true
+			return copyRevision(r), true
 		}
 	}
 	return nil, false
@@ -203,7 +223,9 @@ func (s *MemoryStore) ListRevisions(workflowID string) []*RevisionRecord {
 
 	revs := s.revisions[workflowID]
 	result := make([]*RevisionRecord, len(revs))
-	copy(result, revs)
+	for i, r := range revs {
+		result[i] = copyRevision(r)
+	}
 	return result
 }
 
@@ -228,7 +250,7 @@ func (s *MemoryStore) UpdateRevisionAlias(workflowID string, revisionID int, ali
 			r.RevisionAlias = alias
 			r.UpdatedAt = time.Now()
 			s.logger.Debug("revision alias updated", "workflow_id", workflowID, "revision_id", revisionID, "alias", alias)
-			return r, nil
+			return copyRevision(r), nil
 		}
 	}
 	return nil, fmt.Errorf("revision %d not found", revisionID)
@@ -243,7 +265,7 @@ func (s *MemoryStore) DeleteRevisionAlias(workflowID string, revisionID int) (*R
 			r.RevisionAlias = ""
 			r.UpdatedAt = time.Now()
 			s.logger.Debug("revision alias deleted", "workflow_id", workflowID, "revision_id", revisionID)
-			return r, true
+			return copyRevision(r), true
 		}
 	}
 	return nil, false
@@ -320,7 +342,7 @@ func (s *MemoryStore) CreateExecution(workflowID string, input ExecutionInput) (
 	}
 	s.executions[workflowID] = append(s.executions[workflowID], exec)
 	s.logger.Debug("execution created", "workflow_id", workflowID, "execution_id", exec.ExecutionID)
-	return exec, nil
+	return copyExecution(exec), nil
 }
 
 func (s *MemoryStore) GetExecution(workflowID, executionID string) (*ExecutionRecord, bool) {
@@ -329,7 +351,7 @@ func (s *MemoryStore) GetExecution(workflowID, executionID string) (*ExecutionRe
 
 	for _, e := range s.executions[workflowID] {
 		if e.ExecutionID == executionID {
-			return e, true
+			return copyExecution(e), true
 		}
 	}
 	return nil, false
@@ -341,7 +363,9 @@ func (s *MemoryStore) ListExecutions(workflowID string) []*ExecutionRecord {
 
 	execs := s.executions[workflowID]
 	result := make([]*ExecutionRecord, len(execs))
-	copy(result, execs)
+	for i, e := range execs {
+		result[i] = copyExecution(e)
+	}
 	return result
 }
 
@@ -360,7 +384,7 @@ func (s *MemoryStore) CancelExecution(workflowID, executionID string) (*Executio
 			e.CanceledAt = &now
 			e.UpdatedAt = now
 			s.logger.Debug("execution canceled", "workflow_id", workflowID, "execution_id", executionID)
-			return e, nil
+			return copyExecution(e), nil
 		}
 	}
 	return nil, fmt.Errorf("execution %q not found", executionID)

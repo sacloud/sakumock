@@ -46,7 +46,10 @@ export SAKURA_ACCESS_TOKEN_SECRET=dummy
 import "github.com/sacloud/sakumock/workflows"
 
 // As http.Handler (for custom servers)
-handler := workflows.NewHandler(workflows.Config{})
+handler, err := workflows.NewHandler(workflows.Config{})
+if err != nil {
+    panic(err)
+}
 defer handler.Close()
 
 // As test server (for integration tests)

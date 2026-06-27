@@ -27,6 +27,7 @@ sakumock-workflows
 | `--rate-limit` | `WORKFLOWS_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `WORKFLOWS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--enable-data-plane` | `WORKFLOWS_ENABLE_DATA_PLANE` | `false` | Enable the Runbook execution engine: executions actually run instead of completing immediately |
+| `--execution-timeout` | `WORKFLOWS_EXECUTION_TIMEOUT` | `10m` | Maximum execution time per runbook run (data plane only) |
 | `--debug` | `WORKFLOWS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `WORKFLOWS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `WORKFLOWS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |

@@ -17,7 +17,8 @@ type Config struct {
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"WORKFLOWS_RATE_LIMIT_WINDOW"`
 	Debug           bool          `help:"Enable debug mode" env:"WORKFLOWS_DEBUG" default:"false"`
 
-	EnableDataPlane bool `help:"Enable the Runbook execution engine: executions actually run instead of completing immediately" env:"WORKFLOWS_ENABLE_DATA_PLANE" default:"false"`
+	EnableDataPlane  bool          `help:"Enable the Runbook execution engine: executions actually run instead of completing immediately" env:"WORKFLOWS_ENABLE_DATA_PLANE" default:"false"`
+	ExecutionTimeout time.Duration `help:"Maximum execution time per runbook run (0 uses default 10m)" env:"WORKFLOWS_EXECUTION_TIMEOUT" default:"10m"`
 
 	idGen  *core.IDGenerator
 	logger *slog.Logger
@@ -80,7 +81,11 @@ func NewHandler(cfg Config) (*Server, error) {
 		s.store.ids = cfg.idGen
 	}
 	if cfg.EnableDataPlane {
-		s.executor = newExecutor(s.store, logger)
+		exec := newExecutor(s.store, logger)
+		if cfg.ExecutionTimeout > 0 {
+			exec.executionTimeout = cfg.ExecutionTimeout
+		}
+		s.executor = exec
 	}
 	s.mux = s.buildMux()
 	return s, nil

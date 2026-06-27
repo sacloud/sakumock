@@ -11,9 +11,12 @@ import (
 	"github.com/sacloud/sakumock/workflows/runbook"
 )
 
+const defaultExecutionTimeout = 10 * time.Minute
+
 type executor struct {
-	store  *MemoryStore
-	logger *slog.Logger
+	store            *MemoryStore
+	logger           *slog.Logger
+	executionTimeout time.Duration
 
 	mu      sync.Mutex
 	running map[string]context.CancelFunc
@@ -21,9 +24,10 @@ type executor struct {
 
 func newExecutor(store *MemoryStore, logger *slog.Logger) *executor {
 	return &executor{
-		store:   store,
-		logger:  logger,
-		running: make(map[string]context.CancelFunc),
+		executionTimeout: defaultExecutionTimeout,
+		store:            store,
+		logger:           logger,
+		running:          make(map[string]context.CancelFunc),
 	}
 }
 
@@ -58,7 +62,7 @@ func (e *executor) newRunner(workflowID, executionID string) *runbook.Runner {
 }
 
 func (e *executor) submit(ctx context.Context, workflowID, executionID string, rb *runbook.Runbook, argsJSON string) {
-	execCtx, cancel := context.WithCancel(ctx)
+	execCtx, cancel := context.WithTimeout(ctx, e.executionTimeout)
 
 	e.mu.Lock()
 	e.running[executionID] = cancel

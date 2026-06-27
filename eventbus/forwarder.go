@@ -35,17 +35,21 @@ func newForwarder(env []core.EnvVar, logger *slog.Logger) *forwarder {
 	envStrings := core.EnvStrings(env)
 
 	var mqSA saclient.Client
-	if err := mqSA.SetEnviron(envStrings); err == nil {
-		if client, err := simplemqsdk.NewMessageClient("servicelink", &mqSA); err == nil {
-			f.mqClient = client
-		}
+	if err := mqSA.SetEnviron(envStrings); err != nil {
+		logger.Warn("service link: failed to configure simplemq saclient", "error", err)
+	} else if client, err := simplemqsdk.NewMessageClient("servicelink", &mqSA); err != nil {
+		logger.Warn("service link: failed to create simplemq client", "error", err)
+	} else {
+		f.mqClient = client
 	}
 
 	var snSA saclient.Client
-	if err := snSA.SetEnviron(envStrings); err == nil {
-		if client, err := simplenotificationsdk.NewClient(&snSA); err == nil {
-			f.snClient = client
-		}
+	if err := snSA.SetEnviron(envStrings); err != nil {
+		logger.Warn("service link: failed to configure simplenotification saclient", "error", err)
+	} else if client, err := simplenotificationsdk.NewClient(&snSA); err != nil {
+		logger.Warn("service link: failed to create simplenotification client", "error", err)
+	} else {
+		f.snClient = client
 	}
 
 	return f

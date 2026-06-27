@@ -20,10 +20,15 @@ type nextSignal struct {
 
 func (n *nextSignal) Error() string { return "next: " + n.target }
 
-type CallFunc func(ctx context.Context, env *expr.Env, call *CallStep) (expr.Value, error)
+type CallFunc func(ctx context.Context, env *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error)
+
+type CallOpts struct {
+	AllowLocalNet bool
+}
 
 type Runner struct {
-	CallFuncs map[string]CallFunc
+	CallFuncs     map[string]CallFunc
+	AllowLocalNet bool
 }
 
 func NewRunner() *Runner {
@@ -141,7 +146,7 @@ func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error 
 		return fmt.Errorf("unknown call function: %s", call.Func)
 	}
 
-	result, err := fn(ctx, env, call)
+	result, err := fn(ctx, env, call, CallOpts{AllowLocalNet: r.AllowLocalNet})
 	if err != nil {
 		return fmt.Errorf("call %s: %w", call.Func, err)
 	}

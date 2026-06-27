@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,6 +13,18 @@ import (
 
 	"github.com/sacloud/sakumock/workflows/expr"
 )
+
+const maxResponseBodySize = 10 * 1024 * 1024 // 10 MiB
+const maxRedirects = 10
+
+var httpClient = &http.Client{
+	CheckRedirect: func(_ *http.Request, via []*http.Request) error {
+		if len(via) >= maxRedirects {
+			return fmt.Errorf("stopped after %d redirects", maxRedirects)
+		}
+		return nil
+	},
+}
 
 func defaultCallFuncs() map[string]CallFunc {
 	return map[string]CallFunc{
@@ -38,23 +52,41 @@ func evalCallArgs(env *expr.Env, raw map[string]string) (map[string]expr.Value, 
 }
 
 func httpCall(method string) CallFunc {
-	return func(ctx context.Context, env *expr.Env, call *CallStep) (expr.Value, error) {
-		args, err := evalCallArgs(env, call.Args)
-		if err != nil {
-			return expr.Null, err
-		}
-		args["method"] = expr.String(method)
-
-		fakeCall := &CallStep{
-			Func: "http.request",
-			Args: call.Args,
-		}
-		fakeCall.Args["method"] = method
-		return httpRequestCall(ctx, env, fakeCall)
+	return func(ctx context.Context, env *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error) {
+		merged := make(map[string]string, len(call.Args)+1)
+		maps.Copy(merged, call.Args)
+		merged["method"] = method
+		return httpRequestCall(ctx, env, &CallStep{
+			Func:   "http.request",
+			Args:   merged,
+			Result: call.Result,
+		}, opts)
 	}
 }
 
-func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep) (expr.Value, error) {
+func isBlockedHost(host string) bool {
+	hostname := host
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		hostname = h
+	}
+
+	if hostname == "localhost" {
+		return true
+	}
+
+	ip := net.ParseIP(hostname)
+	if ip == nil {
+		addrs, err := net.LookupIP(hostname)
+		if err != nil || len(addrs) == 0 {
+			return false
+		}
+		ip = addrs[0]
+	}
+
+	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast()
+}
+
+func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error) {
 	args, err := evalCallArgs(env, call.Args)
 	if err != nil {
 		return expr.Null, err
@@ -78,6 +110,14 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep) (expr.V
 		return expr.Null, fmt.Errorf("http.request: invalid url: %w", err)
 	}
 
+	if parsedURL.Scheme != "https" && parsedURL.Scheme != "http" {
+		return expr.Null, fmt.Errorf("http.request: unsupported scheme %q", parsedURL.Scheme)
+	}
+
+	if !opts.AllowLocalNet && isBlockedHost(parsedURL.Host) {
+		return expr.Null, fmt.Errorf("http.request: this URL is blocked")
+	}
+
 	if q, ok := args["query"]; ok && q.Type() == expr.TypeObject {
 		qs := parsedURL.Query()
 		for k, v := range q.AsObject() {
@@ -96,11 +136,9 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep) (expr.V
 
 	var bodyReader io.Reader
 	if b, ok := args["body"]; ok && !b.IsNull() {
-		encoded, err := expr.Eval("json.encode(b)", func() *expr.Env {
-			e := expr.NewEnv()
-			e.Set("b", b)
-			return e
-		}())
+		e := expr.NewEnv()
+		e.Set("b", b)
+		encoded, err := expr.Eval("json.encode(b)", e)
 		if err != nil {
 			return expr.Null, fmt.Errorf("http.request: encode body: %w", err)
 		}
@@ -125,13 +163,13 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep) (expr.V
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return expr.Null, fmt.Errorf("http.request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	respBody, err := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBodySize))
 	if err != nil {
 		return expr.Null, fmt.Errorf("http.request: read body: %w", err)
 	}
@@ -142,7 +180,7 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep) (expr.V
 	}), nil
 }
 
-func sysSleep(ctx context.Context, _ *expr.Env, call *CallStep) (expr.Value, error) {
+func sysSleep(ctx context.Context, _ *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error) {
 	args := call.Args
 	secStr, ok := args["seconds"]
 	if !ok {
@@ -162,7 +200,7 @@ func sysSleep(ctx context.Context, _ *expr.Env, call *CallStep) (expr.Value, err
 	}
 }
 
-func sysSleepUntil(ctx context.Context, _ *expr.Env, call *CallStep) (expr.Value, error) {
+func sysSleepUntil(ctx context.Context, _ *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error) {
 	args := call.Args
 	dateStr, ok := args["date"]
 	if !ok {

@@ -357,6 +357,7 @@ func TestCallHTTP(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
+	r.AllowLocalNet = true
 	result := r.Run(context.Background(), rb, map[string]expr.Value{
 		"url": expr.String(srv.URL),
 	})
@@ -365,6 +366,55 @@ func TestCallHTTP(t *testing.T) {
 	}
 	if result.Value.AsNumber() != 200 {
 		t.Errorf("got %v, want 200", result.Value.AsNumber())
+	}
+}
+
+func TestHTTPBlocksLocalhost(t *testing.T) {
+	blockedURLs := []string{
+		"http://localhost/secret",
+		"http://127.0.0.1/secret",
+		"http://[::1]/secret",
+		"http://169.254.169.254/latest/meta-data",
+	}
+
+	for _, u := range blockedURLs {
+		rb := &runbook.Runbook{
+			Steps: []runbook.NamedStep{
+				{Name: "get", Step: runbook.Step{
+					Call: &runbook.CallStep{
+						Func:   "http.get",
+						Args:   map[string]string{"url": u},
+						Result: "resp",
+					},
+				}},
+			},
+		}
+
+		r := runbook.NewRunner()
+		result := r.Run(context.Background(), rb, nil)
+		if result.Err == nil {
+			t.Errorf("expected error for blocked URL %s", u)
+		}
+	}
+}
+
+func TestHTTPRejectsNonHTTPScheme(t *testing.T) {
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "get", Step: runbook.Step{
+				Call: &runbook.CallStep{
+					Func:   "http.get",
+					Args:   map[string]string{"url": "file:///etc/passwd"},
+					Result: "resp",
+				},
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	result := r.Run(context.Background(), rb, nil)
+	if result.Err == nil {
+		t.Fatal("expected error for file:// scheme")
 	}
 }
 

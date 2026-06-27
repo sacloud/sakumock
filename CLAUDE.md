@@ -64,6 +64,8 @@ Control-plane ports are sequential from 18080. Next available: 18091. (18080 sim
 
 A service that also exposes a separate **data plane** listens on its **control-plane port + 10000** (objectstorage's S3 API via versitygw: 18086 → 28086; monitoringsuite's telemetry ingest: 18084 → 28084; apprun's Docker reverse proxy: 18088 → 28088). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
 
+Exception: workflows' data plane (`--enable-data-plane`) is an internal Runbook execution engine, not a separate listener. It has no `DATA_PLANE_ADDR` — executions run in-process and their status is updated through the same control-plane API.
+
 ### TLS
 
 - TLS is a single **common** option, not per-service: one certificate/key pair serves every listener (all control planes and all data planes) over HTTPS, because they all run on the same host and differ only by port. It is enabled only when **both** files are set; otherwise everything stays plain HTTP. Setting **exactly one** is a startup error (`TLSFiles.Validate`, called by each command's `Run`) rather than silently serving plain HTTP.

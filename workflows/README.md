@@ -2,7 +2,7 @@
 
 A Workflows compatible mock server for local development and testing. It implements the workflow management API (CRUD, revisions, executions, plans, subscriptions) with in-memory storage.
 
-Executions complete immediately with status `Succeeded` (no actual runbook execution engine).
+By default, executions complete immediately with status `Succeeded`. With `--enable-data-plane`, the Runbook execution engine is enabled and executions actually run the YAML runbook asynchronously (Queued → Running → Succeeded/Failed).
 
 ## Install
 
@@ -26,6 +26,7 @@ sakumock-workflows
 | `--latency` | `WORKFLOWS_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `WORKFLOWS_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `WORKFLOWS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--enable-data-plane` | `WORKFLOWS_ENABLE_DATA_PLANE` | `false` | Enable the Runbook execution engine: executions actually run instead of completing immediately |
 | `--debug` | `WORKFLOWS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `WORKFLOWS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `WORKFLOWS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |

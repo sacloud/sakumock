@@ -62,9 +62,18 @@ Precedent: simplenotification exposes `GET`/`DELETE /_sakumock/messages` to list
 
 Control-plane ports are sequential from 18080. Next available: 18091. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage, 18087 iam, 18088 apprun, 18089 apprundedicated, 18090 workflows.)
 
-A service that also exposes a separate **data plane** listens on its **control-plane port + 10000** (objectstorage's S3 API via versitygw: 18086 → 28086; monitoringsuite's telemetry ingest: 18084 → 28084; apprun's Docker reverse proxy: 18088 → 28088). The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
+A data plane needs a **separate listener** (control-plane port + 10000) when the protocol or handler is fundamentally different from the control-plane HTTP API:
 
-Exception: workflows' data plane (`--enable-data-plane`) is an internal Runbook execution engine, not a separate listener. It has no `DATA_PLANE_ADDR` — executions run in-process and their status is updated through the same control-plane API.
+- **objectstorage** (18086 → 28086): the S3 data plane is an external versitygw process, not part of the sakumock binary
+- **monitoringsuite** (18084 → 28084): the telemetry ingest accepts Prometheus remote-write (snappy-compressed protobuf) and OTLP/HTTP — different wire formats from the JSON control-plane API
+- **apprun / apprundedicated** (18088 → 28088, 18089 → 28089): Docker reverse proxies that route by Host header to container ports — host-based routing conflicts with control-plane path routing on the same listener
+
+The large offset keeps the data-plane band (28080+) clear of the growing control-plane band (18080+) — they only collide at ~10000 services — while staying a trivial arithmetic mapping with a shared suffix (18086 ↔ 28086). Do not use a smaller offset such as +100, which collides once 100 services exist.
+
+A data plane that is just additional HTTP paths or an internal engine serves on the **same port** (no `DATA_PLANE_ADDR`):
+
+- **simplemq** (18080): queue management (control) and message send/receive (data) are both HTTP JSON on different path prefixes, served by the same mux
+- **workflows** (18090): the Runbook execution engine (`--enable-data-plane`) runs in-process; executions are triggered and observed through the same control-plane API
 
 ### TLS
 

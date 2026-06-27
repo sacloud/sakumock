@@ -28,6 +28,7 @@ sakumock-workflows
 | `--rate-limit-window` | `WORKFLOWS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--enable-data-plane` | `WORKFLOWS_ENABLE_DATA_PLANE` | `false` | Enable the Runbook execution engine: executions actually run instead of completing immediately |
 | `--execution-timeout` | `WORKFLOWS_EXECUTION_TIMEOUT` | `10m` | Maximum execution time per runbook run (data plane only; real API allows up to 1 year) |
+| `--allow-local-net` | `WORKFLOWS_ALLOW_LOCAL_NET` | `true` | Allow HTTP calls to localhost and private networks; set `false` to simulate real API URL blocking |
 | `--debug` | `WORKFLOWS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `WORKFLOWS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `WORKFLOWS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |

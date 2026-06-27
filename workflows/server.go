@@ -19,6 +19,7 @@ type Config struct {
 
 	EnableDataPlane  bool          `help:"Enable the Runbook execution engine: executions actually run instead of completing immediately" env:"WORKFLOWS_ENABLE_DATA_PLANE" default:"false"`
 	ExecutionTimeout time.Duration `help:"Maximum execution time per runbook run (0 uses default 10m)" env:"WORKFLOWS_EXECUTION_TIMEOUT" default:"10m"`
+	AllowLocalNet    bool          `help:"Allow HTTP calls to localhost and private networks (default true for mock use; set false to simulate real API URL blocking)" env:"WORKFLOWS_ALLOW_LOCAL_NET" default:"true"`
 
 	idGen  *core.IDGenerator
 	logger *slog.Logger
@@ -85,6 +86,7 @@ func NewHandler(cfg Config) (*Server, error) {
 		if cfg.ExecutionTimeout > 0 {
 			exec.executionTimeout = cfg.ExecutionTimeout
 		}
+		exec.allowLocalNet = cfg.AllowLocalNet
 		s.executor = exec
 	}
 	s.mux = s.buildMux()

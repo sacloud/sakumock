@@ -17,6 +17,7 @@ type executor struct {
 	store            *MemoryStore
 	logger           *slog.Logger
 	executionTimeout time.Duration
+	allowLocalNet    bool
 
 	mu      sync.Mutex
 	running map[string]context.CancelFunc
@@ -34,6 +35,7 @@ func newExecutor(store *MemoryStore, logger *slog.Logger) *executor {
 func (e *executor) newRunner(workflowID, executionID string) *runbook.Runner {
 	r := runbook.NewRunner()
 	r.Logger = e.logger
+	r.AllowLocalNet = e.allowLocalNet
 	r.OnEvent = func(ev runbook.Event) {
 		meta := ev.Meta
 		if meta == "" {

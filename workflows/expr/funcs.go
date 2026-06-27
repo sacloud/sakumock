@@ -67,6 +67,10 @@ func builtinFuncs() map[string]Func {
 		"time.parse":  timeParse,
 		"time.now":    timeNow,
 
+		// test
+		"test.count":      testCount,
+		"test.resetCount": testResetCount,
+
 		// uuid
 		"uuid.v7":  uuidV7,
 		"uuid.nil": uuidNil,
@@ -566,6 +570,24 @@ func timeNow(env *Env, args []Value) (Value, error) {
 		return Null, err
 	}
 	return Number(float64(time.Now().Unix())), nil
+}
+
+// test functions
+
+func testCount(env *Env, args []Value) (Value, error) {
+	if err := requireArgs("test.count", args, 0, 0); err != nil {
+		return Null, err
+	}
+	env.testCounter++
+	return Number(float64(env.testCounter)), nil
+}
+
+func testResetCount(env *Env, args []Value) (Value, error) {
+	if err := requireArgs("test.resetCount", args, 0, 0); err != nil {
+		return Null, err
+	}
+	env.testCounter = 0
+	return Number(0), nil
 }
 
 // uuid functions

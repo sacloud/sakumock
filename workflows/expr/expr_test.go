@@ -604,6 +604,15 @@ func TestFunctionCalls(t *testing.T) {
 			},
 		},
 		{
+			"test.count",
+			`test.count()`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsNumber() != 1 {
+					t.Errorf("first call got %v, want 1", v.AsNumber())
+				}
+			},
+		},
+		{
 			"uuid.v7",
 			`uuid.v7()`,
 			func(t *testing.T, v expr.Value) {
@@ -623,6 +632,36 @@ func TestFunctionCalls(t *testing.T) {
 			}
 			tt.check(t, got)
 		})
+	}
+}
+
+func TestTestCounter(t *testing.T) {
+	env := expr.NewEnv()
+
+	for i := 1; i <= 3; i++ {
+		v, err := expr.Eval("test.count()", env)
+		if err != nil {
+			t.Fatalf("count call %d: %v", i, err)
+		}
+		if v.AsNumber() != float64(i) {
+			t.Errorf("count call %d = %v, want %d", i, v.AsNumber(), i)
+		}
+	}
+
+	v, err := expr.Eval("test.resetCount()", env)
+	if err != nil {
+		t.Fatalf("resetCount: %v", err)
+	}
+	if v.AsNumber() != 0 {
+		t.Errorf("resetCount = %v, want 0", v.AsNumber())
+	}
+
+	v, err = expr.Eval("test.count()", env)
+	if err != nil {
+		t.Fatalf("count after reset: %v", err)
+	}
+	if v.AsNumber() != 1 {
+		t.Errorf("count after reset = %v, want 1", v.AsNumber())
 	}
 }
 

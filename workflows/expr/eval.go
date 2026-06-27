@@ -17,6 +17,7 @@ type Env struct {
 	steps       int
 	maxSteps    int
 	MaxArrayLen int
+	testCounter int
 }
 
 type Func func(env *Env, args []Value) (Value, error)

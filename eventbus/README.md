@@ -2,7 +2,7 @@
 
 An EventBus compatible mock server for local development and testing. It implements the control-plane of the [SAKURA Cloud EventBus API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/eventbus) — process configurations, schedules, and triggers — with in-memory storage, so applications and Terraform can exercise EventBus CRUD in tests.
 
-It also has a **data plane** that *fires* those resources: schedules fire on their `Crontab`/recurring interval, and triggers fire on events injected via `POST /_sakumock/events`. Each firing resolves the referenced process configuration and is recorded as a delivery (inspectable via `GET /_sakumock/deliveries`) with the resource's `Status` updated. Actually forwarding a fired job to its destination service (simplemq / simplenotification) over HTTP is a separate layer not yet wired — today a firing is recorded and logged. See [Data plane](#data-plane-firing) below.
+It also has a **data plane** that *fires* those resources: schedules fire on their `Crontab`/recurring interval, and triggers fire on events injected via `POST /_sakumock/events`. Each firing resolves the referenced process configuration and is recorded as a delivery (inspectable via `GET /_sakumock/deliveries`) with the resource's `Status` updated. When [service link](../README.md#service-link) is enabled (`sakumock all --enable-service-link`), fired jobs are forwarded to their destination service over HTTP using the official SDK client. See [Data plane](#data-plane-firing) and [Service link](#service-link) below.
 
 ## Install
 
@@ -122,7 +122,25 @@ EventBus has two kinds of event source, and both resolve to the same action — 
 
 Each firing is recorded as a **delivery** — the resolved `Destination` and `Parameters` of the process configuration — and the schedule's or trigger's `Status` is updated. Recorded deliveries are returned by `GET /_sakumock/deliveries` and, in library use, by `Server.Deliveries()`, so a test can assert what fired without a live destination. A firing whose process configuration is missing is recorded with an `Error` and a failed `Status`.
 
+## Service Link
+
+When running under `sakumock all --enable-service-link`, fired jobs are forwarded to their destination service over HTTP using the official SDK client. The forwarder applies a 5-second timeout per delivery.
+
+| Destination | Parameters | SDK call |
+|---|---|---|
+| `simplemq` | `{"queue_name": "...", "content": "..."}` | `simplemqsdk.NewMessageOp.Send` |
+| `simplenotification` | `{"group_id": "...", "message": "..."}` | `simplenotificationsdk.NewGroupOp.SendMessage` |
+
+Without service link (the default, or when running standalone), firings are recorded but not forwarded — `GET /_sakumock/deliveries` and `Server.Deliveries()` still show them.
+
+Service link requires the data plane to be enabled as well:
+
+```bash
+sakumock all --enable-service-link --eventbus-enable-data-plane
+```
+
+The `autoscale` destination has no mock and is silently ignored.
+
 ### Not yet implemented
 
-- **HTTP forwarding to destinations**: a firing is recorded and logged, but not yet sent to its `Destination` service. Forwarding the `Parameters` to the simplemq / simplenotification mocks over HTTP (peer endpoints injected via `core.ServerOptions`, authenticating with the process configuration's secret) is the next layer; `autoscale` has no mock and would only be logged.
 - **Real event producers**: trigger events arrive only through `POST /_sakumock/events`. Wiring a producer such as a monitoringsuite alert-fire endpoint that emits events here is intentionally a separate service change. The `//eventbus.sakura.ad.jp/eventlog` source has no producer in sakumock and is out of scope.

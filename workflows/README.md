@@ -72,6 +72,17 @@ Regular expressions (`text.findAllRegex`, `text.matchRegex`, `text.replaceAllReg
 
 `text.decode` / `text.encode` only support UTF-8. Passing a non-UTF-8 charset returns an error.
 
+## HTTP call safety limits
+
+The `call` step's HTTP functions (`http.get`, `http.post`, etc.) enforce the following limits:
+
+| Limit | Default | Description |
+|-------|---------|-------------|
+| SSRF protection | on (bypassable) | Blocks requests to localhost, private IPs (`10.x`, `172.16-31.x`, `192.168.x`), and link-local addresses (`169.254.x`). Also rejects non-`http(s)` schemes (e.g. `file://`). Disabled by default in the mock (`AllowLocalNet = true`) since calling other local services is a normal use case; set `AllowLocalNet = false` on the `Runner` to simulate the real API's URL blocking |
+| Response body size | 10 MiB | Maximum response body read from an HTTP call |
+| Redirect limit | 10 | Maximum number of HTTP redirects followed per request |
+| Timeout | 5–180 s (default 60) | Per-request timeout, configurable via the `timeout` call argument |
+
 ## API endpoints
 
 | Method | Path | Description |

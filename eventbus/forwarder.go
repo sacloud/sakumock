@@ -55,9 +55,7 @@ func newForwarder(env []core.EnvVar, logger *slog.Logger) *forwarder {
 	return f
 }
 
-// forward dispatches a delivery to its destination service. It returns an
-// error string for the delivery record; empty means success.
-func (f *forwarder) forward(ctx context.Context, d Delivery) string {
+func (f *forwarder) forward(ctx context.Context, d Delivery) error {
 	ctx, cancel := context.WithTimeout(ctx, serviceLinkTimeout)
 	defer cancel()
 	switch d.Destination {
@@ -66,7 +64,7 @@ func (f *forwarder) forward(ctx context.Context, d Delivery) string {
 	case "simplenotification":
 		return f.forwardToSimpleNotification(ctx, d)
 	default:
-		return ""
+		return nil
 	}
 }
 
@@ -76,29 +74,29 @@ type simpleMQParams struct {
 	Content   string `json:"content"`
 }
 
-func (f *forwarder) forwardToSimpleMQ(ctx context.Context, d Delivery) string {
+func (f *forwarder) forwardToSimpleMQ(ctx context.Context, d Delivery) error {
 	if f.mqClient == nil {
-		return "service link: simplemq endpoint not configured"
+		return fmt.Errorf("service link: simplemq endpoint not configured")
 	}
 
 	var params simpleMQParams
 	if err := json.Unmarshal([]byte(d.Parameters), &params); err != nil {
-		return fmt.Sprintf("service link: invalid simplemq parameters: %v", err)
+		return fmt.Errorf("service link: invalid simplemq parameters: %w", err)
 	}
 	if params.QueueName == "" {
-		return "service link: simplemq parameters missing queue_name"
+		return fmt.Errorf("service link: simplemq parameters missing queue_name")
 	}
 
 	op := simplemqsdk.NewMessageOp(f.mqClient, params.QueueName)
 	if _, err := op.Send(ctx, params.Content); err != nil {
-		return fmt.Sprintf("service link: simplemq send failed: %v", err)
+		return fmt.Errorf("service link: simplemq send failed: %w", err)
 	}
 
 	f.logger.Info("forwarded to simplemq",
 		"queue", params.QueueName,
 		"process_configuration", d.ProcessConfigurationID,
 	)
-	return ""
+	return nil
 }
 
 // simpleNotificationParams is the parsed Parameters for a simplenotification destination.
@@ -107,29 +105,29 @@ type simpleNotificationParams struct {
 	Message string `json:"message"`
 }
 
-func (f *forwarder) forwardToSimpleNotification(ctx context.Context, d Delivery) string {
+func (f *forwarder) forwardToSimpleNotification(ctx context.Context, d Delivery) error {
 	if f.snClient == nil {
-		return "service link: simplenotification endpoint not configured"
+		return fmt.Errorf("service link: simplenotification endpoint not configured")
 	}
 
 	var params simpleNotificationParams
 	if err := json.Unmarshal([]byte(d.Parameters), &params); err != nil {
-		return fmt.Sprintf("service link: invalid simplenotification parameters: %v", err)
+		return fmt.Errorf("service link: invalid simplenotification parameters: %w", err)
 	}
 	if params.GroupID == "" {
-		return "service link: simplenotification parameters missing group_id"
+		return fmt.Errorf("service link: simplenotification parameters missing group_id")
 	}
 
 	op := simplenotificationsdk.NewGroupOp(f.snClient)
 	if _, err := op.SendMessage(ctx, params.GroupID, snv1.SendNotificationMessageRequest{
 		Message: params.Message,
 	}); err != nil {
-		return fmt.Sprintf("service link: simplenotification send failed: %v", err)
+		return fmt.Errorf("service link: simplenotification send failed: %w", err)
 	}
 
 	f.logger.Info("forwarded to simplenotification",
 		"group_id", params.GroupID,
 		"process_configuration", d.ProcessConfigurationID,
 	)
-	return ""
+	return nil
 }

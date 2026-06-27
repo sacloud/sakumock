@@ -232,8 +232,8 @@ func (dp *dataPlane) fire(ctx context.Context, source ServiceItem, pcID string, 
 	}
 
 	if d.Error == "" && dp.forwarder != nil {
-		if fwdErr := dp.forwarder.forward(ctx, d); fwdErr != "" {
-			d.Error = fwdErr
+		if err := dp.forwarder.forward(ctx, d); err != nil {
+			d.Error = err.Error()
 		}
 	}
 

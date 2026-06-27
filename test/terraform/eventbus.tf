@@ -20,6 +20,7 @@ resource "sakura_eventbus_process_configuration" "simplemq" {
 
   sakura_access_token_wo        = "dummy-token"
   sakura_access_token_secret_wo = "dummy-token-secret"
+  simplemq_api_key_wo           = "dummy-api-key"
   credentials_wo_version        = 1
 }
 
@@ -30,7 +31,7 @@ resource "sakura_eventbus_schedule" "test" {
   process_configuration_id = sakura_eventbus_process_configuration.simplenotification.id
   starts_at                = 1700000000000
   recurring_step           = 1
-  recurring_unit           = "day"
+  recurring_unit           = "min"
 }
 
 resource "sakura_eventbus_trigger" "test" {
@@ -39,12 +40,4 @@ resource "sakura_eventbus_trigger" "test" {
 
   process_configuration_id = sakura_eventbus_process_configuration.simplemq.id
   source                   = "test-source"
-  types                    = ["type1"]
-  conditions = [
-    {
-      key    = "key1"
-      op     = "eq"
-      values = ["foo"]
-    },
-  ]
 }

@@ -16,7 +16,7 @@ import (
 // handleInjectEvent (POST /_sakumock/events) injects an event and fires every
 // trigger it matches, returning the resulting deliveries.
 func (s *Server) handleInjectEvent(w http.ResponseWriter, r *http.Request) {
-	var ev event
+	var ev Event
 	if err := core.ReadJSON(r, &ev); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return

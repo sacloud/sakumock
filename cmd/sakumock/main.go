@@ -28,6 +28,7 @@ import (
 type CLI struct {
 	All                AllCmd                     `cmd:"" name:"all" help:"Run all mock services together in one process"`
 	Env                EnvCmd                     `cmd:"" name:"env" help:"Print client environment variables (endpoints + dummy credentials) as a dotenv file and exit"`
+	Inspect            InspectCmd                 `cmd:"" name:"inspect" help:"Query or drive a running sakumock's inspection endpoints"`
 	Simplemq           simplemq.Command           `cmd:"" name:"simplemq" help:"SimpleMQ mock server"`
 	Kms                kms.Command                `cmd:"" name:"kms" help:"KMS mock server"`
 	Secretmanager      secretmanager.Command      `cmd:"" name:"secretmanager" help:"SecretManager mock server"`

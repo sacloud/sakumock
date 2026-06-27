@@ -170,6 +170,52 @@ sakumock all --enable-service-link --eventbus-enable-data-plane
 
 Service link is only available with `sakumock all`; standalone services cannot discover each other's addresses.
 
+## Inspection
+
+Every service exposes mock-only `/_sakumock/` endpoints for observing or driving the mock — listing accepted messages, inspecting fired deliveries, injecting events, and resetting state. These endpoints do not exist in the real SAKURA Cloud API.
+
+See each service's README for available endpoints and response shapes:
+
+- [eventbus — Inspection endpoints](eventbus/README.md#api-endpoints) (`/_sakumock/events`, `/_sakumock/tick`, `/_sakumock/deliveries`)
+- [simplenotification — Inspection endpoints](simplenotification/README.md#inspection-endpoints) (`/_sakumock/messages`)
+
+### Inspection API (Go)
+
+Each service with inspection endpoints provides an `InspectionClient` — an HTTP client that wraps the `/_sakumock/` calls and returns typed domain objects. Use it from integration tests that run against a sakumock process or container (not just in-process test servers):
+
+```go
+import "github.com/sacloud/sakumock/eventbus"
+
+ic := eventbus.NewInspectionClient("http://localhost:18085")
+ds, _ := ic.InjectEvent(ctx, eventbus.Event{Source: "//monitoringsuite..."})
+ds, _ = ic.Deliveries(ctx)
+_ = ic.ClearDeliveries(ctx)
+```
+
+### Inspection CLI
+
+The `sakumock inspect` subcommand calls inspection endpoints from the command line:
+
+```bash
+# List recorded firings
+sakumock inspect eventbus deliveries
+
+# Inject an event and see which triggers fired
+sakumock inspect eventbus inject-event --source "//monitoringsuite..."
+
+# Force schedule evaluation at a specific time
+sakumock inspect eventbus tick --at 2024-01-01T09:00:00+09:00
+
+# List accepted notification messages
+sakumock inspect simplenotification messages
+
+# Clear state between test runs
+sakumock inspect eventbus clear-deliveries
+sakumock inspect simplenotification clear-messages
+```
+
+Each service subcommand accepts `--addr` to override the server address. The address resolves in order of precedence (highest first): `--addr` flag, then `SAKURA_ENDPOINTS_*` environment variable (so `sakumock env` output works as-is), then the built-in default.
+
 ## Docker
 
 A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Container Registry.

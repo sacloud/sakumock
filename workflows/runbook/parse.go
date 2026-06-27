@@ -285,7 +285,10 @@ func parseParallel(n *yaml.Node) (*ParallelStep, error) {
 			}
 			p.Shared = shared
 		case "concurrencyLimit":
-			v, _ := strconv.Atoi(val.Value)
+			v, err := strconv.Atoi(val.Value)
+			if err != nil {
+				return nil, fmt.Errorf("parallel concurrencyLimit: invalid integer %q", val.Value)
+			}
 			p.ConcurrencyLimit = v
 		case "branches":
 			branches, err := parseBranches(val)
@@ -401,7 +404,9 @@ func toExprLiteral(v any) string {
 	case float64:
 		return strconv.FormatFloat(val, 'f', -1, 64)
 	case string:
-		return val
+		escaped := strings.ReplaceAll(val, `\`, `\\`)
+		escaped = strings.ReplaceAll(escaped, `"`, `\"`)
+		return `"` + escaped + `"`
 	case []any:
 		var s strings.Builder
 		s.WriteString("[")

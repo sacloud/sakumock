@@ -17,11 +17,14 @@ import (
 const maxResponseBodySize = 10 * 1024 * 1024 // 10 MiB
 const maxRedirects = 10
 
-func newDefaultHTTPClient() *http.Client {
+func NewHTTPClient(allowLocalNet bool) *http.Client {
 	return &http.Client{
-		CheckRedirect: func(_ *http.Request, via []*http.Request) error {
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= maxRedirects {
 				return fmt.Errorf("stopped after %d redirects", maxRedirects)
+			}
+			if !allowLocalNet && isBlockedHost(req.URL.Host) {
+				return fmt.Errorf("redirect to blocked host: %s", req.URL.Host)
 			}
 			return nil
 		},
@@ -165,15 +168,22 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep, opts Ca
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	resp, err := opts.HTTPClient.Do(req)
+	client := opts.HTTPClient
+	if client == nil {
+		client = http.DefaultClient
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return expr.Null, fmt.Errorf("http.request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	respBody, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBodySize))
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBodySize+1))
 	if err != nil {
 		return expr.Null, fmt.Errorf("http.request: read body: %w", err)
+	}
+	if len(respBody) > maxResponseBodySize {
+		return expr.Null, fmt.Errorf("http.request: response body size exceeds limit %d bytes", maxResponseBodySize)
 	}
 
 	return expr.Object(map[string]expr.Value{

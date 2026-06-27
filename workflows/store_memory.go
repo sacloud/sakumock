@@ -163,6 +163,9 @@ func (s *MemoryStore) DeleteWorkflow(id string) error {
 		}
 	}
 
+	for _, e := range s.executions[id] {
+		delete(s.histories, e.ExecutionID)
+	}
 	delete(s.workflows, id)
 	delete(s.revisions, id)
 	delete(s.executions, id)
@@ -383,7 +386,9 @@ func (s *MemoryStore) UpdateExecutionStatus(workflowID, executionID string, upda
 
 	for _, e := range s.executions[workflowID] {
 		if e.ExecutionID == executionID {
-			e.Status = update.Status
+			if update.Status != "" {
+				e.Status = update.Status
+			}
 			if update.Result != "" {
 				e.Result = update.Result
 			}
@@ -438,6 +443,7 @@ func (s *MemoryStore) DeleteExecution(workflowID, executionID string) error {
 				return fmt.Errorf("execution cannot be deleted (status: %s)", e.Status)
 			}
 			s.executions[workflowID] = append(execs[:i], execs[i+1:]...)
+			delete(s.histories, executionID)
 			s.logger.Debug("execution deleted", "workflow_id", workflowID, "execution_id", executionID)
 			return nil
 		}

@@ -74,7 +74,7 @@ func (r *Runner) emit(e Event) {
 func NewRunner() *Runner {
 	return &Runner{
 		CallFuncs:     defaultCallFuncs(),
-		HTTPClient:    newDefaultHTTPClient(),
+		HTTPClient:    NewHTTPClient(true),
 		Logger:        slog.Default(),
 		AllowLocalNet: true,
 	}

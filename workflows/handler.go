@@ -217,8 +217,8 @@ func parsePaging(r *http.Request) pageParams {
 		}
 	}
 	if v := r.URL.Query().Get("PageLimit"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n >= 1 {
-			p.pageLimit = n
+		if n, err := strconv.Atoi(v); err == nil {
+			p.pageLimit = max(5, min(n, 500))
 		}
 	}
 	return p

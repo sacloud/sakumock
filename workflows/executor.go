@@ -36,6 +36,7 @@ func (e *executor) newRunner(workflowID, executionID string) *runbook.Runner {
 	r := runbook.NewRunner()
 	r.Logger = e.logger
 	r.AllowLocalNet = e.allowLocalNet
+	r.HTTPClient = runbook.NewHTTPClient(e.allowLocalNet)
 	r.OnEvent = func(ev runbook.Event) {
 		meta := ev.Meta
 		if meta == "" {
@@ -84,10 +85,13 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 		)
 
 		now := time.Now()
-		e.store.UpdateExecutionStatus(workflowID, executionID, ExecutionStatusUpdate{
+		if err := e.store.UpdateExecutionStatus(workflowID, executionID, ExecutionStatusUpdate{
 			Status: "Running",
 			RunAt:  &now,
-		})
+		}); err != nil {
+			e.logger.Error("update execution status", "error", err)
+			return
+		}
 
 		var args map[string]expr.Value
 		if argsJSON != "" && argsJSON != "null" {
@@ -116,7 +120,9 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			if status == "Failed" {
 				update.FailedAt = &finished
 			}
-			e.store.UpdateExecutionStatus(workflowID, executionID, update)
+			if err := e.store.UpdateExecutionStatus(workflowID, executionID, update); err != nil {
+				e.logger.Error("update execution status", "error", err)
+			}
 			e.logger.Info("execution finished",
 				"workflow_id", workflowID,
 				"execution_id", executionID,
@@ -131,11 +137,13 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			resultJSON = string(b)
 		}
 
-		e.store.UpdateExecutionStatus(workflowID, executionID, ExecutionStatusUpdate{
+		if err := e.store.UpdateExecutionStatus(workflowID, executionID, ExecutionStatusUpdate{
 			Status:      "Succeeded",
 			Result:      resultJSON,
 			SucceededAt: &finished,
-		})
+		}); err != nil {
+			e.logger.Error("update execution status", "error", err)
+		}
 		e.logger.Info("execution finished",
 			"workflow_id", workflowID,
 			"execution_id", executionID,

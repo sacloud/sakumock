@@ -418,6 +418,163 @@ func TestHTTPRejectsNonHTTPScheme(t *testing.T) {
 	}
 }
 
+func TestNestedForInSwitch(t *testing.T) {
+	// for each row, switch on even/odd, inner for accumulates
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "init", Step: runbook.Step{
+				Assign: []runbook.Assignment{
+					{Name: "evens", Expression: "${0}"},
+					{Name: "odds", Expression: "${0}"},
+				},
+			}},
+			{Name: "outer", Step: runbook.Step{
+				For: &runbook.ForStep{
+					In: "${array.range(1, 11)}",
+					As: "n",
+					Steps: []runbook.NamedStep{
+						{Name: "classify", Step: runbook.Step{
+							Switch: []runbook.SwitchCase{
+								{Condition: "${n % 2 == 0}", Steps: []runbook.NamedStep{
+									{Name: "add_even", Step: runbook.Step{
+										Assign: []runbook.Assignment{
+											{Name: "evens", Expression: "${evens + n}"},
+										},
+									}},
+								}},
+								{Condition: "${true}", Steps: []runbook.NamedStep{
+									{Name: "add_odd", Step: runbook.Step{
+										Assign: []runbook.Assignment{
+											{Name: "odds", Expression: "${odds + n}"},
+										},
+									}},
+								}},
+							},
+						}},
+					},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr("${evens + odds}"),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	result := r.Run(context.Background(), rb, nil)
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	// 1+2+...+10 = 55
+	if result.Value.AsNumber() != 55 {
+		t.Errorf("got %v, want 55", result.Value.AsNumber())
+	}
+}
+
+func TestNestedForInFor(t *testing.T) {
+	// matrix multiplication-style: sum of i*j for i in 1..3, j in 1..3
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "init", Step: runbook.Step{
+				Assign: []runbook.Assignment{
+					{Name: "total", Expression: "${0}"},
+				},
+			}},
+			{Name: "outer", Step: runbook.Step{
+				For: &runbook.ForStep{
+					In: "${[1, 2, 3]}",
+					As: "i",
+					Steps: []runbook.NamedStep{
+						{Name: "inner", Step: runbook.Step{
+							For: &runbook.ForStep{
+								In: "${[1, 2, 3]}",
+								As: "j",
+								Steps: []runbook.NamedStep{
+									{Name: "mul", Step: runbook.Step{
+										Assign: []runbook.Assignment{
+											{Name: "total", Expression: "${total + i * j}"},
+										},
+									}},
+								},
+							},
+						}},
+					},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr("${total}"),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	result := r.Run(context.Background(), rb, nil)
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	// (1+2+3)*(1+2+3) = 36
+	if result.Value.AsNumber() != 36 {
+		t.Errorf("got %v, want 36", result.Value.AsNumber())
+	}
+}
+
+func TestNestedTryInFor(t *testing.T) {
+	// for loop with try-except: bad items are caught, good items accumulated
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "init", Step: runbook.Step{
+				Assign: []runbook.Assignment{
+					{Name: "results", Expression: "${[]}"},
+				},
+			}},
+			{Name: "loop", Step: runbook.Step{
+				For: &runbook.ForStep{
+					In:    `${["1", "bad", "3"]}`,
+					As: "item",
+					Steps: []runbook.NamedStep{
+						{Name: "attempt", Step: runbook.Step{
+							Try: &runbook.TryStep{
+								Steps: []runbook.NamedStep{
+									{Name: "parse", Step: runbook.Step{
+										Assign: []runbook.Assignment{
+											{Name: "parsed", Expression: `${json.decode(item)}`},
+											{Name: "results", Expression: "${array.push(results, parsed)}"},
+										},
+									}},
+								},
+								ExceptAs: "err",
+								ExceptSteps: []runbook.NamedStep{
+									{Name: "handle", Step: runbook.Step{
+										Assign: []runbook.Assignment{
+											{Name: "results", Expression: `${array.push(results, -1)}`},
+										},
+									}},
+								},
+							},
+						}},
+					},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr("${results}"),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	result := r.Run(context.Background(), rb, nil)
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	arr := result.Value.AsArray()
+	if len(arr) != 3 {
+		t.Fatalf("got %d items, want 3", len(arr))
+	}
+	if arr[0].AsNumber() != 1 || arr[1].AsNumber() != -1 || arr[2].AsNumber() != 3 {
+		t.Errorf("got [%v, %v, %v], want [1, -1, 3]", arr[0], arr[1], arr[2])
+	}
+}
+
 func TestContextCancellation(t *testing.T) {
 	rb := &runbook.Runbook{
 		Steps: []runbook.NamedStep{

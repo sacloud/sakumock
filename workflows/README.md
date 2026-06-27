@@ -108,6 +108,10 @@ The `call` step supports the following function groups:
 
 Calling an unimplemented function returns an error.
 
+## Notes on workflow fields
+
+- **`Logging`**: Controls Monitoring Suite log collection integration. The real API documents this as "実装準備中のため設定しても動作しません" (under development, does not function). The mock stores and returns the value but does not act on it.
+
 ## API endpoints
 
 | Method | Path | Description |

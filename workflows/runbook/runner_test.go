@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/sacloud/sakumock/workflows/expr"
 	"github.com/sacloud/sakumock/workflows/runbook"
@@ -440,6 +441,63 @@ func TestSysSleep(t *testing.T) {
 	}
 	if result.Value.AsString() != "ok" {
 		t.Errorf("got %q, want ok", result.Value.AsString())
+	}
+}
+
+func TestSysSleepActualWait(t *testing.T) {
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "wait", Step: runbook.Step{
+				Call: &runbook.CallStep{
+					Func: "sys.sleep",
+					Args: map[string]string{"seconds": "0.1"},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr(`${"ok"}`),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	start := time.Now()
+	result := r.Run(t.Context(), rb, nil)
+	elapsed := time.Since(start)
+
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	if elapsed < 100*time.Millisecond {
+		t.Errorf("sleep returned too fast: %v", elapsed)
+	}
+}
+
+func TestSysSleepUntilActualWait(t *testing.T) {
+	target := time.Now().Add(100 * time.Millisecond).UTC().Format(time.RFC3339Nano)
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "wait", Step: runbook.Step{
+				Call: &runbook.CallStep{
+					Func: "sys.sleepUntil",
+					Args: map[string]string{"date": target},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr(`${"ok"}`),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	start := time.Now()
+	result := r.Run(t.Context(), rb, nil)
+	elapsed := time.Since(start)
+
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	if elapsed < 100*time.Millisecond {
+		t.Errorf("sleepUntil returned too fast: %v", elapsed)
 	}
 }
 

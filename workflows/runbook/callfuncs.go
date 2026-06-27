@@ -191,7 +191,7 @@ func sysSleep(ctx context.Context, env *expr.Env, call *CallStep, _ CallOpts) (e
 	if !ok {
 		return expr.Null, fmt.Errorf("sys.sleep: seconds is required")
 	}
-	dur := time.Duration(secVal.AsNumber()) * time.Second
+	dur := time.Duration(secVal.ToNumber() * float64(time.Second))
 
 	select {
 	case <-time.After(dur):

@@ -2,6 +2,7 @@ package expr_test
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/sacloud/sakumock/workflows/expr"
@@ -587,6 +588,44 @@ func TestDivisionByZero(t *testing.T) {
 	if !math.IsNaN(got.AsNumber()) {
 		t.Errorf("0/0 = %v, want NaN", got.AsNumber())
 	}
+}
+
+func TestSafetyLimits(t *testing.T) {
+	t.Run("step limit", func(t *testing.T) {
+		env := expr.NewEnv()
+		env.SetMaxSteps(10)
+		_, err := expr.Eval("1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1", env)
+		if err == nil {
+			t.Fatal("expected step limit error")
+		}
+		if !strings.Contains(err.Error(), "exceeded") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("array size limit", func(t *testing.T) {
+		env := expr.NewEnv()
+		env.MaxArrayLen = 100
+		_, err := expr.Eval("array.range(1000)", env)
+		if err == nil {
+			t.Fatal("expected array size limit error")
+		}
+		if !strings.Contains(err.Error(), "exceeds limit") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("parse depth limit", func(t *testing.T) {
+		env := expr.NewEnv()
+		deep := strings.Repeat("(", 200) + "1" + strings.Repeat(")", 200)
+		_, err := expr.Eval(deep, env)
+		if err == nil {
+			t.Fatal("expected parse depth error")
+		}
+		if !strings.Contains(err.Error(), "deeply nested") {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
 }
 
 func TestEnvClone(t *testing.T) {

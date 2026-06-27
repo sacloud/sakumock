@@ -85,7 +85,7 @@ func requireArgs(name string, args []Value, min, max int) error {
 
 // array functions
 
-func arrayFill(args []Value) (Value, error) {
+func arrayFill(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("array.fill", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -100,7 +100,7 @@ func arrayFill(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func arrayRange(args []Value) (Value, error) {
+func arrayRange(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("array.range", args, 1, 3); err != nil {
 		return Null, err
 	}
@@ -116,7 +116,19 @@ func arrayRange(args []Value) (Value, error) {
 	if step == 0 {
 		return Null, fmt.Errorf("array.range: step cannot be zero")
 	}
-	var result []Value
+	var count int
+	if step > 0 {
+		count = int((stop - start + step - 1) / step)
+	} else {
+		count = int((start - stop - step - 1) / -step)
+	}
+	if count < 0 {
+		count = 0
+	}
+	if count > env.MaxArrayLen {
+		return Null, fmt.Errorf("array.range: result length %d exceeds limit %d", count, env.MaxArrayLen)
+	}
+	result := make([]Value, 0, count)
 	if step > 0 {
 		for i := start; i < stop; i += step {
 			result = append(result, Number(i))
@@ -129,7 +141,7 @@ func arrayRange(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func arrayPush(args []Value) (Value, error) {
+func arrayPush(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("array.push", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -143,7 +155,7 @@ func arrayPush(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func arraySet(args []Value) (Value, error) {
+func arraySet(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("array.set", args, 3, 3); err != nil {
 		return Null, err
 	}
@@ -161,7 +173,7 @@ func arraySet(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func arrayLength(args []Value) (Value, error) {
+func arrayLength(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("array.length", args, 1, 1); err != nil {
 		return Null, err
 	}
@@ -173,7 +185,7 @@ func arrayLength(args []Value) (Value, error) {
 
 // json functions
 
-func jsonDecode(args []Value) (Value, error) {
+func jsonDecode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("json.decode", args, 1, 1); err != nil {
 		return Null, err
 	}
@@ -184,7 +196,7 @@ func jsonDecode(args []Value) (Value, error) {
 	return FromInterface(raw), nil
 }
 
-func jsonEncode(args []Value) (Value, error) {
+func jsonEncode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("json.encode", args, 1, 1); err != nil {
 		return Null, err
 	}
@@ -197,14 +209,14 @@ func jsonEncode(args []Value) (Value, error) {
 
 // list functions
 
-func listConcat(args []Value) (Value, error) {
+func listConcat(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("list.concat", args, 2, 2); err != nil {
 		return Null, err
 	}
-	return arrayPush(args)
+	return arrayPush(env, args)
 }
 
-func listPrepend(args []Value) (Value, error) {
+func listPrepend(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("list.prepend", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -220,7 +232,7 @@ func listPrepend(args []Value) (Value, error) {
 
 // map functions
 
-func mapDelete(args []Value) (Value, error) {
+func mapDelete(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("map.delete", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -238,7 +250,7 @@ func mapDelete(args []Value) (Value, error) {
 	return Object(result), nil
 }
 
-func mapGet(args []Value) (Value, error) {
+func mapGet(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("map.get", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -253,7 +265,7 @@ func mapGet(args []Value) (Value, error) {
 	return v, nil
 }
 
-func mapPut(args []Value) (Value, error) {
+func mapPut(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("map.put", args, 3, 3); err != nil {
 		return Null, err
 	}
@@ -267,7 +279,7 @@ func mapPut(args []Value) (Value, error) {
 	return Object(result), nil
 }
 
-func mapMerge(args []Value) (Value, error) {
+func mapMerge(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("map.merge", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -280,7 +292,7 @@ func mapMerge(args []Value) (Value, error) {
 	return Object(result), nil
 }
 
-func mapMergeNested(args []Value) (Value, error) {
+func mapMergeNested(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("map.mergeNested", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -305,42 +317,42 @@ func mergeDeep(base, override Value) Value {
 
 // math functions
 
-func mathCeil(args []Value) (Value, error) {
+func mathCeil(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.ceil", args, 1, 1); err != nil {
 		return Null, err
 	}
 	return Number(math.Ceil(args[0].ToNumber())), nil
 }
 
-func mathSqrt(args []Value) (Value, error) {
+func mathSqrt(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.sqrt", args, 1, 1); err != nil {
 		return Null, err
 	}
 	return Number(math.Sqrt(args[0].ToNumber())), nil
 }
 
-func mathAbs(args []Value) (Value, error) {
+func mathAbs(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.abs", args, 1, 1); err != nil {
 		return Null, err
 	}
 	return Number(math.Abs(args[0].ToNumber())), nil
 }
 
-func mathMax(args []Value) (Value, error) {
+func mathMax(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.max", args, 2, 2); err != nil {
 		return Null, err
 	}
 	return Number(math.Max(args[0].ToNumber(), args[1].ToNumber())), nil
 }
 
-func mathMin(args []Value) (Value, error) {
+func mathMin(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.min", args, 2, 2); err != nil {
 		return Null, err
 	}
 	return Number(math.Min(args[0].ToNumber(), args[1].ToNumber())), nil
 }
 
-func mathRandint(args []Value) (Value, error) {
+func mathRandint(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.randint", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -354,21 +366,21 @@ func mathRandint(args []Value) (Value, error) {
 
 // text functions
 
-func textDecode(args []Value) (Value, error) {
+func textDecode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.decode", args, 1, 2); err != nil {
 		return Null, err
 	}
 	return String(args[0].ToString()), nil
 }
 
-func textEncode(args []Value) (Value, error) {
+func textEncode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.encode", args, 1, 2); err != nil {
 		return Null, err
 	}
 	return String(args[0].ToString()), nil
 }
 
-func textFindAll(args []Value) (Value, error) {
+func textFindAll(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.findAll", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -387,7 +399,7 @@ func textFindAll(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func textFindAllRegex(args []Value) (Value, error) {
+func textFindAllRegex(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.findAllRegex", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -403,7 +415,7 @@ func textFindAllRegex(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func textMatchRegex(args []Value) (Value, error) {
+func textMatchRegex(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.matchRegex", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -414,14 +426,14 @@ func textMatchRegex(args []Value) (Value, error) {
 	return Bool(re.MatchString(args[0].ToString())), nil
 }
 
-func textReplaceAll(args []Value) (Value, error) {
+func textReplaceAll(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.replaceAll", args, 3, 3); err != nil {
 		return Null, err
 	}
 	return String(strings.ReplaceAll(args[0].ToString(), args[1].ToString(), args[2].ToString())), nil
 }
 
-func textReplaceAllRegex(args []Value) (Value, error) {
+func textReplaceAllRegex(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.replaceAllRegex", args, 3, 3); err != nil {
 		return Null, err
 	}
@@ -432,7 +444,7 @@ func textReplaceAllRegex(args []Value) (Value, error) {
 	return String(re.ReplaceAllString(args[0].ToString(), args[2].ToString())), nil
 }
 
-func textSplit(args []Value) (Value, error) {
+func textSplit(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.split", args, 2, 2); err != nil {
 		return Null, err
 	}
@@ -444,7 +456,7 @@ func textSplit(args []Value) (Value, error) {
 	return Array(result...), nil
 }
 
-func textSubstring(args []Value) (Value, error) {
+func textSubstring(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.substring", args, 3, 3); err != nil {
 		return Null, err
 	}
@@ -463,21 +475,21 @@ func textSubstring(args []Value) (Value, error) {
 	return String(s[start:end]), nil
 }
 
-func textToLower(args []Value) (Value, error) {
+func textToLower(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.toLower", args, 1, 1); err != nil {
 		return Null, err
 	}
 	return String(strings.ToLower(args[0].ToString())), nil
 }
 
-func textToUpper(args []Value) (Value, error) {
+func textToUpper(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.toUpper", args, 1, 1); err != nil {
 		return Null, err
 	}
 	return String(strings.ToUpper(args[0].ToString())), nil
 }
 
-func textURLDecode(args []Value) (Value, error) {
+func textURLDecode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.urlDecode", args, 1, 1); err != nil {
 		return Null, err
 	}
@@ -488,14 +500,14 @@ func textURLDecode(args []Value) (Value, error) {
 	return String(s), nil
 }
 
-func textURLEncode(args []Value) (Value, error) {
+func textURLEncode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.urlEncode", args, 1, 1); err != nil {
 		return Null, err
 	}
 	return String(url.PathEscape(args[0].ToString())), nil
 }
 
-func textURLEncodePlus(args []Value) (Value, error) {
+func textURLEncodePlus(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.urlEncodePlus", args, 1, 1); err != nil {
 		return Null, err
 	}
@@ -504,7 +516,7 @@ func textURLEncodePlus(args []Value) (Value, error) {
 
 // time functions
 
-func timeFormat(args []Value) (Value, error) {
+func timeFormat(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("time.format", args, 1, 2); err != nil {
 		return Null, err
 	}
@@ -522,7 +534,7 @@ func timeFormat(args []Value) (Value, error) {
 	return String(t.Format(time.RFC3339)), nil
 }
 
-func timeParse(args []Value) (Value, error) {
+func timeParse(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("time.parse", args, 1, 1); err != nil {
 		return Null, err
 	}
@@ -533,7 +545,7 @@ func timeParse(args []Value) (Value, error) {
 	return Number(float64(t.Unix())), nil
 }
 
-func timeNow(args []Value) (Value, error) {
+func timeNow(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("time.now", args, 0, 0); err != nil {
 		return Null, err
 	}
@@ -542,7 +554,7 @@ func timeNow(args []Value) (Value, error) {
 
 // uuid functions
 
-func uuidV7(args []Value) (Value, error) {
+func uuidV7(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("uuid.v7", args, 0, 0); err != nil {
 		return Null, err
 	}
@@ -553,7 +565,7 @@ func uuidV7(args []Value) (Value, error) {
 	return String(id.String()), nil
 }
 
-func uuidNil(args []Value) (Value, error) {
+func uuidNil(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("uuid.nil", args, 0, 0); err != nil {
 		return Null, err
 	}

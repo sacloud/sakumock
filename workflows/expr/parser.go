@@ -5,13 +5,28 @@ import (
 	"strconv"
 )
 
+const maxParseDepth = 128
+
 type parser struct {
 	tokens []token
 	pos    int
+	depth  int
 }
 
 func newParser(tokens []token) *parser {
 	return &parser{tokens: tokens}
+}
+
+func (p *parser) enterDepth() error {
+	p.depth++
+	if p.depth > maxParseDepth {
+		return fmt.Errorf("expression too deeply nested (max %d)", maxParseDepth)
+	}
+	return nil
+}
+
+func (p *parser) leaveDepth() {
+	p.depth--
 }
 
 func (p *parser) peek() token {
@@ -47,6 +62,11 @@ func (p *parser) parse() (node, error) {
 }
 
 func (p *parser) parseExpr(minPrec int) (node, error) {
+	if err := p.enterDepth(); err != nil {
+		return nil, err
+	}
+	defer p.leaveDepth()
+
 	left, err := p.parsePrefix()
 	if err != nil {
 		return nil, err

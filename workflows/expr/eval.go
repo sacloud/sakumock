@@ -6,19 +6,41 @@ import (
 	"math"
 )
 
+const (
+	DefaultMaxSteps    = 100_000
+	DefaultMaxArrayLen = 1_000_000
+)
+
 type Env struct {
-	vars  map[string]Value
-	funcs map[string]Func
+	vars        map[string]Value
+	funcs       map[string]Func
+	steps       int
+	maxSteps    int
+	MaxArrayLen int
 }
 
-type Func func(args []Value) (Value, error)
+type Func func(env *Env, args []Value) (Value, error)
 
 func NewEnv() *Env {
 	return &Env{
-		vars:  make(map[string]Value),
-		funcs: builtinFuncs(),
+		vars:        make(map[string]Value),
+		funcs:       builtinFuncs(),
+		maxSteps:    DefaultMaxSteps,
+		MaxArrayLen: DefaultMaxArrayLen,
 	}
 }
+
+func (e *Env) SetMaxSteps(n int) { e.maxSteps = n }
+
+func (e *Env) step() error {
+	e.steps++
+	if e.steps > e.maxSteps {
+		return fmt.Errorf("evaluation exceeded %d steps", e.maxSteps)
+	}
+	return nil
+}
+
+func (e *Env) resetSteps() { e.steps = 0 }
 
 func (e *Env) Set(name string, val Value) {
 	e.vars[name] = val
@@ -36,10 +58,13 @@ func (e *Env) SetFunc(name string, f Func) {
 func (e *Env) Clone() *Env {
 	vars := make(map[string]Value, len(e.vars))
 	maps.Copy(vars, e.vars)
-	return &Env{vars: vars, funcs: e.funcs}
+	return &Env{vars: vars, funcs: e.funcs, maxSteps: e.maxSteps, MaxArrayLen: e.MaxArrayLen}
 }
 
 func eval(n node, env *Env) (Value, error) {
+	if err := env.step(); err != nil {
+		return Null, err
+	}
 	switch nd := n.(type) {
 	case *literalNode:
 		return nd.value, nil
@@ -228,7 +253,7 @@ func evalCall(nd *callNode, env *Env) (Value, error) {
 		}
 		args[i] = v
 	}
-	return fn(args)
+	return fn(env, args)
 }
 
 func resolveFuncName(n node) string {

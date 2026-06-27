@@ -14,6 +14,7 @@ func Eval(expression string, env *Env) (Value, error) {
 	if err != nil {
 		return Null, fmt.Errorf("parser: %w", err)
 	}
+	env.resetSteps()
 	return eval(ast, env)
 }
 

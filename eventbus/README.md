@@ -68,6 +68,14 @@ http.Post(srv.TestURL()+"/_sakumock/events", "application/json",
 for _, d := range srv.Deliveries() {
     fmt.Println(d.SourceID, d.Destination, d.Parameters)
 }
+
+// InspectionClient — drive and inspect firing over HTTP (e.g. against a
+// running sakumock process or container, not just in-process test servers)
+ic := eventbus.NewInspectionClient("http://localhost:18085")
+ds, _ := ic.InjectEvent(ctx, eventbus.Event{Source: "//monitoringsuite..."})
+ds, _ = ic.Tick(ctx, time.Now())   // force scheduler evaluation
+ds, _ = ic.Deliveries(ctx)         // list all recorded firings
+_ = ic.ClearDeliveries(ctx)        // reset
 ```
 
 ## API endpoints

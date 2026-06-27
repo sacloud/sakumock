@@ -80,6 +80,12 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 for _, m := range srv.Messages() {
     fmt.Println(m.GroupID, m.Message)
 }
+
+// InspectionClient — inspect messages over HTTP (e.g. against a running
+// sakumock process or container, not just in-process test servers)
+ic := simplenotification.NewInspectionClient("http://localhost:18083")
+msgs, _ := ic.Messages(ctx)        // list all accepted messages
+_ = ic.ClearMessages(ctx)          // reset
 ```
 
 ## API endpoints

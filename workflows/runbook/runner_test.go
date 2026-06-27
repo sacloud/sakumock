@@ -418,6 +418,78 @@ func TestHTTPRejectsNonHTTPScheme(t *testing.T) {
 	}
 }
 
+func TestSysSleep(t *testing.T) {
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "wait", Step: runbook.Step{
+				Call: &runbook.CallStep{
+					Func: "sys.sleep",
+					Args: map[string]string{"seconds": "0"},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr(`${"ok"}`),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	result := r.Run(t.Context(), rb, nil)
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	if result.Value.AsString() != "ok" {
+		t.Errorf("got %q, want ok", result.Value.AsString())
+	}
+}
+
+func TestSysSleepCancellation(t *testing.T) {
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "wait", Step: runbook.Step{
+				Call: &runbook.CallStep{
+					Func: "sys.sleep",
+					Args: map[string]string{"seconds": "3600"},
+				},
+			}},
+		},
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	r := runbook.NewRunner()
+	result := r.Run(ctx, rb, nil)
+	if result.Err == nil {
+		t.Fatal("expected cancellation error")
+	}
+}
+
+func TestSysSleepUntilPast(t *testing.T) {
+	rb := &runbook.Runbook{
+		Steps: []runbook.NamedStep{
+			{Name: "wait", Step: runbook.Step{
+				Call: &runbook.CallStep{
+					Func: "sys.sleepUntil",
+					Args: map[string]string{"date": `${"2000-01-01T00:00:00Z"}`},
+				},
+			}},
+			{Name: "done", Step: runbook.Step{
+				Return: ptr(`${"ok"}`),
+			}},
+		},
+	}
+
+	r := runbook.NewRunner()
+	result := r.Run(t.Context(), rb, nil)
+	if result.Err != nil {
+		t.Fatalf("error: %v", result.Err)
+	}
+	if result.Value.AsString() != "ok" {
+		t.Errorf("got %q, want ok", result.Value.AsString())
+	}
+}
+
 func TestNestedForInSwitch(t *testing.T) {
 	// for each row, switch on even/odd, inner for accumulates
 	rb := &runbook.Runbook{

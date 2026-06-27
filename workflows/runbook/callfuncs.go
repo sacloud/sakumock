@@ -182,15 +182,14 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep, opts Ca
 	}), nil
 }
 
-func sysSleep(ctx context.Context, _ *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error) {
-	args := call.Args
-	secStr, ok := args["seconds"]
+func sysSleep(ctx context.Context, env *expr.Env, call *CallStep, _ CallOpts) (expr.Value, error) {
+	args, err := evalCallArgs(env, call.Args)
+	if err != nil {
+		return expr.Null, err
+	}
+	secVal, ok := args["seconds"]
 	if !ok {
 		return expr.Null, fmt.Errorf("sys.sleep: seconds is required")
-	}
-	secVal, err := expr.Eval(secStr, expr.NewEnv())
-	if err != nil {
-		return expr.Null, fmt.Errorf("sys.sleep: %w", err)
 	}
 	dur := time.Duration(secVal.AsNumber()) * time.Second
 
@@ -202,15 +201,14 @@ func sysSleep(ctx context.Context, _ *expr.Env, call *CallStep, opts CallOpts) (
 	}
 }
 
-func sysSleepUntil(ctx context.Context, _ *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error) {
-	args := call.Args
-	dateStr, ok := args["date"]
+func sysSleepUntil(ctx context.Context, env *expr.Env, call *CallStep, _ CallOpts) (expr.Value, error) {
+	args, err := evalCallArgs(env, call.Args)
+	if err != nil {
+		return expr.Null, err
+	}
+	dateVal, ok := args["date"]
 	if !ok {
 		return expr.Null, fmt.Errorf("sys.sleepUntil: date is required")
-	}
-	dateVal, err := expr.Eval(dateStr, expr.NewEnv())
-	if err != nil {
-		return expr.Null, fmt.Errorf("sys.sleepUntil: %w", err)
 	}
 	target, err := time.Parse(time.RFC3339, dateVal.AsString())
 	if err != nil {

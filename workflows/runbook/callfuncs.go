@@ -17,13 +17,15 @@ import (
 const maxResponseBodySize = 10 * 1024 * 1024 // 10 MiB
 const maxRedirects = 10
 
-var httpClient = &http.Client{
-	CheckRedirect: func(_ *http.Request, via []*http.Request) error {
-		if len(via) >= maxRedirects {
-			return fmt.Errorf("stopped after %d redirects", maxRedirects)
-		}
-		return nil
-	},
+func newDefaultHTTPClient() *http.Client {
+	return &http.Client{
+		CheckRedirect: func(_ *http.Request, via []*http.Request) error {
+			if len(via) >= maxRedirects {
+				return fmt.Errorf("stopped after %d redirects", maxRedirects)
+			}
+			return nil
+		},
+	}
 }
 
 func defaultCallFuncs() map[string]CallFunc {
@@ -163,7 +165,7 @@ func httpRequestCall(ctx context.Context, env *expr.Env, call *CallStep, opts Ca
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	resp, err := httpClient.Do(req)
+	resp, err := opts.HTTPClient.Do(req)
 	if err != nil {
 		return expr.Null, fmt.Errorf("http.request: %w", err)
 	}

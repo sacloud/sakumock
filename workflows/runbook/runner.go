@@ -3,6 +3,7 @@ package runbook
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/sacloud/sakumock/workflows/expr"
@@ -24,10 +25,12 @@ type CallFunc func(ctx context.Context, env *expr.Env, call *CallStep, opts Call
 
 type CallOpts struct {
 	AllowLocalNet bool
+	HTTPClient    *http.Client
 }
 
 type Runner struct {
-	CallFuncs     map[string]CallFunc
+	CallFuncs  map[string]CallFunc
+	HTTPClient *http.Client
 	// AllowLocalNet permits HTTP calls to localhost, private, and link-local
 	// addresses. Enabled by default because sakumock is a local mock server
 	// where calling other local services (e.g. other mocks) is a normal use case.
@@ -38,6 +41,7 @@ type Runner struct {
 func NewRunner() *Runner {
 	return &Runner{
 		CallFuncs:     defaultCallFuncs(),
+		HTTPClient:    newDefaultHTTPClient(),
 		AllowLocalNet: true,
 	}
 }
@@ -151,7 +155,7 @@ func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error 
 		return fmt.Errorf("unknown call function: %s", call.Func)
 	}
 
-	result, err := fn(ctx, env, call, CallOpts{AllowLocalNet: r.AllowLocalNet})
+	result, err := fn(ctx, env, call, CallOpts{AllowLocalNet: r.AllowLocalNet, HTTPClient: r.HTTPClient})
 	if err != nil {
 		return fmt.Errorf("call %s: %w", call.Func, err)
 	}

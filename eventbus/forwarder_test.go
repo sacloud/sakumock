@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	sdk "github.com/sacloud/sacloud-sdk-go/api/eventbus"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/eventbus/apis/v1"
@@ -245,7 +246,8 @@ type snMessage struct {
 
 func inspectNotifications(t *testing.T, baseURL string) []snMessage {
 	t.Helper()
-	resp, err := http.Get(baseURL + "/_sakumock/messages")
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get(baseURL + "/_sakumock/messages")
 	if err != nil {
 		t.Fatal(err)
 	}

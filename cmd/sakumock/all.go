@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/url"
 	"sync"
 
 	"github.com/sacloud/sakumock"
@@ -97,9 +98,12 @@ func (c *AllCmd) serviceLinkEnv() []core.EnvVar {
 	for _, cfg := range c.configs() {
 		for _, e := range cfg.ClientEnv() {
 			if c.ListenHost != "" {
-				_, port, err := net.SplitHostPort(cfg.ListenAddr())
-				if err == nil {
-					e.Value = c.TLS.Scheme() + "://" + net.JoinHostPort(c.ListenHost, port)
+				if u, err := url.Parse(e.Value); err == nil {
+					_, port, splitErr := net.SplitHostPort(cfg.ListenAddr())
+					if splitErr == nil {
+						u.Host = net.JoinHostPort(c.ListenHost, port)
+						e.Value = u.String()
+					}
 				}
 			}
 			vars = append(vars, e)

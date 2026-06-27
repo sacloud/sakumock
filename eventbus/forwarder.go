@@ -37,7 +37,7 @@ func newForwarder(env []core.EnvVar, logger *slog.Logger) *forwarder {
 	var mqSA saclient.Client
 	if err := mqSA.SetEnviron(envStrings); err != nil {
 		logger.Warn("service link: failed to configure simplemq saclient", "error", err)
-	} else if client, err := simplemqsdk.NewMessageClient("servicelink", &mqSA); err != nil {
+	} else if client, err := simplemqsdk.NewMessageClient("dummy", &mqSA); err != nil {
 		logger.Warn("service link: failed to create simplemq client", "error", err)
 	} else {
 		f.mqClient = client

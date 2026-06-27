@@ -357,7 +357,6 @@ func TestCallHTTP(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	r.AllowLocalNet = true
 	result := r.Run(context.Background(), rb, map[string]expr.Value{
 		"url": expr.String(srv.URL),
 	})
@@ -391,6 +390,7 @@ func TestHTTPBlocksLocalhost(t *testing.T) {
 		}
 
 		r := runbook.NewRunner()
+		r.AllowLocalNet = false
 		result := r.Run(context.Background(), rb, nil)
 		if result.Err == nil {
 			t.Errorf("expected error for blocked URL %s", u)

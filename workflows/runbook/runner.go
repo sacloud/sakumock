@@ -28,12 +28,17 @@ type CallOpts struct {
 
 type Runner struct {
 	CallFuncs     map[string]CallFunc
+	// AllowLocalNet permits HTTP calls to localhost, private, and link-local
+	// addresses. Enabled by default because sakumock is a local mock server
+	// where calling other local services (e.g. other mocks) is a normal use case.
+	// Set to false to simulate the real Workflows service's URL blocking.
 	AllowLocalNet bool
 }
 
 func NewRunner() *Runner {
 	return &Runner{
-		CallFuncs: defaultCallFuncs(),
+		CallFuncs:     defaultCallFuncs(),
+		AllowLocalNet: true,
 	}
 }
 

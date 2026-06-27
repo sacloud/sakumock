@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"time"
 
+	simplenotificationsdk "github.com/sacloud/sacloud-sdk-go/api/simple-notification"
+	snv1 "github.com/sacloud/sacloud-sdk-go/api/simple-notification/apis/v1"
 	simplemqsdk "github.com/sacloud/sacloud-sdk-go/api/simplemq"
 	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/message"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
@@ -23,6 +25,7 @@ type forwarder struct {
 	logger    *slog.Logger
 
 	mqClient *message.Client
+	snClient *snv1.Client
 }
 
 func newForwarder(endpoints map[string]string, logger *slog.Logger) *forwarder {
@@ -40,6 +43,16 @@ func newForwarder(endpoints map[string]string, logger *slog.Logger) *forwarder {
 			}
 		}
 	}
+	if ep, ok := endpoints["simplenotification"]; ok {
+		var sa saclient.Client
+		if err := sa.SetEnviron([]string{
+			"SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=" + ep,
+		}); err == nil {
+			if client, err := simplenotificationsdk.NewClient(&sa); err == nil {
+				f.snClient = client
+			}
+		}
+	}
 	return f
 }
 
@@ -51,6 +64,8 @@ func (f *forwarder) forward(ctx context.Context, d Delivery) string {
 	switch d.Destination {
 	case "simplemq":
 		return f.forwardToSimpleMQ(ctx, d)
+	case "simplenotification":
+		return f.forwardToSimpleNotification(ctx, d)
 	default:
 		return ""
 	}
@@ -82,6 +97,39 @@ func (f *forwarder) forwardToSimpleMQ(ctx context.Context, d Delivery) string {
 
 	f.logger.Info("forwarded to simplemq",
 		"queue", params.QueueName,
+		"process_configuration", d.ProcessConfigurationID,
+	)
+	return ""
+}
+
+// simpleNotificationParams is the parsed Parameters for a simplenotification destination.
+type simpleNotificationParams struct {
+	GroupID string `json:"group_id"`
+	Message string `json:"message"`
+}
+
+func (f *forwarder) forwardToSimpleNotification(ctx context.Context, d Delivery) string {
+	if f.snClient == nil {
+		return "service link: simplenotification endpoint not configured"
+	}
+
+	var params simpleNotificationParams
+	if err := json.Unmarshal([]byte(d.Parameters), &params); err != nil {
+		return fmt.Sprintf("service link: invalid simplenotification parameters: %v", err)
+	}
+	if params.GroupID == "" {
+		return "service link: simplenotification parameters missing group_id"
+	}
+
+	op := simplenotificationsdk.NewGroupOp(f.snClient)
+	if _, err := op.SendMessage(ctx, params.GroupID, snv1.SendNotificationMessageRequest{
+		Message: params.Message,
+	}); err != nil {
+		return fmt.Sprintf("service link: simplenotification send failed: %v", err)
+	}
+
+	f.logger.Info("forwarded to simplenotification",
+		"group_id", params.GroupID,
 		"process_configuration", d.ProcessConfigurationID,
 	)
 	return ""

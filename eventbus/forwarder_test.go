@@ -11,6 +11,7 @@ import (
 
 	"github.com/sacloud/sakumock/eventbus"
 	"github.com/sacloud/sakumock/simplemq"
+	"github.com/sacloud/sakumock/simplenotification"
 )
 
 func TestForwardToSimpleMQ(t *testing.T) {
@@ -112,6 +113,126 @@ func TestForwardToSimpleMQNoEndpoint(t *testing.T) {
 	if got.Deliveries[0].Error != "" {
 		t.Errorf("expected no error without service link, got: %s", got.Deliveries[0].Error)
 	}
+}
+
+func TestForwardToSimpleNotification(t *testing.T) {
+	snSrv := simplenotification.NewTestServer(simplenotification.Config{})
+	defer snSrv.Close()
+
+	groupID := createNotificationGroup(t, snSrv.TestURL(), "test-group")
+
+	ebSrv := eventbus.NewTestServerWithEndpoints(eventbus.Config{}, map[string]string{
+		"simplenotification": snSrv.TestURL(),
+	})
+	defer ebSrv.Close()
+
+	client := newTestClient(t, ebSrv.TestURL())
+	pcOp := sdk.NewProcessConfigurationOp(client)
+	triggerOp := sdk.NewTriggerOp(client)
+
+	pc, err := pcOp.Create(t.Context(), v1.CreateCommonServiceItemRequest{
+		CommonServiceItem: v1.CreateCommonServiceItemRequestCommonServiceItem{
+			Name:     "pc-simplenotification",
+			Settings: sdk.CreateSimpleNotificationSettings(groupID, "hello from eventbus"),
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = triggerOp.Create(t.Context(), v1.CreateCommonServiceItemRequest{
+		CommonServiceItem: v1.CreateCommonServiceItemRequestCommonServiceItem{
+			Name: "trigger-simplenotification",
+			Settings: v1.NewTriggerSettingsSettings(v1.TriggerSettings{
+				Source:                 "test",
+				ProcessConfigurationID: pc.ID,
+			}),
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := postJSON(t, ebSrv.TestURL()+"/_sakumock/events", map[string]any{
+		"Source": "test",
+	})
+	if got.Count != 1 {
+		t.Fatalf("expected 1 delivery, got %d", got.Count)
+	}
+	if got.Deliveries[0].Error != "" {
+		t.Fatalf("delivery error: %s", got.Deliveries[0].Error)
+	}
+	if got.Deliveries[0].Destination != "simplenotification" {
+		t.Errorf("expected destination simplenotification, got %s", got.Deliveries[0].Destination)
+	}
+
+	msgs := inspectNotifications(t, snSrv.TestURL())
+	if len(msgs) != 1 {
+		t.Fatalf("expected 1 notification message, got %d", len(msgs))
+	}
+	if msgs[0].Message != "hello from eventbus" {
+		t.Errorf("unexpected notification message: %s", msgs[0].Message)
+	}
+	if msgs[0].GroupID != groupID {
+		t.Errorf("unexpected group_id: %s", msgs[0].GroupID)
+	}
+}
+
+// createNotificationGroup creates a notification group via the SimpleNotification
+// control-plane API and returns its ID.
+func createNotificationGroup(t *testing.T, baseURL, name string) string {
+	t.Helper()
+	body, _ := json.Marshal(map[string]any{
+		"CommonServiceItem": map[string]any{
+			"Name": name,
+			"Provider": map[string]any{
+				"Class": "saknoticegroup",
+			},
+		},
+	})
+	resp, err := http.Post(baseURL+"/commonserviceitem", "application/json",
+		bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("create notification group: status %d", resp.StatusCode)
+	}
+	var result struct {
+		CommonServiceItem struct {
+			ID string `json:"ID"`
+		} `json:"CommonServiceItem"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatal(err)
+	}
+	return result.CommonServiceItem.ID
+}
+
+type snMessage struct {
+	GroupID string `json:"group_id"`
+	Message string `json:"message"`
+}
+
+// inspectNotifications retrieves accepted notifications from the /_sakumock/messages endpoint.
+func inspectNotifications(t *testing.T, baseURL string) []snMessage {
+	t.Helper()
+	resp, err := http.Get(baseURL + "/_sakumock/messages")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("inspect notifications: status %d", resp.StatusCode)
+	}
+	var result struct {
+		Messages []snMessage `json:"messages"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatal(err)
+	}
+	return result.Messages
 }
 
 func createQueue(t *testing.T, baseURL, name string) {

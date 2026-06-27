@@ -118,6 +118,7 @@ Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUM
 | Source | Destination | Parameters | SDK used |
 |--------|-------------|-----------|----------|
 | EventBus | SimpleMQ | `{"queue_name": "...", "content": "..."}` | `simplemqsdk.NewMessageClient` + `NewMessageOp.Send` |
+| EventBus | SimpleNotification | `{"group_id": "...", "message": "..."}` | `simplenotificationsdk.NewClient` + `NewGroupOp.SendMessage` |
 
 ### Resource ID generation
 

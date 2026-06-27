@@ -174,6 +174,7 @@ func TestSendMessage_MaxLengthMessage(t *testing.T) {
 func TestInspectMessages(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
 	defer srv.Close()
+	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	for _, m := range []string{"first", "second"} {
 		resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": m})
@@ -182,36 +183,21 @@ func TestInspectMessages(t *testing.T) {
 		}
 	}
 
-	resp, err := http.Get(srv.TestURL() + "/_sakumock/messages")
+	got, err := ic.Messages(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	if len(got) != 2 {
+		t.Fatalf("expected 2 messages, got %d", len(got))
 	}
-	var got struct {
-		Messages []struct {
-			ID        string `json:"id"`
-			GroupID   string `json:"group_id"`
-			Message   string `json:"message"`
-			CreatedAt string `json:"created_at"`
-		} `json:"messages"`
+	if got[0].Message != "first" || got[1].Message != "second" {
+		t.Fatalf("unexpected message order: %+v", got)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
-		t.Fatal(err)
+	if got[0].GroupID != "123456789012" {
+		t.Fatalf("unexpected group id: %s", got[0].GroupID)
 	}
-	if len(got.Messages) != 2 {
-		t.Fatalf("expected 2 messages, got %d", len(got.Messages))
-	}
-	if got.Messages[0].Message != "first" || got.Messages[1].Message != "second" {
-		t.Fatalf("unexpected message order: %+v", got.Messages)
-	}
-	if got.Messages[0].GroupID != "123456789012" {
-		t.Fatalf("unexpected group id: %s", got.Messages[0].GroupID)
-	}
-	if got.Messages[0].CreatedAt == "" {
-		t.Fatalf("expected non-empty created_at")
+	if got[0].CreatedAt.IsZero() {
+		t.Fatalf("expected non-zero created_at")
 	}
 }
 
@@ -264,20 +250,15 @@ func TestSendMessage_ExecFailureStillReturns202(t *testing.T) {
 func TestResetMessages(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
 	defer srv.Close()
+	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "to be reset"})
 	if len(srv.Messages()) != 1 {
 		t.Fatalf("expected 1 message before reset")
 	}
 
-	req, _ := http.NewRequest(http.MethodDelete, srv.TestURL()+"/_sakumock/messages", nil)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
+	if err := ic.ClearMessages(t.Context()); err != nil {
 		t.Fatal(err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		t.Fatalf("expected 204, got %d", resp.StatusCode)
 	}
 
 	if len(srv.Messages()) != 0 {

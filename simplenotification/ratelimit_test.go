@@ -75,6 +75,7 @@ func TestRateLimitInspectionBypassed(t *testing.T) {
 	// Inspection endpoints (/_sakumock/messages) must not consume tokens.
 	srv := simplenotification.NewTestServer(simplenotification.Config{RateLimit: 1})
 	defer srv.Close()
+	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	// Drain the API bucket first.
 	if status, _ := postSend(t, sendURL(srv.TestURL())); status != http.StatusAccepted {
@@ -86,14 +87,8 @@ func TestRateLimitInspectionBypassed(t *testing.T) {
 
 	// Inspection should still respond regardless.
 	for range 10 {
-		resp, err := http.Get(srv.TestURL() + "/_sakumock/messages")
-		if err != nil {
-			t.Fatalf("inspect get: %v", err)
-		}
-		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("inspection: expected 200, got %d", resp.StatusCode)
+		if _, err := ic.Messages(t.Context()); err != nil {
+			t.Fatalf("inspection: %v", err)
 		}
 	}
 }

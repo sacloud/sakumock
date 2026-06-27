@@ -2,9 +2,7 @@ package eventbus_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
@@ -14,49 +12,12 @@ import (
 	"github.com/sacloud/sakumock/eventbus"
 )
 
-// delivery mirrors eventbus.Delivery for decoding the inspection-endpoint JSON.
-type delivery struct {
-	SourceID               string `json:"SourceID"`
-	SourceClass            string `json:"SourceClass"`
-	ProcessConfigurationID string `json:"ProcessConfigurationID"`
-	Destination            string `json:"Destination"`
-	Parameters             string `json:"Parameters"`
-	Error                  string `json:"Error"`
-}
-
-type deliveriesResp struct {
-	Deliveries []delivery `json:"Deliveries"`
-	Count      int        `json:"Count"`
-}
-
-func postJSON(t *testing.T, url string, body any) deliveriesResp {
-	t.Helper()
-	var buf bytes.Buffer
-	if body != nil {
-		if err := json.NewEncoder(&buf).Encode(body); err != nil {
-			t.Fatal(err)
-		}
-	}
-	resp, err := http.Post(url, "application/json", &buf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("POST %s: status %d", url, resp.StatusCode)
-	}
-	var out deliveriesResp
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		t.Fatal(err)
-	}
-	return out
-}
-
 func TestInjectEventFiresMatchingTrigger(t *testing.T) {
 	srv := eventbus.NewTestServer(eventbus.Config{})
 	defer srv.Close()
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
+	ic := eventbus.NewInspectionClient(srv.TestURL())
 	pcOp := sdk.NewProcessConfigurationOp(client)
 	triggerOp := sdk.NewTriggerOp(client)
 
@@ -81,24 +42,31 @@ func TestInjectEventFiresMatchingTrigger(t *testing.T) {
 	}
 
 	// A non-matching event (wrong status) fires nothing.
-	nonMatch := postJSON(t, srv.TestURL()+"/_sakumock/events", map[string]any{
-		"Source": "test-source", "Type": "type1",
-		"Attributes": map[string]any{"status": "ok"},
+	nonMatch, err := ic.InjectEvent(ctx, eventbus.Event{
+		Source:     "test-source",
+		Type:       "type1",
+		Attributes: map[string]any{"status": "ok"},
 	})
-	if nonMatch.Count != 0 {
-		t.Fatalf("non-matching event fired %d deliveries", nonMatch.Count)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(nonMatch) != 0 {
+		t.Fatalf("non-matching event fired %d deliveries", len(nonMatch))
 	}
 
 	// A matching event fires the trigger and delivers the process config's job.
-	got := postJSON(t, srv.TestURL()+"/_sakumock/events", map[string]any{
-		"Source": "test-source", "Type": "type1",
-		"Attributes": map[string]any{"status": "critical"},
-		"Data":       map[string]any{"detail": "disk full"},
+	got, err := ic.InjectEvent(ctx, eventbus.Event{
+		Source:     "test-source",
+		Type:       "type1",
+		Attributes: map[string]any{"status": "critical"},
 	})
-	if got.Count != 1 {
-		t.Fatalf("expected 1 delivery, got %d", got.Count)
+	if err != nil {
+		t.Fatal(err)
 	}
-	d := got.Deliveries[0]
+	if len(got) != 1 {
+		t.Fatalf("expected 1 delivery, got %d", len(got))
+	}
+	d := got[0]
 	if d.SourceID != trigger.ID || d.SourceClass != "eventbustrigger" {
 		t.Errorf("unexpected delivery source: %+v", d)
 	}
@@ -131,6 +99,7 @@ func TestTickFiresRecurringSchedule(t *testing.T) {
 	defer srv.Close()
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
+	ic := eventbus.NewInspectionClient(srv.TestURL())
 	pcOp := sdk.NewProcessConfigurationOp(client)
 	scheduleOp := sdk.NewScheduleOp(client)
 
@@ -153,21 +122,25 @@ func TestTickFiresRecurringSchedule(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Tick 150s past StartsAt using a human-readable RFC3339 time: boundaries at
-	// StartsAt, +1m, +2m fall due.
-	at := url.QueryEscape(start.Add(150 * time.Second).Format(time.RFC3339))
-	got := postJSON(t, srv.TestURL()+"/_sakumock/tick?at="+at, nil)
-	if got.Count != 3 {
-		t.Fatalf("expected 3 deliveries, got %d: %+v", got.Count, got.Deliveries)
+	// Tick 150s past StartsAt: boundaries at StartsAt, +1m, +2m fall due.
+	got, err := ic.Tick(ctx, start.Add(150*time.Second))
+	if err != nil {
+		t.Fatal(err)
 	}
-	if got.Deliveries[0].SourceID != schedule.ID || got.Deliveries[0].SourceClass != "eventbusschedule" {
-		t.Errorf("unexpected delivery source: %+v", got.Deliveries[0])
+	if len(got) != 3 {
+		t.Fatalf("expected 3 deliveries, got %d: %+v", len(got), got)
+	}
+	if got[0].SourceID != schedule.ID || got[0].SourceClass != "eventbusschedule" {
+		t.Errorf("unexpected delivery source: %+v", got[0])
 	}
 
 	// Ticking the same time again is idempotent: the boundaries already fired.
-	again := postJSON(t, srv.TestURL()+"/_sakumock/tick?at="+at, nil)
-	if again.Count != 0 {
-		t.Errorf("re-tick should fire nothing, got %d", again.Count)
+	again, err := ic.Tick(ctx, start.Add(150*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(again) != 0 {
+		t.Errorf("re-tick should fire nothing, got %d", len(again))
 	}
 }
 
@@ -194,12 +167,14 @@ func TestScheduleRejectsInvalidRecurringUnit(t *testing.T) {
 func TestClearDeliveries(t *testing.T) {
 	srv := eventbus.NewTestServer(eventbus.Config{})
 	defer srv.Close()
+	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
+	ic := eventbus.NewInspectionClient(srv.TestURL())
 	pcOp := sdk.NewProcessConfigurationOp(client)
 	triggerOp := sdk.NewTriggerOp(client)
 
 	pcID := createProcessConfiguration(t, pcOp)
-	if _, err := triggerOp.Create(t.Context(), v1.CreateCommonServiceItemRequest{
+	if _, err := triggerOp.Create(ctx, v1.CreateCommonServiceItemRequest{
 		CommonServiceItem: v1.CreateCommonServiceItemRequestCommonServiceItem{
 			Name: "test-trigger",
 			Settings: v1.NewTriggerSettingsSettings(v1.TriggerSettings{
@@ -210,19 +185,16 @@ func TestClearDeliveries(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	postJSON(t, srv.TestURL()+"/_sakumock/events", map[string]any{"Source": "test-source"})
+
+	if _, err := ic.InjectEvent(ctx, eventbus.Event{Source: "test-source"}); err != nil {
+		t.Fatal(err)
+	}
 	if len(srv.Deliveries()) == 0 {
 		t.Fatal("expected a recorded delivery")
 	}
 
-	req, _ := http.NewRequest(http.MethodDelete, srv.TestURL()+"/_sakumock/deliveries", nil)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
+	if err := ic.ClearDeliveries(ctx); err != nil {
 		t.Fatal(err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
-		t.Fatalf("DELETE deliveries: status %d", resp.StatusCode)
 	}
 	if len(srv.Deliveries()) != 0 {
 		t.Errorf("expected deliveries cleared, got %d", len(srv.Deliveries()))

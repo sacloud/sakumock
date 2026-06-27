@@ -2,11 +2,8 @@ package eventbus_test
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
 	"strings"
 	"testing"
-	"time"
 
 	sdk "github.com/sacloud/sacloud-sdk-go/api/eventbus"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/eventbus/apis/v1"
@@ -54,6 +51,7 @@ func TestForwardToSimpleMQ(t *testing.T) {
 	defer ebSrv.Close()
 
 	client := newTestClient(t, ebSrv.TestURL())
+	ic := eventbus.NewInspectionClient(ebSrv.TestURL())
 	pcOp := sdk.NewProcessConfigurationOp(client)
 	triggerOp := sdk.NewTriggerOp(client)
 
@@ -80,17 +78,18 @@ func TestForwardToSimpleMQ(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := postJSON(t, ebSrv.TestURL()+"/_sakumock/events", map[string]any{
-		"Source": "test",
-	})
-	if got.Count != 1 {
-		t.Fatalf("expected 1 delivery, got %d", got.Count)
+	got, err := ic.InjectEvent(t.Context(), eventbus.Event{Source: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if got.Deliveries[0].Error != "" {
-		t.Fatalf("delivery error: %s", got.Deliveries[0].Error)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 delivery, got %d", len(got))
 	}
-	if got.Deliveries[0].Destination != "simplemq" {
-		t.Errorf("expected destination simplemq, got %s", got.Deliveries[0].Destination)
+	if got[0].Error != "" {
+		t.Fatalf("delivery error: %s", got[0].Error)
+	}
+	if got[0].Destination != "simplemq" {
+		t.Errorf("expected destination simplemq, got %s", got[0].Destination)
 	}
 
 	msgs := receiveFromQueue(t, mqSrv.TestURL(), "test-queue-00001")
@@ -107,6 +106,7 @@ func TestForwardToSimpleMQNoEndpoint(t *testing.T) {
 	defer ebSrv.Close()
 
 	client := newTestClient(t, ebSrv.TestURL())
+	ic := eventbus.NewInspectionClient(ebSrv.TestURL())
 	pcOp := sdk.NewProcessConfigurationOp(client)
 	triggerOp := sdk.NewTriggerOp(client)
 
@@ -132,14 +132,15 @@ func TestForwardToSimpleMQNoEndpoint(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := postJSON(t, ebSrv.TestURL()+"/_sakumock/events", map[string]any{
-		"Source": "test",
-	})
-	if got.Count != 1 {
-		t.Fatalf("expected 1 delivery, got %d", got.Count)
+	got, err := ic.InjectEvent(t.Context(), eventbus.Event{Source: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if got.Deliveries[0].Error != "" {
-		t.Errorf("expected no error without service link, got: %s", got.Deliveries[0].Error)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 delivery, got %d", len(got))
+	}
+	if got[0].Error != "" {
+		t.Errorf("expected no error without service link, got: %s", got[0].Error)
 	}
 }
 
@@ -156,6 +157,8 @@ func TestForwardToSimpleNotification(t *testing.T) {
 	defer ebSrv.Close()
 
 	client := newTestClient(t, ebSrv.TestURL())
+	ebIC := eventbus.NewInspectionClient(ebSrv.TestURL())
+	snIC := simplenotification.NewInspectionClient(snSrv.TestURL())
 	pcOp := sdk.NewProcessConfigurationOp(client)
 	triggerOp := sdk.NewTriggerOp(client)
 
@@ -182,20 +185,24 @@ func TestForwardToSimpleNotification(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := postJSON(t, ebSrv.TestURL()+"/_sakumock/events", map[string]any{
-		"Source": "test",
-	})
-	if got.Count != 1 {
-		t.Fatalf("expected 1 delivery, got %d", got.Count)
+	got, err := ebIC.InjectEvent(t.Context(), eventbus.Event{Source: "test"})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if got.Deliveries[0].Error != "" {
-		t.Fatalf("delivery error: %s", got.Deliveries[0].Error)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 delivery, got %d", len(got))
 	}
-	if got.Deliveries[0].Destination != "simplenotification" {
-		t.Errorf("expected destination simplenotification, got %s", got.Deliveries[0].Destination)
+	if got[0].Error != "" {
+		t.Fatalf("delivery error: %s", got[0].Error)
+	}
+	if got[0].Destination != "simplenotification" {
+		t.Errorf("expected destination simplenotification, got %s", got[0].Destination)
 	}
 
-	msgs := inspectNotifications(t, snSrv.TestURL())
+	msgs, err := snIC.Messages(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(msgs) != 1 {
 		t.Fatalf("expected 1 notification message, got %d", len(msgs))
 	}
@@ -237,31 +244,6 @@ func createNotificationGroup(t *testing.T, baseURL, name string) string {
 		t.Fatal(err)
 	}
 	return group.CommonServiceItem.ID
-}
-
-type snMessage struct {
-	GroupID string `json:"group_id"`
-	Message string `json:"message"`
-}
-
-func inspectNotifications(t *testing.T, baseURL string) []snMessage {
-	t.Helper()
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(baseURL + "/_sakumock/messages")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("inspect notifications: status %d", resp.StatusCode)
-	}
-	var result struct {
-		Messages []snMessage `json:"messages"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatal(err)
-	}
-	return result.Messages
 }
 
 type mqQueueSecurity struct{}

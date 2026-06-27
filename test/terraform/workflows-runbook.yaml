@@ -1,0 +1,49 @@
+meta:
+  description: エラトステネスの篩
+args:
+  maxNumber:
+    type: number
+    description: 素数を求める最大の数
+steps:
+  setup:
+    assign:
+      sieve: ${array.fill(array.range(args.maxNumber), true)}
+      primes: []
+  initial:
+    assign:
+      _a: ${array.set(sieve, 0, false)}
+      _b: ${array.set(sieve, 1, false)}
+  loop:
+    for:
+      in: ${array.range(2, math.ceil(math.sqrt(args.maxNumber)))}
+      as: index
+      steps:
+        if:
+          switch:
+            - condition: ${sieve[index] == false}
+              next: continue
+            - condition: ${sieve[index] != false}
+              steps:
+                updateSieve:
+                  for:
+                    in: ${array.range(index * 2, args.maxNumber, index)}
+                    as: n
+                    steps:
+                      set:
+                        assign:
+                          sieve: ${array.set(sieve, n, false)}
+        continue:
+  printPrimes:
+    for:
+      in: ${array.range(2, args.maxNumber)}
+      as: index
+      steps:
+        if:
+          switch:
+            - condition: ${sieve[index] == true}
+              steps:
+                push:
+                  assign:
+                    primes: ${array.push(primes, index)}
+  done:
+    return: ${primes}

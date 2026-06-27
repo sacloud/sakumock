@@ -1,12 +1,14 @@
 package workflows
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/sacloud/sakumock/core"
+	"github.com/sacloud/sakumock/workflows/runbook"
 )
 
 // JSON request types
@@ -202,6 +204,48 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
+type pageParams struct {
+	page      int
+	pageLimit int
+}
+
+func parsePaging(r *http.Request) pageParams {
+	p := pageParams{page: 1, pageLimit: 20}
+	if v := r.URL.Query().Get("Page"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 1 {
+			p.page = n
+		}
+	}
+	if v := r.URL.Query().Get("PageLimit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			p.pageLimit = max(5, min(n, 500))
+		}
+	}
+	return p
+}
+
+func applyPaging[T any](items []T, p pageParams) (paged []T, from int) {
+	total := len(items)
+	start := (p.page - 1) * p.pageLimit
+	if start >= total {
+		return []T{}, start
+	}
+	end := min(start+p.pageLimit, total)
+	return items[start:end], start
+}
+
+func (s *Server) validateRunbook(raw string) error {
+	data := []byte(raw)
+	if err := runbook.ValidateRunbookSize(data); err != nil {
+		return err
+	}
+	rb, err := runbook.Parse(data)
+	if err != nil {
+		return err
+	}
+	return runbook.Validate(rb)
+}
+
 func writeError(w http.ResponseWriter, status int, msg string) {
 	core.WriteJSON(w, status, map[string]any{
 		"is_ok":   false,
@@ -313,6 +357,10 @@ func (s *Server) handleCreateWorkflow(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Runbook is required")
 		return
 	}
+	if err := s.validateRunbook(req.Runbook); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	var tags []Tag
 	if req.Tags != nil {
@@ -360,17 +408,18 @@ func (s *Server) handleListWorkflows(w http.ResponseWriter, r *http.Request) {
 		filtered = append(filtered, wf)
 	}
 
-	items := make([]workflowJSON, len(filtered))
+	all := make([]workflowJSON, len(filtered))
 	for i, wf := range filtered {
-		items[i] = toWorkflowJSON(wf)
+		all[i] = toWorkflowJSON(wf)
 	}
 
+	paged, from := applyPaging(all, parsePaging(r))
 	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"is_ok":     true,
-		"Total":     len(items),
-		"From":      0,
-		"Count":     len(items),
-		"Workflows": items,
+		"Total":     len(all),
+		"From":      from,
+		"Count":     len(paged),
+		"Workflows": paged,
 	})
 }
 
@@ -389,12 +438,13 @@ func (s *Server) handleListWorkflowSuggest(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
+	paged, from := applyPaging(suggests, parsePaging(r))
 	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"is_ok":    true,
 		"Total":    len(suggests),
-		"From":     0,
-		"Count":    len(suggests),
-		"Suggests": suggests,
+		"From":     from,
+		"Count":    len(paged),
+		"Suggests": paged,
 	})
 }
 
@@ -468,6 +518,10 @@ func (s *Server) handleCreateRevision(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Runbook is required")
 		return
 	}
+	if err := s.validateRunbook(req.Runbook); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	rev, err := s.store.CreateRevision(workflowID, req.Runbook, req.RevisionAlias)
 	if err != nil {
@@ -492,17 +546,18 @@ func (s *Server) handleListRevisions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	revisions := s.store.ListRevisions(workflowID)
-	items := make([]revisionJSON, len(revisions))
+	all := make([]revisionJSON, len(revisions))
 	for i, rev := range revisions {
-		items[i] = toRevisionJSON(rev)
+		all[i] = toRevisionJSON(rev)
 	}
 
+	paged, from := applyPaging(all, parsePaging(r))
 	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"is_ok":     true,
-		"Total":     len(items),
-		"From":      0,
-		"Count":     len(items),
-		"Revisions": items,
+		"Total":     len(all),
+		"From":      from,
+		"Count":     len(paged),
+		"Revisions": paged,
 	})
 }
 
@@ -583,11 +638,21 @@ func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Args != "" {
+		if !json.Valid([]byte(req.Args)) {
+			writeError(w, http.StatusBadRequest, "Args must be a valid JSON string")
+			return
+		}
+	}
+
 	input := ExecutionInput{
 		RevisionID:    req.RevisionId,
 		RevisionAlias: req.RevisionAlias,
 		Args:          req.Args,
 		Name:          req.Name,
+	}
+	if s.dataPlaneEnabled() {
+		input.InitialStatus = "Queued"
 	}
 
 	exec, err := s.store.CreateExecution(workflowID, input)
@@ -601,6 +666,19 @@ func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	if s.dataPlaneEnabled() {
+		rev, ok := s.store.GetRevision(workflowID, exec.Revision)
+		if ok {
+			rb, parseErr := runbook.Parse([]byte(rev.Runbook))
+			if parseErr != nil {
+				s.logger.Error("failed to parse runbook", "error", parseErr)
+			} else {
+				s.executor.submit(s.ctx, workflowID, exec.ExecutionID, rb, exec.Args)
+			}
+		}
+	}
+
 	core.WriteJSON(w, http.StatusCreated, map[string]any{
 		"is_ok":     true,
 		"Execution": s.toExecutionJSON(exec),
@@ -615,17 +693,18 @@ func (s *Server) handleListExecutions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	executions := s.store.ListExecutions(workflowID)
-	items := make([]executionJSON, len(executions))
+	all := make([]executionJSON, len(executions))
 	for i, e := range executions {
-		items[i] = s.toExecutionJSON(e)
+		all[i] = s.toExecutionJSON(e)
 	}
 
+	paged, from := applyPaging(all, parsePaging(r))
 	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"is_ok":      true,
-		"Total":      len(items),
-		"From":       0,
-		"Count":      len(items),
-		"Executions": items,
+		"Total":      len(all),
+		"From":       from,
+		"Count":      len(paged),
+		"Executions": paged,
 	})
 }
 
@@ -647,6 +726,10 @@ func (s *Server) handleGetExecution(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCancelExecution(w http.ResponseWriter, r *http.Request) {
 	workflowID := r.PathValue("id")
 	executionID := r.PathValue("executionId")
+
+	if s.dataPlaneEnabled() {
+		s.executor.cancel(executionID)
+	}
 
 	exec, err := s.store.CancelExecution(workflowID, executionID)
 	if err != nil {
@@ -702,12 +785,13 @@ func (s *Server) handleListExecutionHistory(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
+	paged, from := applyPaging(items, parsePaging(r))
 	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"is_ok":     true,
 		"Total":     len(items),
-		"From":      0,
-		"Count":     len(items),
-		"Histories": items,
+		"From":      from,
+		"Count":     len(paged),
+		"Histories": paged,
 	})
 }
 

@@ -16,6 +16,7 @@ type MemoryStore struct {
 	workflows    map[string]*WorkflowRecord
 	revisions    map[string][]*RevisionRecord  // keyed by workflow ID
 	executions   map[string][]*ExecutionRecord // keyed by workflow ID
+	histories    map[string][]HistoryRecord    // keyed by execution ID
 	subscription *SubscriptionRecord
 	ids          *core.IDGenerator
 	logger       *slog.Logger
@@ -29,6 +30,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		workflows:  make(map[string]*WorkflowRecord),
 		revisions:  make(map[string][]*RevisionRecord),
 		executions: make(map[string][]*ExecutionRecord),
+		histories:  make(map[string][]HistoryRecord),
 		ids:        core.NewIDGenerator(core.DefaultIDBase()),
 		logger:     logger,
 	}
@@ -161,6 +163,9 @@ func (s *MemoryStore) DeleteWorkflow(id string) error {
 		}
 	}
 
+	for _, e := range s.executions[id] {
+		delete(s.histories, e.ExecutionID)
+	}
 	delete(s.workflows, id)
 	delete(s.revisions, id)
 	delete(s.executions, id)
@@ -324,11 +329,15 @@ func (s *MemoryStore) CreateExecution(workflowID string, input ExecutionInput) (
 		args = "null"
 	}
 
+	status := input.InitialStatus
+	if status == "" {
+		status = "Succeeded"
+	}
 	exec := &ExecutionRecord{
 		ExecutionID:   uuid.NewString(),
 		Name:          execName,
 		WorkflowID:    workflowID,
-		Status:        "Succeeded",
+		Status:        status,
 		Revision:      targetRev.RevisionID,
 		RevisionAlias: targetRev.RevisionAlias,
 		Args:          args,
@@ -337,8 +346,10 @@ func (s *MemoryStore) CreateExecution(workflowID string, input ExecutionInput) (
 		Error:         "null",
 		CreatedAt:     now,
 		UpdatedAt:     now,
-		RunAt:         &now,
-		SucceededAt:   &now,
+	}
+	if status == "Succeeded" {
+		exec.RunAt = &now
+		exec.SucceededAt = &now
 	}
 	s.executions[workflowID] = append(s.executions[workflowID], exec)
 	s.logger.Debug("execution created", "workflow_id", workflowID, "execution_id", exec.ExecutionID)
@@ -367,6 +378,37 @@ func (s *MemoryStore) ListExecutions(workflowID string) []*ExecutionRecord {
 		result[i] = copyExecution(e)
 	}
 	return result
+}
+
+func (s *MemoryStore) UpdateExecutionStatus(workflowID, executionID string, update ExecutionStatusUpdate) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, e := range s.executions[workflowID] {
+		if e.ExecutionID == executionID {
+			if update.Status != "" {
+				e.Status = update.Status
+			}
+			if update.Result != "" {
+				e.Result = update.Result
+			}
+			if update.Error != "" {
+				e.Error = update.Error
+			}
+			if update.RunAt != nil {
+				e.RunAt = update.RunAt
+			}
+			if update.SucceededAt != nil {
+				e.SucceededAt = update.SucceededAt
+			}
+			if update.FailedAt != nil {
+				e.FailedAt = update.FailedAt
+			}
+			e.UpdatedAt = time.Now()
+			return nil
+		}
+	}
+	return fmt.Errorf("execution %q not found", executionID)
 }
 
 func (s *MemoryStore) CancelExecution(workflowID, executionID string) (*ExecutionRecord, error) {
@@ -401,11 +443,19 @@ func (s *MemoryStore) DeleteExecution(workflowID, executionID string) error {
 				return fmt.Errorf("execution cannot be deleted (status: %s)", e.Status)
 			}
 			s.executions[workflowID] = append(execs[:i], execs[i+1:]...)
+			delete(s.histories, executionID)
 			s.logger.Debug("execution deleted", "workflow_id", workflowID, "execution_id", executionID)
 			return nil
 		}
 	}
 	return fmt.Errorf("execution %q not found", executionID)
+}
+
+func (s *MemoryStore) AppendHistory(workflowID, executionID string, record HistoryRecord) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.histories[executionID] = append(s.histories[executionID], record)
 }
 
 func (s *MemoryStore) ListExecutionHistory(workflowID, executionID string) ([]HistoryRecord, error) {
@@ -422,7 +472,10 @@ func (s *MemoryStore) ListExecutionHistory(workflowID, executionID string) ([]Hi
 	if !found {
 		return nil, fmt.Errorf("execution %q not found", executionID)
 	}
-	return []HistoryRecord{}, nil
+	records := s.histories[executionID]
+	result := make([]HistoryRecord, len(records))
+	copy(result, records)
+	return result, nil
 }
 
 func (s *MemoryStore) GetSubscription() *SubscriptionRecord {

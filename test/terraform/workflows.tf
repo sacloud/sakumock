@@ -10,16 +10,16 @@ resource "sakura_workflows" "test" {
   subscription_id = sakura_workflows_subscription.test.id
   name            = "sakumock-tf-workflow"
   description     = "test workflow"
-  publish         = false
+  publish         = true
   logging         = false
 
   latest_revision = {
-    runbook = <<-EOF
-meta:
-  description: test
-steps:
-  done:
-    return: "hello"
-EOF
+    runbook = file("workflows-runbook.yaml")
   }
+}
+
+resource "sakura_workflows_revision_alias" "test" {
+  workflow_id = sakura_workflows.test.id
+  revision_id = sakura_workflows.test.latest_revision.id
+  alias       = "current"
 }

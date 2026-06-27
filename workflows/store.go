@@ -80,11 +80,21 @@ type WorkflowUpdates struct {
 	ConcurrencyMode *string
 }
 
+type ExecutionStatusUpdate struct {
+	Status      string
+	Result      string
+	Error       string
+	RunAt       *time.Time
+	SucceededAt *time.Time
+	FailedAt    *time.Time
+}
+
 type ExecutionInput struct {
 	RevisionID    *int
 	RevisionAlias string
 	Args          string
 	Name          string
+	InitialStatus string
 }
 
 type Store interface {
@@ -103,8 +113,10 @@ type Store interface {
 	CreateExecution(workflowID string, input ExecutionInput) (*ExecutionRecord, error)
 	GetExecution(workflowID, executionID string) (*ExecutionRecord, bool)
 	ListExecutions(workflowID string) []*ExecutionRecord
+	UpdateExecutionStatus(workflowID, executionID string, update ExecutionStatusUpdate) error
 	CancelExecution(workflowID, executionID string) (*ExecutionRecord, error)
 	DeleteExecution(workflowID, executionID string) error
+	AppendHistory(workflowID, executionID string, record HistoryRecord)
 	ListExecutionHistory(workflowID, executionID string) ([]HistoryRecord, error)
 
 	GetSubscription() *SubscriptionRecord

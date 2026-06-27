@@ -89,9 +89,18 @@ func TestTerraformEndToEnd(t *testing.T) {
 	env = append(env, readEnvFile(t, envFile)...)
 	env = append(env, "SAKURA_ZONE=tk1v") // tk1v is SAKURA Cloud's sandbox zone
 
-	// Run terraform in an isolated working dir holding a copy of the fixture.
+	// Run terraform in an isolated working dir holding a copy of the fixtures.
 	work := t.TempDir()
-	copyFile(t, filepath.Join(repoRoot, "test", "terraform", "main.tf"), filepath.Join(work, "main.tf"))
+	tfDir := filepath.Join(repoRoot, "test", "terraform")
+	entries, err := os.ReadDir(tfDir)
+	if err != nil {
+		t.Fatalf("read terraform dir: %v", err)
+	}
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".tf") {
+			copyFile(t, filepath.Join(tfDir, e.Name()), filepath.Join(work, e.Name()))
+		}
+	}
 
 	runTF := func(args ...string) {
 		t.Helper()

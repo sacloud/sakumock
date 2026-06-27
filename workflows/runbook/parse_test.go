@@ -292,6 +292,59 @@ steps:
 	}
 }
 
+func TestParseFibonacci(t *testing.T) {
+	yaml := `
+meta:
+  description: Fibonacci via next-jump recursion
+args:
+  n:
+    type: number
+steps:
+  init:
+    assign:
+      a: ${0}
+      b: ${1}
+      i: ${0}
+  check:
+    switch:
+      - condition: ${i >= args.n}
+        return: ${a}
+  step:
+    assign:
+      tmp: ${b}
+      b: ${a + b}
+      a: ${tmp}
+      i: ${i + 1}
+    next: check
+`
+	rb, err := runbook.Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+
+	tests := []struct {
+		n    float64
+		want float64
+	}{
+		{0, 0},
+		{1, 1},
+		{2, 1},
+		{10, 55},
+	}
+	r := runbook.NewRunner()
+	for _, tt := range tests {
+		result := r.Run(context.Background(), rb, map[string]expr.Value{
+			"n": expr.Number(tt.n),
+		})
+		if result.Err != nil {
+			t.Fatalf("fib(%v): %v", tt.n, result.Err)
+		}
+		if result.Value.AsNumber() != tt.want {
+			t.Errorf("fib(%v) = %v, want %v", tt.n, result.Value.AsNumber(), tt.want)
+		}
+	}
+}
+
 func TestParseAddressLookup(t *testing.T) {
 	yaml := `
 meta:

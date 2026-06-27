@@ -1,7 +1,6 @@
 package runbook_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/sacloud/sakumock/workflows/expr"
@@ -42,7 +41,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"x": expr.Number(21),
 	})
 	if result.Err != nil {
@@ -69,7 +68,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"x": expr.Number(5),
 	})
 	if result.Err != nil {
@@ -103,7 +102,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("run: %v", result.Err)
 	}
@@ -129,7 +128,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("run: %v", result.Err)
 	}
@@ -184,7 +183,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("run: %v", result.Err)
 	}
@@ -206,7 +205,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("run: %v", result.Err)
 	}
@@ -273,7 +272,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"maxNumber": expr.Number(30),
 	})
 	if result.Err != nil {
@@ -333,7 +332,7 @@ steps:
 	}
 	r := runbook.NewRunner()
 	for _, tt := range tests {
-		result := r.Run(context.Background(), rb, map[string]expr.Value{
+		result := r.Run(t.Context(), rb, map[string]expr.Value{
 			"n": expr.Number(tt.n),
 		})
 		if result.Err != nil {
@@ -375,7 +374,7 @@ steps:
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"address": expr.String("1500001"),
 	})
 	if result.Err != nil {
@@ -385,7 +384,7 @@ steps:
 		t.Errorf("got %q, want 1500001", result.Value.AsString())
 	}
 
-	result = r.Run(context.Background(), rb, map[string]expr.Value{
+	result = r.Run(t.Context(), rb, map[string]expr.Value{
 		"address": expr.String(""),
 	})
 	if result.Err != nil {

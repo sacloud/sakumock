@@ -29,7 +29,7 @@ func TestAssignAndReturn(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -48,7 +48,7 @@ func TestArgs(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"a": expr.Number(10),
 		"b": expr.Number(20),
 	})
@@ -84,7 +84,7 @@ func TestSwitch(t *testing.T) {
 		{-3, "negative"},
 	}
 	for _, tt := range tests {
-		result := r.Run(context.Background(), rb, map[string]expr.Value{
+		result := r.Run(t.Context(), rb, map[string]expr.Value{
 			"x": expr.Number(tt.x),
 		})
 		if result.Err != nil {
@@ -124,7 +124,7 @@ func TestForLoop(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -154,7 +154,7 @@ func TestNext(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -197,7 +197,7 @@ func TestSwitchWithNext(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -226,7 +226,7 @@ func TestTryExcept(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -264,7 +264,7 @@ func TestTryExceptWithSteps(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -295,7 +295,7 @@ func TestParallelBranches(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -325,7 +325,7 @@ func TestParallelIteration(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -357,7 +357,7 @@ func TestCallHTTP(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"url": expr.String(srv.URL),
 	})
 	if result.Err != nil {
@@ -391,7 +391,7 @@ func TestHTTPBlocksLocalhost(t *testing.T) {
 
 		r := runbook.NewRunner()
 		r.AllowLocalNet = false
-		result := r.Run(context.Background(), rb, nil)
+		result := r.Run(t.Context(), rb, nil)
 		if result.Err == nil {
 			t.Errorf("expected error for blocked URL %s", u)
 		}
@@ -412,7 +412,7 @@ func TestHTTPRejectsNonHTTPScheme(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err == nil {
 		t.Fatal("expected error for file:// scheme")
 	}
@@ -461,7 +461,7 @@ func TestNestedForInSwitch(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -508,7 +508,7 @@ func TestNestedForInFor(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -529,7 +529,7 @@ func TestNestedTryInFor(t *testing.T) {
 			}},
 			{Name: "loop", Step: runbook.Step{
 				For: &runbook.ForStep{
-					In:    `${["1", "bad", "3"]}`,
+					In: `${["1", "bad", "3"]}`,
 					As: "item",
 					Steps: []runbook.NamedStep{
 						{Name: "attempt", Step: runbook.Step{
@@ -562,7 +562,7 @@ func TestNestedTryInFor(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, nil)
+	result := r.Run(t.Context(), rb, nil)
 	if result.Err != nil {
 		t.Fatalf("error: %v", result.Err)
 	}
@@ -594,7 +594,7 @@ func TestContextCancellation(t *testing.T) {
 		},
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
 	r := runbook.NewRunner()
@@ -674,7 +674,7 @@ func TestSieveRunbook(t *testing.T) {
 	}
 
 	r := runbook.NewRunner()
-	result := r.Run(context.Background(), rb, map[string]expr.Value{
+	result := r.Run(t.Context(), rb, map[string]expr.Value{
 		"maxNumber": expr.Number(30),
 	})
 	if result.Err != nil {

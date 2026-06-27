@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -21,7 +22,7 @@ type InspectionClient struct {
 // inspection endpoints at baseURL (e.g. "http://localhost:18083").
 func NewInspectionClient(baseURL string) *InspectionClient {
 	return &InspectionClient{
-		baseURL:    baseURL,
+		baseURL:    strings.TrimRight(baseURL, "/"),
 		httpClient: http.DefaultClient,
 	}
 }

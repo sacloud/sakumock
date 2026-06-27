@@ -58,17 +58,22 @@ func (r *Runner) Run(ctx context.Context, rb *Runbook, args map[string]expr.Valu
 	env := expr.NewEnv()
 	if args != nil {
 		env.Set("args", expr.Object(args))
+		r.Logger.Info("runbook start", "description", rb.Meta.Description, "args", expr.Object(args).ToString())
 	} else {
 		env.Set("args", expr.Object(nil))
+		r.Logger.Info("runbook start", "description", rb.Meta.Description)
 	}
 
 	val, err := r.execSteps(ctx, env, rb.Steps)
 	if err != nil {
 		if ret, ok := err.(*returnSignal); ok {
+			r.Logger.Info("runbook end", "result", ret.value.ToString())
 			return Result{Value: ret.value}
 		}
+		r.Logger.Info("runbook end", "error", err.Error())
 		return Result{Err: err}
 	}
+	r.Logger.Info("runbook end")
 	return Result{Value: val}
 }
 
@@ -84,7 +89,7 @@ func (r *Runner) execSteps(ctx context.Context, env *expr.Env, steps []NamedStep
 		}
 
 		step := steps[i]
-		r.Logger.Debug("step execute", "step", step.Name)
+		r.Logger.Info("step execute", "step", step.Name)
 		err := r.execStep(ctx, env, &step.Step)
 		if err != nil {
 			if n, ok := err.(*nextSignal); ok {
@@ -137,6 +142,7 @@ func (r *Runner) execAssign(env *expr.Env, step *Step) error {
 			return fmt.Errorf("assign %s: %w", a.Name, err)
 		}
 		env.Set(a.Name, val)
+		r.Logger.Info("assign", "name", a.Name, "value", val.ToString())
 	}
 	if step.Next != "" {
 		return &nextSignal{target: step.Next}
@@ -149,12 +155,13 @@ func (r *Runner) execReturn(env *expr.Env, step *Step) error {
 	if err != nil {
 		return fmt.Errorf("return: %w", err)
 	}
+	r.Logger.Info("return", "value", val.ToString())
 	return &returnSignal{value: val}
 }
 
 func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error {
 	call := step.Call
-	r.Logger.Debug("call", "func", call.Func)
+	r.Logger.Info("call", "func", call.Func)
 	fn, ok := r.CallFuncs[call.Func]
 	if !ok {
 		return fmt.Errorf("unknown call function: %s", call.Func)
@@ -167,6 +174,7 @@ func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error 
 
 	if call.Result != "" {
 		env.Set(call.Result, result)
+		r.Logger.Info("call result", "func", call.Func, "var", call.Result, "value", result.ToString())
 	}
 	if step.Next != "" {
 		return &nextSignal{target: step.Next}

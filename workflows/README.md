@@ -81,7 +81,7 @@ The `call` step's HTTP functions (`http.get`, `http.post`, etc.) enforce the fol
 
 | Limit | Default | Description |
 |-------|---------|-------------|
-| SSRF protection | on (bypassable) | Blocks requests to localhost, private IPs (`10.x`, `172.16-31.x`, `192.168.x`), and link-local addresses (`169.254.x`). Also rejects non-`http(s)` schemes (e.g. `file://`). Disabled by default in the mock (`AllowLocalNet = true`) since calling other local services is a normal use case; set `AllowLocalNet = false` on the `Runner` to simulate the real API's URL blocking |
+| SSRF protection | on (bypassable) | Blocks requests to localhost, private IPs (`10.x`, `172.16-31.x`, `192.168.x`), and link-local addresses (`169.254.x`). Also rejects non-`http(s)` schemes (e.g. `file://`). Disabled by default (`--allow-local-net=true`) since calling other local services is a normal mock use case; set `--allow-local-net=false` to simulate the real API's URL blocking |
 | Response body size | 10 MiB | Maximum response body read from an HTTP call |
 | Redirect limit | 10 | Maximum number of HTTP redirects followed per request |
 | Timeout | 5–180 s (default 60) | Per-request timeout, configurable via the `timeout` call argument |
@@ -112,7 +112,7 @@ Calling an unimplemented function returns an error.
 
 ## Real API limits (from technical reference)
 
-The real Workflows API enforces these limits. The mock does **not** enforce most of them (only execution timeout is configurable):
+The real Workflows API enforces these limits. The mock enforces most of them (execution memory and history retention are exceptions):
 
 | Limit | Real API | Mock | Enforced |
 |-------|----------|------|----------|

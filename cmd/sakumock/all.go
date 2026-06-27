@@ -87,16 +87,27 @@ func (c *AllCmd) bindAddr(listenAddr string) string {
 	return net.JoinHostPort(c.ListenHost, port)
 }
 
-// serviceEndpointMap builds a map of service name → base URL from the
-// configured addresses. It is used when --enable-service-link is set so
-// services can forward requests to each other over HTTP.
-func (c *AllCmd) serviceEndpointMap() map[string]string {
-	m := make(map[string]string)
+// serviceLinkEnv collects every service's ClientEnv (with --listen-host and
+// TLS scheme applied) plus dummy credentials into one slice. Services that
+// support cross-service forwarding pass these to saclient.Client.SetEnviron
+// to configure SDK clients, so they never hard-code another service's
+// endpoint env var name.
+func (c *AllCmd) serviceLinkEnv() []core.EnvVar {
+	var vars []core.EnvVar
 	for _, cfg := range c.configs() {
-		addr := c.bindAddr(cfg.ListenAddr())
-		m[cfg.Name()] = c.TLS.Scheme() + "://" + addr
+		for _, e := range cfg.ClientEnv() {
+			if c.ListenHost != "" {
+				_, port, err := net.SplitHostPort(cfg.ListenAddr())
+				if err == nil {
+					e.Value = c.TLS.Scheme() + "://" + net.JoinHostPort(c.ListenHost, port)
+				}
+			}
+			vars = append(vars, e)
+		}
 	}
-	return m
+	vars = core.WithTLSScheme(vars, c.TLS.Enabled())
+	vars = append(vars, core.DummyCredentialEnv()...)
+	return vars
 }
 
 // build constructs every service's server. On error it closes the servers it
@@ -108,7 +119,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 		TLS:    c.TLS,
 	}
 	if c.EnableServiceLink {
-		opts.ServiceEndpoints = c.serviceEndpointMap()
+		opts.ServiceLinkEnv = c.serviceLinkEnv()
 	}
 
 	var instances []serviceInstance

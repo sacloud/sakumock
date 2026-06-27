@@ -12,6 +12,8 @@ import (
 	simplemqsdk "github.com/sacloud/sacloud-sdk-go/api/simplemq"
 	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/message"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
+
+	"github.com/sacloud/sakumock/core"
 )
 
 const serviceLinkTimeout = 5 * time.Second
@@ -21,38 +23,31 @@ const serviceLinkTimeout = 5 * time.Second
 // (the unified binary passes service endpoints via ServerOptions); without it,
 // firings are recorded but not forwarded.
 type forwarder struct {
-	endpoints map[string]string // service name → base URL
-	logger    *slog.Logger
+	logger *slog.Logger
 
 	mqClient *message.Client
 	snClient *snv1.Client
 }
 
-func newForwarder(endpoints map[string]string, logger *slog.Logger) *forwarder {
-	f := &forwarder{
-		endpoints: endpoints,
-		logger:    logger,
-	}
-	if ep, ok := endpoints["simplemq"]; ok {
-		var sa saclient.Client
-		if err := sa.SetEnviron([]string{
-			"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=" + ep,
-		}); err == nil {
-			if client, err := simplemqsdk.NewMessageClient("servicelink", &sa); err == nil {
-				f.mqClient = client
-			}
+func newForwarder(env []core.EnvVar, logger *slog.Logger) *forwarder {
+	f := &forwarder{logger: logger}
+
+	envStrings := core.EnvStrings(env)
+
+	var mqSA saclient.Client
+	if err := mqSA.SetEnviron(envStrings); err == nil {
+		if client, err := simplemqsdk.NewMessageClient("servicelink", &mqSA); err == nil {
+			f.mqClient = client
 		}
 	}
-	if ep, ok := endpoints["simplenotification"]; ok {
-		var sa saclient.Client
-		if err := sa.SetEnviron([]string{
-			"SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=" + ep,
-		}); err == nil {
-			if client, err := simplenotificationsdk.NewClient(&sa); err == nil {
-				f.snClient = client
-			}
+
+	var snSA saclient.Client
+	if err := snSA.SetEnviron(envStrings); err == nil {
+		if client, err := simplenotificationsdk.NewClient(&snSA); err == nil {
+			f.snClient = client
 		}
 	}
+
 	return f
 }
 

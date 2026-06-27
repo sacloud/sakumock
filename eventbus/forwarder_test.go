@@ -4,15 +4,36 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	sdk "github.com/sacloud/sacloud-sdk-go/api/eventbus"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/eventbus/apis/v1"
 
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/eventbus"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
 )
+
+// serviceLinkEnv builds a []core.EnvVar for testing by taking each service's
+// ClientEnv() and replacing the address with the test server's URL. This
+// mirrors what AllCmd.serviceLinkEnv() does for the real binary, keeping the
+// env var key names in the owning service package.
+func serviceLinkEnv(services map[core.ServiceConfig]string) []core.EnvVar {
+	var env []core.EnvVar
+	for cfg, testURL := range services {
+		for _, e := range cfg.ClientEnv() {
+			// ClientEnv values are "http://<configured-addr>..." — replace with the test URL.
+			if i := strings.Index(e.Value, "://"); i >= 0 {
+				e.Value = testURL
+			}
+			env = append(env, e)
+		}
+	}
+	env = append(env, core.DummyCredentialEnv()...)
+	return env
+}
 
 func TestForwardToSimpleMQ(t *testing.T) {
 	mqSrv := simplemq.NewTestServer(simplemq.Config{})
@@ -20,9 +41,10 @@ func TestForwardToSimpleMQ(t *testing.T) {
 
 	createQueue(t, mqSrv.TestURL(), "test-queue-00001")
 
-	ebSrv := eventbus.NewTestServerWithEndpoints(eventbus.Config{}, map[string]string{
-		"simplemq": mqSrv.TestURL(),
+	env := serviceLinkEnv(map[core.ServiceConfig]string{
+		simplemq.Config{}: mqSrv.TestURL(),
 	})
+	ebSrv := eventbus.NewTestServerWithServiceLink(eventbus.Config{}, env)
 	defer ebSrv.Close()
 
 	client := newTestClient(t, ebSrv.TestURL())
@@ -121,9 +143,10 @@ func TestForwardToSimpleNotification(t *testing.T) {
 
 	groupID := createNotificationGroup(t, snSrv.TestURL(), "test-group")
 
-	ebSrv := eventbus.NewTestServerWithEndpoints(eventbus.Config{}, map[string]string{
-		"simplenotification": snSrv.TestURL(),
+	env := serviceLinkEnv(map[core.ServiceConfig]string{
+		simplenotification.Config{}: snSrv.TestURL(),
 	})
+	ebSrv := eventbus.NewTestServerWithServiceLink(eventbus.Config{}, env)
 	defer ebSrv.Close()
 
 	client := newTestClient(t, ebSrv.TestURL())
@@ -178,8 +201,6 @@ func TestForwardToSimpleNotification(t *testing.T) {
 	}
 }
 
-// createNotificationGroup creates a notification group via the SimpleNotification
-// control-plane API and returns its ID.
 func createNotificationGroup(t *testing.T, baseURL, name string) string {
 	t.Helper()
 	body, _ := json.Marshal(map[string]any{
@@ -215,7 +236,6 @@ type snMessage struct {
 	Message string `json:"message"`
 }
 
-// inspectNotifications retrieves accepted notifications from the /_sakumock/messages endpoint.
 func inspectNotifications(t *testing.T, baseURL string) []snMessage {
 	t.Helper()
 	resp, err := http.Get(baseURL + "/_sakumock/messages")

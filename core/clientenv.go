@@ -53,6 +53,16 @@ func WithTLSScheme(vars []EnvVar, enabled bool) []EnvVar {
 	return out
 }
 
+// EnvStrings converts env vars to "KEY=VALUE" strings, the format accepted by
+// saclient.Client.SetEnviron.
+func EnvStrings(vars []EnvVar) []string {
+	out := make([]string, len(vars))
+	for i, v := range vars {
+		out[i] = v.Key + "=" + v.Value
+	}
+	return out
+}
+
 // LogArgs renders env vars as alternating key/value arguments for slog.
 func LogArgs(vars []EnvVar) []any {
 	args := make([]any, 0, len(vars)*2)

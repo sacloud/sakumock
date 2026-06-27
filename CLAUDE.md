@@ -89,10 +89,10 @@ Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUM
 
 #### Architecture
 
-- `core.ServerOptions.ServiceEndpoints` (`map[string]string`, service name → base URL) carries the endpoint map from the unified binary to every service. `AllCmd.serviceEndpointMap()` builds it from the configured addresses and TLS scheme.
-- Each service that supports forwarding reads `opts.ServiceEndpoints` in its `NewServer` and stores it in an unexported `Config.serviceEndpoints` field (same injection pattern as `idGen`/`logger`/`tls`).
-- The forwarding logic lives in a `forwarder` struct inside the sending service's package (e.g. `eventbus/forwarder.go`). It uses the **official SDK client** to talk to the destination service — never raw `net/http`. This ensures the mock exercises the same wire protocol the real service would use.
-- The forwarder is constructed in `NewHandler` when `serviceEndpoints` is non-empty, and wired into the data plane. `NewTestServerWithEndpoints(cfg, endpoints)` is the test helper that enables it without `ServerOptions`.
+- `core.ServerOptions.ServiceLinkEnv` (`[]core.EnvVar`) carries the aggregated client env vars (`SAKURA_ENDPOINTS_*` + dummy credentials) from every service. `AllCmd.serviceLinkEnv()` collects each service's `ClientEnv()` with `--listen-host` and TLS scheme applied. This keeps the env var key names in the owning service package — the forwarding service never hard-codes another service's endpoint env var name.
+- Each service that supports forwarding reads `opts.ServiceLinkEnv` in its `NewServer` and stores it in an unexported `Config.serviceLinkEnv` field (same injection pattern as `idGen`/`logger`/`tls`).
+- The forwarding logic lives in a `forwarder` struct inside the sending service's package (e.g. `eventbus/forwarder.go`). It passes the env vars to `saclient.Client.SetEnviron` (via `core.EnvStrings`) and creates SDK clients from there — the forwarder uses the **official SDK client** to talk to the destination service, never raw `net/http`. This ensures the mock exercises the same wire protocol the real service would use.
+- The forwarder is constructed in `NewHandler` when `serviceLinkEnv` is non-empty, and wired into the data plane. `NewTestServerWithServiceLink(cfg, env)` is the test helper that enables it without `ServerOptions`.
 
 #### How forwarding works (EventBus example)
 
@@ -108,10 +108,10 @@ Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUM
 
 #### Adding a new destination
 
-1. In `forwarder.go`, add the SDK client field and initialize it in `newForwarder()` using `saclient.Client.SetEnviron` with the appropriate `SAKURA_ENDPOINTS_*` key.
+1. In `forwarder.go`, add the SDK client field and initialize it in `newForwarder()` — the env vars are already available via `core.EnvStrings(env)`, so call the SDK's `NewClient` with a `saclient.Client` configured from those env vars. No new env var names need to be added here; they come from the destination service's `ClientEnv()`.
 2. Add a `case` in `forward()` dispatching to a new `forwardTo<Service>()` method.
 3. In the method, parse the Parameters JSON, create the SDK operation, and call it with the passed `ctx`.
-4. Add an integration test in `forwarder_test.go`: start both services' test servers, wire the endpoint map, fire, and verify the message arrived.
+4. Add an integration test in `forwarder_test.go`: use the `serviceLinkEnv()` test helper to build env vars from the destination service's `Config.ClientEnv()` with the test URL substituted, start both services' test servers, fire, and verify the message arrived.
 
 #### Current destinations
 

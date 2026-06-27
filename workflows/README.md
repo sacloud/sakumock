@@ -58,6 +58,18 @@ defer srv.Close()
 fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 ```
 
+## Expression evaluator safety limits
+
+The inline expression evaluator (`${...}`) enforces the following limits to prevent DoS from user-supplied expressions:
+
+| Limit | Default | Description |
+|-------|---------|-------------|
+| Parse depth | 128 | Maximum nesting depth of parentheses/operators in a single expression |
+| Evaluation steps | 100,000 | Maximum number of AST node evaluations per expression |
+| Array length | 1,000,000 | Maximum number of elements `array.range` can generate |
+
+Regular expressions (`text.findAllRegex`, `text.matchRegex`, `text.replaceAllRegex`) use Go's `regexp` package (RE2 semantics), which guarantees linear-time matching and is not susceptible to ReDoS.
+
 ## API endpoints
 
 | Method | Path | Description |

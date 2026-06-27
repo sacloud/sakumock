@@ -40,6 +40,13 @@ type ServerOptions struct {
 	// (control plane and data plane) with. The unified binary injects one shared
 	// value so all services use the same cert; zero means plain HTTP.
 	TLS TLSFiles
+	// ServiceLinkEnv is the aggregated client environment variables
+	// (SAKURA_ENDPOINTS_* + dummy credentials) from every service, collected
+	// by the unified binary when --enable-service-link is set. Services that
+	// support cross-service forwarding pass these to saclient.Client.SetEnviron
+	// to configure SDK clients, so the forwarding service never hard-codes
+	// another service's endpoint env var name.
+	ServiceLinkEnv []EnvVar
 }
 
 // ServiceConfig is the common interface every service's Config satisfies. It

@@ -26,6 +26,10 @@ type Config struct {
 	// logger, when non-nil, is the base logger injected by the unified binary
 	// via NewServer; nil means the server falls back to slog.Default().
 	logger *slog.Logger
+
+	// serviceLinkEnv is the aggregated client env vars for cross-service
+	// forwarding. Injected by the unified binary when service linking is enabled.
+	serviceLinkEnv []core.EnvVar
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -51,6 +55,7 @@ func (c Config) ListenAddr() string { return c.Addr }
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
+	c.serviceLinkEnv = opts.ServiceLinkEnv
 	return NewHandler(c)
 }
 
@@ -100,6 +105,9 @@ func NewHandler(cfg Config) (*Server, error) {
 		s.store.ids = cfg.idGen
 	}
 	s.dataPlane = newDataPlane(s.store, logger, nil)
+	if len(cfg.serviceLinkEnv) > 0 {
+		s.dataPlane.forwarder = newForwarder(cfg.serviceLinkEnv, logger)
+	}
 	if cfg.EnableDataPlane {
 		s.dataPlane.start()
 	}
@@ -115,6 +123,14 @@ func NewTestServer(cfg Config) *Server {
 	}
 	s.httpServer = httptest.NewServer(s)
 	return s
+}
+
+// NewTestServerWithServiceLink creates and starts a new EventBus test server
+// with service linking enabled. The env vars are passed to the forwarder's
+// SDK clients via saclient.Client.SetEnviron.
+func NewTestServerWithServiceLink(cfg Config, env []core.EnvVar) *Server {
+	cfg.serviceLinkEnv = env
+	return NewTestServer(cfg)
 }
 
 // TestURL returns the base URL of the test server.

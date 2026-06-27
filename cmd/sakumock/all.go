@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/url"
 	"sync"
 
 	"github.com/sacloud/sakumock"
@@ -62,9 +63,10 @@ func (c *serviceConfigs) configs() []core.ServiceConfig {
 type AllCmd struct {
 	serviceConfigs
 
-	Config     configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
-	Debug      bool           `help:"Enable debug logging for all services"`
-	ListenHost string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
+	Config            configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
+	Debug             bool           `help:"Enable debug logging for all services"`
+	ListenHost        string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
+	EnableServiceLink bool           `name:"enable-service-link" help:"Enable cross-service forwarding over HTTP (e.g. EventBus fires to SimpleMQ)" env:"SAKUMOCK_ENABLE_SERVICE_LINK" default:"false"`
 }
 
 // serviceInstance pairs a service's config with its running server.
@@ -86,21 +88,42 @@ func (c *AllCmd) bindAddr(listenAddr string) string {
 	return net.JoinHostPort(c.ListenHost, port)
 }
 
+// serviceLinkEnv collects every service's ClientEnv (with --listen-host and
+// TLS scheme applied) plus dummy credentials into one slice. Services that
+// support cross-service forwarding pass these to saclient.Client.SetEnviron
+// to configure SDK clients, so they never hard-code another service's
+// endpoint env var name.
+func (c *AllCmd) serviceLinkEnv() []core.EnvVar {
+	var vars []core.EnvVar
+	for _, cfg := range c.configs() {
+		for _, e := range cfg.ClientEnv() {
+			if c.ListenHost != "" {
+				if u, err := url.Parse(e.Value); err == nil {
+					_, port, splitErr := net.SplitHostPort(cfg.ListenAddr())
+					if splitErr == nil {
+						u.Host = net.JoinHostPort(c.ListenHost, port)
+						e.Value = u.String()
+					}
+				}
+			}
+			vars = append(vars, e)
+		}
+	}
+	vars = core.WithTLSScheme(vars, c.TLS.Enabled())
+	vars = append(vars, core.DummyCredentialEnv()...)
+	return vars
+}
+
 // build constructs every service's server. On error it closes the servers it
 // already created so no store is leaked.
 func (c *AllCmd) build() ([]serviceInstance, error) {
-	// Share one ID generator across all services so resource IDs are globally
-	// unique like the real API, instead of each store counting from the same
-	// base and minting the same ID for different resource types — which is
-	// confusing when reading Terraform output. Injected through the interface,
-	// so adding a service needs no change here.
-	// Inject the configured default logger so each service tags its log lines
-	// with its own name (service=<name>), making the interleaved output of all
-	// services in one process attributable to the service that emitted it.
 	opts := core.ServerOptions{
 		IDGen:  core.NewIDGenerator(core.DefaultIDBase()),
 		Logger: slog.Default(),
 		TLS:    c.TLS,
+	}
+	if c.EnableServiceLink {
+		opts.ServiceLinkEnv = c.serviceLinkEnv()
 	}
 
 	var instances []serviceInstance
@@ -139,7 +162,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 		}
 	}()
 
-	slog.Info("sakumock all starting", "version", sakumock.Version)
+	slog.Info("sakumock all starting", "version", sakumock.Version, "service_link", c.EnableServiceLink)
 	for _, i := range instances {
 		slog.Info("starting service", "service", i.cfg.Name(), "addr", c.bindAddr(i.cfg.ListenAddr()), "scheme", c.TLS.Scheme())
 	}

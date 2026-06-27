@@ -83,6 +83,43 @@ A data plane that is just additional HTTP paths or an internal engine serves on 
 - An **externally served** data plane is handed the same files rather than sakumock terminating TLS: objectstorage passes `--cert`/`--key` to the versitygw subprocess. A new external data plane should do likewise.
 - `core.WithTLSScheme(vars, enabled)` upgrades `http://` endpoint values in the client env to `https://` (credentials/regions untouched), so `cli.go` startup logs and `sakumock env` output reflect a TLS listener. `ClientEnv()`/`ExtraClientEnv()` themselves stay `http://` (single source); the scheme is applied at the edges.
 
+### Service link (cross-service forwarding)
+
+Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUMOCK_ENABLE_SERVICE_LINK=true`) that makes services forward requests to each other over HTTP, just as the real SAKURA Cloud platform does. It is `sakumock all`-only: standalone services cannot know each other's addresses. When disabled (the default), firings are recorded but not forwarded — the mock works in isolation.
+
+#### Architecture
+
+- `core.ServerOptions.ServiceLinkEnv` (`[]core.EnvVar`) carries the aggregated client env vars (`SAKURA_ENDPOINTS_*` + dummy credentials) from every service. `AllCmd.serviceLinkEnv()` collects each service's `ClientEnv()` with `--listen-host` and TLS scheme applied. This keeps the env var key names in the owning service package — the forwarding service never hard-codes another service's endpoint env var name.
+- Each service that supports forwarding reads `opts.ServiceLinkEnv` in its `NewServer` and stores it in an unexported `Config.serviceLinkEnv` field (same injection pattern as `idGen`/`logger`/`tls`).
+- The forwarding logic lives in a `forwarder` struct inside the sending service's package (e.g. `eventbus/forwarder.go`). It passes the env vars to `saclient.Client.SetEnviron` (via `core.EnvStrings`) and creates SDK clients from there — the forwarder uses the **official SDK client** to talk to the destination service, never raw `net/http`. This ensures the mock exercises the same wire protocol the real service would use.
+- The forwarder is constructed in `NewHandler` when `serviceLinkEnv` is non-empty, and wired into the data plane. `NewTestServerWithServiceLink(cfg, env)` is the test helper that enables it without `ServerOptions`.
+
+#### How forwarding works (EventBus example)
+
+1. `dataPlane.fire()` resolves a process configuration's `Destination` and `Parameters`.
+2. If a `forwarder` is present and the delivery succeeded, it calls `forwarder.forward(ctx, delivery)`.
+3. `forward()` applies a fixed timeout (`serviceLinkTimeout`, 5s) via `context.WithTimeout` and dispatches by destination name.
+4. `forwardToSimpleMQ()` parses the Parameters JSON (`{"queue_name": "...", "content": "..."}`), creates an SDK `MessageOp`, and calls `op.Send(ctx, content)`.
+5. A non-empty error string from `forward()` is recorded in `Delivery.Error` and the firing is marked as failed.
+
+#### Context propagation
+
+`context.Context` flows from the HTTP handler (`r.Context()`) through `injectEvent`/`tick` → `fire` → `forwarder.forward` → SDK call. The autonomous scheduler (`dataPlane.run`) derives a cancellable context from its stop channel.
+
+#### Adding a new destination
+
+1. In `forwarder.go`, add the SDK client field and initialize it in `newForwarder()` — the env vars are already available via `core.EnvStrings(env)`, so call the SDK's `NewClient` with a `saclient.Client` configured from those env vars. No new env var names need to be added here; they come from the destination service's `ClientEnv()`.
+2. Add a `case` in `forward()` dispatching to a new `forwardTo<Service>()` method.
+3. In the method, parse the Parameters JSON, create the SDK operation, and call it with the passed `ctx`.
+4. Add an integration test in `forwarder_test.go`: use the `serviceLinkEnv()` test helper to build env vars from the destination service's `Config.ClientEnv()` with the test URL substituted, start both services' test servers, fire, and verify the message arrived.
+
+#### Current destinations
+
+| Source | Destination | Parameters | SDK used |
+|--------|-------------|-----------|----------|
+| EventBus | SimpleMQ | `{"queue_name": "...", "content": "..."}` | `simplemqsdk.NewMessageClient` + `NewMessageOp.Send` |
+| EventBus | SimpleNotification | `{"group_id": "...", "message": "..."}` | `simplenotificationsdk.NewClient` + `NewGroupOp.SendMessage` |
+
 ### Resource ID generation
 
 - Real SAKURA Cloud resource IDs are a single **global incremental** counter shared across all resource types (a queue, a KMS key, a server, etc. all draw from one monotonic sequence, so an ID is unique platform-wide). They are 12-digit numbers; the counter currently sits in the `11xx`–`12xx` band.

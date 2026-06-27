@@ -89,14 +89,14 @@ func TestTerraformEndToEnd(t *testing.T) {
 	env = append(env, readEnvFile(t, envFile)...)
 	env = append(env, "SAKURA_ZONE=tk1v") // tk1v is SAKURA Cloud's sandbox zone
 
-	// Run terraform in an isolated working dir holding a copy of the fixture.
-	work := t.TempDir()
-	copyFile(t, filepath.Join(repoRoot, "test", "terraform", "main.tf"), filepath.Join(work, "main.tf"))
+	// Run terraform directly in the fixture directory — generated files
+	// (.terraform/, state) are gitignored and this only runs in CI.
+	tfDir := filepath.Join(repoRoot, "test", "terraform")
 
 	runTF := func(args ...string) {
 		t.Helper()
 		cmd := exec.Command(tfBin, args...)
-		cmd.Dir = work
+		cmd.Dir = tfDir
 		cmd.Env = env
 		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 		if err := cmd.Run(); err != nil {
@@ -106,7 +106,7 @@ func TestTerraformEndToEnd(t *testing.T) {
 
 	t.Cleanup(func() {
 		cmd := exec.Command(tfBin, "destroy", "-auto-approve", "-no-color", "-input=false")
-		cmd.Dir = work
+		cmd.Dir = tfDir
 		cmd.Env = env
 		_ = cmd.Run()
 	})
@@ -117,7 +117,7 @@ func TestTerraformEndToEnd(t *testing.T) {
 	// A plan right after apply must show no changes (exit 0). Exit code 2 means
 	// a diff — a mock that did not round-trip a field the provider reads back.
 	plan := exec.Command(tfBin, "plan", "-detailed-exitcode", "-no-color", "-input=false")
-	plan.Dir = work
+	plan.Dir = tfDir
 	plan.Env = env
 	plan.Stdout, plan.Stderr = os.Stdout, os.Stderr
 	if err := plan.Run(); err != nil {
@@ -198,15 +198,4 @@ func readEnvFile(t *testing.T, path string) []string {
 		t.Fatalf("read env file: %v", err)
 	}
 	return out
-}
-
-func copyFile(t *testing.T, src, dst string) {
-	t.Helper()
-	data, err := os.ReadFile(src)
-	if err != nil {
-		t.Fatalf("read %s: %v", src, err)
-	}
-	if err := os.WriteFile(dst, data, 0o644); err != nil {
-		t.Fatalf("write %s: %v", dst, err)
-	}
 }

@@ -83,6 +83,42 @@ A data plane that is just additional HTTP paths or an internal engine serves on 
 - An **externally served** data plane is handed the same files rather than sakumock terminating TLS: objectstorage passes `--cert`/`--key` to the versitygw subprocess. A new external data plane should do likewise.
 - `core.WithTLSScheme(vars, enabled)` upgrades `http://` endpoint values in the client env to `https://` (credentials/regions untouched), so `cli.go` startup logs and `sakumock env` output reflect a TLS listener. `ClientEnv()`/`ExtraClientEnv()` themselves stay `http://` (single source); the scheme is applied at the edges.
 
+### Service link (cross-service forwarding)
+
+Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUMOCK_ENABLE_SERVICE_LINK=true`) that makes services forward requests to each other over HTTP, just as the real SAKURA Cloud platform does. It is `sakumock all`-only: standalone services cannot know each other's addresses. When disabled (the default), firings are recorded but not forwarded — the mock works in isolation.
+
+#### Architecture
+
+- `core.ServerOptions.ServiceEndpoints` (`map[string]string`, service name → base URL) carries the endpoint map from the unified binary to every service. `AllCmd.serviceEndpointMap()` builds it from the configured addresses and TLS scheme.
+- Each service that supports forwarding reads `opts.ServiceEndpoints` in its `NewServer` and stores it in an unexported `Config.serviceEndpoints` field (same injection pattern as `idGen`/`logger`/`tls`).
+- The forwarding logic lives in a `forwarder` struct inside the sending service's package (e.g. `eventbus/forwarder.go`). It uses the **official SDK client** to talk to the destination service — never raw `net/http`. This ensures the mock exercises the same wire protocol the real service would use.
+- The forwarder is constructed in `NewHandler` when `serviceEndpoints` is non-empty, and wired into the data plane. `NewTestServerWithEndpoints(cfg, endpoints)` is the test helper that enables it without `ServerOptions`.
+
+#### How forwarding works (EventBus example)
+
+1. `dataPlane.fire()` resolves a process configuration's `Destination` and `Parameters`.
+2. If a `forwarder` is present and the delivery succeeded, it calls `forwarder.forward(ctx, delivery)`.
+3. `forward()` applies a fixed timeout (`serviceLinkTimeout`, 5s) via `context.WithTimeout` and dispatches by destination name.
+4. `forwardToSimpleMQ()` parses the Parameters JSON (`{"queue_name": "...", "content": "..."}`), creates an SDK `MessageOp`, and calls `op.Send(ctx, content)`.
+5. A non-empty error string from `forward()` is recorded in `Delivery.Error` and the firing is marked as failed.
+
+#### Context propagation
+
+`context.Context` flows from the HTTP handler (`r.Context()`) through `injectEvent`/`tick` → `fire` → `forwarder.forward` → SDK call. The autonomous scheduler (`dataPlane.run`) derives a cancellable context from its stop channel.
+
+#### Adding a new destination
+
+1. In `forwarder.go`, add the SDK client field and initialize it in `newForwarder()` using `saclient.Client.SetEnviron` with the appropriate `SAKURA_ENDPOINTS_*` key.
+2. Add a `case` in `forward()` dispatching to a new `forwardTo<Service>()` method.
+3. In the method, parse the Parameters JSON, create the SDK operation, and call it with the passed `ctx`.
+4. Add an integration test in `forwarder_test.go`: start both services' test servers, wire the endpoint map, fire, and verify the message arrived.
+
+#### Current destinations
+
+| Source | Destination | Parameters | SDK used |
+|--------|-------------|-----------|----------|
+| EventBus | SimpleMQ | `{"queue_name": "...", "content": "..."}` | `simplemqsdk.NewMessageClient` + `NewMessageOp.Send` |
+
 ### Resource ID generation
 
 - Real SAKURA Cloud resource IDs are a single **global incremental** counter shared across all resource types (a queue, a KMS key, a server, etc. all draw from one monotonic sequence, so an ID is unique platform-wide). They are 12-digit numbers; the counter currently sits in the `11xx`–`12xx` band.

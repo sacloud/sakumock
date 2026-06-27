@@ -25,7 +25,7 @@ func (s *Server) handleInjectEvent(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Source is required")
 		return
 	}
-	fired := s.dataPlane.injectEvent(ev)
+	fired := s.dataPlane.injectEvent(r.Context(), ev)
 	core.WriteJSON(w, http.StatusOK, deliveriesResponse(fired))
 }
 
@@ -46,7 +46,7 @@ func (s *Server) handleTick(w http.ResponseWriter, r *http.Request) {
 		}
 		at = parsed
 	}
-	fired := s.dataPlane.tick(at)
+	fired := s.dataPlane.tick(r.Context(), at)
 	core.WriteJSON(w, http.StatusOK, deliveriesResponse(fired))
 }
 

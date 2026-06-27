@@ -40,6 +40,11 @@ type ServerOptions struct {
 	// (control plane and data plane) with. The unified binary injects one shared
 	// value so all services use the same cert; zero means plain HTTP.
 	TLS TLSFiles
+	// ServiceEndpoints maps service names (e.g. "simplemq") to their base URL
+	// (e.g. "http://127.0.0.1:18080"). When non-nil, services that support
+	// cross-service linking (e.g. EventBus → SimpleMQ) use these URLs to
+	// forward requests over HTTP, just as the real platform would.
+	ServiceEndpoints map[string]string
 }
 
 // ServiceConfig is the common interface every service's Config satisfies. It

@@ -1,6 +1,7 @@
 package eventbus
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"slices"
@@ -60,9 +61,10 @@ type event struct {
 // the autonomous wall-clock scheduler (see run) is started only when the data
 // plane is enabled.
 type dataPlane struct {
-	store  Store
-	logger *slog.Logger
-	now    func() time.Time
+	store     Store
+	logger    *slog.Logger
+	now       func() time.Time
+	forwarder *forwarder
 
 	mu         sync.Mutex
 	deliveries []Delivery
@@ -86,10 +88,8 @@ func newDataPlane(store Store, logger *slog.Logger, now func() time.Time) *dataP
 
 // injectEvent matches an injected event against every trigger and fires the
 // matched ones, returning the deliveries produced.
-func (dp *dataPlane) injectEvent(ev event) []Delivery {
+func (dp *dataPlane) injectEvent(ctx context.Context, ev event) []Delivery {
 	raw, _ := json.Marshal(ev)
-	// One event fires all matched triggers at a single instant, so every
-	// resulting delivery shares the same FiredAt.
 	firedAt := dp.now()
 	var fired []Delivery
 	for _, it := range dp.store.ListItems(classTrigger) {
@@ -101,7 +101,7 @@ func (dp *dataPlane) injectEvent(ev event) []Delivery {
 		if !triggerMatches(st, ev) {
 			continue
 		}
-		fired = append(fired, dp.fire(it, st.ProcessConfigurationID, raw, firedAt))
+		fired = append(fired, dp.fire(ctx, it, st.ProcessConfigurationID, raw, firedAt))
 	}
 	dp.logger.Debug("event injected", "source", ev.Source, "type", ev.Type, "matched", len(fired))
 	return fired
@@ -128,7 +128,7 @@ func triggerMatches(st triggerSettings, ev event) bool {
 // fires each due boundary, returning the deliveries produced. A manual tick via
 // POST /_sakumock/tick and the autonomous scheduler both call this; advancing
 // lastTick makes a boundary fire exactly once across successive ticks.
-func (dp *dataPlane) tick(at time.Time) []Delivery {
+func (dp *dataPlane) tick(ctx context.Context, at time.Time) []Delivery {
 	dp.mu.Lock()
 	windowStart := dp.lastTick
 	if at.After(dp.lastTick) {
@@ -148,7 +148,7 @@ func (dp *dataPlane) tick(at time.Time) []Delivery {
 			continue
 		}
 		for _, boundary := range dueBoundaries(st, windowStart, at) {
-			fired = append(fired, dp.fire(it, st.ProcessConfigurationID, nil, boundary))
+			fired = append(fired, dp.fire(ctx, it, st.ProcessConfigurationID, nil, boundary))
 		}
 	}
 	return fired
@@ -212,7 +212,7 @@ func dueBoundaries(st scheduleSettings, windowStart, at time.Time) []time.Time {
 // records a Delivery, and updates the source resource's Status. A missing or
 // non-process-configuration reference yields a Delivery with Error set and a
 // failed Status, matching what the real service would report for a broken job.
-func (dp *dataPlane) fire(source ServiceItem, pcID string, ev json.RawMessage, firedAt time.Time) Delivery {
+func (dp *dataPlane) fire(ctx context.Context, source ServiceItem, pcID string, ev json.RawMessage, firedAt time.Time) Delivery {
 	d := Delivery{
 		FiredAt:                firedAt,
 		SourceID:               source.ID,
@@ -229,6 +229,12 @@ func (dp *dataPlane) fire(source ServiceItem, pcID string, ev json.RawMessage, f
 	} else {
 		d.Destination = pcSt.Destination
 		d.Parameters = pcSt.Parameters
+	}
+
+	if d.Error == "" && dp.forwarder != nil {
+		if fwdErr := dp.forwarder.forward(ctx, d); fwdErr != "" {
+			d.Error = fwdErr
+		}
 	}
 
 	dp.record(d)
@@ -288,15 +294,20 @@ func (dp *dataPlane) start() {
 
 func (dp *dataPlane) run() {
 	defer close(dp.done)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-dp.stop
+		cancel()
+	}()
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 	dp.logger.Info("data plane scheduler started")
 	for {
 		select {
-		case <-dp.stop:
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			dp.tick(dp.now())
+			dp.tick(ctx, dp.now())
 		}
 	}
 }

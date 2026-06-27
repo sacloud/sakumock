@@ -127,7 +127,7 @@ func (r *Runner) execSteps(ctx context.Context, env *expr.Env, steps []NamedStep
 		}
 
 		step := steps[i]
-		r.Logger.Info("step execute", "step", step.Name)
+		r.Logger.Debug("step execute", "step", step.Name)
 		r.emit(Event{Type: EventStepWillExecute, StepName: step.Name})
 		err := r.execStep(ctx, env, &step.Step)
 		if err == nil {
@@ -184,7 +184,7 @@ func (r *Runner) execAssign(env *expr.Env, step *Step) error {
 			return fmt.Errorf("assign %s: %w", a.Name, err)
 		}
 		env.Set(a.Name, val)
-		r.Logger.Info("assign", "name", a.Name, "value", val.ToString())
+		r.Logger.Debug("assign", "name", a.Name, "value", val.ToString())
 	}
 	if step.Next != "" {
 		return &nextSignal{target: step.Next}
@@ -197,13 +197,13 @@ func (r *Runner) execReturn(env *expr.Env, step *Step) error {
 	if err != nil {
 		return fmt.Errorf("return: %w", err)
 	}
-	r.Logger.Info("return", "value", val.ToString())
+	r.Logger.Debug("return", "value", val.ToString())
 	return &returnSignal{value: val}
 }
 
 func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error {
 	call := step.Call
-	r.Logger.Info("call", "func", call.Func)
+	r.Logger.Debug("call", "func", call.Func)
 	r.emit(Event{Type: EventFunctionWillCall, Meta: call.Func})
 	fn, ok := r.CallFuncs[call.Func]
 	if !ok {
@@ -219,7 +219,7 @@ func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error 
 	r.emit(Event{Type: EventFunctionDidRun, Meta: call.Func})
 	if call.Result != "" {
 		env.Set(call.Result, result)
-		r.Logger.Info("call result", "func", call.Func, "var", call.Result, "value", result.ToString())
+		r.Logger.Debug("call result", "func", call.Func, "var", call.Result, "value", result.ToString())
 	}
 	if step.Next != "" {
 		return &nextSignal{target: step.Next}

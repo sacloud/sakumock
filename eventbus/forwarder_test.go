@@ -1,7 +1,7 @@
 package eventbus_test
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -9,6 +9,11 @@ import (
 
 	sdk "github.com/sacloud/sacloud-sdk-go/api/eventbus"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/eventbus/apis/v1"
+	simplenotificationsdk "github.com/sacloud/sacloud-sdk-go/api/simple-notification"
+	snv1 "github.com/sacloud/sacloud-sdk-go/api/simple-notification/apis/v1"
+	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/message"
+	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/queue"
+	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/eventbus"
@@ -203,32 +208,34 @@ func TestForwardToSimpleNotification(t *testing.T) {
 
 func createNotificationGroup(t *testing.T, baseURL, name string) string {
 	t.Helper()
-	body, _ := json.Marshal(map[string]any{
-		"CommonServiceItem": map[string]any{
-			"Name": name,
-			"Provider": map[string]any{
-				"Class": "saknoticegroup",
-			},
-		},
-	})
-	resp, err := http.Post(baseURL+"/commonserviceitem", "application/json",
-		bytes.NewReader(body))
+	var sa saclient.Client
+	if err := sa.SetEnviron([]string{
+		"SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION=" + baseURL,
+		"SAKURA_ACCESS_TOKEN=dummy",
+		"SAKURA_ACCESS_TOKEN_SECRET=dummy",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	client, err := simplenotificationsdk.NewClient(&sa)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("create notification group: status %d", resp.StatusCode)
-	}
-	var result struct {
-		CommonServiceItem struct {
-			ID string `json:"ID"`
-		} `json:"CommonServiceItem"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	group, err := simplenotificationsdk.NewGroupOp(client).Create(t.Context(), snv1.PostCommonServiceItemRequest{
+		CommonServiceItem: snv1.PostCommonServiceItemRequestCommonServiceItem{
+			Name: name,
+			Icon: snv1.NilCommonServiceItemIcon{Null: true},
+			Settings: snv1.CommonServiceItemSettings{
+				GroupSettings: snv1.GroupSettings{
+					Destinations: []string{},
+				},
+			},
+			Tags: []string{},
+		},
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
-	return result.CommonServiceItem.ID
+	return group.CommonServiceItem.ID
 }
 
 type snMessage struct {
@@ -255,27 +262,36 @@ func inspectNotifications(t *testing.T, baseURL string) []snMessage {
 	return result.Messages
 }
 
+type mqQueueSecurity struct{}
+
+func (s *mqQueueSecurity) ApiKeyAuth(_ context.Context, _ queue.OperationName) (queue.ApiKeyAuth, error) {
+	return queue.ApiKeyAuth{Username: "dummy", Password: "dummy"}, nil
+}
+
 func createQueue(t *testing.T, baseURL, name string) {
 	t.Helper()
-	body, _ := json.Marshal(map[string]any{
-		"CommonServiceItem": map[string]any{
-			"Name": name,
-			"Provider": map[string]any{
-				"Class": "simplemq",
-			},
-		},
-	})
-	req, _ := http.NewRequest(http.MethodPost, baseURL+"/commonserviceitem", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth("dummy", "dummy")
-	resp, err := http.DefaultClient.Do(req)
+	client, err := queue.NewClient(baseURL, &mqQueueSecurity{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("create queue: status %d", resp.StatusCode)
+	res, err := client.CreateQueue(t.Context(), &queue.CreateQueueRequest{
+		CommonServiceItem: queue.CreateQueueRequestCommonServiceItem{
+			Name:     queue.QueueName(name),
+			Provider: queue.CreateQueueRequestCommonServiceItemProvider{Class: queue.CreateQueueRequestCommonServiceItemProviderClassSimplemq},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
+	if _, ok := res.(*queue.CreateQueueCreated); !ok {
+		t.Fatalf("expected CreateQueueCreated, got %T", res)
+	}
+}
+
+type mqMessageSecurity struct{}
+
+func (s *mqMessageSecurity) ApiKeyAuth(_ context.Context, _ message.OperationName) (message.ApiKeyAuth, error) {
+	return message.ApiKeyAuth{Token: "dummy"}, nil
 }
 
 type mqMessage struct {
@@ -284,21 +300,21 @@ type mqMessage struct {
 
 func receiveFromQueue(t *testing.T, baseURL, queueName string) []mqMessage {
 	t.Helper()
-	req, _ := http.NewRequest(http.MethodGet, baseURL+"/v1/queues/"+queueName+"/messages", nil)
-	req.Header.Set("Authorization", "Bearer dummy")
-	resp, err := http.DefaultClient.Do(req)
+	client, err := message.NewClient(baseURL, &mqMessageSecurity{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("receive messages: status %d", resp.StatusCode)
-	}
-	var result struct {
-		Messages []mqMessage `json:"messages"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	res, err := client.ReceiveMessage(t.Context(), message.ReceiveMessageParams{QueueName: message.QueueName(queueName)})
+	if err != nil {
 		t.Fatal(err)
 	}
-	return result.Messages
+	recvOK, ok := res.(*message.ReceiveMessageOK)
+	if !ok {
+		t.Fatalf("expected ReceiveMessageOK, got %T", res)
+	}
+	msgs := make([]mqMessage, len(recvOK.Messages))
+	for i, m := range recvOK.Messages {
+		msgs[i] = mqMessage{Content: string(m.Content)}
+	}
+	return msgs
 }

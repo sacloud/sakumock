@@ -19,6 +19,7 @@ import (
 	"github.com/sacloud/sakumock/secretmanager"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
+	"github.com/sacloud/sakumock/workflows"
 )
 
 // CLI is the top-level command structure. Each subcommand reuses the service's
@@ -37,6 +38,7 @@ type CLI struct {
 	Iam                iam.Command                `cmd:"" name:"iam" help:"IAM mock server"`
 	Apprun             apprun.Command             `cmd:"" name:"apprun" help:"AppRun mock server"`
 	ApprunDedicated    apprundedicated.Command    `cmd:"" name:"apprun-dedicated" help:"AppRun Dedicated mock server"`
+	Workflows          workflows.Command          `cmd:"" name:"workflows" help:"Workflows mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

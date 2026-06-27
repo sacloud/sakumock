@@ -20,6 +20,7 @@ import (
 	"github.com/sacloud/sakumock/secretmanager"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
+	"github.com/sacloud/sakumock/workflows"
 )
 
 // serviceConfigs embeds every service's Config with its CLI prefix. It is
@@ -40,6 +41,7 @@ type serviceConfigs struct {
 	Iam                iam.Config                `embed:"" prefix:"iam-"`
 	Apprun             apprun.Config             `embed:"" prefix:"apprun-"`
 	ApprunDedicated    apprundedicated.Config    `embed:"" prefix:"apprun-dedicated-"`
+	Workflows          workflows.Config          `embed:"" prefix:"workflows-"`
 
 	// TLS is one common certificate/key pair applied to every service's listeners
 	// (control plane and data plane). When both files are set, all listeners serve
@@ -50,7 +52,7 @@ type serviceConfigs struct {
 
 // configs lists every service in start order.
 func (c *serviceConfigs) configs() []core.ServiceConfig {
-	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated}
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows}
 }
 
 // AllCmd runs every mock service together in a single process, each on its own
@@ -116,7 +118,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 }
 
 func (c *AllCmd) debug() bool {
-	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug || c.Apprun.Debug || c.ApprunDedicated.Debug
+	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug || c.Apprun.Debug || c.ApprunDedicated.Debug || c.Workflows.Debug
 }
 
 // Run starts every mock service and serves until ctx is canceled. If one

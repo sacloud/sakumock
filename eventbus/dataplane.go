@@ -45,11 +45,11 @@ type Delivery struct {
 	Error                  string          `json:"Error,omitempty"` // non-empty when the firing could not be resolved
 }
 
-// event is the body of POST /_sakumock/events: a mock-injected event evaluated
+// Event is the body of POST /_sakumock/events: a mock-injected event evaluated
 // against every trigger. Source and Type drive Source/Types matching; the
 // Attributes drive Conditions. Data is the passthrough payload (the API
 // reserves the "data" key from Conditions) and is not used for matching.
-type event struct {
+type Event struct {
 	Source     string          `json:"Source"`
 	Type       string          `json:"Type"`
 	Attributes map[string]any  `json:"Attributes"`
@@ -88,7 +88,7 @@ func newDataPlane(store Store, logger *slog.Logger, now func() time.Time) *dataP
 
 // injectEvent matches an injected event against every trigger and fires the
 // matched ones, returning the deliveries produced.
-func (dp *dataPlane) injectEvent(ctx context.Context, ev event) []Delivery {
+func (dp *dataPlane) injectEvent(ctx context.Context, ev Event) []Delivery {
 	raw, _ := json.Marshal(ev)
 	firedAt := dp.now()
 	var fired []Delivery
@@ -109,7 +109,7 @@ func (dp *dataPlane) injectEvent(ctx context.Context, ev event) []Delivery {
 
 // triggerMatches reports whether the event satisfies the trigger: exact Source,
 // Type membership when Types is restricted, and every Condition.
-func triggerMatches(st triggerSettings, ev event) bool {
+func triggerMatches(st triggerSettings, ev Event) bool {
 	if st.Source != ev.Source {
 		return false
 	}

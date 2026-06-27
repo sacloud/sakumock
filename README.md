@@ -71,8 +71,10 @@ Pass `--enable-service-link` (or `SAKUMOCK_ENABLE_SERVICE_LINK=true`) to let ser
 
 Without `--enable-service-link` (the default), firings are recorded but not forwarded — each service works in isolation.
 
+Service link requires the source service's data plane to be enabled as well — EventBus needs `--eventbus-enable-data-plane` to fire events:
+
 ```bash
-sakumock all --enable-service-link
+sakumock all --enable-service-link --eventbus-enable-data-plane
 ```
 
 Service link is only available with `sakumock all`; standalone services cannot discover each other's addresses.

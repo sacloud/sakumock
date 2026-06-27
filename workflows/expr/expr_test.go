@@ -446,6 +446,173 @@ func TestFunctionCalls(t *testing.T) {
 				}
 			},
 		},
+		{
+			"list.concat",
+			`list.concat([1, 2], 3)`,
+			func(t *testing.T, v expr.Value) {
+				arr := v.AsArray()
+				if len(arr) != 3 || arr[2].AsNumber() != 3 {
+					t.Errorf("got %v", arr)
+				}
+			},
+		},
+		{
+			"list.prepend",
+			`list.prepend([2, 3], 1)`,
+			func(t *testing.T, v expr.Value) {
+				arr := v.AsArray()
+				if len(arr) != 3 || arr[0].AsNumber() != 1 {
+					t.Errorf("got %v", arr)
+				}
+			},
+		},
+		{
+			"map.delete",
+			`map.get(map.delete({"a": 1, "b": 2}, "a"), "a")`,
+			func(t *testing.T, v expr.Value) {
+				if !v.IsNull() {
+					t.Errorf("expected null, got %v", v)
+				}
+			},
+		},
+		{
+			"map.mergeNested",
+			`map.get(map.get(map.mergeNested({"a": {"x": 1}}, {"a": {"y": 2}}), "a"), "y")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsNumber() != 2 {
+					t.Errorf("got %v, want 2", v)
+				}
+			},
+		},
+		{
+			"math.min",
+			`math.min(3, 5)`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsNumber() != 3 {
+					t.Errorf("got %v, want 3", v)
+				}
+			},
+		},
+		{
+			"math.randint",
+			`math.randint(1, 1)`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsNumber() != 1 {
+					t.Errorf("got %v, want 1", v)
+				}
+			},
+		},
+		{
+			"text.decode (UTF-8)",
+			`text.decode("hello", "UTF-8")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "hello" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"text.encode (default)",
+			`text.encode("hello")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "hello" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"text.findAll",
+			`text.findAll("abcabc", "bc")`,
+			func(t *testing.T, v expr.Value) {
+				arr := v.AsArray()
+				if len(arr) != 2 || arr[0].AsNumber() != 1 || arr[1].AsNumber() != 4 {
+					t.Errorf("got %v", arr)
+				}
+			},
+		},
+		{
+			"text.findAllRegex",
+			`text.findAllRegex("abc123def456", "[0-9]+")`,
+			func(t *testing.T, v expr.Value) {
+				arr := v.AsArray()
+				if len(arr) != 2 || arr[0].AsString() != "123" || arr[1].AsString() != "456" {
+					t.Errorf("got %v", arr)
+				}
+			},
+		},
+		{
+			"text.replaceAllRegex",
+			`text.replaceAllRegex("abc123", "[0-9]+", "NUM")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "abcNUM" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"text.toLower",
+			`text.toLower("HELLO")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "hello" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"text.urlEncode",
+			`text.urlEncode("hello world")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "hello%20world" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"text.urlEncodePlus",
+			`text.urlEncodePlus("hello world")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "hello+world" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"text.urlDecode",
+			`text.urlDecode("hello+world")`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "hello world" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"time.parse + time.format",
+			`time.format(time.parse("2025-01-01T00:00:00Z"))`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsString() != "2025-01-01T00:00:00Z" {
+					t.Errorf("got %q", v.AsString())
+				}
+			},
+		},
+		{
+			"time.now",
+			`time.now()`,
+			func(t *testing.T, v expr.Value) {
+				if v.AsNumber() <= 0 {
+					t.Errorf("expected positive timestamp, got %v", v.AsNumber())
+				}
+			},
+		},
+		{
+			"uuid.v7",
+			`uuid.v7()`,
+			func(t *testing.T, v expr.Value) {
+				s := v.AsString()
+				if len(s) != 36 || s[14] != '7' {
+					t.Errorf("expected UUID v7, got %q", s)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -456,6 +623,17 @@ func TestFunctionCalls(t *testing.T) {
 			}
 			tt.check(t, got)
 		})
+	}
+}
+
+func TestTextDecodeRejectsNonUTF8(t *testing.T) {
+	env := expr.NewEnv()
+	_, err := expr.Eval(`text.decode("hello", "Shift_JIS")`, env)
+	if err == nil {
+		t.Fatal("expected error for non-UTF-8 charset")
+	}
+	if !strings.Contains(err.Error(), "only UTF-8") {
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 

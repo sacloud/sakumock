@@ -370,6 +370,9 @@ func textDecode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.decode", args, 1, 2); err != nil {
 		return Null, err
 	}
+	if err := requireUTF8Charset("text.decode", args); err != nil {
+		return Null, err
+	}
 	return String(args[0].ToString()), nil
 }
 
@@ -377,7 +380,20 @@ func textEncode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.encode", args, 1, 2); err != nil {
 		return Null, err
 	}
+	if err := requireUTF8Charset("text.encode", args); err != nil {
+		return Null, err
+	}
 	return String(args[0].ToString()), nil
+}
+
+func requireUTF8Charset(name string, args []Value) error {
+	if len(args) >= 2 {
+		charset := strings.ToLower(args[1].ToString())
+		if charset != "utf-8" && charset != "utf8" {
+			return fmt.Errorf("%s: only UTF-8 is supported, got %q", name, args[1].ToString())
+		}
+	}
+	return nil
 }
 
 func textFindAll(env *Env, args []Value) (Value, error) {

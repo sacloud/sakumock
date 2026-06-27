@@ -70,6 +70,8 @@ The inline expression evaluator (`${...}`) enforces the following limits to prev
 
 Regular expressions (`text.findAllRegex`, `text.matchRegex`, `text.replaceAllRegex`) use Go's `regexp` package (RE2 semantics), which guarantees linear-time matching and is not susceptible to ReDoS.
 
+`text.decode` / `text.encode` only support UTF-8. Passing a non-UTF-8 charset returns an error.
+
 ## API endpoints
 
 | Method | Path | Description |

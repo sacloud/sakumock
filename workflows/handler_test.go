@@ -2,6 +2,7 @@ package workflows_test
 
 import (
 	"testing"
+	"time"
 
 	wf "github.com/sacloud/sacloud-sdk-go/api/workflows"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/workflows/apis/v1"
@@ -215,6 +216,72 @@ func TestExecutionLifecycle(t *testing.T) {
 		t.Fatalf("delete execution: %v", err)
 	}
 
+	if err := workflowOp.Delete(ctx, wfID); err != nil {
+		t.Fatalf("delete workflow: %v", err)
+	}
+}
+
+func TestExecutionDataPlane(t *testing.T) {
+	runbookYAML := `
+meta:
+  description: data plane test
+args:
+  x:
+    type: number
+steps:
+  done:
+    return: ${args.x * 2}
+`
+	srv := workflows.NewTestServer(workflows.Config{EnableDataPlane: true})
+	defer srv.Close()
+	ctx := t.Context()
+	client := newClient(t, srv.TestURL())
+	workflowOp := wf.NewWorkflowOp(client)
+	executionOp := wf.NewExecutionOp(client)
+
+	created, err := workflowOp.Create(ctx, v1.CreateWorkflowReq{
+		Name:    "dp-test",
+		Runbook: runbookYAML,
+		Publish: true,
+		Logging: true,
+	})
+	if err != nil {
+		t.Fatalf("create workflow: %v", err)
+	}
+	wfID := created.ID
+
+	exec, err := executionOp.Create(ctx, wfID, v1.OptCreateExecutionReq{
+		Set: true,
+		Value: v1.CreateExecutionReq{
+			Args: v1.NewOptString(`{"x": 21}`),
+		},
+	})
+	if err != nil {
+		t.Fatalf("create execution: %v", err)
+	}
+
+	// Wait for async execution to complete
+	var gotExec *v1.GetExecutionOKExecution
+	for range 50 {
+		time.Sleep(10 * time.Millisecond)
+		gotExec, err = executionOp.Read(ctx, wfID, exec.ExecutionId)
+		if err != nil {
+			t.Fatalf("read execution: %v", err)
+		}
+		if gotExec.Status == v1.GetExecutionOKExecutionStatusSucceeded {
+			break
+		}
+	}
+	if gotExec.Status != v1.GetExecutionOKExecutionStatusSucceeded {
+		t.Fatalf("execution status = %q, want Succeeded", gotExec.Status)
+	}
+	if gotExec.Result != "42" {
+		t.Errorf("result = %q, want 42", gotExec.Result)
+	}
+
+	if err := executionOp.Delete(ctx, wfID, exec.ExecutionId); err != nil {
+		t.Fatalf("delete execution: %v", err)
+	}
 	if err := workflowOp.Delete(ctx, wfID); err != nil {
 		t.Fatalf("delete workflow: %v", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sacloud/sakumock/core"
+	"github.com/sacloud/sakumock/workflows/runbook"
 )
 
 // JSON request types
@@ -589,6 +590,9 @@ func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 		Args:          req.Args,
 		Name:          req.Name,
 	}
+	if s.dataPlaneEnabled() {
+		input.InitialStatus = "Queued"
+	}
 
 	exec, err := s.store.CreateExecution(workflowID, input)
 	if err != nil {
@@ -601,6 +605,19 @@ func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	if s.dataPlaneEnabled() {
+		rev, ok := s.store.GetRevision(workflowID, exec.Revision)
+		if ok {
+			rb, parseErr := runbook.Parse([]byte(rev.Runbook))
+			if parseErr != nil {
+				s.logger.Error("failed to parse runbook", "error", parseErr)
+			} else {
+				s.executor.submit(s.ctx, workflowID, exec.ExecutionID, rb, exec.Args)
+			}
+		}
+	}
+
 	core.WriteJSON(w, http.StatusCreated, map[string]any{
 		"is_ok":     true,
 		"Execution": s.toExecutionJSON(exec),
@@ -647,6 +664,10 @@ func (s *Server) handleGetExecution(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCancelExecution(w http.ResponseWriter, r *http.Request) {
 	workflowID := r.PathValue("id")
 	executionID := r.PathValue("executionId")
+
+	if s.dataPlaneEnabled() {
+		s.executor.cancel(executionID)
+	}
 
 	exec, err := s.store.CancelExecution(workflowID, executionID)
 	if err != nil {

@@ -1,6 +1,7 @@
 package workflows
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +16,8 @@ type Config struct {
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"WORKFLOWS_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"WORKFLOWS_RATE_LIMIT_WINDOW"`
 	Debug           bool          `help:"Enable debug mode" env:"WORKFLOWS_DEBUG" default:"false"`
+
+	EnableDataPlane bool `help:"Enable the Runbook execution engine: executions actually run instead of completing immediately" env:"WORKFLOWS_ENABLE_DATA_PLANE" default:"false"`
 
 	idGen  *core.IDGenerator
 	logger *slog.Logger
@@ -47,6 +50,9 @@ type Server struct {
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
 	logger      *slog.Logger
+	executor    *executor
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 func NewHandler(cfg Config) (*Server, error) {
@@ -55,10 +61,13 @@ func NewHandler(cfg Config) (*Server, error) {
 		base = slog.Default()
 	}
 	logger := base.With("service", cfg.Name())
+	ctx, cancel := context.WithCancel(context.Background())
 	s := &Server{
 		store:   NewStore(logger),
 		latency: cfg.Latency,
 		logger:  logger,
+		ctx:     ctx,
+		cancel:  cancel,
 		rateLimiter: core.NewRateLimiter(
 			cfg.RateLimit,
 			core.WithRateLimitWindow(cfg.RateLimitWindow),
@@ -69,6 +78,9 @@ func NewHandler(cfg Config) (*Server, error) {
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
+	}
+	if cfg.EnableDataPlane {
+		s.executor = newExecutor(s.store, logger)
 	}
 	s.mux = s.buildMux()
 	return s, nil
@@ -88,8 +100,16 @@ func (s *Server) TestURL() string {
 }
 
 func (s *Server) Close() {
+	s.cancel()
+	if s.executor != nil {
+		s.executor.shutdown()
+	}
 	if s.httpServer != nil {
 		s.httpServer.Close()
 	}
 	s.store.Close()
+}
+
+func (s *Server) dataPlaneEnabled() bool {
+	return s.executor != nil
 }

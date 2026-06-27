@@ -68,6 +68,9 @@ func (c *InspectInjectEventCmd) Run(ctx context.Context) error {
 		}
 	}
 	if c.Data != "" {
+		if !json.Valid([]byte(c.Data)) {
+			return fmt.Errorf("Data must be valid JSON, got %q", c.Data)
+		}
 		ev.Data = json.RawMessage(c.Data)
 	}
 	ds, err := eventbus.NewInspectionClient(c.Addr).InjectEvent(ctx, ev)

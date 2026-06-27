@@ -312,6 +312,30 @@ steps:
 		t.Errorf("result = %q, want 42", gotExec.Result)
 	}
 
+	history, err := executionOp.ListHistory(ctx, v1.ListExecutionHistoryParams{
+		ID:          wfID,
+		ExecutionId: exec.ExecutionId,
+	})
+	if err != nil {
+		t.Fatalf("list history: %v", err)
+	}
+	if history.Total == 0 {
+		t.Error("expected non-empty execution history")
+	}
+	hasStart := false
+	hasComplete := false
+	for _, h := range history.Histories {
+		if h.Type == "workflowWillStart" {
+			hasStart = true
+		}
+		if h.Type == "workflowDidCompleted" {
+			hasComplete = true
+		}
+	}
+	if !hasStart || !hasComplete {
+		t.Errorf("history missing start=%v complete=%v", hasStart, hasComplete)
+	}
+
 	if err := executionOp.Delete(ctx, wfID, exec.ExecutionId); err != nil {
 		t.Fatalf("delete execution: %v", err)
 	}

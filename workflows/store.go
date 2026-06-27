@@ -116,6 +116,7 @@ type Store interface {
 	UpdateExecutionStatus(workflowID, executionID string, update ExecutionStatusUpdate) error
 	CancelExecution(workflowID, executionID string) (*ExecutionRecord, error)
 	DeleteExecution(workflowID, executionID string) error
+	AppendHistory(workflowID, executionID string, record HistoryRecord)
 	ListExecutionHistory(workflowID, executionID string) ([]HistoryRecord, error)
 
 	GetSubscription() *SubscriptionRecord

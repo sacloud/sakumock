@@ -29,15 +29,45 @@ type CallOpts struct {
 	HTTPClient    *http.Client
 }
 
+type EventType string
+
+const (
+	EventWorkflowWillStart   EventType = "workflowWillStart"
+	EventWorkflowDidComplete EventType = "workflowDidCompleted"
+	EventWorkflowDidFail     EventType = "workflowDidFailed"
+	EventWorkflowDidCancel   EventType = "workflowDidCanceled"
+	EventStepWillExecute     EventType = "stepWillExecute"
+	EventStepDidExecute      EventType = "stepDidExecuted"
+	EventFunctionWillCall    EventType = "functionWillCall"
+	EventFunctionDidRun      EventType = "functionDidRun"
+	EventFunctionDidFail     EventType = "functionDidFailed"
+)
+
+type Event struct {
+	Type      EventType
+	StepName  string
+	Meta      string
+	Variables string
+}
+
+type EventHandler func(Event)
+
 type Runner struct {
 	CallFuncs  map[string]CallFunc
 	HTTPClient *http.Client
 	Logger     *slog.Logger
+	OnEvent    EventHandler
 	// AllowLocalNet permits HTTP calls to localhost, private, and link-local
 	// addresses. Enabled by default because sakumock is a local mock server
 	// where calling other local services (e.g. other mocks) is a normal use case.
 	// Set to false to simulate the real Workflows service's URL blocking.
 	AllowLocalNet bool
+}
+
+func (r *Runner) emit(e Event) {
+	if r.OnEvent != nil {
+		r.OnEvent(e)
+	}
 }
 
 func NewRunner() *Runner {
@@ -63,17 +93,25 @@ func (r *Runner) Run(ctx context.Context, rb *Runbook, args map[string]expr.Valu
 		env.Set("args", expr.Object(nil))
 		r.Logger.Info("runbook start", "description", rb.Meta.Description)
 	}
+	r.emit(Event{Type: EventWorkflowWillStart})
 
 	val, err := r.execSteps(ctx, env, rb.Steps)
 	if err != nil {
 		if ret, ok := err.(*returnSignal); ok {
 			r.Logger.Info("runbook end", "result", ret.value.ToString())
+			r.emit(Event{Type: EventWorkflowDidComplete, Meta: ret.value.ToString()})
 			return Result{Value: ret.value}
 		}
 		r.Logger.Info("runbook end", "error", err.Error())
+		if ctx.Err() != nil {
+			r.emit(Event{Type: EventWorkflowDidCancel, Meta: err.Error()})
+		} else {
+			r.emit(Event{Type: EventWorkflowDidFail, Meta: err.Error()})
+		}
 		return Result{Err: err}
 	}
 	r.Logger.Info("runbook end")
+	r.emit(Event{Type: EventWorkflowDidComplete})
 	return Result{Value: val}
 }
 
@@ -90,7 +128,11 @@ func (r *Runner) execSteps(ctx context.Context, env *expr.Env, steps []NamedStep
 
 		step := steps[i]
 		r.Logger.Info("step execute", "step", step.Name)
+		r.emit(Event{Type: EventStepWillExecute, StepName: step.Name})
 		err := r.execStep(ctx, env, &step.Step)
+		if err == nil {
+			r.emit(Event{Type: EventStepDidExecute, StepName: step.Name})
+		}
 		if err != nil {
 			if n, ok := err.(*nextSignal); ok {
 				found := false
@@ -162,6 +204,7 @@ func (r *Runner) execReturn(env *expr.Env, step *Step) error {
 func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error {
 	call := step.Call
 	r.Logger.Info("call", "func", call.Func)
+	r.emit(Event{Type: EventFunctionWillCall, Meta: call.Func})
 	fn, ok := r.CallFuncs[call.Func]
 	if !ok {
 		return fmt.Errorf("unknown call function: %s", call.Func)
@@ -169,9 +212,11 @@ func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error 
 
 	result, err := fn(ctx, env, call, CallOpts{AllowLocalNet: r.AllowLocalNet, HTTPClient: r.HTTPClient})
 	if err != nil {
+		r.emit(Event{Type: EventFunctionDidFail, Meta: call.Func + ": " + err.Error()})
 		return fmt.Errorf("call %s: %w", call.Func, err)
 	}
 
+	r.emit(Event{Type: EventFunctionDidRun, Meta: call.Func})
 	if call.Result != "" {
 		env.Set(call.Result, result)
 		r.Logger.Info("call result", "func", call.Func, "var", call.Result, "value", result.ToString())

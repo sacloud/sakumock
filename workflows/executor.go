@@ -13,7 +13,6 @@ import (
 
 type executor struct {
 	store  *MemoryStore
-	runner *runbook.Runner
 	logger *slog.Logger
 
 	mu      sync.Mutex
@@ -21,14 +20,41 @@ type executor struct {
 }
 
 func newExecutor(store *MemoryStore, logger *slog.Logger) *executor {
-	r := runbook.NewRunner()
-	r.Logger = logger
 	return &executor{
 		store:   store,
-		runner:  r,
 		logger:  logger,
 		running: make(map[string]context.CancelFunc),
 	}
+}
+
+func (e *executor) newRunner(workflowID, executionID string) *runbook.Runner {
+	r := runbook.NewRunner()
+	r.Logger = e.logger
+	r.OnEvent = func(ev runbook.Event) {
+		meta := ev.Meta
+		if meta == "" {
+			meta = "{}"
+		}
+		stackTrace := ev.StepName
+		if stackTrace == "" {
+			stackTrace = "-"
+		}
+		variables := ev.Variables
+		if variables == "" {
+			variables = "{}"
+		}
+		e.store.AppendHistory(workflowID, executionID, HistoryRecord{
+			WorkflowExecutionID: executionID,
+			JobID:               executionID,
+			ThreadID:            "main",
+			Type:                string(ev.Type),
+			CreatedAt:           time.Now(),
+			Meta:                meta,
+			StackTrace:          stackTrace,
+			Variables:           variables,
+		})
+	}
+	return r
 }
 
 func (e *executor) submit(ctx context.Context, workflowID, executionID string, rb *runbook.Runbook, argsJSON string) {
@@ -68,7 +94,8 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			}
 		}
 
-		result := e.runner.Run(execCtx, rb, args)
+		runner := e.newRunner(workflowID, executionID)
+		result := runner.Run(execCtx, rb, args)
 
 		finished := time.Now()
 		if result.Err != nil {

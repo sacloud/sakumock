@@ -16,6 +16,7 @@ type MemoryStore struct {
 	workflows    map[string]*WorkflowRecord
 	revisions    map[string][]*RevisionRecord  // keyed by workflow ID
 	executions   map[string][]*ExecutionRecord // keyed by workflow ID
+	histories    map[string][]HistoryRecord    // keyed by execution ID
 	subscription *SubscriptionRecord
 	ids          *core.IDGenerator
 	logger       *slog.Logger
@@ -29,6 +30,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		workflows:  make(map[string]*WorkflowRecord),
 		revisions:  make(map[string][]*RevisionRecord),
 		executions: make(map[string][]*ExecutionRecord),
+		histories:  make(map[string][]HistoryRecord),
 		ids:        core.NewIDGenerator(core.DefaultIDBase()),
 		logger:     logger,
 	}
@@ -443,6 +445,13 @@ func (s *MemoryStore) DeleteExecution(workflowID, executionID string) error {
 	return fmt.Errorf("execution %q not found", executionID)
 }
 
+func (s *MemoryStore) AppendHistory(workflowID, executionID string, record HistoryRecord) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.histories[executionID] = append(s.histories[executionID], record)
+}
+
 func (s *MemoryStore) ListExecutionHistory(workflowID, executionID string) ([]HistoryRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -457,7 +466,10 @@ func (s *MemoryStore) ListExecutionHistory(workflowID, executionID string) ([]Hi
 	if !found {
 		return nil, fmt.Errorf("execution %q not found", executionID)
 	}
-	return []HistoryRecord{}, nil
+	records := s.histories[executionID]
+	result := make([]HistoryRecord, len(records))
+	copy(result, records)
+	return result, nil
 }
 
 func (s *MemoryStore) GetSubscription() *SubscriptionRecord {

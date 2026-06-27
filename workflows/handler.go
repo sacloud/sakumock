@@ -1,6 +1,7 @@
 package workflows
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -582,6 +583,13 @@ func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 	if err := core.ReadJSON(r, &req); err != nil && err.Error() != "empty request body" {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	if req.Args != "" {
+		if !json.Valid([]byte(req.Args)) {
+			writeError(w, http.StatusBadRequest, "Args must be a valid JSON string")
+			return
+		}
 	}
 
 	input := ExecutionInput{

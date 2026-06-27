@@ -221,6 +221,39 @@ func TestExecutionLifecycle(t *testing.T) {
 	}
 }
 
+func TestExecutionRejectsInvalidArgsJSON(t *testing.T) {
+	srv := workflows.NewTestServer(workflows.Config{})
+	defer srv.Close()
+	ctx := t.Context()
+	client := newClient(t, srv.TestURL())
+	workflowOp := wf.NewWorkflowOp(client)
+	executionOp := wf.NewExecutionOp(client)
+
+	created, err := workflowOp.Create(ctx, v1.CreateWorkflowReq{
+		Name:    "args-test",
+		Runbook: testRunbook,
+		Publish: true,
+		Logging: true,
+	})
+	if err != nil {
+		t.Fatalf("create workflow: %v", err)
+	}
+
+	_, err = executionOp.Create(ctx, created.ID, v1.OptCreateExecutionReq{
+		Set: true,
+		Value: v1.CreateExecutionReq{
+			Args: v1.NewOptString("not valid json"),
+		},
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid Args JSON")
+	}
+
+	if err := workflowOp.Delete(ctx, created.ID); err != nil {
+		t.Fatalf("delete workflow: %v", err)
+	}
+}
+
 func TestExecutionDataPlane(t *testing.T) {
 	runbookYAML := `
 meta:

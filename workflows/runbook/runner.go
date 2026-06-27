@@ -3,6 +3,7 @@ package runbook
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"sync"
 
@@ -31,6 +32,7 @@ type CallOpts struct {
 type Runner struct {
 	CallFuncs  map[string]CallFunc
 	HTTPClient *http.Client
+	Logger     *slog.Logger
 	// AllowLocalNet permits HTTP calls to localhost, private, and link-local
 	// addresses. Enabled by default because sakumock is a local mock server
 	// where calling other local services (e.g. other mocks) is a normal use case.
@@ -42,6 +44,7 @@ func NewRunner() *Runner {
 	return &Runner{
 		CallFuncs:     defaultCallFuncs(),
 		HTTPClient:    newDefaultHTTPClient(),
+		Logger:        slog.Default(),
 		AllowLocalNet: true,
 	}
 }
@@ -81,6 +84,7 @@ func (r *Runner) execSteps(ctx context.Context, env *expr.Env, steps []NamedStep
 		}
 
 		step := steps[i]
+		r.Logger.Debug("step execute", "step", step.Name)
 		err := r.execStep(ctx, env, &step.Step)
 		if err != nil {
 			if n, ok := err.(*nextSignal); ok {
@@ -150,6 +154,7 @@ func (r *Runner) execReturn(env *expr.Env, step *Step) error {
 
 func (r *Runner) execCall(ctx context.Context, env *expr.Env, step *Step) error {
 	call := step.Call
+	r.Logger.Debug("call", "func", call.Func)
 	fn, ok := r.CallFuncs[call.Func]
 	if !ok {
 		return fmt.Errorf("unknown call function: %s", call.Func)

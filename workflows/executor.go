@@ -21,9 +21,11 @@ type executor struct {
 }
 
 func newExecutor(store *MemoryStore, logger *slog.Logger) *executor {
+	r := runbook.NewRunner()
+	r.Logger = logger
 	return &executor{
 		store:   store,
-		runner:  runbook.NewRunner(),
+		runner:  r,
 		logger:  logger,
 		running: make(map[string]context.CancelFunc),
 	}
@@ -43,6 +45,11 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			e.mu.Unlock()
 			cancel()
 		}()
+
+		e.logger.Info("execution started",
+			"workflow_id", workflowID,
+			"execution_id", executionID,
+		)
 
 		now := time.Now()
 		e.store.UpdateExecutionStatus(workflowID, executionID, ExecutionStatusUpdate{

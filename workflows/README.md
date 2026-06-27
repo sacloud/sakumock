@@ -83,6 +83,30 @@ The `call` step's HTTP functions (`http.get`, `http.post`, etc.) enforce the fol
 | Redirect limit | 10 | Maximum number of HTTP redirects followed per request |
 | Timeout | 5–180 s (default 60) | Per-request timeout, configurable via the `timeout` call argument |
 
+## Call function support
+
+The `call` step supports the following function groups:
+
+| Function | Status | Notes |
+|----------|--------|-------|
+| `http.get/post/put/delete/patch` | Supported | Real HTTP requests with safety limits (see above) |
+| `http.request` | Supported | Generic HTTP with explicit `method` argument |
+| `sys.sleep` | Supported | Honors context cancellation |
+| `sys.sleepUntil` | Supported | Honors context cancellation |
+| `sakuraCloud.request` | Not implemented | Generic SAKURA Cloud API call |
+| `sakuraCloud.secret` | Not implemented | Read secret from SecretManager vault |
+| `sakuraCloud.listServers` | Not implemented | List servers in a zone |
+| `sakuraCloud.serverStatus` | Not implemented | Get server status |
+| `sakuraCloud.startServer` | Not implemented | Start a server |
+| `sakuraCloud.stopServer` | Not implemented | Stop a server |
+| `sakuraCloud.server` | Not implemented | Generic server API call |
+| `apprun.create` | Not implemented | Create AppRun application |
+| `apprun.delete` | Not implemented | Delete AppRun application |
+| `apprun.request` | Not implemented | Generic AppRun API call |
+| `feed.parse` | Not implemented | Parse Atom XML feed |
+
+Calling an unimplemented function returns an error.
+
 ## API endpoints
 
 | Method | Path | Description |

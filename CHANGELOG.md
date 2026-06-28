@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.6.0](https://github.com/sacloud/sakumock/compare/v0.5.2...v0.6.0) - 2026-06-28
+- feat: add Workflows service mock (control plane) by @fujiwara in https://github.com/sacloud/sakumock/pull/119
+- feat: add Workflows data plane (Runbook execution engine) by @fujiwara in https://github.com/sacloud/sakumock/pull/121
+- docs: add workflows service to root README by @fujiwara in https://github.com/sacloud/sakumock/pull/122
+- feat: add service link (EventBus → SimpleMQ / SimpleNotification) by @fujiwara in https://github.com/sacloud/sakumock/pull/123
+- docs(eventbus): add service link section by @fujiwara in https://github.com/sacloud/sakumock/pull/125
+- feat: add InspectionClient for mock-only endpoints by @fujiwara in https://github.com/sacloud/sakumock/pull/126
+- docs: update READMEs to match implemented endpoints by @fujiwara in https://github.com/sacloud/sakumock/pull/127
+
 ## [v0.5.2](https://github.com/sacloud/sakumock/compare/v0.5.1...v0.5.2) - 2026-06-20
 - fix(apprun): use correct status enum value UnHealthy by @fujiwara in https://github.com/sacloud/sakumock/pull/117
 

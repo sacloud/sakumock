@@ -1,6 +1,6 @@
 # sakumock/simplenotification
 
-A Simple Notification compatible mock server for local development and testing. It implements only the message-sending endpoint of the [SAKURA Cloud Simple Notification API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/simple-notification) with in-memory storage. Destination groups, routing, and history APIs are out of scope — this mock focuses on letting applications exercise notification dispatch in tests.
+A Simple Notification compatible mock server for local development and testing. It implements the [SAKURA Cloud Simple Notification API](https://github.com/sacloud/sacloud-sdk-go/tree/main/api/simple-notification) with in-memory storage: CRUD for destinations, groups, and routings, plus message sending.
 
 ## Install
 
@@ -92,9 +92,14 @@ _ = ic.ClearMessages(ctx)          // reset
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/commonserviceitem/{id}/simplenotification/message` | Send a notification message to the specified group (`id` must be a 12-digit number) |
+| POST | `/commonserviceitem` | Create a destination, group, or routing |
+| GET | `/commonserviceitem` | List destinations, groups, or routings |
+| GET | `/commonserviceitem/{id}` | Get a destination, group, or routing |
+| PUT | `/commonserviceitem/{id}` | Update a destination, group, or routing |
+| DELETE | `/commonserviceitem/{id}` | Delete a destination, group, or routing |
+| POST | `/commonserviceitem/{id}/simplenotification/message` | Send a notification message to the specified group |
 
-The handler accepts any 12-digit numeric `id`; group existence is not checked. Messages are validated to be non-empty and at most 2048 characters long. On success the server responds with `202 Accepted` and `{"is_ok": true}`.
+Messages are validated to be non-empty and at most 2048 characters long. On success the server responds with `202 Accepted` and `{"is_ok": true}`.
 
 ## Inspection endpoints
 

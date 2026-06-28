@@ -1,6 +1,6 @@
 # sakumock/secretmanager
 
-A SecretManager-compatible mock server for local development and testing. It implements the secret API (list, create, delete, unveil) with in-memory storage and secret versioning.
+A SecretManager-compatible mock server for local development and testing. It implements the vault and secret APIs with in-memory storage and secret versioning.
 
 ## Install
 
@@ -51,7 +51,7 @@ sakura-secrets-cli list
 sakura-secrets-cli get my-secret
 ```
 
-Vaults are created automatically on first access. All data is stored in memory and lost when the server stops.
+All data is stored in memory and lost when the server stops.
 
 ## Use as a library
 
@@ -70,9 +70,21 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 
 ## API Endpoints
 
+### Vaults
+
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/secretmanager/vaults/{vault_id}/secrets` | List secrets |
-| `POST` | `/secretmanager/vaults/{vault_id}/secrets` | Create or update a secret |
-| `DELETE` | `/secretmanager/vaults/{vault_id}/secrets` | Delete a secret |
-| `POST` | `/secretmanager/vaults/{vault_id}/secrets/unveil` | Retrieve a secret value |
+| `GET` | `/secretmanager/vaults` | List vaults |
+| `POST` | `/secretmanager/vaults` | Create a vault |
+| `GET` | `/secretmanager/vaults/{vault_resource_id}` | Get a vault |
+| `PUT` | `/secretmanager/vaults/{vault_resource_id}` | Update a vault |
+| `DELETE` | `/secretmanager/vaults/{vault_resource_id}` | Delete a vault |
+
+### Secrets
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/secretmanager/vaults/{vault_resource_id}/secrets` | List secrets in a vault |
+| `POST` | `/secretmanager/vaults/{vault_resource_id}/secrets` | Create or update a secret |
+| `DELETE` | `/secretmanager/vaults/{vault_resource_id}/secrets` | Delete a secret |
+| `POST` | `/secretmanager/vaults/{vault_resource_id}/secrets/unveil` | Reveal a secret value |

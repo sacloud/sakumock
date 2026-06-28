@@ -67,7 +67,7 @@ every control-plane path of the monitoring-suite OpenAPI spec, grouped as:
 
 | Group | Paths |
 |-------|-------|
-| Alert projects | `/alerts/projects/` (+ `{resource_id}`) |
+| Alert projects | `/alerts/projects/` (+ `{resource_id}`, histories) |
 | Alert rules | `/alerts/projects/{project_resource_id}/rules/` (+ histories) |
 | Log-measure rules | `/alerts/projects/{project_resource_id}/log-measure-rules/` |
 | Notification targets | `/alerts/projects/{project_resource_id}/notification-targets/` |

@@ -10,35 +10,43 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.GlobalKey(), h)
 	}
+	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
+		}
+	}
 	return []core.RegisteredRoute{
 		// Plans & Subscription
-		{Route: core.Route{Method: "GET", Path: "/plans", Description: "List plans", Kind: "api"}, Handler: rl(s.handleListPlans)},
-		{Route: core.Route{Method: "GET", Path: "/subscriptions", Description: "Get subscription", Kind: "api"}, Handler: rl(s.handleGetSubscription)},
-		{Route: core.Route{Method: "POST", Path: "/subscriptions", Description: "Create subscription", Kind: "api"}, Handler: rl(s.handleCreateSubscription)},
-		{Route: core.Route{Method: "DELETE", Path: "/subscriptions", Description: "Delete subscription", Kind: "api"}, Handler: rl(s.handleDeleteSubscription)},
+		route("GET", "/plans", "List plans", s.handleListPlans),
+		route("GET", "/subscriptions", "Get subscription", s.handleGetSubscription),
+		route("POST", "/subscriptions", "Create subscription", s.handleCreateSubscription),
+		route("DELETE", "/subscriptions", "Delete subscription", s.handleDeleteSubscription),
 
 		// Workflows
-		{Route: core.Route{Method: "POST", Path: "/workflows", Description: "Create a workflow", Kind: "api"}, Handler: rl(s.handleCreateWorkflow)},
-		{Route: core.Route{Method: "GET", Path: "/workflows", Description: "List workflows", Kind: "api"}, Handler: rl(s.handleListWorkflows)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/suggest", Description: "List workflow suggestions", Kind: "api"}, Handler: rl(s.handleListWorkflowSuggest)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/{id}", Description: "Get a workflow", Kind: "api"}, Handler: rl(s.handleGetWorkflow)},
-		{Route: core.Route{Method: "PATCH", Path: "/workflows/{id}", Description: "Update a workflow", Kind: "api"}, Handler: rl(s.handleUpdateWorkflow)},
-		{Route: core.Route{Method: "DELETE", Path: "/workflows/{id}", Description: "Delete a workflow", Kind: "api"}, Handler: rl(s.handleDeleteWorkflow)},
+		route("POST", "/workflows", "Create a workflow", s.handleCreateWorkflow),
+		route("GET", "/workflows", "List workflows", s.handleListWorkflows),
+		route("GET", "/workflows/suggest", "List workflow suggestions", s.handleListWorkflowSuggest),
+		route("GET", "/workflows/{id}", "Get a workflow", s.handleGetWorkflow),
+		route("PATCH", "/workflows/{id}", "Update a workflow", s.handleUpdateWorkflow),
+		route("DELETE", "/workflows/{id}", "Delete a workflow", s.handleDeleteWorkflow),
 
 		// Revisions
-		{Route: core.Route{Method: "POST", Path: "/workflows/{id}/revisions", Description: "Create a revision", Kind: "api"}, Handler: rl(s.handleCreateRevision)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/{id}/revisions", Description: "List revisions", Kind: "api"}, Handler: rl(s.handleListRevisions)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/{id}/revisions/{revisionId}", Description: "Get a revision", Kind: "api"}, Handler: rl(s.handleGetRevision)},
-		{Route: core.Route{Method: "PUT", Path: "/workflows/{id}/revisions/{revisionId}/revision_alias", Description: "Update revision alias", Kind: "api"}, Handler: rl(s.handleUpdateRevisionAlias)},
-		{Route: core.Route{Method: "DELETE", Path: "/workflows/{id}/revisions/{revisionId}/revision_alias", Description: "Delete revision alias", Kind: "api"}, Handler: rl(s.handleDeleteRevisionAlias)},
+		route("POST", "/workflows/{id}/revisions", "Create a revision", s.handleCreateRevision),
+		route("GET", "/workflows/{id}/revisions", "List revisions", s.handleListRevisions),
+		route("GET", "/workflows/{id}/revisions/{revisionId}", "Get a revision", s.handleGetRevision),
+		route("PUT", "/workflows/{id}/revisions/{revisionId}/revision_alias", "Update revision alias", s.handleUpdateRevisionAlias),
+		route("DELETE", "/workflows/{id}/revisions/{revisionId}/revision_alias", "Delete revision alias", s.handleDeleteRevisionAlias),
 
 		// Executions
-		{Route: core.Route{Method: "POST", Path: "/workflows/{id}/executions", Description: "Create an execution", Kind: "api"}, Handler: rl(s.handleCreateExecution)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/{id}/executions", Description: "List executions", Kind: "api"}, Handler: rl(s.handleListExecutions)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/{id}/executions/{executionId}", Description: "Get an execution", Kind: "api"}, Handler: rl(s.handleGetExecution)},
-		{Route: core.Route{Method: "POST", Path: "/workflows/{id}/executions/{executionId}/cancel", Description: "Cancel an execution", Kind: "api"}, Handler: rl(s.handleCancelExecution)},
-		{Route: core.Route{Method: "DELETE", Path: "/workflows/{id}/executions/{executionId}", Description: "Delete an execution", Kind: "api"}, Handler: rl(s.handleDeleteExecution)},
-		{Route: core.Route{Method: "GET", Path: "/workflows/{id}/executions/{executionId}/exec_history", Description: "List execution history", Kind: "api"}, Handler: rl(s.handleListExecutionHistory)},
+		route("POST", "/workflows/{id}/executions", "Create an execution", s.handleCreateExecution),
+		route("GET", "/workflows/{id}/executions", "List executions", s.handleListExecutions),
+		route("GET", "/workflows/{id}/executions/{executionId}", "Get an execution", s.handleGetExecution),
+		route("POST", "/workflows/{id}/executions/{executionId}/cancel", "Cancel an execution", s.handleCancelExecution),
+		route("DELETE", "/workflows/{id}/executions/{executionId}", "Delete an execution", s.handleDeleteExecution),
+		route("GET", "/workflows/{id}/executions/{executionId}/exec_history", "List execution history", s.handleListExecutionHistory),
 	}
 }
 

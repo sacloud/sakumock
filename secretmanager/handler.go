@@ -115,10 +115,6 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Secret.Name == "" {
-		writeError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
 	latestVersion, err := s.store.Create(vaultID, req.Secret.Name, req.Secret.Value)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())

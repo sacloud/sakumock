@@ -1,0 +1,5 @@
+{
+  "pathRewrites": {
+    "{resource_id}": "{vault_resource_id}"
+  }
+}

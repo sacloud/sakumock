@@ -2,7 +2,7 @@ OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
 OPENAPI_SUBDIR := api/secretmanager/openapi
 OPENAPI_FILES := openapi-fixed.json
 
-.PHONY: clean test openapi
+.PHONY: clean test openapi generate
 
 sakumock-secretmanager: ../go.* *.go cmd/sakumock-secretmanager/*.go
 	go build -o $@ ./cmd/sakumock-secretmanager
@@ -22,3 +22,7 @@ openapi:
 	mkdir -p openapi
 	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
 	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"
+	$(MAKE) generate
+
+generate:
+	go generate .

@@ -63,6 +63,12 @@ func (s *Server) handleCreateProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// The spec declares no minLength for name/code, so the generated validation
+	// accepts an empty string; the real API rejects it.
+	if req.Name == "" || req.Code == "" {
+		writeError(w, http.StatusBadRequest, "name and code are required")
+		return
+	}
 	now := time.Now()
 	rec := &ProjectRecord{
 		ID:             s.store.nextID(),

@@ -61,9 +61,12 @@ type Server struct {
 	store       *MemoryStore
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
-	logger      *slog.Logger
-	docker      *DockerManager
-	dp          *dataPlane
+	// validator rejects request bodies violating the spec-derived constraints
+	// in the generated bodySchemas table (validate_gen.go).
+	validator *core.BodyValidator
+	logger    *slog.Logger
+	docker    *DockerManager
+	dp        *dataPlane
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -95,6 +98,7 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeAppError(w, status, message)
 			}),
 		),
+		validator: core.NewBodyValidator(bodySchemas, writeAppError),
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen

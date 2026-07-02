@@ -245,29 +245,16 @@ const (
 	maxEnvValueBytes     = 512
 	maxPacketFilterRules = 10
 	maxTrafficVersions   = 4
-	maxScale             = 10
-	maxTimeoutSeconds    = 300
-	maxAppNameLen        = 255
 )
 
+// Spec-expressible constraints (required fields, name/image lengths, numeric
+// ranges, cpu/memory enums) are enforced by the generated bodySchemas table
+// (validate_gen.go) before these handlers run; the checks below keep only the
+// domain rules the OpenAPI spec cannot express.
+
 func validateApplication(req *createApplicationRequest) string {
-	if len(req.Name) == 0 || len(req.Name) > maxAppNameLen {
-		return "application name must be 1-255 characters"
-	}
-	if req.Port < 1 || req.Port > 65535 {
-		return "port must be between 1 and 65535"
-	}
 	if reservedPorts[req.Port] {
 		return fmt.Sprintf("port %d is reserved and cannot be used", req.Port)
-	}
-	if req.TimeoutSeconds < 1 || req.TimeoutSeconds > maxTimeoutSeconds {
-		return "timeout_seconds must be between 1 and 300"
-	}
-	if req.MinScale < 0 || req.MinScale > maxScale {
-		return "min_scale must be between 0 and 10"
-	}
-	if req.MaxScale < 0 || req.MaxScale > maxScale {
-		return "max_scale must be between 0 and 10"
 	}
 	if req.MinScale > req.MaxScale {
 		return "min_scale must be less than or equal to max_scale"
@@ -275,10 +262,7 @@ func validateApplication(req *createApplicationRequest) string {
 	if len(req.Components) != maxComponents {
 		return "exactly 1 component is required"
 	}
-	if msg := validateComponents(req.Components); msg != "" {
-		return msg
-	}
-	return ""
+	return validateComponents(req.Components)
 }
 
 func validatePatch(req *patchApplicationRequest, current *Application) string {
@@ -286,19 +270,8 @@ func validatePatch(req *patchApplicationRequest, current *Application) string {
 	if req.Port != nil {
 		port = *req.Port
 	}
-	if port < 1 || port > 65535 {
-		return "port must be between 1 and 65535"
-	}
 	if reservedPorts[port] {
 		return fmt.Sprintf("port %d is reserved and cannot be used", port)
-	}
-
-	timeout := current.TimeoutSeconds
-	if req.TimeoutSeconds != nil {
-		timeout = *req.TimeoutSeconds
-	}
-	if timeout < 1 || timeout > maxTimeoutSeconds {
-		return "timeout_seconds must be between 1 and 300"
 	}
 
 	minS := current.MinScale
@@ -308,12 +281,6 @@ func validatePatch(req *patchApplicationRequest, current *Application) string {
 	maxS := current.MaxScale
 	if req.MaxScale != nil {
 		maxS = *req.MaxScale
-	}
-	if minS < 0 || minS > maxScale {
-		return "min_scale must be between 0 and 10"
-	}
-	if maxS < 0 || maxS > maxScale {
-		return "max_scale must be between 0 and 10"
 	}
 	if minS > maxS {
 		return "min_scale must be less than or equal to max_scale"

@@ -102,6 +102,12 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	csi := req.CommonServiceItem
+	// The spec declares no minLength for Name, so the generated validation
+	// accepts an empty string; the real API rejects it.
+	if csi.Name == "" {
+		writeError(w, http.StatusBadRequest, "Name is required")
+		return
+	}
 	it := s.store.CreateItem(ServiceItem{
 		Name:          csi.Name,
 		Description:   csi.Description,

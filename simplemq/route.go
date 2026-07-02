@@ -10,22 +10,37 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.PathValueKey("queueName"), h)
 	}
-	cp := s.basicAuthMiddleware
+	// Data-plane routes: bearer auth outermost, then rate limit, then
+	// spec-derived body validation, then the handler.
+	dp := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route:   core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			Handler: s.authMiddleware(rl(s.validator.Middleware(method, path, h))),
+		}
+	}
+	// Control-plane routes: basic auth outermost, then spec-derived body
+	// validation (standard-error shape), then the handler.
+	cp := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route:   core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			Handler: s.basicAuthMiddleware(s.cpValidator.Middleware(method, path, h)),
+		}
+	}
 	return []core.RegisteredRoute{
 		// Data plane
-		{Route: core.Route{Method: "POST", Path: "/v1/queues/{queueName}/messages", Description: "Send a message to the queue", Kind: "api"}, Handler: s.authMiddleware(rl(s.handleSend))},
-		{Route: core.Route{Method: "GET", Path: "/v1/queues/{queueName}/messages", Description: "Receive messages from the queue", Kind: "api"}, Handler: s.authMiddleware(rl(s.handleReceive))},
-		{Route: core.Route{Method: "PUT", Path: "/v1/queues/{queueName}/messages/{messageId}", Description: "Extend the visibility timeout of a message", Kind: "api"}, Handler: s.authMiddleware(rl(s.handleExtendTimeout))},
-		{Route: core.Route{Method: "DELETE", Path: "/v1/queues/{queueName}/messages/{messageId}", Description: "Delete a message from the queue", Kind: "api"}, Handler: s.authMiddleware(rl(s.handleDelete))},
+		dp("POST", "/v1/queues/{queueName}/messages", "Send a message to the queue", s.handleSend),
+		dp("GET", "/v1/queues/{queueName}/messages", "Receive messages from the queue", s.handleReceive),
+		dp("PUT", "/v1/queues/{queueName}/messages/{messageId}", "Extend the visibility timeout of a message", s.handleExtendTimeout),
+		dp("DELETE", "/v1/queues/{queueName}/messages/{messageId}", "Delete a message from the queue", s.handleDelete),
 		// Control plane
-		{Route: core.Route{Method: "POST", Path: "/commonserviceitem", Description: "Create a queue", Kind: "api"}, Handler: cp(s.handleCreateQueue)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem", Description: "List queues", Kind: "api"}, Handler: cp(s.handleListQueues)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem/{id}", Description: "Get a queue", Kind: "api"}, Handler: cp(s.handleGetQueue)},
-		{Route: core.Route{Method: "PUT", Path: "/commonserviceitem/{id}", Description: "Update queue settings", Kind: "api"}, Handler: cp(s.handleConfigQueue)},
-		{Route: core.Route{Method: "DELETE", Path: "/commonserviceitem/{id}", Description: "Delete a queue", Kind: "api"}, Handler: cp(s.handleDeleteQueue)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem/{id}/simplemq/message-count", Description: "Get message count for a queue", Kind: "api"}, Handler: cp(s.handleGetMessageCount)},
-		{Route: core.Route{Method: "PUT", Path: "/commonserviceitem/{id}/simplemq/rotate-apikey", Description: "Rotate the API key for a queue", Kind: "api"}, Handler: cp(s.handleRotateAPIKey)},
-		{Route: core.Route{Method: "DELETE", Path: "/commonserviceitem/{id}/simplemq/messages", Description: "Clear all messages from a queue", Kind: "api"}, Handler: cp(s.handleClearMessages)},
+		cp("POST", "/commonserviceitem", "Create a queue", s.handleCreateQueue),
+		cp("GET", "/commonserviceitem", "List queues", s.handleListQueues),
+		cp("GET", "/commonserviceitem/{id}", "Get a queue", s.handleGetQueue),
+		cp("PUT", "/commonserviceitem/{id}", "Update queue settings", s.handleConfigQueue),
+		cp("DELETE", "/commonserviceitem/{id}", "Delete a queue", s.handleDeleteQueue),
+		cp("GET", "/commonserviceitem/{id}/simplemq/message-count", "Get message count for a queue", s.handleGetMessageCount),
+		cp("PUT", "/commonserviceitem/{id}/simplemq/rotate-apikey", "Rotate the API key for a queue", s.handleRotateAPIKey),
+		cp("DELETE", "/commonserviceitem/{id}/simplemq/messages", "Clear all messages from a queue", s.handleClearMessages),
 	}
 }
 

@@ -13,16 +13,18 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// queueName and messageId arrive as path parameters, which the spec-derived
+// body validation does not cover; these validators mirror the spec's path
+// parameter constraints. Request-body constraints (content, queue settings)
+// are enforced by the generated bodySchemas table (validate_gen.go).
 var (
-	queueNamePattern      = regexp.MustCompile(`^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$`)
-	messageContentPattern = regexp.MustCompile(`^[0-9a-zA-Z+/=]*$`)
-	messageIDPattern      = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+	queueNamePattern = regexp.MustCompile(`^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$`)
+	messageIDPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 )
 
 const (
-	queueNameMinLength   = 5
-	queueNameMaxLength   = 64
-	messageContentMaxLen = 256000
+	queueNameMinLength = 5
+	queueNameMaxLength = 64
 )
 
 func validateQueueName(name string) error {
@@ -31,16 +33,6 @@ func validateQueueName(name string) error {
 	}
 	if !queueNamePattern.MatchString(name) {
 		return fmt.Errorf("queue name must match pattern %s", queueNamePattern.String())
-	}
-	return nil
-}
-
-func validateMessageContent(content string) error {
-	if len(content) > messageContentMaxLen {
-		return fmt.Errorf("message content must not exceed %d characters", messageContentMaxLen)
-	}
-	if !messageContentPattern.MatchString(content) {
-		return fmt.Errorf("message content must be base64 encoded")
 	}
 	return nil
 }
@@ -208,12 +200,10 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
+	// The spec declares no minLength for content, so the generated validation
+	// accepts an empty string; the real API rejects it.
 	if req.Content == "" {
 		writeError(w, http.StatusBadRequest, "content is required")
-		return
-	}
-	if err := validateMessageContent(req.Content); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

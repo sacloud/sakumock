@@ -117,14 +117,6 @@ func (s *Server) handleCreateQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	csi := req.CommonServiceItem
-	if err := validateQueueName(csi.Name); err != nil {
-		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", err.Error())
-		return
-	}
-	if csi.Provider.Class != "simplemq" {
-		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "Provider.Class must be simplemq")
-		return
-	}
 
 	now := time.Now()
 	q, err := s.store.CreateQueue(csi.Name, csi.Description, csi.Tags, 0, 0, now)
@@ -194,14 +186,6 @@ func (s *Server) handleConfigQueue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	settings := req.CommonServiceItem.Settings
-	if settings.VisibilityTimeoutSeconds < 5 || settings.VisibilityTimeoutSeconds > 900 {
-		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "VisibilityTimeoutSeconds must be between 5 and 900")
-		return
-	}
-	if settings.ExpireSeconds < 60 || settings.ExpireSeconds > 1209600 {
-		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "ExpireSeconds must be between 60 and 1209600")
-		return
-	}
 
 	now := time.Now()
 	q, err := s.store.UpdateQueue(id, req.CommonServiceItem.Description, req.CommonServiceItem.Tags,

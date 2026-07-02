@@ -77,7 +77,26 @@
           },
           "serial": {"type": "string", "readOnly": true},
           "config": {"$ref": "#/components/schemas/Config"},
-          "extra": {"type": "object"}
+          "extra": {"type": "object"},
+          "untyped": {"maxLength": 3},
+          "merged_scalar": {
+            "allOf": [
+              {"type": "string", "pattern": "^a", "enum": ["ab", "ba"]},
+              {"type": "string", "pattern": "b$", "enum": ["ab", "bb"]}
+            ]
+          },
+          "merged_array": {
+            "allOf": [
+              {"type": "array", "items": {"type": "string", "maxLength": 5}},
+              {"type": "array", "items": {"type": "string", "minLength": 1}}
+            ]
+          },
+          "merged_object": {
+            "allOf": [
+              {"type": "object", "properties": {"mode": {"type": "string", "maxLength": 8}}},
+              {"type": "object", "properties": {"mode": {"type": "string", "minLength": 2}}}
+            ]
+          }
         }
       },
       "PatchedWidgetRequest": {

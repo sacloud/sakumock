@@ -41,6 +41,7 @@ var bodySchemas = map[string]*core.BodySchema{
 	// NOTE: POST /uploads/ has a non-JSON request body; skipped
 	// NOTE: pattern "^(?=ab)" at POST /widgets/.bad_pattern is not RE2-compatible; skipped
 	// NOTE: oneOf at POST /widgets/.config.choice left permissive
+	// NOTE: conflicting patterns "^a" and "b$" in allOf at POST /widgets/.merged_scalar; pattern left unenforced
 	"POST /widgets/": {
 		Type:     "object",
 		Required: []string{"name", "size"},
@@ -78,6 +79,28 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type: "integer",
 				Enum: []any{float64(1), float64(2), float64(3)},
 			},
+			"merged_array": {
+				Type: "array",
+				Items: &core.BodySchema{
+					Type:      "string",
+					MinLength: core.IntPtr(1),
+					MaxLength: core.IntPtr(5),
+				},
+			},
+			"merged_object": {
+				Type: "object",
+				Properties: map[string]*core.BodySchema{
+					"mode": {
+						Type:      "string",
+						MinLength: core.IntPtr(2),
+						MaxLength: core.IntPtr(8),
+					},
+				},
+			},
+			"merged_scalar": {
+				Type: "string",
+				Enum: []any{"ab"},
+			},
 			"name": {
 				Type:      "string",
 				MinLength: core.IntPtr(1),
@@ -105,6 +128,9 @@ var bodySchemas = map[string]*core.BodySchema{
 				},
 				MinItems: core.IntPtr(1),
 				MaxItems: core.IntPtr(5),
+			},
+			"untyped": {
+				MaxLength: core.IntPtr(3),
 			},
 		},
 	},

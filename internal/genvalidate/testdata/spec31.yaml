@@ -42,6 +42,12 @@ components:
             - 'null'
           minimum: 5
           exclusiveMaximum: 900
+        priority:
+          type:
+            - string
+            - integer
+          minLength: 1
+          minimum: 0
     EventRequest:
       type: object
       required:

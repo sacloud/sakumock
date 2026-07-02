@@ -173,13 +173,26 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 	}
 
 	s := &core.BodySchema{}
-	s.Type, s.Nullable = schemaType(m)
+	types, nullable := schemaTypes(m)
+	s.Nullable = nullable
+	switch len(types) {
+	case 0:
+	case 1:
+		s.Type = types[0]
+	default:
+		// A 3.1 multi-type union (e.g. ["string", "integer"]) has no single
+		// core type; leave Type empty so no type is rejected. The keyword
+		// constraints below still compile and apply per dynamic type.
+		c.note("multiple types %v at %s; type check left permissive", types, loc)
+	}
 	if b, ok := m["nullable"].(bool); ok && b {
 		s.Nullable = true
 	}
 
-	switch s.Type {
-	case "object", "":
+	// An omitted type means the keywords decide what applies (JSON Schema
+	// allows constraints without a type), so each keyword group compiles both
+	// for its own type and for an untyped schema.
+	if s.Type == "object" || s.Type == "" {
 		if props, ok := m["properties"].(map[string]any); ok {
 			// Compile in sorted order so notes are emitted deterministically.
 			for _, name := range slices.Sorted(maps.Keys(props)) {
@@ -212,13 +225,15 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 			}
 			sort.Strings(s.Required)
 		}
-	case "array":
+	}
+	if s.Type == "array" || s.Type == "" {
 		if items, ok := m["items"]; ok {
 			s.Items = c.compile(items, loc+"[]", seen)
 		}
 		s.MinItems = intVal(m["minItems"])
 		s.MaxItems = intVal(m["maxItems"])
-	case "string":
+	}
+	if s.Type == "string" || s.Type == "" {
 		s.MinLength = intVal(m["minLength"])
 		s.MaxLength = intVal(m["maxLength"])
 		if p, ok := m["pattern"].(string); ok && p != "" {
@@ -228,7 +243,8 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 				s.Pattern = p
 			}
 		}
-	case "integer", "number":
+	}
+	if s.Type == "integer" || s.Type == "number" || s.Type == "" {
 		s.Minimum = floatVal(m["minimum"])
 		s.Maximum = floatVal(m["maximum"])
 		// 3.0 uses boolean exclusiveMinimum/Maximum flags alongside
@@ -322,36 +338,74 @@ func (c *compiler) merge(a, b *core.BodySchema, loc string) *core.BodySchema {
 		if out.Properties == nil {
 			out.Properties = map[string]*core.BodySchema{}
 		}
-		maps.Copy(out.Properties, b.Properties)
+		for _, k := range slices.Sorted(maps.Keys(b.Properties)) {
+			if existing, ok := out.Properties[k]; ok {
+				out.Properties[k] = c.merge(existing, b.Properties[k], loc+"."+k)
+			} else {
+				out.Properties[k] = b.Properties[k]
+			}
+		}
 	}
-	if out.Items == nil {
+	switch {
+	case out.Items == nil:
 		out.Items = b.Items
+	case b.Items != nil:
+		out.Items = c.merge(out.Items, b.Items, loc+".items")
 	}
 	out.MinItems = maxInt(out.MinItems, b.MinItems)
 	out.MaxItems = minInt(out.MaxItems, b.MaxItems)
 	out.MinLength = maxInt(out.MinLength, b.MinLength)
 	out.MaxLength = minInt(out.MaxLength, b.MaxLength)
-	if out.Pattern == "" {
+	switch {
+	case out.Pattern == "":
 		out.Pattern = b.Pattern
+	case b.Pattern != "" && b.Pattern != out.Pattern:
+		// allOf requires both patterns to hold, but BodySchema holds one;
+		// enforcing either alone could reject spec-valid values' complement,
+		// so drop the check rather than pick a side.
+		c.note("conflicting patterns %q and %q in allOf at %s; pattern left unenforced", out.Pattern, b.Pattern, loc)
+		out.Pattern = ""
 	}
 	out.Minimum = maxFloat(out.Minimum, b.Minimum)
 	out.Maximum = minFloat(out.Maximum, b.Maximum)
 	out.ExclusiveMinimum = out.ExclusiveMinimum || b.ExclusiveMinimum
 	out.ExclusiveMaximum = out.ExclusiveMaximum || b.ExclusiveMaximum
-	if out.Enum == nil {
+	switch {
+	case out.Enum == nil:
 		out.Enum = b.Enum
+	case b.Enum != nil:
+		// allOf semantics: the value must satisfy both enums, so intersect.
+		out.Enum = intersectEnums(out.Enum, b.Enum)
+		if len(out.Enum) == 0 {
+			c.note("enums in allOf at %s have an empty intersection; enum left unenforced", loc)
+		}
 	}
 	return &out
 }
 
-// schemaType normalizes the type keyword: 3.0 `type: "string"` and 3.1
-// `type: ["string", "null"]` both become ("string", nullable).
-func schemaType(m map[string]any) (string, bool) {
+// intersectEnums keeps the values of a that also appear in b, preserving a's
+// order. Values are the generator-normalized literals (string/float64/bool),
+// so direct equality is the right comparison.
+func intersectEnums(a, b []any) []any {
+	var out []any
+	for _, v := range a {
+		if slices.Contains(b, v) {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// schemaTypes normalizes the type keyword: 3.0 `type: "string"` yields one
+// type; the 3.1 array form `type: ["string", "null"]` yields the non-null
+// types plus the nullable flag.
+func schemaTypes(m map[string]any) ([]string, bool) {
 	switch t := m["type"].(type) {
 	case string:
-		return t, false
+		return []string{t}, false
 	case []any:
-		typ, nullable := "", false
+		var types []string
+		nullable := false
 		for _, e := range t {
 			s, ok := e.(string)
 			if !ok {
@@ -359,13 +413,13 @@ func schemaType(m map[string]any) (string, bool) {
 			}
 			if s == "null" {
 				nullable = true
-			} else if typ == "" {
-				typ = s
+			} else {
+				types = append(types, s)
 			}
 		}
-		return typ, nullable
+		return types, nullable
 	}
-	return "", false
+	return nil, false
 }
 
 // emptySchema reports whether s carries no checkable constraint at all.

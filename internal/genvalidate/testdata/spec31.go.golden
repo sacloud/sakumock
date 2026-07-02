@@ -20,6 +20,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
+	// NOTE: multiple types [string integer] at POST /queues.priority; type check left permissive
 	"POST /queues": {
 		Type:     "object",
 		Required: []string{"name"},
@@ -29,6 +30,10 @@ var bodySchemas = map[string]*core.BodySchema{
 				MinLength: core.IntPtr(1),
 				MaxLength: core.IntPtr(60),
 				Pattern:   "^[a-zA-Z0-9_-]+$",
+			},
+			"priority": {
+				MinLength: core.IntPtr(1),
+				Minimum:   core.Float64Ptr(0),
 			},
 			"timeout": {
 				Type:             "integer",

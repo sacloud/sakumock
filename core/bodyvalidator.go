@@ -3,8 +3,12 @@ package core
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"maps"
 	"net/http"
+	"slices"
+	"strings"
 )
 
 // BodyValidationErrorWriter writes the 400 response in the service's own
@@ -20,10 +24,71 @@ type BodyValidator struct {
 	errWrite BodyValidationErrorWriter
 }
 
+// BodyValidatorOption customizes a BodyValidator at construction.
+type BodyValidatorOption func(*BodyValidator)
+
 // NewBodyValidator creates a validator over schemas keyed by
 // "METHOD /path" (the mux pattern registered in the route table).
-func NewBodyValidator(schemas map[string]*BodySchema, errWrite BodyValidationErrorWriter) *BodyValidator {
-	return &BodyValidator{schemas: schemas, errWrite: errWrite}
+func NewBodyValidator(schemas map[string]*BodySchema, errWrite BodyValidationErrorWriter, opts ...BodyValidatorOption) *BodyValidator {
+	bv := &BodyValidator{schemas: schemas, errWrite: errWrite}
+	for _, opt := range opts {
+		opt(bv)
+	}
+	return bv
+}
+
+// WithNonEmpty overlays a MinLength-1 constraint onto the given string
+// fields, addressed as dotted object-property paths per route key (e.g.
+// {"POST /kms/keys": {"Key.Name"}}). It exists for the recurring spec gap
+// where a field is declared required but has no minLength, while the real
+// API rejects an empty string — the overlay closes the gap without touching
+// the generated bodySchemas (the schemas passed in are never mutated; nodes
+// along each path are copied). A field that already carries a spec minLength
+// keeps it.
+//
+// A route key or path that does not resolve to a string field in the schema
+// panics at construction: overrides are static configuration, and a spec
+// update that renames a field must fail loudly instead of silently dropping
+// the constraint.
+func WithNonEmpty(fields map[string][]string) BodyValidatorOption {
+	return func(bv *BodyValidator) {
+		overlaid := maps.Clone(bv.schemas)
+		for _, key := range slices.Sorted(maps.Keys(fields)) {
+			if overlaid[key] == nil {
+				panic(fmt.Sprintf("core.WithNonEmpty: no schema for route %q", key))
+			}
+			for _, path := range fields[key] {
+				overlaid[key] = withMinLength(overlaid[key], key, path)
+			}
+		}
+		bv.schemas = overlaid
+	}
+}
+
+// withMinLength returns a copy of schema with MinLength 1 set on the string
+// field at the dotted object-property path, copying only the nodes along the
+// path so shared schema literals stay untouched.
+func withMinLength(schema *BodySchema, key, path string) *BodySchema {
+	root := *schema
+	cur := &root
+	segs := strings.Split(path, ".")
+	for i, seg := range segs {
+		prop := cur.Properties[seg]
+		if prop == nil {
+			panic(fmt.Sprintf("core.WithNonEmpty: route %q has no property %q", key, strings.Join(segs[:i+1], ".")))
+		}
+		cur.Properties = maps.Clone(cur.Properties)
+		child := *prop
+		cur.Properties[seg] = &child
+		cur = &child
+	}
+	if cur.Type != "string" {
+		panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is %q, not a string", key, path, cur.Type))
+	}
+	if cur.MinLength == nil {
+		cur.MinLength = IntPtr(1)
+	}
+	return &root
 }
 
 // Middleware wraps next with request-body validation for the route registered

@@ -51,11 +51,14 @@ var (
 
 // Server is a local AppRun Dedicated mock server.
 type Server struct {
-	httpServer    *httptest.Server
-	mux           *http.ServeMux
-	store         *MemoryStore
-	latency       time.Duration
-	rateLimiter   *core.RateLimiter
+	httpServer  *httptest.Server
+	mux         *http.ServeMux
+	store       *MemoryStore
+	latency     time.Duration
+	rateLimiter *core.RateLimiter
+	// validator rejects request bodies violating the spec-derived constraints
+	// in the generated bodySchemas table (validate_gen.go).
+	validator     *core.BodyValidator
 	logger        *slog.Logger
 	docker        *DockerManager
 	dp            *dataPlane
@@ -82,6 +85,7 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
+		validator: core.NewBodyValidator(bodySchemas, writeError),
 	}
 	s.mux = s.buildMux()
 

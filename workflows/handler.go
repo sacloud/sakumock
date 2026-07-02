@@ -349,14 +349,6 @@ func (s *Server) handleCreateWorkflow(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
-	if req.Runbook == "" {
-		writeError(w, http.StatusBadRequest, "Runbook is required")
-		return
-	}
 	if err := s.validateRunbook(req.Runbook); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -512,10 +504,6 @@ func (s *Server) handleCreateRevision(w http.ResponseWriter, r *http.Request) {
 	var req createRevisionRequest
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if req.Runbook == "" {
-		writeError(w, http.StatusBadRequest, "Runbook is required")
 		return
 	}
 	if err := s.validateRunbook(req.Runbook); err != nil {
@@ -870,11 +858,6 @@ func (s *Server) handleCreateSubscription(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.PlanId == 0 {
-		writeError(w, http.StatusBadRequest, "PlanId is required")
-		return
-	}
-
 	if err := s.store.CreateSubscription(req.PlanId); err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return

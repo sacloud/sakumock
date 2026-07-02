@@ -89,10 +89,6 @@ func (s *Server) handleCreateServicePrincipal(w http.ResponseWriter, r *http.Req
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "name is required")
-		return
-	}
 	now := time.Now()
 	rec := &ServicePrincipalRecord{
 		ID:          s.store.nextID(),

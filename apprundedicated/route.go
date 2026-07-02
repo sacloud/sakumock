@@ -10,59 +10,67 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.GlobalKey(), h)
 	}
+	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
+		}
+	}
 	return []core.RegisteredRoute{
 		// Clusters
-		{Route: core.Route{Method: "POST", Path: "/clusters", Description: "Create cluster", Kind: "api"}, Handler: rl(s.handleCreateCluster)},
-		{Route: core.Route{Method: "GET", Path: "/clusters", Description: "List clusters", Kind: "api"}, Handler: rl(s.handleListClusters)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}", Description: "Get cluster", Kind: "api"}, Handler: rl(s.handleGetCluster)},
-		{Route: core.Route{Method: "PUT", Path: "/clusters/{clusterID}", Description: "Update cluster", Kind: "api"}, Handler: rl(s.handleUpdateCluster)},
-		{Route: core.Route{Method: "DELETE", Path: "/clusters/{clusterID}", Description: "Delete cluster", Kind: "api"}, Handler: rl(s.handleDeleteCluster)},
+		route("POST", "/clusters", "Create cluster", s.handleCreateCluster),
+		route("GET", "/clusters", "List clusters", s.handleListClusters),
+		route("GET", "/clusters/{clusterID}", "Get cluster", s.handleGetCluster),
+		route("PUT", "/clusters/{clusterID}", "Update cluster", s.handleUpdateCluster),
+		route("DELETE", "/clusters/{clusterID}", "Delete cluster", s.handleDeleteCluster),
 
 		// Applications
-		{Route: core.Route{Method: "POST", Path: "/applications", Description: "Create application", Kind: "api"}, Handler: rl(s.handleCreateApplication)},
-		{Route: core.Route{Method: "GET", Path: "/applications", Description: "List applications", Kind: "api"}, Handler: rl(s.handleListApplications)},
-		{Route: core.Route{Method: "GET", Path: "/applications/{applicationID}", Description: "Get application", Kind: "api"}, Handler: rl(s.handleGetApplication)},
-		{Route: core.Route{Method: "PUT", Path: "/applications/{applicationID}", Description: "Update application", Kind: "api"}, Handler: rl(s.handleUpdateApplication)},
-		{Route: core.Route{Method: "DELETE", Path: "/applications/{applicationID}", Description: "Delete application", Kind: "api"}, Handler: rl(s.handleDeleteApplication)},
-		{Route: core.Route{Method: "GET", Path: "/applications/{applicationID}/containers", Description: "Get application containers", Kind: "api"}, Handler: rl(s.handleGetApplicationContainers)},
+		route("POST", "/applications", "Create application", s.handleCreateApplication),
+		route("GET", "/applications", "List applications", s.handleListApplications),
+		route("GET", "/applications/{applicationID}", "Get application", s.handleGetApplication),
+		route("PUT", "/applications/{applicationID}", "Update application", s.handleUpdateApplication),
+		route("DELETE", "/applications/{applicationID}", "Delete application", s.handleDeleteApplication),
+		route("GET", "/applications/{applicationID}/containers", "Get application containers", s.handleGetApplicationContainers),
 
 		// Application Versions
-		{Route: core.Route{Method: "POST", Path: "/applications/{applicationID}/versions", Description: "Create version", Kind: "api"}, Handler: rl(s.handleCreateVersion)},
-		{Route: core.Route{Method: "GET", Path: "/applications/{applicationID}/versions", Description: "List versions", Kind: "api"}, Handler: rl(s.handleListVersions)},
-		{Route: core.Route{Method: "GET", Path: "/applications/{applicationID}/versions/{version}", Description: "Get version", Kind: "api"}, Handler: rl(s.handleGetVersion)},
-		{Route: core.Route{Method: "DELETE", Path: "/applications/{applicationID}/versions/{version}", Description: "Delete version", Kind: "api"}, Handler: rl(s.handleDeleteVersion)},
+		route("POST", "/applications/{applicationID}/versions", "Create version", s.handleCreateVersion),
+		route("GET", "/applications/{applicationID}/versions", "List versions", s.handleListVersions),
+		route("GET", "/applications/{applicationID}/versions/{version}", "Get version", s.handleGetVersion),
+		route("DELETE", "/applications/{applicationID}/versions/{version}", "Delete version", s.handleDeleteVersion),
 
 		// Auto Scaling Groups
-		{Route: core.Route{Method: "POST", Path: "/clusters/{clusterID}/asg", Description: "Create auto scaling group", Kind: "api"}, Handler: rl(s.handleCreateASG)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg", Description: "List auto scaling groups", Kind: "api"}, Handler: rl(s.handleListASGs)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}", Description: "Get auto scaling group", Kind: "api"}, Handler: rl(s.handleGetASG)},
-		{Route: core.Route{Method: "DELETE", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}", Description: "Delete auto scaling group", Kind: "api"}, Handler: rl(s.handleDeleteASG)},
+		route("POST", "/clusters/{clusterID}/asg", "Create auto scaling group", s.handleCreateASG),
+		route("GET", "/clusters/{clusterID}/asg", "List auto scaling groups", s.handleListASGs),
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}", "Get auto scaling group", s.handleGetASG),
+		route("DELETE", "/clusters/{clusterID}/asg/{autoScalingGroupID}", "Delete auto scaling group", s.handleDeleteASG),
 
 		// Load Balancers
-		{Route: core.Route{Method: "POST", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers", Description: "Create load balancer", Kind: "api"}, Handler: rl(s.handleCreateLB)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers", Description: "List load balancers", Kind: "api"}, Handler: rl(s.handleListLBs)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}", Description: "Get load balancer", Kind: "api"}, Handler: rl(s.handleGetLB)},
-		{Route: core.Route{Method: "DELETE", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}", Description: "Delete load balancer", Kind: "api"}, Handler: rl(s.handleDeleteLB)},
+		route("POST", "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers", "Create load balancer", s.handleCreateLB),
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers", "List load balancers", s.handleListLBs),
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}", "Get load balancer", s.handleGetLB),
+		route("DELETE", "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}", "Delete load balancer", s.handleDeleteLB),
 
 		// Load Balancer Nodes
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes", Description: "List load balancer nodes", Kind: "api"}, Handler: rl(s.handleListLBNodes)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes/{loadBalancerNodeID}", Description: "Get load balancer node", Kind: "api"}, Handler: rl(s.handleGetLBNode)},
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes", "List load balancer nodes", s.handleListLBNodes),
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes/{loadBalancerNodeID}", "Get load balancer node", s.handleGetLBNode),
 
 		// Worker Nodes
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes", Description: "List worker nodes", Kind: "api"}, Handler: rl(s.handleListWorkerNodes)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}", Description: "Get worker node", Kind: "api"}, Handler: rl(s.handleGetWorkerNode)},
-		{Route: core.Route{Method: "PUT", Path: "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}/draining", Description: "Update worker node draining", Kind: "api"}, Handler: rl(s.handleUpdateWorkerNodeDraining)},
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes", "List worker nodes", s.handleListWorkerNodes),
+		route("GET", "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}", "Get worker node", s.handleGetWorkerNode),
+		route("PUT", "/clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}/draining", "Update worker node draining", s.handleUpdateWorkerNodeDraining),
 
 		// Certificates
-		{Route: core.Route{Method: "POST", Path: "/clusters/{clusterID}/certificates", Description: "Create certificate", Kind: "api"}, Handler: rl(s.handleCreateCertificate)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/certificates", Description: "List certificates", Kind: "api"}, Handler: rl(s.handleListCertificates)},
-		{Route: core.Route{Method: "GET", Path: "/clusters/{clusterID}/certificates/{certificateID}", Description: "Get certificate", Kind: "api"}, Handler: rl(s.handleGetCertificate)},
-		{Route: core.Route{Method: "PUT", Path: "/clusters/{clusterID}/certificates/{certificateID}", Description: "Update certificate", Kind: "api"}, Handler: rl(s.handleUpdateCertificate)},
-		{Route: core.Route{Method: "DELETE", Path: "/clusters/{clusterID}/certificates/{certificateID}", Description: "Delete certificate", Kind: "api"}, Handler: rl(s.handleDeleteCertificate)},
+		route("POST", "/clusters/{clusterID}/certificates", "Create certificate", s.handleCreateCertificate),
+		route("GET", "/clusters/{clusterID}/certificates", "List certificates", s.handleListCertificates),
+		route("GET", "/clusters/{clusterID}/certificates/{certificateID}", "Get certificate", s.handleGetCertificate),
+		route("PUT", "/clusters/{clusterID}/certificates/{certificateID}", "Update certificate", s.handleUpdateCertificate),
+		route("DELETE", "/clusters/{clusterID}/certificates/{certificateID}", "Delete certificate", s.handleDeleteCertificate),
 
 		// Service Classes
-		{Route: core.Route{Method: "GET", Path: "/service_classes/lb", Description: "List LB service classes", Kind: "api"}, Handler: rl(s.handleListLBServiceClasses)},
-		{Route: core.Route{Method: "GET", Path: "/service_classes/worker", Description: "List worker service classes", Kind: "api"}, Handler: rl(s.handleListWorkerServiceClasses)},
+		route("GET", "/service_classes/lb", "List LB service classes", s.handleListLBServiceClasses),
+		route("GET", "/service_classes/worker", "List worker service classes", s.handleListWorkerServiceClasses),
 	}
 }
 

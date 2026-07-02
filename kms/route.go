@@ -10,17 +10,25 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.GlobalKey(), h)
 	}
+	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
+		}
+	}
 	return []core.RegisteredRoute{
-		{Route: core.Route{Method: "GET", Path: "/kms/keys", Description: "List all keys", Kind: "api"}, Handler: rl(s.handleListKeys)},
-		{Route: core.Route{Method: "POST", Path: "/kms/keys", Description: "Create a new key", Kind: "api"}, Handler: rl(s.handleCreateKey)},
-		{Route: core.Route{Method: "GET", Path: "/kms/keys/{resource_id}", Description: "Get a key", Kind: "api"}, Handler: rl(s.handleReadKey)},
-		{Route: core.Route{Method: "PUT", Path: "/kms/keys/{resource_id}", Description: "Update a key", Kind: "api"}, Handler: rl(s.handleUpdateKey)},
-		{Route: core.Route{Method: "DELETE", Path: "/kms/keys/{resource_id}", Description: "Delete a key", Kind: "api"}, Handler: rl(s.handleDeleteKey)},
-		{Route: core.Route{Method: "POST", Path: "/kms/keys/{resource_id}/rotate", Description: "Rotate a key", Kind: "api"}, Handler: rl(s.handleRotateKey)},
-		{Route: core.Route{Method: "POST", Path: "/kms/keys/{resource_id}/status", Description: "Change key status", Kind: "api"}, Handler: rl(s.handleChangeStatus)},
-		{Route: core.Route{Method: "POST", Path: "/kms/keys/{resource_id}/schedule-destruction", Description: "Schedule key destruction", Kind: "api"}, Handler: rl(s.handleScheduleDestruction)},
-		{Route: core.Route{Method: "POST", Path: "/kms/keys/{resource_id}/encrypt", Description: "Encrypt data with a key", Kind: "api"}, Handler: rl(s.handleEncrypt)},
-		{Route: core.Route{Method: "POST", Path: "/kms/keys/{resource_id}/decrypt", Description: "Decrypt data with a key", Kind: "api"}, Handler: rl(s.handleDecrypt)},
+		route("GET", "/kms/keys", "List all keys", s.handleListKeys),
+		route("POST", "/kms/keys", "Create a new key", s.handleCreateKey),
+		route("GET", "/kms/keys/{resource_id}", "Get a key", s.handleReadKey),
+		route("PUT", "/kms/keys/{resource_id}", "Update a key", s.handleUpdateKey),
+		route("DELETE", "/kms/keys/{resource_id}", "Delete a key", s.handleDeleteKey),
+		route("POST", "/kms/keys/{resource_id}/rotate", "Rotate a key", s.handleRotateKey),
+		route("POST", "/kms/keys/{resource_id}/status", "Change key status", s.handleChangeStatus),
+		route("POST", "/kms/keys/{resource_id}/schedule-destruction", "Schedule key destruction", s.handleScheduleDestruction),
+		route("POST", "/kms/keys/{resource_id}/encrypt", "Encrypt data with a key", s.handleEncrypt),
+		route("POST", "/kms/keys/{resource_id}/decrypt", "Decrypt data with a key", s.handleDecrypt),
 	}
 }
 

@@ -58,10 +58,6 @@ func (s *Server) handleCreateFolder(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "name is required")
-		return
-	}
 	now := time.Now()
 	rec := &FolderRecord{
 		ID:          s.store.nextID(),

@@ -23,12 +23,6 @@ const (
 	classTrigger              = "eventbustrigger"
 )
 
-var validProviderClasses = map[string]bool{
-	classProcessConfiguration: true,
-	classSchedule:             true,
-	classTrigger:              true,
-}
-
 var validDestinations = map[string]bool{
 	"simplenotification": true,
 	"simplemq":           true,
@@ -311,14 +305,6 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	csi := req.CommonServiceItem
-	if csi.Name == "" {
-		writeError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
-	if !validProviderClasses[csi.Provider.Class] {
-		writeError(w, http.StatusBadRequest, "Provider.Class must be one of eventbusprocessconfiguration, eventbusschedule, eventbustrigger")
-		return
-	}
 	if msg := s.validateSettings(csi.Provider.Class, csi.Settings); msg != "" {
 		writeError(w, http.StatusBadRequest, msg)
 		return

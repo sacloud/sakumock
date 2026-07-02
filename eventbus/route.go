@@ -10,13 +10,21 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.GlobalKey(), h)
 	}
+	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
+		}
+	}
 	return []core.RegisteredRoute{
-		{Route: core.Route{Method: "POST", Path: "/commonserviceitem", Description: "Create a process configuration, schedule, or trigger", Kind: "api"}, Handler: rl(s.handleCreateItem)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem", Description: "List process configurations, schedules, or triggers", Kind: "api"}, Handler: rl(s.handleListItems)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem/{id}", Description: "Get a process configuration, schedule, or trigger", Kind: "api"}, Handler: rl(s.handleGetItem)},
-		{Route: core.Route{Method: "PUT", Path: "/commonserviceitem/{id}", Description: "Update a process configuration, schedule, or trigger", Kind: "api"}, Handler: rl(s.handleUpdateItem)},
-		{Route: core.Route{Method: "DELETE", Path: "/commonserviceitem/{id}", Description: "Delete a process configuration, schedule, or trigger", Kind: "api"}, Handler: rl(s.handleDeleteItem)},
-		{Route: core.Route{Method: "PUT", Path: "/commonserviceitem/{id}/eventbus/processconfiguration/set-secret", Description: "Set the secret of a process configuration", Kind: "api"}, Handler: rl(s.handleSetSecret)},
+		route("POST", "/commonserviceitem", "Create a process configuration, schedule, or trigger", s.handleCreateItem),
+		route("GET", "/commonserviceitem", "List process configurations, schedules, or triggers", s.handleListItems),
+		route("GET", "/commonserviceitem/{id}", "Get a process configuration, schedule, or trigger", s.handleGetItem),
+		route("PUT", "/commonserviceitem/{id}", "Update a process configuration, schedule, or trigger", s.handleUpdateItem),
+		route("DELETE", "/commonserviceitem/{id}", "Delete a process configuration, schedule, or trigger", s.handleDeleteItem),
+		route("PUT", "/commonserviceitem/{id}/eventbus/processconfiguration/set-secret", "Set the secret of a process configuration", s.handleSetSecret),
 
 		// Mock-only data-plane endpoints (not rate-limited, like other inspection helpers).
 		{Route: core.Route{Method: "POST", Path: "/_sakumock/events", Description: "Inject an event and fire matching triggers", Kind: "inspection"}, Handler: s.handleInjectEvent},

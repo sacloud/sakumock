@@ -174,12 +174,6 @@ func (s *Server) handleCreateKey(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for Key.Name, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Key.Name == "" {
-		writeError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
 	origin := req.Key.KeyOrigin
 	if origin == "" {
 		origin = "generated"

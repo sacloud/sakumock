@@ -254,12 +254,6 @@ func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for cluster_id, so the generated
-	// validation accepts an empty string; the real API rejects it.
-	if req.ClusterID == "" {
-		writeError(w, http.StatusBadRequest, "cluster_id is required")
-		return
-	}
 	planType := "standard"
 	if c, ok := findCluster(req.ClusterID); ok && c.PlanFamily == "archive" {
 		planType = "archive"
@@ -324,12 +318,6 @@ func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	// The spec declares no minLength for dest_bucket, so the generated
-	// validation accepts an empty string; the real API rejects it.
-	if req.DestBucket == "" {
-		writeError(w, http.StatusBadRequest, "dest_bucket is required")
 		return
 	}
 	b, ok := s.store.SetBucketReplication(name, req.DestBucket)
@@ -852,13 +840,6 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	// The spec's enum covers type but declares no minLength for
-	// service_class_path, so the generated validation accepts an empty
-	// string; the real API rejects it.
-	if req.NewPlan.Type == "" || req.NewPlan.ServiceClassPath == "" {
-		writeError(w, http.StatusBadRequest, "new_plan.type and new_plan.service_class_path are required")
 		return
 	}
 	b, ok := s.store.GetBucket(name)

@@ -113,12 +113,6 @@ func (s *Server) handleCreateLogStorage(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for name, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "name is required")
-		return
-	}
 	classification := "shared"
 	if req.Classification != nil && *req.Classification != "" {
 		classification = *req.Classification
@@ -288,12 +282,6 @@ func (s *Server) handleCreateMetricsStorage(w http.ResponseWriter, r *http.Reque
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for name, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "name is required")
-		return
-	}
 	now := time.Now()
 	rid := s.store.nextResourceID()
 	st := &MetricsStorage{
@@ -417,12 +405,6 @@ func (s *Server) handleCreateTraceStorage(w http.ResponseWriter, r *http.Request
 	var req traceStorageCreateRequest
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	// The spec declares no minLength for name, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Name == "" {
-		writeError(w, http.StatusBadRequest, "name is required")
 		return
 	}
 	classification := "shared"

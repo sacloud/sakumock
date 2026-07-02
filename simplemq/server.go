@@ -108,10 +108,10 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator: core.NewBodyValidator(bodySchemas, writeError),
+		validator: core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
 		cpValidator: core.NewBodyValidator(bodySchemas, func(w http.ResponseWriter, status int, message string) {
 			core.WriteStandardError(w, status, "", message)
-		}),
+		}, core.WithNonEmpty(bodyNonEmptyFields)),
 	}
 	if cfg.idGen != nil {
 		if ms, ok := s.store.(*MemoryStore); ok {

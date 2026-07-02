@@ -79,16 +79,6 @@ func (s *Server) handleCreateVault(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for Name/KmsKeyID, so the generated
-	// validation accepts empty strings; the real API rejects them.
-	if req.Vault.Name == "" {
-		writeError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
-	if req.Vault.KmsKeyID == "" {
-		writeError(w, http.StatusBadRequest, "KmsKeyID is required")
-		return
-	}
 	v := s.store.CreateVault(req.Vault.Name, req.Vault.KmsKeyID, req.Vault.Description, req.Vault.Tags)
 	s.logger.Debug("vault created", "vault_id", v.ID, "name", v.Name)
 	core.WriteJSON(w, http.StatusCreated, wrappedVault{Vault: toVaultJSON(v)})

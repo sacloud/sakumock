@@ -1394,10 +1394,6 @@ func (s *Server) handleCreateCertificate(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if msg := validateCreateCertificate(&req); msg != "" {
-		writeError(w, http.StatusBadRequest, msg)
-		return
-	}
 
 	cert := &Certificate{
 		ClusterID:                  clusterID,
@@ -1448,10 +1444,6 @@ func (s *Server) handleUpdateCertificate(w http.ResponseWriter, r *http.Request)
 	var req createCertificateReq
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
-		return
-	}
-	if msg := validateCreateCertificate(&req); msg != "" {
-		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 

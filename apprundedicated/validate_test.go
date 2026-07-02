@@ -68,7 +68,6 @@ func TestValidateCreateVersion(t *testing.T) {
 			r.MinScale = &min
 			r.MaxScale = &max
 		}, "minScale must be less than"},
-		{"empty image", func(r *createVersionReq) { r.Image = "" }, "image must be 1-512"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -103,7 +102,6 @@ func TestValidateCreateASG(t *testing.T) {
 		modify func(r *createASGReq)
 		want   string
 	}{
-		{"empty zone", func(r *createASGReq) { r.Zone = "" }, "zone is required"},
 		{"invalid service class", func(r *createASGReq) {
 			r.WorkerServiceClassPath = "cloud/apprun/dedicated/worker/99vcpu_999gb"
 		}, "invalid workerServiceClassPath"},
@@ -141,35 +139,5 @@ func TestValidateCreateLB(t *testing.T) {
 		Interfaces:       valid.Interfaces,
 	}); !strings.Contains(msg, "invalid serviceClassPath") {
 		t.Fatalf("expected invalid serviceClassPath, got %q", msg)
-	}
-}
-
-func TestValidateCreateCertificate(t *testing.T) {
-	valid := &createCertificateReq{
-		Name:           "my-cert",
-		CertificatePem: "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----",
-		PrivatekeyPem:  "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
-	}
-	if msg := validateCreateCertificate(valid); msg != "" {
-		t.Fatalf("expected valid, got %q", msg)
-	}
-
-	tests := []struct {
-		name   string
-		modify func(r *createCertificateReq)
-		want   string
-	}{
-		{"empty certificatePem", func(r *createCertificateReq) { r.CertificatePem = "" }, "certificatePem must be 1-1000000"},
-		{"empty privatekeyPem", func(r *createCertificateReq) { r.PrivatekeyPem = "" }, "privatekeyPem must be 1-1000000"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := *valid
-			tt.modify(&r)
-			msg := validateCreateCertificate(&r)
-			if !strings.Contains(msg, tt.want) {
-				t.Fatalf("expected %q, got %q", tt.want, msg)
-			}
-		})
 	}
 }

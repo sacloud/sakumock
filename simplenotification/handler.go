@@ -81,12 +81,6 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for Message, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Message == "" {
-		writeError(w, http.StatusBadRequest, "Message is required")
-		return
-	}
 	rec, err := s.store.Send(id, req.Message, time.Now())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())

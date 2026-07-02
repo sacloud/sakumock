@@ -117,3 +117,84 @@ func TestBodyValidatorMiddleware(t *testing.T) {
 		}
 	})
 }
+
+func TestWithNonEmpty(t *testing.T) {
+	newSchemas := func() map[string]*core.BodySchema {
+		return map[string]*core.BodySchema{
+			"POST /keys": {
+				Type:     "object",
+				Required: []string{"Key"},
+				Properties: map[string]*core.BodySchema{
+					"Key": {
+						Type:     "object",
+						Required: []string{"Name"},
+						Properties: map[string]*core.BodySchema{
+							"Name":  {Type: "string", MaxLength: core.IntPtr(255)},
+							"Count": {Type: "integer"},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	do := func(t *testing.T, bv *core.BodyValidator, body string) int {
+		t.Helper()
+		req := httptest.NewRequest(http.MethodPost, "/keys", strings.NewReader(body))
+		rec := httptest.NewRecorder()
+		bv.Middleware("POST", "/keys", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})(rec, req)
+		return rec.Code
+	}
+
+	t.Run("rejects empty string at the overlaid path", func(t *testing.T) {
+		bv := core.NewBodyValidator(newSchemas(), testErrWriter,
+			core.WithNonEmpty(map[string][]string{"POST /keys": {"Key.Name"}}))
+		if got := do(t, bv, `{"Key": {"Name": ""}}`); got != http.StatusBadRequest {
+			t.Fatalf("empty Name: status = %d, want 400", got)
+		}
+		if got := do(t, bv, `{"Key": {"Name": "k"}}`); got != http.StatusOK {
+			t.Fatalf("valid Name: status = %d, want 200", got)
+		}
+	})
+
+	t.Run("does not mutate the passed schemas", func(t *testing.T) {
+		schemas := newSchemas()
+		core.NewBodyValidator(schemas, testErrWriter,
+			core.WithNonEmpty(map[string][]string{"POST /keys": {"Key.Name"}}))
+		if schemas["POST /keys"].Properties["Key"].Properties["Name"].MinLength != nil {
+			t.Fatal("original schema gained a MinLength")
+		}
+	})
+
+	t.Run("keeps an existing spec minLength", func(t *testing.T) {
+		schemas := newSchemas()
+		schemas["POST /keys"].Properties["Key"].Properties["Name"].MinLength = core.IntPtr(5)
+		bv := core.NewBodyValidator(schemas, testErrWriter,
+			core.WithNonEmpty(map[string][]string{"POST /keys": {"Key.Name"}}))
+		if got := do(t, bv, `{"Key": {"Name": "abc"}}`); got != http.StatusBadRequest {
+			t.Fatalf("3-char Name with minLength 5: status = %d, want 400", got)
+		}
+	})
+
+	mustPanic := func(t *testing.T, fields map[string][]string) {
+		t.Helper()
+		defer func() {
+			if recover() == nil {
+				t.Fatal("expected panic")
+			}
+		}()
+		core.NewBodyValidator(newSchemas(), testErrWriter, core.WithNonEmpty(fields))
+	}
+
+	t.Run("panics on unknown route", func(t *testing.T) {
+		mustPanic(t, map[string][]string{"POST /nope": {"Key.Name"}})
+	})
+	t.Run("panics on unknown property", func(t *testing.T) {
+		mustPanic(t, map[string][]string{"POST /keys": {"Key.Nope"}})
+	})
+	t.Run("panics on non-string property", func(t *testing.T) {
+		mustPanic(t, map[string][]string{"POST /keys": {"Key.Count"}})
+	})
+}

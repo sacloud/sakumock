@@ -200,12 +200,6 @@ func (s *Server) handleSend(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
-	// The spec declares no minLength for content, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Content == "" {
-		writeError(w, http.StatusBadRequest, "content is required")
-		return
-	}
 
 	msg, err := s.store.Send(queueName, req.Content, now)
 	if err != nil {

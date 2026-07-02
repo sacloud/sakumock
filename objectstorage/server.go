@@ -97,7 +97,10 @@ type Server struct {
 	store       *MemoryStore
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
-	logger      *slog.Logger
+	// validator rejects request bodies violating the spec-derived constraints
+	// in the generated bodySchemas table (validate_gen.go).
+	validator *core.BodyValidator
+	logger    *slog.Logger
 	// dataPlane is the external S3 gateway process when --enable-data-plane is
 	// set and versitygw is available; nil otherwise (its methods are nil-safe).
 	dataPlane *dataPlane
@@ -121,6 +124,7 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
+		validator: core.NewBodyValidator(bodySchemas, writeError),
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen

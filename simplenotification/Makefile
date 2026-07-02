@@ -2,7 +2,7 @@ OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
 OPENAPI_SUBDIR := api/simple-notification/openapi
 OPENAPI_FILES := openapi.yaml
 
-.PHONY: clean test openapi
+.PHONY: clean test openapi generate
 
 sakumock-simplenotification: ../go.* *.go cmd/sakumock-simplenotification/*.go
 	go build -o $@ ./cmd/sakumock-simplenotification
@@ -22,3 +22,7 @@ openapi:
 	mkdir -p openapi
 	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
 	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"
+	$(MAKE) generate
+
+generate:
+	go generate .

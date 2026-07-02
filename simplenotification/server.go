@@ -62,7 +62,10 @@ type Server struct {
 	latency     time.Duration
 	exec        string
 	rateLimiter *core.RateLimiter
-	logger      *slog.Logger
+	// validator rejects request bodies violating the spec-derived constraints
+	// in the generated bodySchemas table (validate_gen.go).
+	validator *core.BodyValidator
+	logger    *slog.Logger
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -84,6 +87,7 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
+		validator: core.NewBodyValidator(bodySchemas, writeError),
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen

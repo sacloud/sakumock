@@ -67,8 +67,10 @@ func TestAllSharesOneIDGenerator(t *testing.T) {
 	// same base value.
 	vaultID := postResourceID(t, byName["secretmanager"], "/secretmanager/vaults",
 		`{"Vault":{"Name":"v","KmsKeyID":"k"}}`, "Vault")
+	// The simplenotification spec marks every CommonServiceItem field
+	// required, and the generated validation enforces that.
 	destID := postResourceID(t, byName["simplenotification"], "/commonserviceitem",
-		`{"CommonServiceItem":{"Name":"d","Provider":{"Class":"saknoticedestination"}}}`, "CommonServiceItem")
+		`{"CommonServiceItem":{"Name":"d","Description":"","Icon":null,"Tags":[],"ServiceClass":"cloud/saknoticedestination/2","Provider":{"Class":"saknoticedestination"},"Settings":{}}}`, "CommonServiceItem")
 
 	if vaultID == "" || destID == "" {
 		t.Fatalf("missing IDs: vault=%q dest=%q", vaultID, destID)

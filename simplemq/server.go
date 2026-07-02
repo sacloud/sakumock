@@ -73,6 +73,13 @@ type Server struct {
 	strict      bool
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
+	// validator and cpValidator reject request bodies violating the
+	// spec-derived constraints in the generated bodySchemas table
+	// (validate_gen.go). They share the schemas but write the 400 in the
+	// data-plane ({"code","message"}) and control-plane (StandardError)
+	// envelopes respectively.
+	validator   *core.BodyValidator
+	cpValidator *core.BodyValidator
 	logger      *slog.Logger
 }
 
@@ -101,6 +108,10 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
+		validator: core.NewBodyValidator(bodySchemas, writeError),
+		cpValidator: core.NewBodyValidator(bodySchemas, func(w http.ResponseWriter, status int, message string) {
+			core.WriteStandardError(w, status, "", message)
+		}),
 	}
 	if cfg.idGen != nil {
 		if ms, ok := s.store.(*MemoryStore); ok {

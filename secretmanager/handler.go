@@ -115,6 +115,8 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// The spec declares no minLength for Name, so the generated validation
+	// accepts an empty string; the real API rejects it.
 	if req.Secret.Name == "" {
 		writeError(w, http.StatusBadRequest, "Name is required")
 		return

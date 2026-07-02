@@ -46,6 +46,11 @@ func validateCreateVersion(req *createVersionReq) string {
 }
 
 func validateCreateASG(req *createASGReq) string {
+	// The spec declares no minLength for zone, so the generated validation
+	// accepts an empty string; the real API rejects it.
+	if req.Zone == "" {
+		return "zone is required"
+	}
 	if !validWorkerServiceClassPaths[req.WorkerServiceClassPath] {
 		return fmt.Sprintf("invalid workerServiceClassPath: %q", req.WorkerServiceClassPath)
 	}

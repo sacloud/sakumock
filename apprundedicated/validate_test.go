@@ -103,6 +103,7 @@ func TestValidateCreateASG(t *testing.T) {
 		modify func(r *createASGReq)
 		want   string
 	}{
+		{"empty zone", func(r *createASGReq) { r.Zone = "" }, "zone is required"},
 		{"invalid service class", func(r *createASGReq) {
 			r.WorkerServiceClassPath = "cloud/apprun/dedicated/worker/99vcpu_999gb"
 		}, "invalid workerServiceClassPath"},

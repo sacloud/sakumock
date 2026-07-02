@@ -1,0 +1,74 @@
+openapi: 3.1.0
+info:
+  title: fixture 3.1
+  version: 1.0.0
+paths:
+  /queues:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQueueRequest'
+      responses:
+        '201':
+          description: created
+  /events:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRequest'
+      responses:
+        '201':
+          description: created
+components:
+  schemas:
+    CreateQueueRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+          pattern: '^[a-zA-Z0-9_-]+$'
+        timeout:
+          type:
+            - integer
+            - 'null'
+          minimum: 5
+          exclusiveMaximum: 900
+        priority:
+          type:
+            - string
+            - integer
+          minLength: 1
+          minimum: 0
+    EventRequest:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/MessageEvent'
+            - $ref: '#/components/schemas/TimerEvent'
+          discriminator:
+            propertyName: kind
+        source:
+          type: string
+          minLength: 1
+    MessageEvent:
+      type: object
+      properties:
+        kind:
+          type: string
+    TimerEvent:
+      type: object
+      properties:
+        kind:
+          type: string

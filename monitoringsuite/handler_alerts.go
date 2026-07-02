@@ -132,10 +132,6 @@ func (s *Server) handleCreateAlertRule(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Query == nil || *req.Query == "" {
-		writeError(w, http.StatusBadRequest, "query is required")
-		return
-	}
 	rule := &AlertRule{
 		UID:       newUUID(),
 		ProjectID: p.ResourceID,
@@ -414,10 +410,6 @@ func (s *Server) handleCreateNotificationTarget(w http.ResponseWriter, r *http.R
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.ServiceType == nil || *req.ServiceType == "" {
-		writeError(w, http.StatusBadRequest, "service_type is required")
-		return
-	}
 	t := &NotificationTarget{
 		UID:         newUUID(),
 		ProjectID:   p.ResourceID,
@@ -545,10 +537,6 @@ func (s *Server) handleCreateNotificationRouting(w http.ResponseWriter, r *http.
 	var req notificationRoutingRequest
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if req.NotificationTargetUID == nil || *req.NotificationTargetUID == "" {
-		writeError(w, http.StatusBadRequest, "notification_target_uid is required")
 		return
 	}
 	if t, ok := s.store.notificationTargets.get(*req.NotificationTargetUID); !ok || t.ProjectID != p.ResourceID {

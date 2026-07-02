@@ -16,8 +16,10 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	}
 	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
 		return core.RegisteredRoute{
-			Route:   core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
-			Handler: rl(h),
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
 		}
 	}
 	return []core.RegisteredRoute{

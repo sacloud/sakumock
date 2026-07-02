@@ -26,6 +26,7 @@ All services are also aggregated into a single `sakumock` binary (entrypoint `cm
 - `new_store.go` — Store factory
 - `handler.go` — HTTP handlers and JSON types
 - `route.go` — `routeTable()` (single source of truth driving both `buildMux()` and `Routes()`) plus the public `Routes()` method, all built on the shared types in `github.com/sacloud/sakumock/core`
+- `validate_gen.go` + `generate.go` — generated spec-derived request-body validation table and its `//go:generate` directive (see "Spec-derived request-body validation" below)
 - `server.go` — Config, Server, NewHandler, NewTestServer
 - `cli.go` — `Command` (embeds `Config`, adds `--routes`); its `Run` sets up logging, prints routes or starts the server via `core.Serve`, and holds the service-specific startup log lines
 - `cmd/sakumock-<service>/` — standalone CLI entrypoint; a thin shim that parses flags into `Command` and calls `Command.Run` (uses `core.NotifyContext` for signal handling — no per-service signal files)
@@ -143,6 +144,14 @@ Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUM
 - Run `make openapi` in each service directory to fetch the spec from the Go module cache
 - When upgrading an SDK dependency, always run `make openapi` to update the spec
 - Handler implementations must conform to the OpenAPI spec (paths, methods, request/response schemas, status codes)
+
+#### Spec-derived request-body validation (generated)
+
+- Request-body constraints that the spec can express (required, min/maxLength, pattern, enum, minimum/maximum, min/maxItems, type, nullable) are **not hand-written in handlers**. They are generated into a per-service `validate_gen.go` (`var bodySchemas map[string]*core.BodySchema`, keyed by `"METHOD /path"`) by `internal/genvalidate`, driven by a `//go:generate` directive in the service's `generate.go`. The service wires it in `NewHandler` (`validator: core.NewBodyValidator(bodySchemas, writeError)`) and wraps every route in `routeTable()` with `s.validator.Middleware(method, path, h)` (inside the rate-limit wrapper), so violations return 400 in the service's own error envelope before the handler runs. Referential checks ("X not found") and domain logic stay hand-written in handlers.
+- Regeneration: each service Makefile's `openapi` target chains `make generate` (which runs `go generate .`); the root `make generate` runs `go generate ./...`. CI's `generated-code` job regenerates and fails on any diff, so `validate_gen.go` never drifts from the committed spec. After `make openapi`, always commit the regenerated `validate_gen.go` together with the spec — the diff is the reviewable record of validation changes.
+- The generator handles OpenAPI 3.0 and 3.1 (`nullable: true` and `type: ["T","null"]`), resolves local `$ref`s, and merges `allOf`. `oneOf`/`anyOf`/`not`/recursive refs/non-RE2 patterns are degraded to permissive with a `// NOTE:` comment in the generated file. Spec paths the mock does not serve produce inert entries (the middleware lookup never matches); `/_sakumock/` routes have no entries and pass through. For services whose route paths differ from spec paths (objectstorage, simplemq, secretmanager, simplenotification), pass `-mapping <file>.json` (`prefix` / `pathRewrites` / `routes` / `skipPaths`).
+- Each wired service has a `validate_gen_test.go` consistency test asserting every `bodySchemas` key matches a `routeTable()` entry, so a spec/route drift (e.g. renamed path parameter) fails tests instead of silently disabling validation. Currently wired: monitoringsuite (pilot); when adding validation to another service, follow the monitoringsuite pattern (generate.go, server.go, route.go, Makefile) and delete the superseded hand-written checks.
+- Empty and JSON-syntax-error bodies pass through the validator so `core.ReadJSON`'s existing error handling stays authoritative; the validator only rejects well-formed JSON violating the schema.
 - Error responses must conform to the spec's error schema when one is defined. `commonserviceitem`-based endpoints share the SAKURA Cloud standard `Error { is_fatal, serial, status, error_code, error_msg }`, written via `core.WriteStandardError(w, status, code, msg)` (it derives `error_code` from the status text when code is empty). Proprietary endpoints with no spec error schema keep their own shape
 - When the spec does not define an error schema (typical for service-specific proprietary endpoints), pick a shape that matches the real API's behavior rather than inventing an ad-hoc one
 

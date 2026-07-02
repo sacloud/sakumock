@@ -131,10 +131,6 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.Name == "" || req.Code == "" {
-		writeError(w, http.StatusBadRequest, "name and code are required")
-		return
-	}
 	if msg := validatePassword(req.Password, s.store.getPasswordPolicy()); msg != "" {
 		writeError(w, http.StatusBadRequest, msg)
 		return

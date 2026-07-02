@@ -4,10 +4,11 @@ import "fmt"
 
 // Spec-expressible constraints (required fields, name patterns, string
 // lengths, numeric ranges, enums, array bounds) are enforced by the generated
-// bodySchemas table (validate_gen.go) before a handler runs. The functions
-// here keep only the domain rules the OpenAPI spec does not express: value
-// allow-lists, cross-field comparisons, reserved ranges, and non-empty checks
-// for strings the spec gives no minLength.
+// bodySchemas table (validate_gen.go) before a handler runs, and non-empty
+// checks for strings the spec gives no minLength are overlaid via
+// validate_overrides.go. The functions here keep only the domain rules the
+// OpenAPI spec does not express: value allow-lists, cross-field comparisons,
+// and reserved ranges.
 
 var validWorkerServiceClassPaths = map[string]bool{
 	"cloud/apprun/dedicated/worker/1vcpu_2gb": true,
@@ -39,18 +40,10 @@ func validateCreateVersion(req *createVersionReq) string {
 	if req.MinScale != nil && req.MaxScale != nil && *req.MinScale > *req.MaxScale {
 		return "minScale must be less than or equal to maxScale"
 	}
-	if len(req.Image) == 0 {
-		return "image must be 1-512 characters"
-	}
 	return ""
 }
 
 func validateCreateASG(req *createASGReq) string {
-	// The spec declares no minLength for zone, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Zone == "" {
-		return "zone is required"
-	}
 	if !validWorkerServiceClassPaths[req.WorkerServiceClassPath] {
 		return fmt.Sprintf("invalid workerServiceClassPath: %q", req.WorkerServiceClassPath)
 	}
@@ -63,16 +56,6 @@ func validateCreateASG(req *createASGReq) string {
 func validateCreateLB(req *createLBReq) string {
 	if !validLBServiceClassPaths[req.ServiceClassPath] {
 		return fmt.Sprintf("invalid serviceClassPath: %q", req.ServiceClassPath)
-	}
-	return ""
-}
-
-func validateCreateCertificate(req *createCertificateReq) string {
-	if len(req.CertificatePem) == 0 {
-		return "certificatePem must be 1-1000000 characters"
-	}
-	if len(req.PrivatekeyPem) == 0 {
-		return "privatekeyPem must be 1-1000000 characters"
 	}
 	return ""
 }

@@ -87,7 +87,7 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator: core.NewBodyValidator(bodySchemas, writeError),
+		validator: core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen

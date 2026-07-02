@@ -131,12 +131,6 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	// The spec declares no minLength for name/code, so the generated validation
-	// accepts an empty string; the real API rejects it.
-	if req.Name == "" || req.Code == "" {
-		writeError(w, http.StatusBadRequest, "name and code are required")
-		return
-	}
 	if msg := validatePassword(req.Password, s.store.getPasswordPolicy()); msg != "" {
 		writeError(w, http.StatusBadRequest, msg)
 		return

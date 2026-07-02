@@ -10,13 +10,21 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.GlobalKey(), h)
 	}
+	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
+		return core.RegisteredRoute{
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
+		}
+	}
 	return []core.RegisteredRoute{
-		{Route: core.Route{Method: "POST", Path: "/commonserviceitem", Description: "Create a destination, group, or routing", Kind: "api"}, Handler: rl(s.handleCreateItem)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem", Description: "List destinations, groups, or routings", Kind: "api"}, Handler: rl(s.handleListItems)},
-		{Route: core.Route{Method: "GET", Path: "/commonserviceitem/{id}", Description: "Get a destination, group, or routing", Kind: "api"}, Handler: rl(s.handleGetItem)},
-		{Route: core.Route{Method: "PUT", Path: "/commonserviceitem/{id}", Description: "Update a destination, group, or routing", Kind: "api"}, Handler: rl(s.handleUpdateItem)},
-		{Route: core.Route{Method: "DELETE", Path: "/commonserviceitem/{id}", Description: "Delete a destination, group, or routing", Kind: "api"}, Handler: rl(s.handleDeleteItem)},
-		{Route: core.Route{Method: "POST", Path: "/commonserviceitem/{id}/simplenotification/message", Description: "Send a notification message to the specified group", Kind: "api"}, Handler: rl(s.handleSendMessage)},
+		route("POST", "/commonserviceitem", "Create a destination, group, or routing", s.handleCreateItem),
+		route("GET", "/commonserviceitem", "List destinations, groups, or routings", s.handleListItems),
+		route("GET", "/commonserviceitem/{id}", "Get a destination, group, or routing", s.handleGetItem),
+		route("PUT", "/commonserviceitem/{id}", "Update a destination, group, or routing", s.handleUpdateItem),
+		route("DELETE", "/commonserviceitem/{id}", "Delete a destination, group, or routing", s.handleDeleteItem),
+		route("POST", "/commonserviceitem/{id}/simplenotification/message", "Send a notification message to the specified group", s.handleSendMessage),
 		{Route: core.Route{Method: "GET", Path: "/_sakumock/messages", Description: "List accepted notification messages", Kind: "inspection"}, Handler: s.handleInspectMessages},
 		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/messages", Description: "Clear accepted notification messages", Kind: "inspection"}, Handler: s.handleResetMessages},
 	}

@@ -1,0 +1,5 @@
+{
+  "skipPaths": [
+    "/commonserviceitem/simplenotification/routing/reorder"
+  ]
+}

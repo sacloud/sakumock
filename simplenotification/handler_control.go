@@ -13,12 +13,6 @@ import (
 // through verbatim (json.RawMessage), so the mock does not model the polymorphic
 // per-class settings of destinations, groups, and routings.
 
-var validProviderClasses = map[string]bool{
-	"saknoticedestination": true,
-	"saknoticegroup":       true,
-	"saknoticerouting":     true,
-}
-
 type csiProvider struct {
 	Class        string `json:"Class"`
 	Name         string `json:"Name,omitempty"`
@@ -108,14 +102,6 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	csi := req.CommonServiceItem
-	if csi.Name == "" {
-		writeError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
-	if !validProviderClasses[csi.Provider.Class] {
-		writeError(w, http.StatusBadRequest, "Provider.Class must be one of saknoticedestination, saknoticegroup, saknoticerouting")
-		return
-	}
 	it := s.store.CreateItem(ServiceItem{
 		Name:          csi.Name,
 		Description:   csi.Description,

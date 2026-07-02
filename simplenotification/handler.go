@@ -1,22 +1,17 @@
 package simplenotification
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/sacloud/sakumock/core"
 )
 
-const (
-	groupIDPattern   = `^[0-9]{12}$`
-	maxMessageLength = 2048
-)
+const groupIDPattern = `^[0-9]{12}$`
 
 var groupIDRe = regexp.MustCompile(groupIDPattern)
 
@@ -86,12 +81,10 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// The spec declares no minLength for Message, so the generated validation
+	// accepts an empty string; the real API rejects it.
 	if req.Message == "" {
 		writeError(w, http.StatusBadRequest, "Message is required")
-		return
-	}
-	if utf8.RuneCountInString(req.Message) > maxMessageLength {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Message must be %d characters or less", maxMessageLength))
 		return
 	}
 	rec, err := s.store.Send(id, req.Message, time.Now())

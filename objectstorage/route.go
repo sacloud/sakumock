@@ -16,7 +16,12 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		return s.rateLimiter.Middleware(core.GlobalKey(), h)
 	}
 	api := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
-		return core.RegisteredRoute{Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"}, Handler: rl(h)}
+		return core.RegisteredRoute{
+			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
+			// Rate limit outermost, then spec-derived body validation, then
+			// the handler.
+			Handler: rl(s.validator.Middleware(method, path, h)),
+		}
 	}
 	return []core.RegisteredRoute{
 		// Federation API (/fed/v1).

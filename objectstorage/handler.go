@@ -254,10 +254,6 @@ func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.ClusterID == "" {
-		writeError(w, http.StatusBadRequest, "cluster_id is required")
-		return
-	}
 	planType := "standard"
 	if c, ok := findCluster(req.ClusterID); ok && c.PlanFamily == "archive" {
 		planType = "archive"
@@ -322,10 +318,6 @@ func (s *Server) handlePostReplication(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if req.DestBucket == "" {
-		writeError(w, http.StatusBadRequest, "dest_bucket is required")
 		return
 	}
 	b, ok := s.store.SetBucketReplication(name, req.DestBucket)
@@ -766,10 +758,6 @@ func (s *Server) handlePutEncryption(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if req.KMSKeyID == "" {
-		writeError(w, http.StatusBadRequest, "kms_key_id is required")
-		return
-	}
 	b, ok := s.store.SetBucketEncryption(name, req.KMSKeyID)
 	if !ok {
 		writeError(w, http.StatusNotFound, "bucket not found")
@@ -852,10 +840,6 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if req.NewPlan.Type == "" || req.NewPlan.ServiceClassPath == "" {
-		writeError(w, http.StatusBadRequest, "new_plan.type and new_plan.service_class_path are required")
 		return
 	}
 	b, ok := s.store.GetBucket(name)

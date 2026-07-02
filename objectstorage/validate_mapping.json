@@ -1,0 +1,7 @@
+{
+  "prefix": "/{site}/v2",
+  "routes": {
+    "PUT /buckets/{name}": "PUT /fed/v1/buckets/{name}",
+    "POST /buckets/{name}/replication": "POST /fed/v1/buckets/{name}/replication"
+  }
+}

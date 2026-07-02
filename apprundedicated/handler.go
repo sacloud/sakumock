@@ -797,10 +797,6 @@ func (s *Server) handleUpdateCluster(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if msg := validateUpdateCluster(&req); msg != "" {
-		writeError(w, http.StatusBadRequest, msg)
-		return
-	}
 	if err := s.store.UpdateCluster(id, req.ServicePrincipalID, req.LetsEncryptEmail); err != nil {
 		writeError(w, http.StatusNotFound, "Not Found")
 		return
@@ -825,10 +821,6 @@ func (s *Server) handleCreateApplication(w http.ResponseWriter, r *http.Request)
 	var req createApplicationReq
 	if err := readJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
-		return
-	}
-	if msg := validateCreateApplication(&req); msg != "" {
-		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
 	if _, ok := s.store.ReadCluster(req.ClusterID); !ok {

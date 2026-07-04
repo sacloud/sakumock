@@ -383,6 +383,44 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		resp := gwDoWith(t, dpAddr, "GET", svc.RouteHost.Value, "/", func(r *http.Request) { r.SetBasicAuth("carol", "pw") })
 		assertStatus(t, resp, 403, "Your IP address is not allowed")
 	})
+
+	t.Run("route-level restriction disables the user-level one", func(t *testing.T) {
+		// Per the API reference, the user's IP restriction only takes effect
+		// when the route has none configured.
+		svc := createUpstreamService(t, client, "ip_both", upstream.URL, func(req *v1.ServiceDetailRequest) {
+			req.Authentication = v1.NewOptServiceDetailRequestAuthentication(v1.ServiceDetailRequestAuthenticationBasic)
+		})
+		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
+			Name:      v1.NewOptName("both_ip_route"),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
+			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				RestrictedBy: v1.IpRestrictionConfigRestrictedByAllowIps,
+				Ips:          []string{"127.0.0.1"},
+			}),
+		})
+		user, err := apigwsdk.NewUserOp(client).Create(t.Context(), &v1.UserDetail{
+			Name: "ip_both_user",
+			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				RestrictedBy: v1.IpRestrictionConfigRestrictedByDenyIps,
+				Ips:          []string{"127.0.0.1"},
+			}),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := apigwsdk.NewUserExtraOp(client, uuid.MustParse(user.ID.Value.String())).UpdateAuth(t.Context(), v1.UserAuthentication{
+			BasicAuth: v1.NewOptBasicAuth(v1.BasicAuth{UserName: "dave", Password: "pw"}),
+		}); err != nil {
+			t.Fatal(err)
+		}
+		// The user's deny list would block 127.0.0.1, but the route has its
+		// own restriction, so only the route's allow list applies.
+		resp := gwDoWith(t, dpAddr, "GET", svc.RouteHost.Value, "/", func(r *http.Request) { r.SetBasicAuth("dave", "pw") })
+		assertStatus(t, resp, 200, "")
+	})
 }
 
 func TestCredentialUniqueness(t *testing.T) {

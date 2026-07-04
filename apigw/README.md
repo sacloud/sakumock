@@ -95,7 +95,7 @@ Authentication (the service's `authentication` field) is enforced before proxyin
 - **jwt**: `Authorization: Bearer` tokens; the credential is resolved by the token's `iss` claim matching the credential `key`, and the signature is verified with the credential's algorithm (HS256/384/512) and secret. `exp`/`nbf` are validated.
 - **oidc**: not enforced yet (arrives in a later phase); requests to OIDC-protected services get 401.
 - Route **authorization** (group ACL): when enabled, the authenticated user must belong to one of the enabled groups, otherwise 403.
-- **IP restrictions** apply in the real gateway's order: route-level before authentication, user-level after.
+- **IP restrictions**: the route-level restriction applies before authentication; the user-level restriction applies after authentication and only when the route has none configured (per the API reference).
 - Credential identifiers (`basicAuth`/`hmacAuth` `userName`, `jwt` `key`) must be unique across users because the data plane resolves the consumer by them; reusing one is rejected with 400.
 
 ## Behavior notes

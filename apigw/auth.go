@@ -37,7 +37,9 @@ func (dp *dataPlane) authorize(w http.ResponseWriter, r *http.Request, m *matchR
 	if !ok {
 		return false
 	}
-	if user != nil && !dp.allowIP(w, user.IPRestriction, clientIP) {
+	// Per the API reference, the user's IP restriction only takes effect when
+	// the route has none configured.
+	if user != nil && m.route.IPRestriction == nil && !dp.allowIP(w, user.IPRestriction, clientIP) {
 		return false
 	}
 	return dp.checkACL(w, m.route.Authorization, user)

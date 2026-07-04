@@ -31,6 +31,12 @@ func (c *Command) Run(ctx context.Context) error {
 
 	core.SetupLogger(c.Debug)
 
+	shutdownTracing, err := core.SetupTracing(ctx)
+	if err != nil {
+		return err
+	}
+	defer shutdownTracing()
+
 	c.Config.tls = c.TLS
 	h, err := NewHandler(c.Config)
 	if err != nil {
@@ -51,5 +57,5 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 	slog.Info("to use with sacloud-sdk-go",
 		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
-	return core.Serve(ctx, c.Addr, h, c.TLS)
+	return core.Serve(ctx, c.Addr, core.TraceHandler(c.Name(), h), c.TLS)
 }

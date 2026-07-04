@@ -35,6 +35,12 @@ func (c *Command) Run(ctx context.Context) error {
 
 	core.SetupLogger(c.Debug)
 
+	shutdownTracing, err := core.SetupTracing(ctx)
+	if err != nil {
+		return err
+	}
+	defer shutdownTracing()
+
 	// The data plane is started inside NewHandler, so propagate the common TLS
 	// files into Config first (standalone path; the unified binary injects them
 	// via ServerOptions instead).
@@ -54,5 +60,5 @@ func (c *Command) Run(ctx context.Context) error {
 	)
 	slog.Info("to use with sacloud-sdk-go",
 		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
-	return core.Serve(ctx, c.Addr, h, c.TLS)
+	return core.Serve(ctx, c.Addr, core.TraceHandler(c.Name(), h), c.TLS)
 }

@@ -69,7 +69,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		func(m proto.Message) int { return len(m.(*logspb.LogsData).ResourceLogs) }))
 	mux.HandleFunc("POST /v1/traces", dp.handleOTLP("traces", func() proto.Message { return &tracepb.TracesData{} },
 		func(m proto.Message) int { return len(m.(*tracepb.TracesData).ResourceSpans) }))
-	dp.server = &http.Server{Handler: mux}
+	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), mux)}
 	go func() {
 		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane server stopped", "error", err)

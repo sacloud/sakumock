@@ -42,7 +42,7 @@ func TestTerraformEndToEnd(t *testing.T) {
 	// fixed defaults, so the test never collides with — or accidentally talks
 	// to — a process already listening on those ports. The chosen address for
 	// each service is passed via its prefixed --<service>-addr flag.
-	addrs := []string{freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t), freeAddr(t)}
+	addrs := freeAddrs(t, 12)
 	addrFlags := []string{
 		"--simplemq-addr", addrs[0],
 		"--kms-addr", addrs[1],
@@ -55,6 +55,7 @@ func TestTerraformEndToEnd(t *testing.T) {
 		"--apprun-addr", addrs[8],
 		"--apprun-dedicated-addr", addrs[9],
 		"--workflows-addr", addrs[10],
+		"--apigw-addr", addrs[11],
 	}
 
 	// Write the client dotenv with the `env` subcommand (no server needed); the
@@ -130,18 +131,30 @@ func TestTerraformEndToEnd(t *testing.T) {
 	runTF("destroy", "-auto-approve", "-no-color", "-input=false")
 }
 
-// freeAddr returns a currently-free loopback address. There is a small window
-// between closing the listener and sakumock binding it, which is acceptable for
-// a test and far less likely than a clash on a fixed port.
-func freeAddr(t *testing.T) string {
+// freeAddrs returns n distinct currently-free loopback addresses. All
+// listeners are held open until every port is allocated, so the kernel cannot
+// hand the same port out twice (closing between allocations allows reuse).
+// There is still a small window between closing them and sakumock binding,
+// which is acceptable for a test and far less likely than a clash on a fixed
+// port.
+func freeAddrs(t *testing.T, n int) []string {
 	t.Helper()
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("allocate free port: %v", err)
+	addrs := make([]string, 0, n)
+	listeners := make([]net.Listener, 0, n)
+	defer func() {
+		for _, l := range listeners {
+			_ = l.Close()
+		}
+	}()
+	for range n {
+		l, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatalf("allocate free port: %v", err)
+		}
+		listeners = append(listeners, l)
+		addrs = append(addrs, l.Addr().String())
 	}
-	addr := l.Addr().String()
-	_ = l.Close()
-	return addr
+	return addrs
 }
 
 // stopProcess sends SIGTERM and waits for the process to exit, force-killing it

@@ -50,9 +50,8 @@ func newEchoUpstream(t *testing.T) *httptest.Server {
 	return srv
 }
 
-// newGateway starts a mock with the data plane enabled and returns the SDK
-// client plus the data plane address.
-func newGateway(t *testing.T) (*v1.Client, string) {
+// newGatewayServer starts a mock with the data plane enabled.
+func newGatewayServer(t *testing.T) *apigw.Server {
 	t.Helper()
 	srv := apigw.NewTestServer(apigw.Config{
 		EnableDataPlane: true,
@@ -62,6 +61,14 @@ func newGateway(t *testing.T) (*v1.Client, string) {
 	if srv.DataPlaneAddr() == "" {
 		t.Fatal("data plane address should be set")
 	}
+	return srv
+}
+
+// newGateway starts a mock with the data plane enabled and returns the SDK
+// client plus the data plane address.
+func newGateway(t *testing.T) (*v1.Client, string) {
+	t.Helper()
+	srv := newGatewayServer(t)
 	return newClient(t, srv.TestURL()), srv.DataPlaneAddr()
 }
 

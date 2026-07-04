@@ -301,11 +301,15 @@ func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResul
 			if m.stripSessionCookie {
 				removeCookie(req, sessionCookieName)
 			}
+			applyRequestTransformation(req, m.route.RequestTransform)
 			// A request without a body may be retried safely; dropping the
 			// zero-length body makes that explicit for the retry transport.
 			if req.ContentLength == 0 {
 				req.Body = nil
 			}
+		},
+		ModifyResponse: func(resp *http.Response) error {
+			return applyResponseTransformation(resp, m.route.ResponseTransform)
 		},
 		Transport: dp.transportFor(svc),
 		ErrorHandler: func(rw http.ResponseWriter, req *http.Request, err error) {

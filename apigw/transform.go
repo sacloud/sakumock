@@ -42,14 +42,14 @@ func applyRequestTransformation(req *http.Request, tr *RequestTransformation) {
 	}
 	if tr.Replace != nil {
 		for _, kv := range tr.Replace.Headers {
-			if req.Header.Get(kv.Key) != "" {
+			if headerExists(req.Header, kv.Key) {
 				req.Header.Set(kv.Key, kv.Value)
 			}
 		}
 	}
 	if tr.Add != nil {
 		for _, kv := range tr.Add.Headers {
-			if req.Header.Get(kv.Key) == "" {
+			if !headerExists(req.Header, kv.Key) {
 				req.Header.Set(kv.Key, kv.Value)
 			}
 		}
@@ -110,7 +110,9 @@ func applyRequestTransformation(req *http.Request, tr *RequestTransformation) {
 	raw, err := io.ReadAll(req.Body)
 	req.Body.Close()
 	if err != nil {
-		req.Body = io.NopCloser(bytes.NewReader(nil))
+		// The body is already damaged; forward what was read with a
+		// consistent Content-Length so the transport fails predictably.
+		setRequestBody(req, raw)
 		return
 	}
 	transformed, ok := transformJSONObject(raw, func(obj map[string]any) {
@@ -153,9 +155,7 @@ func applyRequestTransformation(req *http.Request, tr *RequestTransformation) {
 	if !ok {
 		transformed = raw
 	}
-	req.Body = io.NopCloser(bytes.NewReader(transformed))
-	req.ContentLength = int64(len(transformed))
-	req.Header.Set("Content-Length", strconv.Itoa(len(transformed)))
+	setRequestBody(req, transformed)
 }
 
 // applyResponseTransformation rewrites the upstream response in place (the
@@ -179,14 +179,14 @@ func applyResponseTransformation(resp *http.Response, tr *ResponseTransformation
 	}
 	if tr.Replace != nil && statusMatches(tr.Replace.IfStatusCode, status) {
 		for _, kv := range tr.Replace.Headers {
-			if resp.Header.Get(kv.Key) != "" {
+			if headerExists(resp.Header, kv.Key) {
 				resp.Header.Set(kv.Key, kv.Value)
 			}
 		}
 	}
 	if tr.Add != nil && statusMatches(tr.Add.IfStatusCode, status) {
 		for _, kv := range tr.Add.Headers {
-			if resp.Header.Get(kv.Key) == "" {
+			if !headerExists(resp.Header, kv.Key) {
 				resp.Header.Set(kv.Key, kv.Value)
 			}
 		}
@@ -198,11 +198,12 @@ func applyResponseTransformation(resp *http.Response, tr *ResponseTransformation
 	}
 
 	// Whole-body replacement takes precedence over JSON field operations.
-	if tr.Replace != nil && tr.Replace.Body != "" && statusMatches(tr.Replace.IfStatusCode, status) {
-		return setResponseBody(resp, []byte(tr.Replace.Body))
+	// Presence (not emptiness) triggers it, so replacing with "" works.
+	if tr.Replace != nil && tr.Replace.Body != nil && statusMatches(tr.Replace.IfStatusCode, status) {
+		return setResponseBody(resp, []byte(*tr.Replace.Body))
 	}
 
-	if !responseHasJSONOps(tr) || !isTransformableJSON(resp.Header, true) {
+	if !responseHasJSONOps(tr) || !isTransformableJSON(resp.Header, resp.Body != nil) {
 		return nil
 	}
 	raw, err := io.ReadAll(resp.Body)
@@ -306,6 +307,19 @@ func setResponseBody(resp *http.Response, body []byte) error {
 	resp.ContentLength = int64(len(body))
 	resp.Header.Set("Content-Length", strconv.Itoa(len(body)))
 	return nil
+}
+
+// headerExists distinguishes a missing header from one present with an empty
+// value (Header.Get returns "" for both).
+func headerExists(h http.Header, key string) bool {
+	_, ok := h[http.CanonicalHeaderKey(key)]
+	return ok
+}
+
+func setRequestBody(req *http.Request, body []byte) {
+	req.Body = io.NopCloser(bytes.NewReader(body))
+	req.ContentLength = int64(len(body))
+	req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 }
 
 func statusMatches(codes []int, status int) bool {

@@ -55,24 +55,6 @@ func putJSON(t *testing.T, cpURL, path, body string) {
 	}
 }
 
-func gwDoBody(t *testing.T, dpAddr, method, host, path, contentType, body string) *http.Response {
-	t.Helper()
-	req, err := http.NewRequestWithContext(t.Context(), method, "http://"+dpAddr+path, strings.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Host = host
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { resp.Body.Close() })
-	return resp
-}
-
 func decodeTransformEcho(t *testing.T, resp *http.Response) transformEcho {
 	t.Helper()
 	var e transformEcho
@@ -278,6 +260,17 @@ func TestDataPlaneResponseTransformation(t *testing.T) {
 	b, _ := io.ReadAll(resp.Body)
 	if string(b) != "gone" {
 		t.Errorf("body = %q, want gone (replace.body)", b)
+	}
+
+	// Presence, not emptiness, triggers the replacement: an explicit empty
+	// string clears the body.
+	putJSON(t, srv, trPath, `{
+		"replace": {"body": ""}
+	}`)
+	resp = gwDo(t, dpAddr, "GET", host, "/")
+	b, _ = io.ReadAll(resp.Body)
+	if string(b) != "" {
+		t.Errorf("body = %q, want empty (replace.body: \"\")", b)
 	}
 }
 

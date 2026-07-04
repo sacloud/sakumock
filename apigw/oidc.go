@@ -2,6 +2,7 @@ package apigw
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
@@ -14,11 +15,11 @@ import (
 // stalled IdP fails fast instead of tying up request goroutines.
 const oidcDiscoveryTimeout = 10 * time.Second
 
-// authenticateOidc validates a Bearer token against the service's OIDC
-// configuration: the issuer's discovery document and JWKS are fetched (and
-// cached) via go-oidc, so any IdP — including the real Google — works. This
-// covers the accessToken authentication method; authorizationCodeFlow
-// (browser login + session) arrives in a later phase.
+// authenticateOidc enforces the service's OIDC configuration. Bearer tokens
+// (the accessToken method) are verified against the issuer's JWKS; requests
+// without one fall through to the authorizationCodeFlow method (session
+// cookie, or a browser round-trip to the IdP) when the configuration allows
+// it.
 //
 // The error messages carry the underlying reason: a mock should make token
 // problems easy to debug, and the real API's generic responses hide them.
@@ -32,48 +33,58 @@ func (dp *dataPlane) authenticateOidc(w http.ResponseWriter, r *http.Request, m 
 		writeError(w, http.StatusUnauthorized, "Unauthorized: OIDC configuration not found")
 		return false
 	}
-	if !slices.Contains(cfg.AuthenticationMethods, "accessToken") {
-		// Only the accessToken (Bearer) method is implemented; a config
-		// allowing solely authorizationCodeFlow must not accept Bearer
-		// tokens (the flow itself arrives in a later phase).
-		writeError(w, http.StatusUnauthorized, "Unauthorized: the OIDC configuration does not allow the accessToken method")
-		return false
-	}
+	allowBearer := slices.Contains(cfg.AuthenticationMethods, "accessToken")
+	allowCode := slices.Contains(cfg.AuthenticationMethods, "authorizationCodeFlow")
 
-	token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
-	if !ok {
-		writeError(w, http.StatusUnauthorized, "Unauthorized")
-		return false
+	if token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer "); ok {
+		if !allowBearer {
+			writeError(w, http.StatusUnauthorized, "Unauthorized: the OIDC configuration does not allow the accessToken method")
+			return false
+		}
+		return dp.authenticateBearer(w, r, m, cfg, token)
 	}
+	if allowCode {
+		return dp.authenticateSession(w, r, m, cfg)
+	}
+	writeError(w, http.StatusUnauthorized, "Unauthorized")
+	return false
+}
 
+// authenticateBearer verifies an accessToken-method Bearer token.
+func (dp *dataPlane) authenticateBearer(w http.ResponseWriter, r *http.Request, m *matchResult, cfg OidcConfig, token string) bool {
 	provider, err := dp.oidcProvider(cfg.Issuer)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "Unauthorized: OIDC discovery failed: "+err.Error())
 		return false
 	}
-
-	// Without tokenAudiences the token's aud must contain the client ID;
-	// with them, the aud check is done by hand against the configured list.
-	vcfg := &oidc.Config{ClientID: cfg.ClientID}
-	if len(cfg.TokenAudiences) > 0 {
-		vcfg = &oidc.Config{SkipClientIDCheck: true}
-	}
-	idToken, err := provider.Verifier(vcfg).Verify(r.Context(), token)
-	if err != nil {
+	if _, err := dp.verifyIDToken(r.Context(), provider, cfg, token); err != nil {
 		writeError(w, http.StatusUnauthorized, "Unauthorized: "+err.Error())
 		return false
 	}
-	if len(cfg.TokenAudiences) > 0 && !slices.ContainsFunc(idToken.Audience, func(aud string) bool {
-		return slices.Contains(cfg.TokenAudiences, aud)
-	}) {
-		writeError(w, http.StatusUnauthorized, "Unauthorized: token audience is not allowed")
-		return false
-	}
-
 	if cfg.HideCredentials {
 		m.stripAuthorization = true
 	}
 	return true
+}
+
+// verifyIDToken verifies signature, issuer, expiry, and audience: without
+// tokenAudiences the token's aud must contain the client ID; with them, the
+// aud is checked against the configured list instead.
+func (dp *dataPlane) verifyIDToken(ctx context.Context, provider *oidc.Provider, cfg OidcConfig, raw string) (*oidc.IDToken, error) {
+	vcfg := &oidc.Config{ClientID: cfg.ClientID}
+	if len(cfg.TokenAudiences) > 0 {
+		vcfg = &oidc.Config{SkipClientIDCheck: true}
+	}
+	idToken, err := provider.Verifier(vcfg).Verify(ctx, raw)
+	if err != nil {
+		return nil, err
+	}
+	if len(cfg.TokenAudiences) > 0 && !slices.ContainsFunc(idToken.Audience, func(aud string) bool {
+		return slices.Contains(cfg.TokenAudiences, aud)
+	}) {
+		return nil, errors.New("token audience is not allowed")
+	}
+	return idToken, nil
 }
 
 // oidcProvider returns the cached provider for the issuer, performing the

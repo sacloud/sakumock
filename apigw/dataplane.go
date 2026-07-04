@@ -38,6 +38,8 @@ type dataPlane struct {
 	transports    map[string]*cachedTransport
 	regexps       map[string]*regexp.Regexp
 	oidcProviders map[string]*oidc.Provider
+	pendingLogins map[string]pendingLogin
+	sessions      map[string]gwSession
 }
 
 // cachedTransport is a per-service HTTP transport, rebuilt when the service's
@@ -65,6 +67,8 @@ func startDataPlane(cfg Config, store *MemoryStore, logger *slog.Logger) (*dataP
 		transports:    make(map[string]*cachedTransport),
 		regexps:       make(map[string]*regexp.Regexp),
 		oidcProviders: make(map[string]*oidc.Provider),
+		pendingLogins: make(map[string]pendingLogin),
+		sessions:      make(map[string]gwSession),
 	}
 
 	dp.server = &http.Server{Handler: dp}
@@ -103,6 +107,9 @@ type matchResult struct {
 	// stripAuthorization drops the Authorization header before proxying
 	// (the OIDC configuration's hideCredentials).
 	stripAuthorization bool
+	// stripSessionCookie drops the gateway-internal session cookie before
+	// proxying.
+	stripSessionCookie bool
 }
 
 func (dp *dataPlane) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -290,6 +297,9 @@ func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResul
 			req.Header.Set("X-Forwarded-Host", originalHost)
 			if m.stripAuthorization {
 				req.Header.Del("Authorization")
+			}
+			if m.stripSessionCookie {
+				removeCookie(req, sessionCookieName)
 			}
 			// A request without a body may be retried safely; dropping the
 			// zero-length body makes that explicit for the retry transport.

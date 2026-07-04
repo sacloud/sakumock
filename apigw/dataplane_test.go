@@ -29,6 +29,7 @@ type echoUpstream struct {
 	XFProto       string `json:"xfProto"`
 	XFFor         string `json:"xfFor"`
 	Authorization string `json:"authorization"`
+	Cookie        string `json:"cookie"`
 }
 
 func newEchoUpstream(t *testing.T) *httptest.Server {
@@ -42,6 +43,7 @@ func newEchoUpstream(t *testing.T) *httptest.Server {
 			XFProto:       r.Header.Get("X-Forwarded-Proto"),
 			XFFor:         r.Header.Get("X-Forwarded-For"),
 			Authorization: r.Header.Get("Authorization"),
+			Cookie:        r.Header.Get("Cookie"),
 		})
 	}))
 	t.Cleanup(srv.Close)

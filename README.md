@@ -171,6 +171,32 @@ sakumock all --enable-service-link --eventbus-enable-data-plane
 
 Service link is only available with `sakumock all`; standalone services cannot discover each other's addresses.
 
+## OpenTelemetry Tracing
+
+sakumock can emit OpenTelemetry traces for every request it handles — one server span per request, continuing the client's trace when the request carries a W3C `traceparent` header. Configuration uses the standard OTEL environment variables only; there are no sakumock flags:
+
+```bash
+# Export spans to any OTLP/HTTP endpoint (a collector, Jaeger, ...):
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 sakumock all
+```
+
+Tracing is enabled when `OTEL_EXPORTER_OTLP_ENDPOINT` or `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is set (and `OTEL_SDK_DISABLED` is not `true`); otherwise it is completely off. Only OTLP over HTTP is supported — `OTEL_EXPORTER_OTLP_PROTOCOL=grpc` is not.
+
+- Spans are named after the matched route (e.g. `GET /cloud/zone/is1a/api/kms/1.0/keys/{id}`) and carry `http.route` plus a `sakumock.service` attribute identifying the service; the resource is `service.name=sakumock` (override with `OTEL_SERVICE_NAME`).
+- Every `request` log line gains `trace_id` and `span_id` attributes, so logs and traces correlate.
+- All listeners are instrumented: every control plane and the in-process data planes (monitoring suite ingest, AppRun proxies, API gateway). The object storage S3 data plane (versitygw, an external process) is not.
+- The SDK's other standard env vars work as usual: `OTEL_RESOURCE_ATTRIBUTES`, `OTEL_TRACES_SAMPLER`, `OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_BSP_*`, ...
+
+sakumock can even export to its own Monitoring Suite mock ingest:
+
+```bash
+MONITORINGSUITE_ENABLE_DATA_PLANE=true \
+MONITORINGSUITE_DATA_PLANE_DUMP_DIR=/tmp/telemetry \
+OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:28084 sakumock all
+```
+
+Note that in this loopback setup each export POST is itself traced, so an idle sakumock emits one heartbeat span per batch interval — harmless, but visible in the dumps.
+
 ## Inspection
 
 Every service exposes mock-only `/_sakumock/` endpoints for observing or driving the mock — listing accepted messages, inspecting fired deliveries, injecting events, and resetting state. These endpoints do not exist in the real SAKURA Cloud API.

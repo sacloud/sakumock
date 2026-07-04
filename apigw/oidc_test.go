@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"math/big"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +26,13 @@ import (
 type fakeIdP struct {
 	srv *httptest.Server
 	key *rsa.PrivateKey
+	// codes issued by /auth, keyed by the authorization code, for /token.
+	codes map[string]fakeIdPCode
+}
+
+type fakeIdPCode struct {
+	nonce    string
+	clientID string
 }
 
 func newFakeIdP(t *testing.T) *fakeIdP {
@@ -32,8 +41,53 @@ func newFakeIdP(t *testing.T) *fakeIdP {
 	if err != nil {
 		t.Fatal(err)
 	}
-	idp := &fakeIdP{key: key}
+	idp := &fakeIdP{key: key, codes: make(map[string]fakeIdPCode)}
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /auth", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		code := uuid.NewString()
+		idp.codes[code] = fakeIdPCode{nonce: q.Get("nonce"), clientID: q.Get("client_id")}
+		u, err := url.Parse(q.Get("redirect_uri"))
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		ru := u.Query()
+		ru.Set("code", code)
+		ru.Set("state", q.Get("state"))
+		u.RawQuery = ru.Encode()
+		http.Redirect(w, r, u.String(), http.StatusFound)
+	})
+	mux.HandleFunc("POST /token", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		issued, ok := idp.codes[r.PostFormValue("code")]
+		if !ok {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(map[string]string{"error": "invalid_grant"})
+			return
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+			"iss":   idp.srv.URL,
+			"sub":   "test-subject",
+			"aud":   issued.clientID,
+			"nonce": issued.nonce,
+			"exp":   time.Now().Add(time.Hour).Unix(),
+			"iat":   time.Now().Unix(),
+		})
+		token.Header["kid"] = "test-key"
+		signed, err := token.SignedString(idp.key)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"access_token": "fake-access-token",
+			"token_type":   "Bearer",
+			"expires_in":   3600,
+			"id_token":     signed,
+		})
+	})
 	mux.HandleFunc("GET /.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{
 			"issuer":                                idp.srv.URL,
@@ -248,4 +302,110 @@ func TestDataPlaneOidcHideCredentials(t *testing.T) {
 	if got["authorization"] != "" {
 		t.Errorf("Authorization reached the upstream despite hideCredentials: %q", got["authorization"])
 	}
+}
+
+// flowDo sends one step of the code flow to the data plane without following
+// redirects.
+func flowDo(t *testing.T, dpAddr, host, pathAndQuery string, cookies []*http.Cookie) *http.Response {
+	t.Helper()
+	req, err := http.NewRequestWithContext(t.Context(), "GET", "http://"+dpAddr+pathAndQuery, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Host = host
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	client := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { resp.Body.Close() })
+	return resp
+}
+
+func TestDataPlaneOidcCodeFlow(t *testing.T) {
+	client, dpAddr := newGateway(t)
+	upstream := newEchoUpstream(t)
+	idp := newFakeIdP(t)
+
+	oidcID := createOidcConfig(t, client, &v1.Oidc{
+		Name:                  "code_flow",
+		AuthenticationMethods: v1.AuthenticationMethods{v1.AuthenticationMethodsItemAuthorizationCodeFlow},
+		Issuer:                idp.issuer(),
+		ClientId:              "my-client",
+		ClientSecret:          "my-secret",
+		UseSession:            v1.NewOptBool(true),
+	})
+	svc := setupOidcGateway(t, client, "oidc_flow", upstream.URL, oidcID)
+	// The Host header includes the data plane port so redirect_uri round-trips.
+	_, dpPort, err := net.SplitHostPort(dpAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	host := svc.RouteHost.Value + ":" + dpPort
+
+	// Step 1: the unauthenticated request is redirected to the IdP. The
+	// original query string is part of the redirect_uri, so the user lands
+	// back on the exact URL they requested.
+	resp := flowDo(t, dpAddr, host, "/app?x=1", nil)
+	if resp.StatusCode != 302 {
+		t.Fatalf("step1 status = %d, want 302", resp.StatusCode)
+	}
+	authURL := resp.Header.Get("Location")
+	if !strings.HasPrefix(authURL, idp.issuer()+"/auth") {
+		t.Fatalf("step1 Location = %q, want the IdP authorization endpoint", authURL)
+	}
+	if !strings.Contains(authURL, "redirect_uri="+url.QueryEscape("http://"+host+"/app?x=1")) {
+		t.Errorf("step1 Location misses the original URL as redirect_uri: %q", authURL)
+	}
+
+	// Step 2: the IdP authenticates the user and redirects back with a code.
+	idpClient := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	idpResp, err := idpClient.Get(authURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer idpResp.Body.Close()
+	callback, err := url.Parse(idpResp.Header.Get("Location"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if callback.Host != host {
+		t.Fatalf("callback host = %q, want %q", callback.Host, host)
+	}
+
+	// Step 3: the gateway exchanges the code, sets the session cookie, and
+	// redirects to the originally requested URL.
+	resp = flowDo(t, dpAddr, host, callback.Path+"?"+callback.RawQuery, nil)
+	if resp.StatusCode != 302 {
+		t.Fatalf("step3 status = %d, want 302", resp.StatusCode)
+	}
+	if loc := resp.Header.Get("Location"); loc != "http://"+host+"/app?x=1" {
+		t.Errorf("step3 Location = %q, want the original URL including its query", loc)
+	}
+	var session *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == "apigw_session" {
+			session = c
+		}
+	}
+	if session == nil {
+		t.Fatal("step3 set no session cookie")
+	}
+
+	// Step 4: the session cookie authenticates subsequent requests, and the
+	// gateway-internal cookie does not leak to the upstream.
+	resp = flowDo(t, dpAddr, host, "/app", []*http.Cookie{session})
+	if resp.StatusCode != 200 {
+		t.Fatalf("step4 status = %d, want 200", resp.StatusCode)
+	}
+	if e := decodeEcho(t, resp); strings.Contains(e.Cookie, "apigw_session") {
+		t.Errorf("session cookie leaked to the upstream: %q", e.Cookie)
+	}
+
+	// An unknown state on the callback is rejected.
+	resp = flowDo(t, dpAddr, host, "/app?code=whatever&state=forged", nil)
+	assertStatus(t, resp, 401, "unknown or expired login state")
 }

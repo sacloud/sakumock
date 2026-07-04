@@ -21,7 +21,7 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [apprun](apprun/) | 18088 | `github.com/sacloud/sakumock/apprun` | AppRun control-plane API (optional Docker data plane) |
 | [apprundedicated](apprundedicated/) | 18089 | `github.com/sacloud/sakumock/apprundedicated` | AppRun Dedicated control-plane API (optional Docker data plane) |
 | [workflows](workflows/) | 18090 | `github.com/sacloud/sakumock/workflows` | Workflows control-plane API (optional Runbook execution engine) |
-| [apigw](apigw/) | 18091 | `github.com/sacloud/sakumock/apigw` | API Gateway control-plane API |
+| [apigw](apigw/) | 18091 | `github.com/sacloud/sakumock/apigw` | API Gateway control-plane API (optional gateway data plane) |
 
 ## Quick Start
 
@@ -233,12 +233,12 @@ docker run --rm \
 
 ### Data Plane Image
 
-A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every service's data plane by default: the Object Storage S3 data plane (bundling the [versitygw](https://github.com/versity/versitygw) S3 gateway; `OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`), the Monitoring Suite telemetry ingest data plane (`MONITORINGSUITE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28084`), and the AppRun / AppRun Dedicated Docker data planes (`APPRUN_ENABLE_DATA_PLANE=true` on `0.0.0.0:28088`, `APPRUN_DEDICATED_ENABLE_DATA_PLANE=true` on `0.0.0.0:28089`). The default image includes none of these, so use this tag when you need a data plane:
+A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every service's data plane by default: the Object Storage S3 data plane (bundling the [versitygw](https://github.com/versity/versitygw) S3 gateway; `OBJECT_STORAGE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28086`), the Monitoring Suite telemetry ingest data plane (`MONITORINGSUITE_ENABLE_DATA_PLANE=true`, listening on `0.0.0.0:28084`), the AppRun / AppRun Dedicated Docker data planes (`APPRUN_ENABLE_DATA_PLANE=true` on `0.0.0.0:28088`, `APPRUN_DEDICATED_ENABLE_DATA_PLANE=true` on `0.0.0.0:28089`), and the API Gateway data plane (`APIGW_ENABLE_DATA_PLANE=true` on `0.0.0.0:28091`). The default image includes none of these, so use this tag when you need a data plane:
 
 ```bash
 docker run --rm \
   -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 \
-  -p 28084:28084 -p 28086:28086 \
+  -p 28084:28084 -p 28086:28086 -p 28091:28091 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 
@@ -265,7 +265,7 @@ docker run --rm \
   -e APPRUN_ENABLE_DATA_PLANE=false \
   -e APPRUN_DEDICATED_ENABLE_DATA_PLANE=false \
   -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 \
-  -p 28084:28084 -p 28086:28086 \
+  -p 28084:28084 -p 28086:28086 -p 28091:28091 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 

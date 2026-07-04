@@ -457,6 +457,26 @@ func allHTTPMethods() []string {
 	return []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"}
 }
 
+// RoutesByHost returns the routes whose effective host set (hosts, or the
+// auto-issued host when hosts is empty) contains host, in creation order.
+// The data plane calls this per request.
+func (s *MemoryStore) RoutesByHost(host string) []Route {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var out []Route
+	for _, rt := range s.routes {
+		hosts := rt.Hosts
+		if len(hosts) == 0 {
+			hosts = []string{rt.Host}
+		}
+		if slices.Contains(hosts, host) {
+			out = append(out, copyRoute(rt))
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	return out
+}
+
 func (s *MemoryStore) ListRoutes(serviceID string) ([]Route, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

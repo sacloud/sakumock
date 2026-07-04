@@ -31,6 +31,7 @@ func (c *Command) Run(ctx context.Context) error {
 
 	core.SetupLogger(c.Debug)
 
+	c.Config.tls = c.TLS
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -42,8 +43,12 @@ func (c *Command) Run(ctx context.Context) error {
 		"addr", c.Addr,
 		"latency", c.Latency,
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
+		"data_plane", c.EnableDataPlane,
 		"debug", c.Debug,
 	)
+	if c.EnableDataPlane {
+		slog.Info("data plane listening", "addr", h.DataPlaneAddr(), "scheme", c.TLS.Scheme())
+	}
 	slog.Info("to use with sacloud-sdk-go",
 		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
 	return core.Serve(ctx, c.Addr, h, c.TLS)

@@ -159,7 +159,7 @@ Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUM
 
 ### Code style
 
-- Logging: `log/slog`. Per-request logs (`ServeHTTP`) MUST be **Info** level — the mock's purpose is to confirm it is handling requests, so request visibility at Info is intentional. Use Debug for internal operations (store reads/writes, etc.)
+- Logging: `log/slog`. Per-request logs (`ServeHTTP`) MUST be **Info** level — the mock's purpose is to confirm it is handling requests, so request visibility at Info is intentional. Use Debug for internal operations (store reads/writes, etc.). Wrap the ResponseWriter with `core.NewResponseRecorder` and log via `core.RequestLogArgs(r, rw, extras...)` so error responses (>= 400) include the reason (`error` attribute with the response body) — the reason otherwise only reaches the client
 - CLI: `alecthomas/kong` for flag parsing
 - JSON request/response bodies: define a named struct with `json:"..."` tags for any shape whose fields are known and fixed — including shapes used only once. Reserve `map[string]any` for genuinely dynamic or undetermined structures (e.g. settings/icon passed through verbatim). Factor a shared type when the same shape appears in more than one place (e.g. a `{"data": ...}` envelope, or a key shape reused across resources) rather than repeating a map literal. Structs make field/type mistakes a compile error and document the contract.
 - Tests: use the real SAKURA Cloud SDK client against `NewTestServer`

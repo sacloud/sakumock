@@ -279,23 +279,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
 	}
-	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+	rw := core.NewResponseRecorder(w)
 	s.mux.ServeHTTP(rw, r)
-	s.logger.Info("request",
-		"method", r.Method,
-		"path", r.URL.Path,
-		"status", rw.statusCode,
-	)
-}
-
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
+	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }
 
 func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {

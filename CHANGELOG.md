@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.7.0](https://github.com/sacloud/sakumock/compare/v0.6.0...v0.7.0) - 2026-07-04
+- Generate request-body validation from OpenAPI specs by @fujiwara in https://github.com/sacloud/sakumock/pull/128
+- Roll out generated spec-derived validation to six services by @fujiwara in https://github.com/sacloud/sakumock/pull/130
+- Roll out generated spec-derived validation to the remaining four services by @fujiwara in https://github.com/sacloud/sakumock/pull/131
+- Keep empty-string guards for identifiers the spec gives no minLength by @fujiwara in https://github.com/sacloud/sakumock/pull/132
+- Declare no-minLength spec gaps via core.WithNonEmpty overrides by @fujiwara in https://github.com/sacloud/sakumock/pull/133
+- feat(apigw): add API Gateway mock service (control plane) by @fujiwara in https://github.com/sacloud/sakumock/pull/134
+- feat(apigw): add the gateway data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/136
+- build(deps): Bump golang.org/x/net from 0.54.0 to 0.55.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/135
+- feat(apigw): enforce data-plane authentication, group ACL, and IP restriction by @fujiwara in https://github.com/sacloud/sakumock/pull/137
+- feat(core): log the error reason on 4xx/5xx responses in every service by @fujiwara in https://github.com/sacloud/sakumock/pull/138
+- feat(apigw): validate OIDC Bearer tokens on the data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/139
+- feat(apigw): support the OIDC authorization code flow with sessions by @fujiwara in https://github.com/sacloud/sakumock/pull/140
+- feat(apigw): apply request/response transformations on the data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/141
+- feat(apigw): serve object storage backends on the data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/142
+- feat(apigw): enforce corsConfig on the data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/143
+- chore: drop what-only comments and fix two stale ones by @fujiwara in https://github.com/sacloud/sakumock/pull/144
+- feat: OpenTelemetry trace support by @fujiwara in https://github.com/sacloud/sakumock/pull/145
+
 ## [v0.6.0](https://github.com/sacloud/sakumock/compare/v0.5.2...v0.6.0) - 2026-06-28
 - feat: add Workflows service mock (control plane) by @fujiwara in https://github.com/sacloud/sakumock/pull/119
 - feat: add Workflows data plane (Runbook execution engine) by @fujiwara in https://github.com/sacloud/sakumock/pull/121

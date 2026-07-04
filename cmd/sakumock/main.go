@@ -8,6 +8,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock"
+	"github.com/sacloud/sakumock/apigw"
 	"github.com/sacloud/sakumock/apprun"
 	"github.com/sacloud/sakumock/apprundedicated"
 	"github.com/sacloud/sakumock/core"
@@ -40,6 +41,7 @@ type CLI struct {
 	Apprun             apprun.Command             `cmd:"" name:"apprun" help:"AppRun mock server"`
 	ApprunDedicated    apprundedicated.Command    `cmd:"" name:"apprun-dedicated" help:"AppRun Dedicated mock server"`
 	Workflows          workflows.Command          `cmd:"" name:"workflows" help:"Workflows mock server"`
+	Apigw              apigw.Command              `cmd:"" name:"apigw" help:"API Gateway mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

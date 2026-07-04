@@ -61,7 +61,7 @@ Precedent: simplenotification exposes `GET`/`DELETE /_sakumock/messages` to list
 
 ### Port allocation
 
-Control-plane ports are sequential from 18080. Next available: 18091. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage, 18087 iam, 18088 apprun, 18089 apprundedicated, 18090 workflows.)
+Control-plane ports are sequential from 18080. Next available: 18092. (18080 simplemq, 18081 kms, 18082 secretmanager, 18083 simplenotification, 18084 monitoringsuite, 18085 eventbus, 18086 objectstorage, 18087 iam, 18088 apprun, 18089 apprundedicated, 18090 workflows, 18091 apigw.)
 
 A data plane needs a **separate listener** (control-plane port + 10000) when the protocol or handler is fundamentally different from the control-plane HTTP API:
 

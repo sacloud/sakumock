@@ -60,7 +60,7 @@ func TestMessageExpiration(t *testing.T) {
 		t.Errorf("expected 0 messages after compact, got %d", len(q.messages))
 	}
 
-	_ = msg // use msg
+	_ = msg
 }
 
 func TestConfigVisibilityTimeoutPropagation(t *testing.T) {

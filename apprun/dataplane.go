@@ -158,7 +158,6 @@ func (dm *DockerManager) checkContainers() {
 	}
 }
 
-// inspectRunning returns true if the container is running.
 func inspectRunning(containerID string) bool {
 	out, err := exec.Command("docker", "inspect", "--format", "{{.State.Running}}", containerID).CombinedOutput()
 	if err != nil {

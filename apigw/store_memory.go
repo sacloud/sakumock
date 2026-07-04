@@ -1118,9 +1118,7 @@ func (s *MemoryStore) UpdateCertificate(id string, c Certificate) error {
 		cur.ECDSA = ptr(*c.ECDSA)
 	}
 	cur.UpdatedAt = now()
-	// Domains denormalize the certificate name via resolveCertificateLocked
-	// on read paths; nothing to sync here because CertificateName is
-	// recomputed when domains are listed.
+	// Domains denormalize the certificate name; keep them in sync on rename.
 	for _, d := range s.domains {
 		if d.CertificateID == id {
 			d.CertificateName = c.Name

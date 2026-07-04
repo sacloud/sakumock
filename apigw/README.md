@@ -84,7 +84,7 @@ Matching and forwarding semantics (Kong-style, per the spec):
 - A route `path` starting with `~/` is a regular expression anchored at the start; anything else is a literal prefix. Regex routes rank above prefix routes; among regex routes the lowest `regexPriority` wins (0 is highest), among prefix routes the longest prefix wins.
 - `stripPath` (default true) removes the matched portion before forwarding; the service `path` is prepended. `preserveHost` (default false) keeps the client's Host header instead of the upstream host.
 - An http request matching an https-only route gets the `httpsRedirectStatusCode` response (3xx redirect, or the default 426 upgrade).
-- No match returns `404 {"message":"no Route matched with those values"}`; upstream failures return 502, upstream timeouts (`readTimeout`) 504 — the same messages as the real gateway.
+- No match returns `404 {"message":"no Route matched with those values"}`; upstream failures return 502 and timeouts 504 — the same messages as the real gateway. `connectTimeout` bounds the dial; `readTimeout`/`writeTimeout` bound the idle time between successive read/write operations on the upstream connection (nginx-style semantics, as in the real gateway).
 - `retries` is best-effort: only connection-level failures of bodyless requests are retried. `X-Forwarded-For/-Proto/-Host` are set on forwarded requests. Upstream TLS certificates are **not verified** (mock convenience for self-signed local upstreams).
 - With the common `--tls-cert`/`--tls-key`, the data plane serves HTTPS and routes match the `https` protocol.
 

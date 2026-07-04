@@ -338,18 +338,28 @@ func (dp *dataPlane) transportFor(svc Service) http.RoundTripper {
 	if svc.Retries != nil {
 		retries = *svc.Retries
 	}
-	fp := fmt.Sprintf("%s|%d|%d|%d", svc.Protocol, svc.ConnectTimeout, svc.ReadTimeout, retries)
+	fp := fmt.Sprintf("%s|%d|%d|%d|%d", svc.Protocol, svc.ConnectTimeout, svc.WriteTimeout, svc.ReadTimeout, retries)
 
 	dp.mu.Lock()
 	defer dp.mu.Unlock()
 	if ct, ok := dp.transports[svc.ID]; ok && ct.fingerprint == fp {
 		return ct.rt
 	}
+	dialer := &net.Dialer{Timeout: time.Duration(svc.ConnectTimeout) * time.Millisecond}
+	readTimeout := time.Duration(svc.ReadTimeout) * time.Millisecond
+	writeTimeout := time.Duration(svc.WriteTimeout) * time.Millisecond
 	tr := &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout: time.Duration(svc.ConnectTimeout) * time.Millisecond,
-		}).DialContext,
-		ResponseHeaderTimeout: time.Duration(svc.ReadTimeout) * time.Millisecond,
+		// readTimeout/writeTimeout bound the idle time between two successive
+		// read/write operations on the upstream connection (Kong semantics),
+		// implemented as per-operation deadlines on the dialed conn. Waiting
+		// for response headers is a read, so no ResponseHeaderTimeout needed.
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			conn, err := dialer.DialContext(ctx, network, addr)
+			if err != nil {
+				return nil, err
+			}
+			return &timeoutConn{Conn: conn, readTimeout: readTimeout, writeTimeout: writeTimeout}, nil
+		},
 		// The mock does not verify upstream TLS certificates so local
 		// upstreams with self-signed certificates work out of the box.
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -381,6 +391,34 @@ func (t *retryRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
 		}
 	}
 	return resp, err
+}
+
+// timeoutConn applies the service's readTimeout/writeTimeout as a deadline
+// per read/write operation, mirroring how the real gateway's nginx-style
+// timeouts bound the interval between successive operations rather than the
+// whole exchange.
+type timeoutConn struct {
+	net.Conn
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+}
+
+func (c *timeoutConn) Read(b []byte) (int, error) {
+	if c.readTimeout > 0 {
+		if err := c.Conn.SetReadDeadline(time.Now().Add(c.readTimeout)); err != nil {
+			return 0, err
+		}
+	}
+	return c.Conn.Read(b)
+}
+
+func (c *timeoutConn) Write(b []byte) (int, error) {
+	if c.writeTimeout > 0 {
+		if err := c.Conn.SetWriteDeadline(time.Now().Add(c.writeTimeout)); err != nil {
+			return 0, err
+		}
+	}
+	return c.Conn.Write(b)
 }
 
 func stripPort(host string) string {

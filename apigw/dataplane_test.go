@@ -1,6 +1,7 @@
 package apigw_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -385,6 +386,38 @@ func TestDataPlaneUpstreamErrors(t *testing.T) {
 		body, _ := io.ReadAll(resp.Body)
 		if !strings.Contains(string(body), "invalid response was received from the upstream") {
 			t.Errorf("body = %s", body)
+		}
+	})
+
+	t.Run("stalled write returns 504", func(t *testing.T) {
+		// The handler never reads the request body, so a large upload stalls
+		// once the kernel buffers fill and the writeTimeout fires.
+		stall := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(1 * time.Second)
+		}))
+		t.Cleanup(stall.Close)
+		svc := createUpstreamService(t, client, "dp_stall", stall.URL, func(req *v1.ServiceDetailRequest) {
+			req.WriteTimeout = v1.NewOptInt(100) // ms
+			req.Retries = v1.NewOptInt(0)
+		})
+		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
+			Name:      v1.NewOptName("stall_route"),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Methods:   []v1.HTTPMethod{v1.HTTPMethodPOST},
+		})
+		req, err := http.NewRequestWithContext(t.Context(), "POST", "http://"+dpAddr+"/",
+			bytes.NewReader(make([]byte, 32<<20)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Host = svc.RouteHost.Value
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("request: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 504 {
+			t.Fatalf("status = %d, want 504", resp.StatusCode)
 		}
 	})
 

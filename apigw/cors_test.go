@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	apigwsdk "github.com/sacloud/sacloud-sdk-go/api/apigw"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/apigw/apis/v1"
 )
 
@@ -203,5 +204,56 @@ func TestDataPlaneCORSPreflightContinue(t *testing.T) {
 	}
 	if e := decodeEcho(t, resp); e.XFHost == "" {
 		t.Error("preflight should have been proxied to the upstream")
+	}
+}
+
+func TestDataPlaneCORSObjectStoragePreflightContinue(t *testing.T) {
+	client, dpAddr := newGateway(t)
+	fakeS3 := newFakeS3(t, map[string]string{"pf-bucket/hello.txt": "hi"})
+
+	sub := createSubscription(t, client, "cors_s3_sub")
+	svcOp := apigwsdk.NewServiceOp(client)
+	created, err := svcOp.Create(t.Context(), &v1.ServiceDetailRequest{
+		Name:         "cors_s3",
+		Protocol:     v1.ServiceDetailRequestProtocolHTTPS,
+		Host:         "storage.example.com",
+		Subscription: v1.ServiceSubscriptionRequest{ID: sub.ID.Value},
+		ObjectStorageConfig: v1.NewOptObjectStorageConfig(v1.ObjectStorageConfig{
+			BucketName:       "pf-bucket",
+			Endpoint:         fakeS3.URL,
+			Region:           "jp-north-1",
+			AccessKeyID:      "k",
+			SecretAccessKey:  "s",
+			UseDocumentIndex: true,
+		}),
+		CorsConfig: v1.NewOptCorsConfig(v1.CorsConfig{
+			AccessControlAllowOrigins: v1.NewOptString("http://app.example.com"),
+			PreflightContinue:         v1.NewOptBool(true),
+		}),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc, err := svcOp.Read(t.Context(), created.ID.Value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
+		Name:      v1.NewOptName("cors_s3_route"),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodOPTIONS},
+	})
+
+	// The preflight is forwarded to the S3 endpoint, whose bucket-CORS
+	// answer is relayed.
+	resp := gwDoWith(t, dpAddr, "OPTIONS", svc.RouteHost.Value, "/hello.txt", preflight("http://app.example.com", "GET"))
+	if resp.StatusCode != 200 {
+		t.Fatalf("status = %d", resp.StatusCode)
+	}
+	if got := resp.Header.Get("Access-Control-Allow-Origin"); got != "http://app.example.com" {
+		t.Errorf("Allow-Origin = %q, want the bucket CORS echo", got)
+	}
+	if got := resp.Header.Get("Access-Control-Allow-Methods"); got != "GET" {
+		t.Errorf("Allow-Methods = %q, want the bucket CORS value", got)
 	}
 }

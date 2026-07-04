@@ -18,6 +18,13 @@ import (
 func newFakeS3(t *testing.T, objects map[string]string) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			// S3 answers CORS preflights (bucket CORS) without signatures.
+			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+			w.Header().Set("Access-Control-Allow-Methods", "GET")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		if !strings.HasPrefix(r.Header.Get("Authorization"), "AWS4-HMAC-SHA256") {
 			w.WriteHeader(http.StatusForbidden)
 			return

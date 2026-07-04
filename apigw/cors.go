@@ -10,6 +10,13 @@ import (
 // accessControlAllowMethods is not configured.
 const corsDefaultMethods = "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
 
+// isCORSPreflight identifies a CORS preflight request.
+func isCORSPreflight(r *http.Request) bool {
+	return r.Method == http.MethodOptions &&
+		r.Header.Get("Origin") != "" &&
+		r.Header.Get("Access-Control-Request-Method") != ""
+}
+
 // handleCORSPreflight answers a CORS preflight for a service with corsConfig.
 // It runs before authentication — browsers send preflights without
 // credentials, so an auth-protected route must still answer them (the real
@@ -17,8 +24,7 @@ const corsDefaultMethods = "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT
 // whether the response was written.
 func (dp *dataPlane) handleCORSPreflight(w http.ResponseWriter, r *http.Request, m *matchResult) bool {
 	cfg := m.service.CorsConfig
-	if cfg == nil || r.Method != http.MethodOptions ||
-		r.Header.Get("Origin") == "" || r.Header.Get("Access-Control-Request-Method") == "" {
+	if cfg == nil || !isCORSPreflight(r) {
 		return false
 	}
 	if cfg.PreflightContinue != nil && *cfg.PreflightContinue {

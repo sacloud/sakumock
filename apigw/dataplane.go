@@ -100,19 +100,14 @@ type matchResult struct {
 }
 
 func (dp *dataPlane) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+	rw := core.NewResponseRecorder(w)
 
 	m := dp.match(rw, r)
 	if m != nil && dp.authorize(rw, r, m) {
 		dp.proxy(rw, r, m)
 	}
 
-	args := []any{
-		"method", r.Method,
-		"host", r.Host,
-		"path", r.URL.Path,
-		"status", rw.statusCode,
-	}
+	args := core.RequestLogArgs(r, rw, "host", r.Host)
 	if m != nil {
 		args = append(args, "route", m.route.Name, "upstream", m.service.Host)
 	}

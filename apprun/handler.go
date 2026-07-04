@@ -3,7 +3,6 @@ package apprun
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -930,9 +929,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
 	}
-	s.logger.Debug("request", "method", r.Method, "path", r.URL.Path)
-	s.mux.ServeHTTP(w, r)
+	rw := core.NewResponseRecorder(w)
+	s.mux.ServeHTTP(rw, r)
+	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }
-
-// unused but referenced by slog; suppress linter
-var _ = slog.Info

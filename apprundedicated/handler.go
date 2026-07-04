@@ -1500,6 +1500,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
 	}
-	s.logger.Info("request", "method", r.Method, "path", r.URL.Path)
-	s.mux.ServeHTTP(w, r)
+	rw := core.NewResponseRecorder(w)
+	s.mux.ServeHTTP(rw, r)
+	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }

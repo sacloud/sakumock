@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/sacloud/sakumock"
+	"github.com/sacloud/sakumock/apigw"
 	"github.com/sacloud/sakumock/apprun"
 	"github.com/sacloud/sakumock/apprundedicated"
 	"github.com/sacloud/sakumock/core"
@@ -43,6 +44,7 @@ type serviceConfigs struct {
 	Apprun             apprun.Config             `embed:"" prefix:"apprun-"`
 	ApprunDedicated    apprundedicated.Config    `embed:"" prefix:"apprun-dedicated-"`
 	Workflows          workflows.Config          `embed:"" prefix:"workflows-"`
+	Apigw              apigw.Config              `embed:"" prefix:"apigw-"`
 
 	// TLS is one common certificate/key pair applied to every service's listeners
 	// (control plane and data plane). When both files are set, all listeners serve
@@ -53,7 +55,7 @@ type serviceConfigs struct {
 
 // configs lists every service in start order.
 func (c *serviceConfigs) configs() []core.ServiceConfig {
-	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows}
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows, c.Apigw}
 }
 
 // AllCmd runs every mock service together in a single process, each on its own
@@ -141,7 +143,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 }
 
 func (c *AllCmd) debug() bool {
-	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug || c.Apprun.Debug || c.ApprunDedicated.Debug || c.Workflows.Debug
+	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug || c.Apprun.Debug || c.ApprunDedicated.Debug || c.Workflows.Debug || c.Apigw.Debug
 }
 
 // Run starts every mock service and serves until ctx is canceled. If one

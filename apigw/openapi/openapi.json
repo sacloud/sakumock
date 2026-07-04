@@ -1,0 +1,4301 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "version": "2.0.1",
+    "title": "API Gateway APIドキュメント",
+    "contact": {
+      "name": "SAKURA internet Inc."
+    },
+    "license": {
+      "name": "Copyright(C) SAKURA internet Inc. all rights reserved."
+    },
+    "description": "---\n「API Gateway」が提供するAPIの利用方法とサンプルを公開しております。\n# 基本的な使い方\n## APIキーの発行\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。\nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n<div class=\"warning\">\n  <b>操作マニュアル</b><br />\n  <ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n---\n# 利用例\n\nAPI Gatewayの利用を開始するには最低限、以下の登録が必要です。\n\n- 契約\n- アップストリーム（以下サービス）\n- エントリポイント（以下ルート）\n\n## 1.契約登録\n\n契約するプランによってサービス作成数等の制限とご利用料金に違いがあります。ご利用用途に合わせたプランをご選択ください。\n\n現在利用可能なプランを取得するには以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/plans\n```\n\n取得できたプランのidを使用して、\n契約の登録をする場合は以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '{\n               \"planId\": \"{plan_id}\",\n               \"name\": \"example-subscription-1\"\n          }' \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/subscriptions\n```\n\n契約が完了すると、\n\n- サービス、ルートの作成、更新、削除\n- ユーザー、グループの作成、更新、削除\n- ルート認可の設定\n- リクエスト・レスポンス変換の設定\n- グループの所属設定\n- ユーザー認証情報の設定\n- 独自ドメイン・証明書の登録、更新、削除\n\nなどの操作が可能になります。\n\nまた、ご利用中のさくらクラウドアカウントの契約状況を確認するには以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/subscriptions\n```\n\nご利用中の契約を解約する場合は以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/subscriptions/{subscription_id}\n```\n\n## 2.サービスの作成、取得\n\nサービスとはリクエストの転送先に関する情報です。\n選択したプランによって作成可能数が異なります。\n\nサービスを作成するには以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '{\n               \"name\": \"example-service-1\",\n               \"tags\": [\n                  \"tag1\",\n                  \"tag2\"\n               ],\n               \"protocol\": \"https\",\n               \"host\": \"xxx.example.jp\",\n               \"path\": \"/base\",\n               \"port\": 80,\n               \"retries\": 5,\n               \"connectTimeout\": 60000,\n               \"writeTimeout\": 60000,\n               \"readTimeout\": 60000,\n               \"authentication\": \"basic\",\n               \"subscription\": {\n                  \"id\": \"01234567-89ab-cdef-0123-456789abcdef\"\n               }\n          }' \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/services\n```\n\n上記で作成したサービスを取得するには以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/services/{service_id}\n```\n\n## 3.ルートの作成、取得\n\nルートとは作成したサービスに対するエントリポイントです。\n必ず、紐づくサービスが必要になります。\n\nルートを作成するには以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '{\n               \"name\": \"example-route-1\",\n               \"tags\": [\n                    \"tag1\",\n                    \"tag2\"\n               ],\n               \"protocols\": \"http,https\",\n               \"path\": \"/\",\n               \"methods\": [\n                    \"GET\",\n                    \"POST\"\n               ],\n               \"httpsRedirectStatusCode\": 426,\n               \"regexPriority\": 0,\n               \"stripPath\": false,\n               \"preserveHost\": true,\n               \"requestBuffering\": false,\n               \"responseBuffering\": false\n          }' \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/services/{service_id}/routes\n```\n\n上記で作成したルートを取得するには以下のような入力を行います。\n\n```sh\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apigw/1.0/services/{service_id}/routes/{route_id}\n```\n---\n"
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/api/apigw/1.0/"
+    }
+  ],
+  "paths": {
+    "/services": {
+      "post": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Service登録API",
+        "description": "アップストリームのエンドポイント情報である Service を登録します。",
+        "operationId": "addService",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceDetailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "service": {
+                          "$ref": "#/components/schemas/ServiceDetailRequest"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntityResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Service一覧照会API",
+        "description": "登録した Service の一覧を取得します。",
+        "operationId": "getServices",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "services": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/ServiceDetailResponse"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}": {
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Service詳細照会API",
+        "description": "登録した Service の詳細情報を取得します。",
+        "operationId": "getServiceById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "service": {
+                          "$ref": "#/components/schemas/ServiceDetailResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Service更新API",
+        "description": "登録した Service の詳細情報を更新します。",
+        "operationId": "updateService",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceDetail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Service削除API",
+        "description": "登録した Service を削除します。",
+        "operationId": "deleteService",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}/routes": {
+      "post": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route登録API",
+        "description": "登録した Service に対して、公開するエンドポイントとして Route を登録します。<br> 各 Route の認証設定は全て Service の設定に準じます。",
+        "operationId": "addRoute",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          }
+        ],
+        "requestBody": {
+          "description": "Create a route",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteDetail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "$ref": "#/components/schemas/RouteDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Service Route一覧照会API",
+        "description": "Service に登録した Route の一覧を取得します。",
+        "operationId": "getServiceRoutes",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "routes": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Route"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route詳細照会API",
+        "description": "Service に登録した Route の詳細情報を取得します。",
+        "operationId": "getRoute",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "$ref": "#/components/schemas/RouteDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route更新API",
+        "description": "Service に登録した Route の詳細情報を更新します。",
+        "operationId": "updateRoute",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "requestBody": {
+          "description": "Update a route",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteDetail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route削除API",
+        "description": "Service に登録した Route を削除します。",
+        "operationId": "deleteRoute",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}/routes/{routeId}/authorization": {
+      "put": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route認可情報更新API",
+        "description": "登録した Route に対してアクセス可能な Group を登録します。<br> 登録しない場合は全てのUserがアクセス可能になります。",
+        "operationId": "upsertRouteAuthorization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteAuthorizationDetail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route認可情報取得API",
+        "description": "Route に登録した認可情報を取得します。",
+        "operationId": "getRouteAuthorization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "routeAuthorization": {
+                          "$ref": "#/components/schemas/RouteAuthorizationDetailResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}/routes/{routeId}/request": {
+      "put": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route Request変換情報更新API",
+        "description": "Route から Service へ転送する際にリクエスト内容を変換する設定を登録します。\n- **httpMethod**: 設定したHTTPメソッドへ変換します。\n- **allow**: 設定した Key 以外をリクエストから取り除きます。\n- **remove**: 設定した Key をリクエストから取り除きます。\n- **rename**: 設定した From-To に従い、リクエストの Key を変更します。\n- **replace**: 設定した Key と同名の Key がリクエストに存在する場合、Value の値を置換します。\n- **add**: 設定した値をリクエストに追加します。同名の Key がリクエストに存在しない場合に機能します。\n- **append**: 設定した値をリクエストに追加します。同名の Key がリクエストに存在する場合は Value に追記します。\n",
+        "operationId": "upsertRequestTransformation",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestTransformation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route Request変換情報取得API",
+        "description": "Route に登録したリクエスト変換情報を取得します。",
+        "operationId": "getRequestTransformation",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "requestTransformation": {
+                          "$ref": "#/components/schemas/RequestTransformation"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/services/{serviceId}/routes/{routeId}/response": {
+      "put": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route Response変換情報更新API",
+        "description": "Route から Service へ転送する際にレスポンス内容を変換する設定を登録します。\n- **allow**: 設定した Key 以外をレスポンスから取り除きます。\n- **remove**: 設定した Key をレスポンスから取り除きます。\n- **rename**: 設定した From-To に従い、レスポンスの Key を変更します。\n- **replace**: 設定した Key と同名の Key がレスポンスに存在する場合、Value の値を置換します。\n- **add**: 設定した値をレスポンスに追加します。同名の Key がレスポンスに存在しない場合に機能します。\n- **append**: 設定した値をレスポンスに追加します。同名の Key がレスポンスに存在する場合は Value に追記します。\n- **ifStatusCode**: 設定した場合、アップストリームからのレスポンスコードが設定した値と一致する場合に、各種変換が機能します。\n",
+        "operationId": "upsertResponseTransformation",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseTransformation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "サービス"
+        ],
+        "summary": "Route Response変換情報取得API",
+        "description": "Route に登録したレスポンス変換情報を取得します。",
+        "operationId": "getResponseTransformation",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceID"
+          },
+          {
+            "$ref": "#/components/parameters/RouteID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "responseTransformation": {
+                          "$ref": "#/components/schemas/ResponseTransformation"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User登録API",
+        "description": "認証情報を設定する User を登録します。<br> User のIP制限設定は、Route にIP制限が設定されていない場合に機能します。",
+        "operationId": "addUser",
+        "requestBody": {
+          "description": "Create a User",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDetail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/UserDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User一覧照会API",
+        "description": "登録した User の一覧を取得します。",
+        "operationId": "getUsers",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/User"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "get": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User詳細照会API",
+        "description": "登録した User の詳細情報を取得します。",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/UserDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User更新API",
+        "description": "登録した User の詳細情報を更新します。",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "requestBody": {
+          "description": "Update a user",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDetail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User削除API",
+        "description": "登録した User を削除します。",
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/users/{userId}/groups": {
+      "get": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User所属Group照会API",
+        "description": "登録した Group の一覧を取得します。<br> 指定した User が各 Group に所属しているかどうかの情報も含めて返却します。",
+        "operationId": "getUserGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "groups": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UserGroupDetail"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User所属Group更新API",
+        "description": "登録した User を Group に所属させます。",
+        "operationId": "updateUserGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "requestBody": {
+          "description": "Update a user group",
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/UserGroupDetailUpdate"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/users/{userId}/authentication": {
+      "get": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User認証情報取得API",
+        "description": "User に登録された認証情報を取得します。<br> なお、パスワード、シークレットなどの機密情報は取得できません。",
+        "operationId": "getUserAuthentication",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "userAuthentication": {
+                          "$ref": "#/components/schemas/UserAuthentication"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ユーザー"
+        ],
+        "summary": "User認証情報更新API",
+        "description": "User に認証情報を登録します。",
+        "operationId": "upsertUserAuthentication",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UserID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserAuthentication"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/groups": {
+      "get": {
+        "tags": [
+          "グループ"
+        ],
+        "summary": "Group一覧照会API",
+        "description": "登録した Group の一覧を取得します。",
+        "operationId": "getGroups",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "groups": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Group"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "グループ"
+        ],
+        "summary": "Group登録API",
+        "description": "新しい Group を登録します。<br> Group は User を分類し、アクセス制御を管理するために使用されます。",
+        "operationId": "addGroup",
+        "requestBody": {
+          "description": "Create a Group",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Group"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "group": {
+                          "$ref": "#/components/schemas/Group"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/groups/{groupId}": {
+      "get": {
+        "tags": [
+          "グループ"
+        ],
+        "summary": "Group詳細照会API",
+        "description": "登録した Group の詳細情報を取得します。",
+        "operationId": "getGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/GroupID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "group": {
+                          "$ref": "#/components/schemas/Group"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "グループ"
+        ],
+        "summary": "Group更新API",
+        "description": "登録した Group の詳細情報を更新します。",
+        "operationId": "updateGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/GroupID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Group"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "グループ"
+        ],
+        "summary": "Group削除API",
+        "description": "登録した Group を削除します。",
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/GroupID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/domains": {
+      "post": {
+        "tags": [
+          "ドメイン"
+        ],
+        "summary": "Domain登録API",
+        "description": "route の host で使用するドメインを登録します。",
+        "operationId": "addDomain",
+        "requestBody": {
+          "description": "Create a Domain",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Domain"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "domain": {
+                          "$ref": "#/components/schemas/Domain"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ドメイン"
+        ],
+        "summary": "Domain一覧照会API",
+        "description": "登録した Domain の一覧を取得します。",
+        "operationId": "getDomains",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "$ref": "#/components/schemas/DomainDTO"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/domains/{domainId}": {
+      "put": {
+        "tags": [
+          "ドメイン"
+        ],
+        "summary": "Domain更新API",
+        "description": "登録した Domain の証明書情報を更新します。<br>ドメイン名の変更はできません。",
+        "operationId": "updateDomain",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DomainPUT"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ドメイン"
+        ],
+        "summary": "Domain削除API",
+        "description": "登録した Domain を削除します。",
+        "operationId": "deleteDomain",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/DomainID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/certificates": {
+      "post": {
+        "tags": [
+          "証明書"
+        ],
+        "summary": "Certificate登録API",
+        "description": "SSL証明書を登録します。",
+        "operationId": "addCertificate",
+        "requestBody": {
+          "description": "Create a Certificate",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Certificate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "certificate": {
+                          "$ref": "#/components/schemas/Certificate"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntityResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "証明書"
+        ],
+        "summary": "Certificate一覧照会API",
+        "description": "登録した Certificate の一覧を取得します。",
+        "operationId": "getCertificates",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "$ref": "#/components/schemas/CertificateDTO"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/certificates/{certificateId}": {
+      "put": {
+        "tags": [
+          "証明書"
+        ],
+        "summary": "Certificate更新API",
+        "description": "登録した Certificate の詳細情報を更新します。",
+        "operationId": "updateCertificate",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CertificateID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Certificate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntityResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "証明書"
+        ],
+        "summary": "Certificate削除API",
+        "description": "登録した Certificate を削除します。",
+        "operationId": "deleteCertificate",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CertificateID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/plans": {
+      "get": {
+        "tags": [
+          "プラン"
+        ],
+        "summary": "プラン一覧照会API",
+        "description": "現在契約可能な API Gateway の料金プランの一覧を取得します。",
+        "operationId": "getPlans",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "plans": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Plan"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/subscriptions": {
+      "post": {
+        "tags": [
+          "サブスクリプション"
+        ],
+        "summary": "契約API",
+        "description": "選択したプランで API Gateway の利用契約を行います。",
+        "operationId": "subscribe",
+        "requestBody": {
+          "description": "契約情報",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "サブスクリプション"
+        ],
+        "summary": "契約一覧照会API",
+        "description": "お客様の API Gateway 契約情報の一覧を取得します。",
+        "operationId": "getSubscriptions",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/SubscriptionList"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}": {
+      "get": {
+        "tags": [
+          "サブスクリプション"
+        ],
+        "summary": "契約詳細照会API",
+        "description": "お客様の API Gateway 契約情報を取得します。<br> 契約が存在する場合は、契約情報と利用中のプラン情報を返却します。",
+        "operationId": "getSubscriptionById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SubscriptionID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "subscription": {
+                          "$ref": "#/components/schemas/SubscriptionDetailResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "サブスクリプション"
+        ],
+        "summary": "契約更新API",
+        "description": "契約名を更新します。",
+        "operationId": "updateSubscription",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SubscriptionID"
+          }
+        ],
+        "requestBody": {
+          "description": "契約情報",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "サブスクリプション"
+        ],
+        "summary": "契約解約API",
+        "description": "登録した契約を解約します。",
+        "operationId": "unsubscribe",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SubscriptionID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/oidc": {
+      "post": {
+        "tags": [
+          "OIDC認証"
+        ],
+        "summary": "OIDC認証登録API",
+        "description": "OIDC認証の設定値を登録します。",
+        "operationId": "addOidc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Oidc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "oidc": {
+                          "$ref": "#/components/schemas/Oidc"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntityResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "OIDC認証"
+        ],
+        "summary": "OIDC認証一覧照会API",
+        "description": "登録した OIDC認証 の一覧を取得します。",
+        "operationId": "getOidc",
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "oidcs": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Oidc"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/oidc/{oidcId}": {
+      "get": {
+        "tags": [
+          "OIDC認証"
+        ],
+        "summary": "OIDC認証詳細照会API",
+        "description": "登録した OIDC認証 の詳細を取得します。",
+        "operationId": "getOidcById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OidcID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功時のレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "apigw"
+                  ],
+                  "properties": {
+                    "apigw": {
+                      "type": "object",
+                      "properties": {
+                        "oidc": {
+                          "$ref": "#/components/schemas/OidcDetail"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "OIDC認証"
+        ],
+        "summary": "OIDC認証更新API",
+        "description": "登録した OIDC認証 を更新します。",
+        "operationId": "updateOidc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OidcID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Oidc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "OIDC認証"
+        ],
+        "summary": "OIDC認証削除API",
+        "description": "登録した OIDC認証 を削除します。",
+        "operationId": "deleteOidc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OidcID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "成功時の返却値はありません。"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerErrorResponse"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Model": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "example": "b69f7bfe-1d8f-48bb-8b85-b47359366e48",
+            "description": "Entityを識別するためのID"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "作成日時"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "更新日時"
+          }
+        },
+        "description": "各Entity共通のモデル"
+      },
+      "AuthenticationMethods": {
+        "type": "array",
+        "description": "OIDC認証フロー",
+        "items": {
+          "type": "string",
+          "enum": [
+            "authorizationCodeFlow",
+            "accessToken"
+          ],
+          "example": "accessToken"
+        }
+      },
+      "Name": {
+        "type": "string",
+        "description": "Unicode文字、数字、ハイフン、アンダースコア、ピリオドのみ許可",
+        "minLength": 1,
+        "maxLength": 255,
+        "example": "name",
+        "pattern": "^[\\p{L}\\p{N}._\\-]+$"
+      },
+      "Tags": {
+        "type": "array",
+        "description": "エンティティを検索するためのタグ",
+        "example": [
+          "tag1",
+          "tag2"
+        ],
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^\\/\\s\\u3000]+$"
+        }
+      },
+      "Oidc": {
+        "description": "Oidc認証情報",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "description": "認証名<br>認証名は半角英数字およびアンダースコアのみを許可",
+                "example": "name"
+              },
+              "authenticationMethods": {
+                "$ref": "#/components/schemas/AuthenticationMethods"
+              },
+              "issuer": {
+                "type": "string",
+                "description": "IdPに紐づくエンドポイント",
+                "example": "http://example.com"
+              },
+              "clientId": {
+                "type": "string",
+                "description": "IdPに紐づくクライアントID",
+                "example": "abc123xyz456def789ghi012jkl345mno678pqr",
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              },
+              "clientSecret": {
+                "type": "string",
+                "description": "IdPに紐づくクライアントシークレット",
+                "example": "s3cr3tK3y!@12345vWxz67890uYz@Qp",
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              },
+              "scopes": {
+                "type": "array",
+                "description": "IdPに要求するスコープ",
+                "items": {
+                  "type": "string"
+                },
+                "example": "openid"
+              },
+              "hideCredentials": {
+                "type": "boolean",
+                "description": "認証情報のサービス（アップストリームサーバ）への転送を有効にするかどうか",
+                "default": false
+              },
+              "tokenAudiences": {
+                "type": "array",
+                "description": "トークンaudクレーム検証値",
+                "items": {
+                  "type": "string",
+                  "example": "value1"
+                }
+              },
+              "useSession": {
+                "type": "boolean",
+                "description": "認証情報をセッションとしてAPIゲートウェイへの保存を有効にするかどうか",
+                "default": false
+              },
+              "refreshTokenParamName": {
+                "type": "string",
+                "description": "この項目は現在、指定することができない<br>リフレッシュトークンパラメータ名<br>指定がない場合は\"refresh_token\"が設定される<br>※authenticationMethodsに\"refreshToken\"が含まれる場合に使用される",
+                "example": "refreshToken",
+                "deprecated": true
+              }
+            },
+            "required": [
+              "name",
+              "authenticationMethods",
+              "issuer",
+              "clientId",
+              "clientSecret"
+            ]
+          }
+        ]
+      },
+      "OidcDetail": {
+        "description": "OIDC詳細情報",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Oidc"
+          },
+          {
+            "properties": {
+              "services": {
+                "type": "array",
+                "description": "OIDC認証を使用するServiceの要約情報",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceSummary"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "OidcSummary": {
+        "description": "OIDC認証要約情報",
+        "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Entityを識別するためのID",
+                "example": "b69f7bfe-1d8f-48bb-8b85-b47359366e48"
+              },
+              "name": {
+                "type": "string",
+                "description": "OIDC認証名",
+                "example": "OidcName",
+                "readOnly": true
+              }
+            }
+      },
+      "Service": {
+        "description": "Service情報",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "description": "Service名<br>Service名は半角英数字およびアンダースコアのみを許可",
+                "example": "serviceName"
+              },
+              "tags": {
+                "$ref": "#/components/schemas/Tags",
+                "description": "Serviceを検索するためのタグ"
+              },
+              "protocol": {
+                "type": "string",
+                "description": "Serviceにアクセスするためのプロトコル",
+                "enum": [
+                  "http",
+                  "https"
+                ],
+                "example": "https"
+              },
+              "host": {
+                "type": "string",
+                "description": "Serviceにアクセスするためのホスト名<br>ホスト名はドメイン名またはIPアドレスを指定する<br>プライベート/ループバックIPアドレスは指定できない",
+                "maxLength": 253,
+                "pattern": "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
+                "example": "xxx.example.jp"
+              },
+              "path": {
+                "type": "string",
+                "maxLength": 255,
+                "pattern": "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
+                "description": "Serviceにアクセスするためのパス<br>パスは/から始まり、半角英数字、アンダースコア、ハイフン、スラッシュ、一部記号（!.*'()-）のみを許可",
+                "example": "/base",
+                "default": "/"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535,
+                "description": "Serviceにアクセスするためのポート番号<br>省略した場合はプロトコルに応じたデフォルトポートが設定される",
+                "example": 80
+              },
+              "retries": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 32767,
+                "default": 5,
+                "description": "リトライ回数"
+              },
+              "connectTimeout": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483646,
+                "default": 60000,
+                "description": "接続タイムアウト秒数"
+              },
+              "writeTimeout": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483646,
+                "default": 60000,
+                "description": "書き込みタイムアウト秒数"
+              },
+              "readTimeout": {
+                "minimum": 1,
+                "maximum": 2147483646,
+                "type": "integer",
+                "default": 60000,
+                "description": "読み込みタイムアウト秒数"
+              },
+              "authentication": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "basic",
+                  "hmac",
+                  "jwt",
+                  "oidc"
+                ],
+                "default": "none",
+                "description": "認証方式<br>未指定の場合は認証なし"
+              },
+              "oidc": {
+                "$ref": "#/components/schemas/OidcSummary"
+              },
+              "routeHost": {
+                "type": "string",
+                "maxLength": 253,
+                "example": "site-xxxxxxxxx.xxx.apigw.sakura.ne.jp",
+                "description": "自動発行したRouteのホスト",
+                "readOnly": true
+              }
+            },
+            "required": [
+              "name",
+              "protocol",
+              "host"
+            ]
+          }
+        ]
+      },
+      "ServiceDetail": {
+        "description": "Service詳細情報",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Service"
+          },
+          {
+            "properties": {
+              "corsConfig": {
+                "$ref": "#/components/schemas/CorsConfig"
+              },
+              "objectStorageConfig": {
+                "$ref": "#/components/schemas/ObjectStorageConfig"
+              }
+            }
+          }
+        ]
+      },
+      "ServiceDetailResponse": {
+        "description": "Service情報",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceDetail"
+          },
+          {
+            "properties": {
+              "subscription": {
+                "$ref": "#/components/schemas/ServiceSubscriptionResponse"
+              }
+            },
+            "required": [
+              "subscription"
+            ]
+          }
+        ]
+      },
+      "ServiceSubscriptionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "サブスクリプションID",
+            "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+          },
+          "name": {
+            "type": "string",
+            "description": "サブスクリプション名",
+            "example": "example-subscription-1"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "ServiceDetailRequest": {
+        "description": "Service登録リクエスト",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceDetail"
+          },
+          {
+            "properties": {
+              "subscription": {
+                "$ref": "#/components/schemas/ServiceSubscriptionRequest"
+              }
+            },
+            "required": [
+              "subscription"
+            ]
+          }
+        ]
+      },
+      "ServiceSubscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "サブスクリプションID",
+            "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "ServiceSummary": {
+        "description": "Service要約情報",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Entityを識別するためのID",
+            "example": "b69f7bfe-1d8f-48bb-8b85-b47359366e48"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name",
+            "description": "Service名<br>Service名は半角英数字およびアンダースコアのみを許可",
+             "example": "serviceName"
+          }
+        }
+      },
+      "CorsConfig": {
+        "description": "CORS設定",
+        "type": "object",
+            "properties": {
+              "credentials": {
+                "type": "boolean",
+                "description": "ブラウザがクロスオリジンリクエストに対してクレデンシャルを含めるかどうか",
+                "example": false
+              },
+              "accessControlExposedHeaders": {
+                "type": "string",
+                "description": "ブラウザがアクセス可能なヘッダー",
+                "maxLength": 4000,
+                "example": ""
+              },
+              "accessControlAllowHeaders": {
+                "type": "string",
+                "description": "クライアントがリクエストに含めることができるヘッダー",
+                "maxLength": 4000,
+                "example": ""
+              },
+              "maxAge": {
+                "type": "integer",
+                "description": "CORS許可の有効期限",
+                "format": "int32",
+                "default": 0,
+                "example": 0
+              },
+              "accessControlAllowMethods": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/HTTPMethod"
+                },
+                "example": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "PATCH",
+                  "OPTIONS",
+                  "HEAD",
+                  "CONNECT",
+                  "TRACE"
+                ],
+                "description": "CORS許可メソッド<br>未指定の場合は全メソッドを許可"
+              },
+              "accessControlAllowOrigins": {
+                "type": "string",
+                "description": "CORSで許可するOrigin<br>未指定の場合は全Originを許可",
+                "example": "*",
+                "maxLength": 4000
+              },
+              "preflightContinue": {
+                "type": "boolean",
+                "description": "CORSのPreflightリクエストを処理するかどうか",
+                "example": false
+              },
+              "privateNetwork": {
+                "type": "boolean",
+                "description": "privateNetwork内で動作させるかどうか",
+                "example": false
+              }
+            }
+      },
+      "ObjectStorageConfig": {
+        "description": "Object Storage設定",
+        "type": "object",
+            "properties": {
+              "bucketName": {
+                "type": "string",
+                "description": "バケット名",
+                "example": "my-bucket",
+                "pattern": "^[a-z0-9.\\-]*$"
+              },
+              "folderName": {
+                "type": "string",
+                "description": "フォルダ名",
+                "example": "my-folder",
+                "pattern": "^[a-zA-Z0-9_\\-\\/!.*'()]*$"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "S3互換のエンドポイントURL",
+                "example": "s3.example.com"
+              },
+              "region": {
+                "type": "string",
+                "description": "S3互換のリージョン名",
+                "example": "jp-north-1"
+              },
+              "accessKeyID": {
+                "type": "string",
+                "description": "アクセスキーID",
+                "example": "XXXXXXXXXXXXXXXX",
+                "writeOnly": true,
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              },
+              "secretAccessKey": {
+                "type": "string",
+                "description": "シークレットアクセスキー",
+                "example": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                "writeOnly": true,
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              },
+              "useDocumentIndex": {
+                "type": "boolean",
+                "description": "ドキュメントインデックスを有効にするかどうか",
+                "default": true
+              }
+            },
+            "required": [
+              "bucketName",
+              "endpoint",
+              "region",
+              "accessKeyID",
+              "secretAccessKey",
+              "useDocumentIndex"
+            ]
+      },
+      "IpRestrictionConfig": {
+        "type": "object",
+        "description": "IP制限",
+            "properties": {
+              "protocols": {
+                "type": "string",
+                "enum": [
+                  "http,https",
+                  "http",
+                  "https"
+                ],
+                "example": "http,https",
+                "description": "IP制限を設定するプロトコル"
+              },
+              "restrictedBy": {
+                "type": "string",
+                "enum": [
+                  "allowIps",
+                  "denyIps"
+                ],
+                "example": "allowIps",
+                "description": "IP制限の種別"
+              },
+              "ips": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$"
+                },
+                "minItems": 1,
+                "example": [
+                  "192.168.1.1",
+                  "192.168.1.2"
+                ],
+                "description": "対象IPアドレス<br>IPアドレスはIPv4のみを許可"
+              }
+            },
+            "required": [
+              "protocols",
+              "restrictedBy",
+              "ips"
+            ]
+      },
+      "Route": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "serviceId": {
+                "type": "string",
+                "format": "uuid",
+                "readOnly": true,
+                "example": "04c6abbd-0c12-42e5-8d90-7eea021028d9"
+              },
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "example": "routeName"
+              },
+              "tags": {
+                "$ref": "#/components/schemas/Tags",
+                "description": "Routeを検索するためのタグ"
+              },
+              "protocols": {
+                "type": "string",
+                "enum": [
+                  "http,https",
+                  "http",
+                  "https"
+                ],
+                "example": "http,https",
+                "description": "Routeにアクセスするためのプロトコル"
+              },
+              "path": {
+                "type": "string",
+                "example": "/",
+                "maxLength": 255,
+                "pattern": "^(\\/|~\\/).*",
+                "description": "Routeにアクセスするためのパス<br>パスはスラッシュまたはチルダスラッシュで始まるパス文字列のみを許可"
+              },
+              "host": {
+                "readOnly": true,
+                "type": "string",
+                "example": "site-XXXXXXXXXXXXXXXX.XXX.apigw.sakura.ne.jp",
+                "description": "自動発行されたホスト<br>hostsに値が設定されていない場合に有効"
+              },
+              "hosts": {
+                "type": "array",
+                "example": [
+                  "example.com",
+                  "example.jp"
+                ],
+                "description": "ホスト名<br>自動発行されたホストまたは設定したドメインを指定する<br>自動発行されたホストはService詳細照会APIで確認できる<br>作成したドメインはDomain一覧照会APIで確認できる",
+                "items": {
+                  "type": "string",
+                  "description": "ホスト名<br>自動発行されたホストまたは設定したドメインを指定する<br>自動発行されたホストはService詳細照会APIで確認できる<br>作成したドメインはDomain一覧照会APIで確認できる",
+                  "example": [
+                    "example.com",
+                    "example.jp"
+                  ]
+                }
+              },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/HTTPMethod"
+                },
+                "example": [
+                  "GET",
+                  "POST"
+                ],
+                "description": "RouteにアクセスするためのHTTPメソッド<br>未指定の場合は全メソッドを許可<br>オブジェクトストレージ形式のサービスに紐づく場合は、GET・HEAD・OPTIONSメソッドのみを許可"
+              },
+              "httpsRedirectStatusCode": {
+                "type": "integer",
+                "enum": [
+                  301,
+                  302,
+                  303,
+                  307,
+                  308,
+                  426
+                ],
+                "default": 426,
+                "example": 426,
+                "description": "HTTPSリダイレクト時のステータスコード"
+              },
+              "regexPriority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255,
+                "default": 0,
+                "example": 0,
+                "description": "パスを正規表現で指定した場合の優先度<br>0が最優先"
+              },
+              "stripPath": {
+                "type": "boolean",
+                "default": true,
+                "example": false,
+                "description": "リクエストのパスからルートのパスを削除するかどうか"
+              },
+              "preserveHost": {
+                "type": "boolean",
+                "default": false,
+                "example": true,
+                "description": "リクエストのHostヘッダーを保持するかどうか"
+              },
+              "requestBuffering": {
+                "type": "boolean",
+                "default": true,
+                "example": false,
+                "description": "リクエストのバッファリングを有効にするかどうか"
+              },
+              "responseBuffering": {
+                "type": "boolean",
+                "default": true,
+                "example": false,
+                "description": "レスポンスのバッファリングを有効にするかどうか"
+              }
+            }
+          }
+        ],
+        "required": [
+          "name",
+          "protocols",
+          "methods"
+        ]
+      },
+      "RouteDetail": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Route"
+          },
+          {
+            "properties": {
+              "ipRestrictionConfig": {
+                "$ref": "#/components/schemas/IpRestrictionConfig"
+              }
+            }
+          }
+        ]
+      },
+      "RouteAuthorization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "GroupのEntityを識別するためのID",
+            "format": "uuid",
+            "example": "1183b70d-70af-4e49-8af5-2a629b5c1b30"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name",
+            "description": "Group名 <br> Group名はUnicode文字、数字、ハイフン、アンダースコア、ピリオド、チルダのみ許可",
+            "example": "group1"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "対象の Group が許可されているかどうか",
+            "example": true
+          }
+        }
+      },
+      "BasicAuth": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "userName": {
+                "type": "string",
+                "description": "ユーザ名",
+                "example": "userName"
+              },
+              "password": {
+                "type": "string",
+                "description": "パスワード",
+                "example": "password",
+                "writeOnly": true,
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              }
+            }
+          },
+          {
+            "required": [
+              "userName",
+              "password"
+            ]
+          }
+        ]
+      },
+      "Jwt": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "JWTの署名キー",
+                "example": "key",
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              },
+              "secret": {
+                "type": "string",
+                "description": "JWTの署名シークレット",
+                "example": "secret",
+                "writeOnly": true,
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              },
+              "algorithm": {
+                "type": "string",
+                "description": "JWTの署名アルゴリズム",
+                "enum": [
+                  "HS256",
+                  "HS384",
+                  "HS512"
+                ],
+                "example": "HS256"
+              }
+            }
+          },
+          {
+            "required": [
+              "key",
+              "secret",
+              "algorithm"
+            ]
+          }
+        ]
+      },
+      "HmacAuth": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "userName": {
+                "type": "string",
+                "description": "ユーザ名",
+                "example": "username"
+              },
+              "secret": {
+                "type": "string",
+                "description": "HMACのシークレット",
+                "example": "secret",
+                "writeOnly": true,
+                "x-oapi-codegen-extra-tags": {
+                  "mask": "true"
+                }
+              }
+            }
+          },
+          {
+            "required": [
+              "userName",
+              "secret"
+            ]
+          }
+        ]
+      },
+      "User": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "example": "user"
+              },
+              "customID": {
+                "type": "string",
+                "description": "カスタムID",
+                "example": "example_custom_id_123456"
+              },
+              "groups": {
+                "readOnly": true,
+                "type": "array",
+                "description": "Userが所属しているGroupのリスト",
+                "items": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              },
+              "tags": {
+                "$ref": "#/components/schemas/Tags",
+                "description": "Userを検索するためのタグ"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        ]
+      },
+      "UserDetail": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/User"
+          },
+          {
+            "properties": {
+              "ipRestrictionConfig": {
+                "$ref": "#/components/schemas/IpRestrictionConfig"
+              }
+            }
+          }
+        ]
+      },
+      "Group": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "example": "group1"
+              },
+              "tags": {
+                "$ref": "#/components/schemas/Tags",
+                "description": "Groupを検索するためのタグ"
+              }
+            }
+          }
+        ],
+        "required": [
+          "name"
+        ]
+      },
+      "Domain": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "domainName": {
+                "type": "string",
+                "description": "ドメイン名<br>ドメイン名はドメイン名形式を指定する<br>IPv4アドレス及びワイルドカード（*）を指定できない<br>大文字を含めることはできない",
+                "example": "example.com",
+                "pattern": "^\\s*(([a-z\\d]([a-z\\d-]*[a-z\\d])?)\\.)+([a-z\\d-]{2,})(\\.)?\\s*$"
+              },
+              "certificateId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "証明書のID",
+                "example": "1183b70d-70af-4e49-8af5-2a629b5c1b30"
+              },
+              "certificateName": {
+                "type": "string",
+                "description": "証明書の識別名",
+                "example": "certificateName",
+                "readOnly": true
+              }
+            }
+          },
+          {
+            "required": [
+              "domainName"
+            ]
+          }
+        ]
+      },
+      "DomainPUT": {
+        "type": "object",
+        "properties": {
+          "certificateId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "証明書のID",
+            "example": "1183b70d-70af-4e49-8af5-2a629b5c1b30"
+          }
+        }
+      },
+      "Certificate": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "description": "証明書の識別名<br>証明書名はUnicode文字、数字、ハイフン、アンダースコア、ピリオドのみ許可",
+                "example": "certificateName"
+              },
+              "rsa": {
+                "type": "object",
+                "description": "RSA証明書情報",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CertificateDetails"
+                  }
+                ]
+              },
+              "ecdsa": {
+                "type": "object",
+                "description": "ECDSA証明書情報",
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CertificateDetails"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "CertificateDetails": {
+        "type": "object",
+        "properties": {
+          "cert": {
+            "type": "string",
+            "description": "証明書<br>改行コード（\\n）はエスケープ文字に変換して指定する",
+            "example": "-----BEGIN CERTIFICATE-----\nMIIDOTCCAiGgAwIBAgIUD8d5Ln4LX/3QxXjhYXDdsXDwcBYwDQYJKoZIhvcNAQEL\nBQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoM\nGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAeFw0yNTAyMTcwMjMwMzNaFw0zNTAy\nMTUwMjMwMzNaMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEw\nHwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwggEiMA0GCSqGSIb3DQEB\nAQUAA4IBDwAwggEKAoIBAQC4casKTZ7neLdesms1bhcCUsS/gmTcDHZkbHy6SDaV\nCN6q11iTpq27o4+c5CCu+zkn1ND1PStGXzhTlFOOluzCB0J4seBnFy2T8HXsTy1G\nUvjdwceJKHMzYbM695RdiVfcAqX7UUFjBEyHV6duoSXmoIIBqFoOyX8Oc3mzdtW2\nbmq02COW+bU/3NPj5w1Swtz2o9YPXv4DGwHfdntLH+zW/ObgRaSQPqe2aXQEwl8P\n0FJB5c+/enZg/pmvIOa5xQ2exWPIGcmEQRol9YW4B3cpXwaFAjtpMcb6zV/ZDquq\nq//ErI1u4aeyNp3Gdr179tuntiY0jZ8KptsKZOToCeKZAgMBAAGjITAfMB0GA1Ud\nDgQWBBQtOsKs2R2QB/J8XX5KpcVjXi7yIDANBgkqhkiG9w0BAQsFAAOCAQEAYD+M\nxTAgjRQAgrmSZemIFTw80npS6LHGLFWjKvxlKWZ+2AFOVmVvyrD9Ls2kzaCkpiDQ\nFs6Kn3j7Ny37r91uJQK8qZJIcuSRp9+d0XhcIjmpI7bnhLJ9W0WH9GJzhAedYJev\ngNVFbf+Ygva/32qcwVIu28df84OAonGQF2GQ5KFJ8KM+5itC87Kc6cLPh+lB/D7A\nd9CSctSyU6aao1dY9UJszrokIhwtOrbYvisaLLzTrXhVx+IdZS8xT0WFiHhB7ZSC\nchA9B5keAa2stjuH6tkWSxiF5wIuq29lNNpUvqpWQ2ySOc/doC18q6quSGQCYQM2\nOaBp1GS0IjXB0xf4Hw==\n-----END CERTIFICATE-----\n",
+            "pattern": "^-----BEGIN CERTIFICATE-----\\r?\\n(?:[A-Za-z0-9+/=\\r\\n]+)-----END CERTIFICATE-----\\r?\\n?$",
+            "writeOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "mask": "true"
+            }
+          },
+          "key": {
+            "type": "string",
+            "description": "秘密鍵<br>改行コード（\\n）はエスケープ文字に変換して指定する",
+            "example": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC4casKTZ7neLde\nsms1bhcCUsS/gmTcDHZkbHy6SDaVCN6q11iTpq27o4+c5CCu+zkn1ND1PStGXzhT\nlFOOluzCB0J4seBnFy2T8HXsTy1GUvjdwceJKHMzYbM695RdiVfcAqX7UUFjBEyH\nV6duoSXmoIIBqFoOyX8Oc3mzdtW2bmq02COW+bU/3NPj5w1Swtz2o9YPXv4DGwHf\ndntLH+zW/ObgRaSQPqe2aXQEwl8P0FJB5c+/enZg/pmvIOa5xQ2exWPIGcmEQRol\n9YW4B3cpXwaFAjtpMcb6zV/ZDquqq//ErI1u4aeyNp3Gdr179tuntiY0jZ8KptsK\nZOToCeKZAgMBAAECggEAHhPR3Q3DBnh93/A/dwiQsafL/suQOqlrmxJtP+FryTTs\n6WDRnc5V/B3UMF+r4W0FU99VWKXqIIEsScY2iVpHme0eJAQkaxtGqvPQ/xalnuyu\njwG9J2WUbQIXJ1wH8pLljsf9x4m8xx1Z2iOV9v6faXMDkFVNo6YB1VpJCSuCoUuB\nFyNsCRiNP0AbR3m/pTRjw/YEqnNf+FraWrj4TdLqV6pP07MuXcJCcX7vMgpxjkhQ\nzPw5zZmWWsezMbYfKtHETe8WGOTWt1jGBi8HLDi4CXhOPw5qUR+/wNWDxuG4pUlS\nJqknjDBmGkjh1pMRYcjcOafrWZt3wq/1X2qqcJGS4wKBgQD4BBX13dHi0/GyfkQk\nFoD37AGV1u0p5oO2bnJXwf7aOghC1N9mtJlZ8L+SuEj0LP4xzvvpFMDwbR5W/vxU\nrhlzJ64mZmJbwA//cQQe3onIao+BZ6Pj8nAurZAVVIc/TUqiwlSoGqB9QfDVQ0Oq\ni/H0TmdL0RDCs7bKCf15a+ydCwKBgQC+Ya6j1flc7p5pxqQqb2kGMojH4GOO0cBG\nYJymKVwnuPxuFX3mCUVhGdEZoIeHMLCzdIOTJMLDONmjSd0khoYXrgMIquCggBte\ng3X4bYReF4IIHkZf8EwMO6B4RbGdEitvu823ZKX5GNQ5/tUIIUAvf3Bzzh18tzUd\nw5iOj04dawKBgQDbDeDHk+/5Q/FKEbPlm+q1DsInsfku9OaIjux3DmUmIfOB87qN\nYB3CDp1l3VayM7sgCwz8RNRUhkwx0mzT7iGUUAvE5tEg8HYwy4U0LqHLXjL5vKxI\nfK0QzUNhU5NRGdc+Ah37i+kMON2ZvxtY2toNSeJ6WGFRVqGvuTsjr2sBGQKBgCQU\nVwhtkKhwAE2De7EfFAQ8p3dZqwRx88JipM1IoVJV2GD0abuinidcwSfeKFEShSo9\nNoI4QUDGEVjEssgtRlROgfyuhYtlO8qZl03RU3iRc+8d7bBY1dCrrCme654cx2aR\nbNcIl/uxHOcwyCaWRpe5yxHnSedMwSA25T5/IgqpAoGBAIka2NWE5/oIWavB/M4h\n7QOdBuAuRvFXuhoGX5619olfqe0H1r/OUHOcXCoWHhAaBUeR3jkWwu/kdq7AUCjU\nK9bEnJp21n70F+GU/GpqI1frRVEtMqQvd1KTp3b1kyriy0iAI3YxVYEfLMtHw+GP\nQvCkj/GcoNjfECmbAlhX8+nw\n-----END PRIVATE KEY-----\n",
+            "writeOnly": true,
+            "x-oapi-codegen-extra-tags": {
+              "mask": "true"
+            }
+          },
+          "expiredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "証明書の有効期限",
+            "example": "2022-12-31 23:59:59",
+            "readOnly": true
+          }
+        }
+      },
+      "DomainDTO": {
+        "type": "object",
+        "properties": {
+          "domains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Domain"
+            }
+          }
+        }
+      },
+      "CertificateDTO": {
+        "type": "object",
+        "properties": {
+          "certificates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Certificate"
+            }
+          }
+        }
+      },
+      "UserGroupDetailUpdate": {
+        "type": "object",
+        "allOf": [
+          {
+            "properties": {
+              "isAssigned": {
+                "type": "boolean",
+                "example": false,
+                "description": "UserがGroupに所属しているかどうか"
+              }
+            },
+            "required": [
+              "isAssigned"
+            ]
+          },
+          {
+            "oneOf": [
+              {
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "1183b70d-70af-4e49-8af5-2a629b5c1b34",
+                    "description": "GroupのID"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              {
+                "properties": {
+                  "name": {
+                    "$ref": "#/components/schemas/Name",
+                    "example": "groupName"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "UserGroupDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "1183b70d-70af-4e49-8af5-2a629b5c1b34",
+            "description": "GroupのID"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name",
+            "example": "groupname",
+            "description": "Group名"
+          },
+          "isAssigned": {
+            "type": "boolean",
+            "example": false,
+            "description": "UserがGroupに所属しているかどうか"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "isAssigned"
+        ]
+      },
+      "RouteAuthorizationDetail": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "isACLEnabled": {
+                "type": "boolean",
+                "enum": [
+                  false
+                ],
+                "description": "認可設定を無効にする"
+              }
+            },
+            "required": [
+              "isACLEnabled"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "isACLEnabled": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ],
+                "description": "認可設定を有効にする"
+              },
+              "groups": {
+                "type": "array",
+                "description": "認可するGroupのリスト",
+                "items": {
+                  "$ref": "#/components/schemas/RouteAuthorization"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "isACLEnabled",
+              "groups"
+            ]
+          }
+        ]
+      },
+      "RouteAuthorizationDetailResponse": {
+        "type": "object",
+        "properties": {
+          "isACLEnabled": {
+            "type": "boolean",
+            "description": "認可設定が有効かどうか"
+          },
+          "groups": {
+            "type": "array",
+            "description": "認可するGroupのリスト",
+            "items": {
+              "$ref": "#/components/schemas/RouteAuthorization"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "isACLEnabled",
+          "groups"
+        ]
+      },
+      "UserAuthentication": {
+        "type": "object",
+        "properties": {
+          "basicAuth": {
+            "$ref": "#/components/schemas/BasicAuth"
+          },
+          "jwt": {
+            "$ref": "#/components/schemas/Jwt"
+          },
+          "hmacAuth": {
+            "$ref": "#/components/schemas/HmacAuth"
+          }
+        }
+      },
+      "RequestTransformation": {
+        "type": "object",
+        "properties": {
+          "httpMethod": {
+            "$ref": "#/components/schemas/HTTPMethod"
+          },
+          "allow": {
+            "$ref": "#/components/schemas/RequestAllowDetail"
+          },
+          "remove": {
+            "$ref": "#/components/schemas/RequestRemoveDetail"
+          },
+          "rename": {
+            "$ref": "#/components/schemas/RequestRenameDetail"
+          },
+          "replace": {
+            "$ref": "#/components/schemas/RequestModificationDetail"
+          },
+          "add": {
+            "$ref": "#/components/schemas/RequestModificationDetail"
+          },
+          "append": {
+            "$ref": "#/components/schemas/RequestModificationDetail"
+          }
+        }
+      },
+      "RequestAllowDetail": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "array",
+            "description": "許可するボディのキー<br>半角英数字、アンダースコア、ハイフンのみを許可",
+            "items": {
+              "$ref": "#/components/schemas/JSONKey"
+            }
+          }
+        }
+      },
+      "RequestRemoveDetail": {
+        "type": "object",
+        "properties": {
+          "headerKeys": {
+            "type": "array",
+            "description": "削除するヘッダのキー<br>半角英数字、アンダースコア、ハイフンのみを許可",
+            "items": {
+              "$ref": "#/components/schemas/RequestHeaderKey"
+            }
+          },
+          "queryParams": {
+            "type": "array",
+            "description": "削除するクエリパラメータのキー<br>半角英数字、アンダースコア、ハイフンのみを許可",
+            "items": {
+              "$ref": "#/components/schemas/QueryParamKey"
+            }
+          },
+          "body": {
+            "type": "array",
+            "description": "削除するボディのキー<br>半角英数字、アンダースコア、ハイフンのみを許可",
+            "items": {
+              "$ref": "#/components/schemas/JSONKey"
+            }
+          }
+        }
+      },
+      "RequestRenameDetail": {
+        "type": "object",
+        "properties": {
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "$ref": "#/components/schemas/RequestHeaderKey"
+                },
+                "to": {
+                  "$ref": "#/components/schemas/RequestHeaderKey"
+                }
+              }
+            }
+          },
+          "queryParams": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "$ref": "#/components/schemas/QueryParamKey",
+                  "description": "リネームするクエリパラメータのキー"
+                },
+                "to": {
+                  "$ref": "#/components/schemas/QueryParamKey",
+                  "description": "リネーム後のクエリパラメータのキー"
+                }
+              }
+            }
+          },
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "リネームするボディのキー"
+                },
+                "to": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "リネーム後のボディのキー"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RequestModificationDetail": {
+        "type": "object",
+        "properties": {
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/RequestHeaderKey",
+                  "description": "追加するヘッダのキー"
+                },
+                "value": {
+                  "$ref": "#/components/schemas/RequestHeaderValue",
+                  "description": "追加するヘッダの値"
+                }
+              }
+            }
+          },
+          "queryParams": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/QueryParamKey",
+                  "description": "追加するクエリパラメータのキー"
+                },
+                "value": {
+                  "$ref": "#/components/schemas/QueryParamValue",
+                  "description": "追加するクエリパラメータの値"
+                }
+              }
+            }
+          },
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "追加するボディのキー"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "追加するボディの値"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ResponseTransformation": {
+        "type": "object",
+        "properties": {
+          "allow": {
+            "$ref": "#/components/schemas/ResponseAllowDetail"
+          },
+          "remove": {
+            "$ref": "#/components/schemas/ResponseRemoveDetail"
+          },
+          "rename": {
+            "$ref": "#/components/schemas/ResponseRenameDetail"
+          },
+          "replace": {
+            "$ref": "#/components/schemas/ResponseReplaceDetail"
+          },
+          "add": {
+            "$ref": "#/components/schemas/ResponseModificationDetail"
+          },
+          "append": {
+            "$ref": "#/components/schemas/ResponseModificationDetail"
+          }
+        }
+      },
+      "ResponseAllowDetail": {
+        "type": "object",
+        "description": "許可するJSONのキー<br>半角英数字、ハイフン、アンダースコア、ピリオド繋ぎを許可",
+        "properties": {
+          "jsonKeys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JSONKey"
+            }
+          }
+        }
+      },
+      "ResponseRemoveDetail": {
+        "type": "object",
+        "properties": {
+          "ifStatusCode": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 999
+            },
+            "description": "特定のステータスコードの場合に削除する"
+          },
+          "headerKeys": {
+            "type": "array",
+            "description": "削除するヘッダのキー<br>半角英数字、ハイフンのみを許可",
+            "items": {
+              "$ref": "#/components/schemas/ResponseHeaderKey"
+            }
+          },
+          "jsonKeys": {
+            "type": "array",
+            "description": "削除するJSONのキー<br>半角英数字、ハイフン、アンダースコア、ピリオド繋ぎを許可",
+            "items": {
+              "$ref": "#/components/schemas/JSONKey"
+            }
+          }
+        }
+      },
+      "ResponseRenameDetail": {
+        "type": "object",
+        "properties": {
+          "ifStatusCode": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 999
+            },
+            "description": "特定のステータスコードの場合にリネームする"
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "リネームするヘッダーのキー<br>半角英数字、ハイフンのみを許可",
+              "properties": {
+                "from": {
+                  "$ref": "#/components/schemas/ResponseHeaderKey"
+                },
+                "to": {
+                  "$ref": "#/components/schemas/ResponseHeaderKey"
+                }
+              }
+            }
+          },
+          "json": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "リネームするJSONのキー"
+                },
+                "to": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "リネーム後のJSONのキー"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ResponseReplaceDetail": {
+        "type": "object",
+        "properties": {
+          "ifStatusCode": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 999
+            },
+            "description": "特定のステータスコードの場合に置換する"
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/ResponseHeaderKey",
+                  "description": "置換するヘッダーのキー"
+                },
+                "value": {
+                  "$ref": "#/components/schemas/RequestHeaderValue",
+                  "description": "置換後のヘッダーの値"
+                }
+              }
+            }
+          },
+          "json": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "置換するJSONのキー"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "置換後のJSONの値"
+                }
+              }
+            }
+          },
+          "body": {
+            "type": "string",
+            "description": "置換するボディ"
+          }
+        }
+      },
+      "ResponseModificationDetail": {
+        "type": "object",
+        "properties": {
+          "ifStatusCode": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 999
+            },
+            "description": "特定のステータスコードの場合に追加する"
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/ResponseHeaderKey",
+                  "description": "追加するヘッダーのキー"
+                },
+                "value": {
+                  "$ref": "#/components/schemas/RequestHeaderValue",
+                  "description": "追加するヘッダーの値"
+                }
+              }
+            }
+          },
+          "json": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "$ref": "#/components/schemas/JSONKey",
+                  "description": "追加するJSONのキー"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "追加するJSONの値"
+                }
+              }
+            }
+          }
+        }
+      },
+      "JSONKey": {
+        "type": "string",
+        "description": "JSONのキー<br>半角英数字、ハイフン、アンダースコア、ピリオド繋ぎを許可",
+        "pattern": "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+        "maxLength": 255
+      },
+      "RequestHeaderKey": {
+        "type": "string",
+        "description": "リクエストヘッダのキー<br>半角英数字、ハイフン、アンダースコアのみを許可",
+        "pattern": "^[a-zA-Z0-9-_]+$",
+        "maxLength": 255
+      },
+      "ResponseHeaderKey": {
+        "type": "string",
+        "description": "リクエストヘッダのキー<br>半角英数字、ハイフンのみを許可",
+        "pattern": "^[a-zA-Z0-9-]+$",
+        "maxLength": 255
+      },
+      "RequestHeaderValue": {
+        "type": "string",
+        "description": "リクエストヘッダの値<br>ASCII文字のみを許可",
+        "pattern": "^[\\x20-\\x7E]*$",
+        "maxLength": 255
+      },
+      "QueryParamKey": {
+        "type": "string",
+        "description": "クエリパラメータのキー<br>半角英数字、ハイフン、アンダースコアのみを許可",
+        "pattern": "^[a-zA-Z0-9-_.]+$",
+        "maxLength": 255
+      },
+      "QueryParamValue": {
+        "type": "string",
+        "description": "クエリパラメータの値<br>URLエンコードされた文字列",
+        "pattern": "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
+        "maxLength": 255
+      },
+      "Plan": {
+        "description": "料金プラン",
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "プラン名",
+                "example": "ベーシックプラン"
+              },
+              "price": {
+                "type": "string",
+                "example": "1000",
+                "description": "価格"
+              },
+              "description": {
+                "type": "string",
+                "example": "description",
+                "description": "プランの説明"
+              },
+              "maxServices": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "作成できるServiceの最大数",
+                "example": 1
+              },
+              "maxRequests": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "追加料金なしで利用できるリクエスト数",
+                "example": 10000000
+              },
+              "maxRequestsUnit": {
+                "type": "string",
+                "enum": [
+                  "second",
+                  "minute",
+                  "hour",
+                  "day",
+                  "month",
+                  "year"
+                ],
+                "description": "maxRequestsの上限が適用される期間の単位",
+                "example": "month"
+              },
+              "overage": {
+                "$ref": "#/components/schemas/Overage"
+              }
+            }
+          }
+        ]
+      },
+      "Overage": {
+        "type": "object",
+        "properties": {
+          "unitRequests": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "超過リクエスト数単位",
+            "example": 1000000
+          },
+          "unitPrice": {
+            "type": "string",
+            "description": "超過リクエスト数単位の価格",
+            "example": "1000"
+          }
+        }
+      },
+      "SubscriptionDetailResponse": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SubscriptionDetail"
+          },
+          {
+            "properties": {
+              "plan": {
+                "$ref": "#/components/schemas/SubscriptionPlanResponse"
+              }
+            }
+          }
+        ]
+      },
+      "SubscriptionDetail": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "example": "契約1",
+                "description": "ユーザ識別用契約名"
+              },
+              "resourceId": {
+                "type": "integer",
+                "format": "int64",
+                "description": "契約を一意に識別するリソースID",
+                "example": 123456789012
+              },
+              "monthlyRequest": {
+                "type": "integer",
+                "description": "今月のリクエスト累計数",
+                "example": 15000
+              },
+              "service": {
+                "type": "object",
+                "$ref": "#/components/schemas/SubscriptionService",
+                "description": "契約に紐づくServiceの情報"
+              }
+            }
+          }
+        ]
+      },
+      "SubscriptionPlanResponse": {
+        "description": "料金プラン",
+        "type": "object",
+            "properties": {
+              "planID": {
+                "type": "string",
+                "format": "uuid",
+                "description": "プランID",
+                "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+              },
+              "planName": {
+                "type": "string",
+                "description": "プラン名",
+                "example": "ベーシックプラン"
+              },
+              "price": {
+                "type": "string",
+                "example": "1000",
+                "description": "価格"
+              },
+              "maxServices": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "作成できるServiceの最大数",
+                "example": 10
+              },
+              "maxRequests": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "追加料金なしで利用できるリクエスト数",
+                "example": 10000000
+              },
+              "maxRequestsUnit": {
+                "type": "string",
+                "enum": [
+                  "second",
+                  "minute",
+                  "hour",
+                  "day",
+                  "month",
+                  "year"
+                ],
+                "description": "maxRequestsの上限が適用される期間の単位",
+                "example": "month"
+              },
+              "overage": {
+                "$ref": "#/components/schemas/Overage"
+              }
+            }
+      },
+      "SubscriptionList": {
+        "type": "object",
+        "properties": {
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Subscription"
+            }
+          },
+          "maxSubscription": {
+            "type": "integer",
+            "description": "最大契約数",
+            "example": 5
+          }
+        }
+      },
+      "Subscription": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "properties": {
+              "name": {
+                "$ref": "#/components/schemas/Name",
+                "example": "契約1",
+                "description": "ユーザ識別用契約名"
+              },
+              "planId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "プランID",
+                "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+              },
+              "resourceId": {
+                "type": "integer",
+                "format": "int64",
+                "description": "契約を識別するためのID",
+                "example": 123456789012
+              },
+              "monthlyRequest": {
+                "type": "integer",
+                "description": "今月のリクエスト累計数",
+                "example": 15000
+              },
+              "service": {
+                "type": "object",
+                "$ref": "#/components/schemas/SubscriptionService",
+                "description": "契約に紐づくServiceの情報"
+              }
+            }
+          }
+        ]
+      },
+      "SubscriptionService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "現在契約と紐づいているServiceのID",
+            "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+          },
+          "name": {
+            "type": "string",
+            "description": "現在契約と紐づいているService名",
+            "example": "serviceName"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "SubscriptionUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "契約1",
+            "description": "契約名"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "SubscriptionCreate": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba",
+            "description": "プランID"
+          },
+          "name": {
+            "type": "string",
+            "example": "契約1",
+            "description": "契約名"
+          }
+        },
+        "required": [
+          "planId",
+          "name"
+        ],
+        "description": "契約情報"
+      },
+      "ErrorSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "各エラーに対応したメッセージが返却される",
+            "example": "Bad Request"
+          }
+        }
+      },
+      "HTTPMethod": {
+        "type": "string",
+        "description": "変換するHTTPメソッド",
+        "enum": [
+          "GET",
+          "POST",
+          "PUT",
+          "DELETE",
+          "PATCH",
+          "OPTIONS",
+          "HEAD",
+          "CONNECT",
+          "TRACE"
+        ]
+      }
+    },
+    "responses": {
+      "BadRequestResponse": {
+        "description": "Requestエラー",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorSchema"
+            }
+          }
+        }
+      },
+      "UnauthorizedResponse": {
+        "description": "認証エラー",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorSchema"
+            }
+          }
+        }
+      },
+      "NotFoundResponse": {
+        "description": "リソースが存在しない",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorSchema"
+            }
+          }
+        }
+      },
+      "ConflictResponse": {
+        "description": "リソースが競合している",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorSchema"
+            }
+          }
+        }
+      },
+      "UnprocessableEntityResponse": {
+        "description": "Request自体は正しいが、処理できない",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorSchema"
+            }
+          }
+        }
+      },
+      "ServerErrorResponse": {
+        "description": "サーバーエラー",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorSchema"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "ServiceID": {
+        "name": "serviceId",
+        "in": "path",
+        "description": "ServiceID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+        },
+        "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+      },
+      "RouteID": {
+        "in": "path",
+        "name": "routeId",
+        "description": "RouteID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "02c6abbd-0c12-42e5-8d90-7eea021028d9"
+        },
+        "required": true,
+        "example": "02c6abbd-0c12-42e5-8d90-7eea021028d9"
+      },
+      "UserID": {
+        "in": "path",
+        "name": "userId",
+        "description": "UserID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "67f57741-ac25-433a-8d7a-8778711b4a2c"
+        },
+        "required": true,
+        "example": "67f57741-ac25-433a-8d7a-8778711b4a2c"
+      },
+      "GroupID": {
+        "in": "path",
+        "name": "groupId",
+        "description": "GroupID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "ac8a3fb3-0354-4917-9a3d-c5dc5ab50869"
+        },
+        "required": true,
+        "example": "ac8a3fb3-0354-4917-9a3d-c5dc5ab50869"
+      },
+      "DomainID": {
+        "in": "path",
+        "name": "domainId",
+        "description": "DomainID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+        },
+        "required": true,
+        "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+      },
+      "CertificateID": {
+        "in": "path",
+        "name": "certificateId",
+        "description": "CertificateID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+        },
+        "required": true,
+        "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+      },
+      "OidcID": {
+        "in": "path",
+        "name": "oidcId",
+        "description": "OidcID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+        },
+        "required": true,
+        "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+      },
+      "SubscriptionID": {
+        "in": "path",
+        "name": "subscriptionId",
+        "description": "SubscriptionID",
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+        },
+        "required": true,
+        "example": "7c8d78bc-e4a3-4600-b70a-f5fe802dc1ba"
+      }
+    }
+  }
+}

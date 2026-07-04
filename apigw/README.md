@@ -1,0 +1,69 @@
+# sakumock/apigw
+
+An API Gateway compatible mock server for local development and testing. It implements the gateway management API (services, routes, route authorization/transformations, users, groups, domains, certificates, plans, subscriptions, OIDC configurations) with in-memory storage.
+
+Each service gets an auto-issued gateway hostname (`routeHost`) of the form `site-<id>.localhost`. The data plane (the gateway itself, routing requests on those hostnames to upstreams) will be added in a later phase; this package currently mocks the control plane.
+
+## Install
+
+```bash
+go install github.com/sacloud/sakumock/cmd/sakumock-apigw@latest
+```
+
+Or use the unified [`sakumock`](../README.md#install) binary: `sakumock apigw` accepts the same flags as `sakumock-apigw`.
+
+## Usage
+
+```bash
+sakumock-apigw
+```
+
+### Options
+
+| Flag | Env | Default | Description |
+|------|-----|---------|-------------|
+| `--addr` | `APIGW_LOCALSERVER_ADDR` | `127.0.0.1:18091` | Listen address |
+| `--latency` | `APIGW_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
+| `--rate-limit` | `APIGW_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--rate-limit-window` | `APIGW_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--debug` | `APIGW_DEBUG` | `false` | Enable debug mode |
+| `--tls-cert` | `APIGW_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
+| `--tls-key` | `APIGW_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
+
+## Use with sacloud-sdk-go
+
+The [sacloud-sdk-go](https://github.com/sacloud/sacloud-sdk-go) `api/apigw` client reads the `SAKURA_ENDPOINTS_APIGW` override:
+
+```bash
+export SAKURA_ENDPOINTS_APIGW=http://localhost:18091
+export SAKURA_ACCESS_TOKEN=dummy
+export SAKURA_ACCESS_TOKEN_SECRET=dummy
+```
+
+## Library usage
+
+```go
+import "github.com/sacloud/sakumock/apigw"
+
+// As http.Handler (for custom servers)
+handler, err := apigw.NewHandler(apigw.Config{})
+if err != nil {
+    panic(err)
+}
+defer handler.Close()
+
+// As test server (for integration tests)
+srv := apigw.NewTestServer(apigw.Config{})
+defer srv.Close()
+fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
+```
+
+## Behavior notes
+
+- **Plans** are seeded at startup (`トライアル` and `エンタープライズ`, mirroring the real service's public pricing) and read-only; plan IDs are deterministic across restarts.
+- **Subscriptions** bind to at most one service, as in the real API. `POST /subscriptions` returns 204 with no body; look the subscription up via `GET /subscriptions` (this matches the real API and is what the SDK/Terraform provider do).
+- **routeHost** is `site-<first 12 hex of the service id>.localhost`. `*.localhost` resolves to loopback on typical systems, so gateway hostnames need no DNS setup once the data plane exists.
+- **Route `hosts`** entries must be the service's `routeHost` or a registered domain's `domainName`, per the spec.
+- **Referential integrity**: deleting a service with routes, a domain referenced by a route's `hosts`, a certificate referenced by a domain, or a subscription bound to a service is refused (400); deleting an OIDC configuration referenced by a service is refused (409). Deleting a group cascades out of user memberships and route authorizations.
+- **Secrets are echoed**: credential values (`password`, `secret`, OIDC `clientSecret`, object storage keys) are returned by GET endpoints because the SDK's generated client requires those fields on decode. Do not put real secrets into the mock.
+- **Certificates**: `expiredAt` is derived by parsing the uploaded PEM; the PEM material itself is never returned (writeOnly in the spec).

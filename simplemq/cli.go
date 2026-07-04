@@ -35,6 +35,12 @@ func (c *Command) Run(ctx context.Context) error {
 
 	core.SetupLogger(c.Debug)
 
+	shutdownTracing, err := core.SetupTracing(ctx)
+	if err != nil {
+		return err
+	}
+	defer shutdownTracing()
+
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -54,7 +60,7 @@ func (c *Command) Run(ctx context.Context) error {
 	)
 	slog.Info("to use with sacloud-sdk-go or simplemq-cli",
 		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)
-	return core.Serve(ctx, c.Addr, h, c.TLS)
+	return core.Serve(ctx, c.Addr, core.TraceHandler(c.Name(), h), c.TLS)
 }
 
 func apiKeyHint(key string) string {

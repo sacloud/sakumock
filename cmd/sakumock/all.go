@@ -153,6 +153,12 @@ func (c *AllCmd) Run(ctx context.Context) error {
 	}
 	core.SetupLogger(c.debug())
 
+	shutdownTracing, err := core.SetupTracing(ctx)
+	if err != nil {
+		return err
+	}
+	defer shutdownTracing()
+
 	instances, err := c.build()
 	if err != nil {
 		return err
@@ -181,7 +187,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 			// If any service stops (clean shutdown or bind error), cancel the
 			// shared context so the others stop as well.
 			defer cancel()
-			if err := core.Serve(ctx, c.bindAddr(inst.cfg.ListenAddr()), inst.server, c.TLS); err != nil {
+			if err := core.Serve(ctx, c.bindAddr(inst.cfg.ListenAddr()), core.TraceHandler(inst.cfg.Name(), inst.server), c.TLS); err != nil {
 				errs[idx] = fmt.Errorf("%s: %w", inst.cfg.Name(), err)
 			}
 		}(idx, inst)

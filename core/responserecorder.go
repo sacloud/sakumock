@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 // maxErrorBodyLog bounds how much of an error response body ResponseRecorder
@@ -55,13 +57,17 @@ func (r *ResponseRecorder) Flush() {
 }
 
 // RequestLogArgs builds the standard per-request log attributes: method,
-// path, status, the error reason when the response is an error, and any
+// path, status, trace/span IDs when the request carries a span (see
+// SetupTracing), the error reason when the response is an error, and any
 // service-specific extras.
 func RequestLogArgs(r *http.Request, rec *ResponseRecorder, extra ...any) []any {
 	args := []any{
 		"method", r.Method,
 		"path", r.URL.Path,
 		"status", rec.Status,
+	}
+	if sc := trace.SpanContextFromContext(r.Context()); sc.IsValid() {
+		args = append(args, "trace_id", sc.TraceID().String(), "span_id", sc.SpanID().String())
 	}
 	if msg := rec.ErrorBody(); msg != "" {
 		args = append(args, "error", msg)

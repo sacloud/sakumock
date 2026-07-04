@@ -23,11 +23,13 @@ import (
 // MinIO, or real object storage — since the configuration is self-contained.
 func (dp *dataPlane) serveObjectStorage(w http.ResponseWriter, r *http.Request, m *matchResult) {
 	osc := m.service.ObjectStorage
+	applyCORSResponseHeaders(w.Header(), m.service.CorsConfig, r.Header.Get("Origin"))
 
 	switch r.Method {
 	case http.MethodGet, http.MethodHead:
 	case http.MethodOptions:
-		// CORS is not enforced by the mock; answer preflights permissively.
+		// CORS preflights are answered before this point; a plain OPTIONS
+		// gets an empty success.
 		w.WriteHeader(http.StatusNoContent)
 		return
 	default:

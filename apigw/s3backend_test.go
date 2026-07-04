@@ -1,6 +1,7 @@
 package apigw_test
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -74,7 +75,7 @@ func createObjectStorageService(t *testing.T, client *v1.Client, name, endpoint,
 }
 
 func TestDataPlaneObjectStorageBackend(t *testing.T) {
-	client, dpAddr := newGateway(t)
+	cpURL, client, dpAddr := newGatewayWithControlPlane(t)
 	fakeS3 := newFakeS3(t, map[string]string{
 		"site-bucket/static/hello.txt":  "hello from s3",
 		"site-bucket/static/index.html": "<html>index</html>",
@@ -136,6 +137,35 @@ func TestDataPlaneObjectStorageBackend(t *testing.T) {
 		resp := gwDo(t, dpAddr, "OPTIONS", host, "/hello.txt")
 		if resp.StatusCode != 204 {
 			t.Errorf("status = %d, want 204", resp.StatusCode)
+		}
+	})
+
+	t.Run("empty methods default to GET, HEAD, and OPTIONS", func(t *testing.T) {
+		// The SDK fills methods client-side, so exercise the omission with a
+		// raw request. An empty list must not expand to all methods here.
+		resp, err := http.Post(cpURL+"/services/"+svc.ID.Value.String()+"/routes", "application/json",
+			strings.NewReader(`{"name":"s3_defaults_route","protocols":"http","path":"/defaults","methods":[]}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		var created struct {
+			Apigw struct {
+				Route struct {
+					Methods []string `json:"methods"`
+				} `json:"route"`
+			} `json:"apigw"`
+		}
+		if resp.StatusCode != 201 {
+			body, _ := io.ReadAll(resp.Body)
+			t.Fatalf("status = %d: %s", resp.StatusCode, body)
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
+			t.Fatal(err)
+		}
+		got := created.Apigw.Route.Methods
+		if len(got) != 3 {
+			t.Errorf("methods = %v, want [GET HEAD OPTIONS]", got)
 		}
 	})
 

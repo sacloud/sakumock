@@ -47,7 +47,7 @@ func (dp *dataPlane) serveObjectStorage(w http.ResponseWriter, r *http.Request, 
 			dp.writeS3Error(w, key, err)
 			return
 		}
-		writeObjectHeaders(w, aws.ToString(out.ContentType), aws.ToInt64(out.ContentLength))
+		writeObjectHeaders(w, aws.ToString(out.ContentType), out.ContentLength)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -61,7 +61,7 @@ func (dp *dataPlane) serveObjectStorage(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	defer out.Body.Close()
-	writeObjectHeaders(w, aws.ToString(out.ContentType), aws.ToInt64(out.ContentLength))
+	writeObjectHeaders(w, aws.ToString(out.ContentType), out.ContentLength)
 	w.WriteHeader(http.StatusOK)
 	io.Copy(w, out.Body)
 }
@@ -82,12 +82,14 @@ func objectKey(osc *ObjectStore, upstreamPath string) string {
 	return key
 }
 
-func writeObjectHeaders(w http.ResponseWriter, contentType string, contentLength int64) {
+// writeObjectHeaders keeps nil (unknown length) distinct from an explicit 0
+// (empty object): only a known length becomes a Content-Length header.
+func writeObjectHeaders(w http.ResponseWriter, contentType string, contentLength *int64) {
 	if contentType != "" {
 		w.Header().Set("Content-Type", contentType)
 	}
-	if contentLength > 0 {
-		w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	if contentLength != nil {
+		w.Header().Set("Content-Length", strconv.FormatInt(*contentLength, 10))
 	}
 }
 

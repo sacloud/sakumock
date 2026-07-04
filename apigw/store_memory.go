@@ -447,6 +447,14 @@ func applyRouteDefaults(rt *Route) {
 	if rt.ResponseBuffering == nil {
 		rt.ResponseBuffering = ptr(true)
 	}
+	// The spec allows all methods when none are specified.
+	if len(rt.Methods) == 0 {
+		rt.Methods = allHTTPMethods()
+	}
+}
+
+func allHTTPMethods() []string {
+	return []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"}
 }
 
 func (s *MemoryStore) ListRoutes(serviceID string) ([]Route, error) {
@@ -1057,7 +1065,10 @@ func (s *MemoryStore) CreateSubscription(planID, name string) (Subscription, err
 			return Subscription{}, errBadRequest("subscription %s already exists", name)
 		}
 	}
-	resourceID, _ := strconv.ParseInt(s.ids.Next(), 10, 64)
+	resourceID, err := strconv.ParseInt(s.ids.Next(), 10, 64)
+	if err != nil {
+		return Subscription{}, &StoreError{Status: 500, Message: "generate resource ID: " + err.Error()}
+	}
 	sub := Subscription{
 		ID:         uuid.NewString(),
 		CreatedAt:  now(),

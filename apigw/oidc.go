@@ -5,9 +5,14 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
+
+// oidcDiscoveryTimeout bounds the discovery request so an unreachable or
+// stalled IdP fails fast instead of tying up request goroutines.
+const oidcDiscoveryTimeout = 10 * time.Second
 
 // authenticateOidc validates a Bearer token against the service's OIDC
 // configuration: the issuer's discovery document and JWKS are fetched (and
@@ -25,6 +30,13 @@ func (dp *dataPlane) authenticateOidc(w http.ResponseWriter, r *http.Request, m 
 	cfg, _, err := dp.store.GetOidc(m.service.Oidc.ID)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "Unauthorized: OIDC configuration not found")
+		return false
+	}
+	if !slices.Contains(cfg.AuthenticationMethods, "accessToken") {
+		// Only the accessToken (Bearer) method is implemented; a config
+		// allowing solely authorizationCodeFlow must not accept Bearer
+		// tokens (the flow itself arrives in a later phase).
+		writeError(w, http.StatusUnauthorized, "Unauthorized: the OIDC configuration does not allow the accessToken method")
 		return false
 	}
 
@@ -79,8 +91,12 @@ func (dp *dataPlane) oidcProvider(issuer string) (*oidc.Provider, error) {
 
 	// The discovery request runs outside the lock so a slow IdP does not
 	// stall unrelated requests; concurrent first uses may race, and the
-	// second result simply replaces the first (both are valid).
-	p, err := oidc.NewProvider(context.Background(), issuer)
+	// second result simply replaces the first (both are valid). The timeout
+	// only bounds the discovery: the provider's JWKS key set uses its own
+	// background context internally.
+	ctx, cancel := context.WithTimeout(context.Background(), oidcDiscoveryTimeout)
+	defer cancel()
+	p, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
 		return nil, err
 	}

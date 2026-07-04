@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -152,7 +153,25 @@ func TestDataPlaneOidcBearer(t *testing.T) {
 	t.Run("valid token is proxied with credentials kept", func(t *testing.T) {
 		resp := gwDoWith(t, dpAddr, "GET", host, "/", bearerToken(idp.sign(t, "my-client", in1h)))
 		assertStatus(t, resp, 200, "")
+		// Without hideCredentials, the Authorization header reaches the
+		// upstream.
+		if e := decodeEcho(t, resp); !strings.HasPrefix(e.Authorization, "Bearer ") {
+			t.Errorf("upstream Authorization = %q, want the bearer token", e.Authorization)
+		}
 	})
+	t.Run("config without accessToken method rejects bearer", func(t *testing.T) {
+		codeOnlyID := createOidcConfig(t, client, &v1.Oidc{
+			Name:                  "code_only",
+			AuthenticationMethods: v1.AuthenticationMethods{v1.AuthenticationMethodsItemAuthorizationCodeFlow},
+			Issuer:                idp.issuer(),
+			ClientId:              "my-client",
+			ClientSecret:          "my-secret",
+		})
+		codeSvc := setupOidcGateway(t, client, "oidc_code_only", upstream.URL, codeOnlyID)
+		resp := gwDoWith(t, dpAddr, "GET", codeSvc.RouteHost.Value, "/", bearerToken(idp.sign(t, "my-client", in1h)))
+		assertStatus(t, resp, 401, "does not allow the accessToken method")
+	})
+
 	t.Run("ACL does not apply to OIDC consumers", func(t *testing.T) {
 		// OIDC consumers are external to the user store; an enabled route
 		// authorization must not lock them out.

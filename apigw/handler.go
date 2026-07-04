@@ -88,10 +88,8 @@ func (s *Server) handleAddService(w http.ResponseWriter, r *http.Request) {
 	if !s.readJSON(w, r, &req) {
 		return
 	}
-	if req.Subscription == nil || req.Subscription.ID == "" {
-		writeError(w, http.StatusBadRequest, "subscription is required")
-		return
-	}
+	// The validator guarantees subscription (required) and a non-empty
+	// subscription.id (WithNonEmpty overlay) before this handler runs.
 	created, err := s.store.CreateService(req.Service, req.Subscription.ID)
 	if err != nil {
 		s.writeStoreError(w, err)

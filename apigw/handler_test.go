@@ -7,6 +7,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -628,5 +629,35 @@ func TestOidcLifecycle(t *testing.T) {
 	}
 	if _, ok := delRes.(*v1.DeleteOidcNoContent); !ok {
 		t.Errorf("delete oidc = %T, want DeleteOidcNoContent", delRes)
+	}
+}
+
+// TestServiceValidation exercises the spec-derived validator paths that the
+// SDK client cannot produce (it always sends well-formed typed values).
+func TestServiceValidation(t *testing.T) {
+	srv := apigw.NewTestServer(apigw.Config{})
+	defer srv.Close()
+
+	post := func(body string) int {
+		t.Helper()
+		resp, err := http.Post(srv.TestURL()+"/services", "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		return resp.StatusCode
+	}
+
+	// subscription is required by the generated schema.
+	if got := post(`{"name":"v","protocol":"http","host":"upstream.example.com"}`); got != 400 {
+		t.Errorf("missing subscription: status = %d, want 400", got)
+	}
+	// subscription.id is required by the generated schema.
+	if got := post(`{"name":"v","protocol":"http","host":"upstream.example.com","subscription":{}}`); got != 400 {
+		t.Errorf("missing subscription.id: status = %d, want 400", got)
+	}
+	// An empty subscription.id is a spec gap covered by the WithNonEmpty overlay.
+	if got := post(`{"name":"v","protocol":"http","host":"upstream.example.com","subscription":{"id":""}}`); got != 400 {
+		t.Errorf("empty subscription.id: status = %d, want 400", got)
 	}
 }

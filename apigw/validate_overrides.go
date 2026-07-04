@@ -5,6 +5,7 @@ package apigw
 // core.WithNonEmpty overlays MinLength 1 onto these paths at construction.
 // Remove an entry once the upstream spec gains the minLength.
 var bodyNonEmptyFields = map[string][]string{
+	"POST /services":                      {"subscription.id"},
 	"POST /oidc":                          {"issuer", "clientId", "clientSecret"},
 	"PUT /oidc/{oidcId}":                  {"issuer", "clientId", "clientSecret"},
 	"POST /subscriptions":                 {"planId", "name"},

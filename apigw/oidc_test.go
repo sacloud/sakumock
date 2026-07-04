@@ -346,8 +346,10 @@ func TestDataPlaneOidcCodeFlow(t *testing.T) {
 	}
 	host := svc.RouteHost.Value + ":" + dpPort
 
-	// Step 1: the unauthenticated request is redirected to the IdP.
-	resp := flowDo(t, dpAddr, host, "/app", nil)
+	// Step 1: the unauthenticated request is redirected to the IdP. The
+	// original query string is part of the redirect_uri, so the user lands
+	// back on the exact URL they requested.
+	resp := flowDo(t, dpAddr, host, "/app?x=1", nil)
 	if resp.StatusCode != 302 {
 		t.Fatalf("step1 status = %d, want 302", resp.StatusCode)
 	}
@@ -355,7 +357,7 @@ func TestDataPlaneOidcCodeFlow(t *testing.T) {
 	if !strings.HasPrefix(authURL, idp.issuer()+"/auth") {
 		t.Fatalf("step1 Location = %q, want the IdP authorization endpoint", authURL)
 	}
-	if !strings.Contains(authURL, "redirect_uri="+url.QueryEscape("http://"+host+"/app")) {
+	if !strings.Contains(authURL, "redirect_uri="+url.QueryEscape("http://"+host+"/app?x=1")) {
 		t.Errorf("step1 Location misses the original URL as redirect_uri: %q", authURL)
 	}
 
@@ -380,8 +382,8 @@ func TestDataPlaneOidcCodeFlow(t *testing.T) {
 	if resp.StatusCode != 302 {
 		t.Fatalf("step3 status = %d, want 302", resp.StatusCode)
 	}
-	if loc := resp.Header.Get("Location"); loc != "http://"+host+"/app" {
-		t.Errorf("step3 Location = %q, want the original URL", loc)
+	if loc := resp.Header.Get("Location"); loc != "http://"+host+"/app?x=1" {
+		t.Errorf("step3 Location = %q, want the original URL including its query", loc)
 	}
 	var session *http.Cookie
 	for _, c := range resp.Cookies() {

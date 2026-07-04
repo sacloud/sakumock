@@ -2,8 +2,8 @@ package apigw
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -73,7 +73,7 @@ func (dp *dataPlane) startLogin(w http.ResponseWriter, r *http.Request, cfg Oidc
 
 	state := randomToken()
 	nonce := randomToken()
-	redirectURI := dp.scheme + "://" + r.Host + r.URL.Path
+	redirectURI := dp.scheme + "://" + r.Host + r.URL.RequestURI()
 
 	dp.mu.Lock()
 	sweepExpired(dp.pendingLogins, func(p pendingLogin) time.Time { return p.expires })
@@ -168,8 +168,10 @@ func (dp *dataPlane) validSession(id string) bool {
 // requested.
 func oauth2Config(cfg OidcConfig, provider *oidc.Provider, redirectURI string) *oauth2.Config {
 	scopes := cfg.Scopes
-	if len(scopes) == 0 {
-		scopes = []string{oidc.ScopeOpenID}
+	if !slices.Contains(scopes, oidc.ScopeOpenID) {
+		// The openid scope is what makes the IdP return an id_token; the
+		// flow cannot complete without it.
+		scopes = append([]string{oidc.ScopeOpenID}, scopes...)
 	}
 	return &oauth2.Config{
 		ClientID:     cfg.ClientID,
@@ -180,10 +182,10 @@ func oauth2Config(cfg OidcConfig, provider *oidc.Provider, redirectURI string) *
 	}
 }
 
+// randomToken returns an unguessable value for state/nonce/session IDs.
+// crypto/rand.Text cannot fail, unlike error-returning Read patterns.
 func randomToken() string {
-	b := make([]byte, 16)
-	rand.Read(b)
-	return hex.EncodeToString(b)
+	return rand.Text()
 }
 
 // sweepExpired drops expired entries once the map grows past sweepThreshold,

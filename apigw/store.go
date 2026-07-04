@@ -231,7 +231,10 @@ type Overage struct {
 }
 
 // Subscription is a plan contract. At most one service binds to a
-// subscription; ResourceID is a SAKURA Cloud numeric resource ID.
+// subscription; ResourceID is a SAKURA Cloud numeric resource ID. Other
+// SAKURA Cloud APIs serialize resource IDs as JSON strings, but the apigw
+// spec declares resourceId as integer (int64) and the generated SDK client
+// decodes it as such, so the number is intentional here.
 type Subscription struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`

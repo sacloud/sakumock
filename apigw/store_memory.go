@@ -771,15 +771,66 @@ func (s *MemoryStore) GetUserAuthentication(userID string) (*UserAuthentication,
 	return c.Auth, nil
 }
 
+// UserByBasicUserName finds the user owning the Basic credential userName.
+// The data plane calls this per authenticated request; a scan is fine at mock
+// scale and avoids index maintenance.
+func (s *MemoryStore) UserByBasicUserName(name string) (User, bool) {
+	return s.findUser(func(u *User) bool {
+		return u.Auth != nil && u.Auth.BasicAuth != nil && u.Auth.BasicAuth.UserName == name
+	})
+}
+
+// UserByHmacUserName finds the user owning the HMAC credential userName.
+func (s *MemoryStore) UserByHmacUserName(name string) (User, bool) {
+	return s.findUser(func(u *User) bool {
+		return u.Auth != nil && u.Auth.HmacAuth != nil && u.Auth.HmacAuth.UserName == name
+	})
+}
+
+// UserByJwtKey finds the user whose JWT credential key matches the token's
+// iss claim.
+func (s *MemoryStore) UserByJwtKey(key string) (User, bool) {
+	return s.findUser(func(u *User) bool {
+		return u.Auth != nil && u.Auth.Jwt != nil && u.Auth.Jwt.Key == key
+	})
+}
+
+func (s *MemoryStore) findUser(match func(*User) bool) (User, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, u := range s.users {
+		if match(u) {
+			return copyUser(u), true
+		}
+	}
+	return User{}, false
+}
+
 // UpsertUserAuthentication merges the provided credentials into the user's
 // stored ones: a credential type present in auth replaces (or creates) the
 // stored credential of that type, keeping its ID; absent types are untouched.
+// Credential identifiers (Basic/HMAC userName, JWT key) must be unique across
+// users — the data plane resolves the consumer by them.
 func (s *MemoryStore) UpsertUserAuthentication(userID string, auth UserAuthentication) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	u, ok := s.users[userID]
 	if !ok {
 		return errNotFound("user %s not found", userID)
+	}
+	for id, other := range s.users {
+		if id == userID || other.Auth == nil {
+			continue
+		}
+		if auth.BasicAuth != nil && other.Auth.BasicAuth != nil && other.Auth.BasicAuth.UserName == auth.BasicAuth.UserName {
+			return errBadRequest("basicAuth userName %s is already used by another user", auth.BasicAuth.UserName)
+		}
+		if auth.HmacAuth != nil && other.Auth.HmacAuth != nil && other.Auth.HmacAuth.UserName == auth.HmacAuth.UserName {
+			return errBadRequest("hmacAuth userName %s is already used by another user", auth.HmacAuth.UserName)
+		}
+		if auth.Jwt != nil && other.Auth.Jwt != nil && other.Auth.Jwt.Key == auth.Jwt.Key {
+			return errBadRequest("jwt key %s is already used by another user", auth.Jwt.Key)
+		}
 	}
 	if u.Auth == nil {
 		u.Auth = &UserAuthentication{}

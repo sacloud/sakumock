@@ -2,7 +2,7 @@
 
 An API Gateway compatible mock server for local development and testing. It implements the gateway management API (services, routes, route authorization/transformations, users, groups, domains, certificates, plans, subscriptions, OIDC configurations) with in-memory storage.
 
-Each service gets an auto-issued gateway hostname (`routeHost`) of the form `site-<id>.localhost`. With `--enable-data-plane`, the gateway itself runs on a separate listener (default `127.0.0.1:28091`): requests are matched by Host header, path, and method against the configured routes and reverse proxied to the owning service's upstream. Authentication enforcement arrives in a later phase.
+Each service gets an auto-issued gateway hostname (`routeHost`) of the form `site-<id>.localhost`. With `--enable-data-plane`, the gateway itself runs on a separate listener (default `127.0.0.1:28091`): requests are matched by Host header, path, and method against the configured routes, authenticated per the service's `authentication` scheme, and reverse proxied to the owning service's upstream.
 
 ## Install
 
@@ -87,6 +87,16 @@ Matching and forwarding semantics (Kong-style, per the spec):
 - No match returns `404 {"message":"no Route matched with those values"}`; upstream failures return 502 and timeouts 504 — the same messages as the real gateway. `connectTimeout` bounds the dial; `readTimeout`/`writeTimeout` bound the idle time between successive read/write operations on the upstream connection (nginx-style semantics, as in the real gateway).
 - `retries` is best-effort: only connection-level failures of bodyless requests are retried. `X-Forwarded-For/-Proto/-Host` are set on forwarded requests. Upstream TLS certificates are **not verified** (mock convenience for self-signed local upstreams).
 - With the common `--tls-cert`/`--tls-key`, the data plane serves HTTPS and routes match the `https` protocol.
+
+Authentication (the service's `authentication` field) is enforced before proxying:
+
+- **basic**: standard Basic authentication against the user's `basicAuth` credential.
+- **hmac**: draft-cavage style signatures (`Authorization: hmac username="...",algorithm="hmac-sha256",headers="date request-line",signature="..."`), algorithms `hmac-sha1/256/384/512`, with a 300s clock skew check on the `Date`/`X-Date` header when it is part of the signature. Request-body digests are not validated (matching the real gateway's default).
+- **jwt**: `Authorization: Bearer` tokens; the credential is resolved by the token's `iss` claim matching the credential `key`, and the signature is verified with the credential's algorithm (HS256/384/512) and secret. `exp`/`nbf` are validated.
+- **oidc**: not enforced yet (arrives in a later phase); requests to OIDC-protected services get 401.
+- Route **authorization** (group ACL): when enabled, the authenticated user must belong to one of the enabled groups, otherwise 403.
+- **IP restrictions** apply in the real gateway's order: route-level before authentication, user-level after.
+- Credential identifiers (`basicAuth`/`hmacAuth` `userName`, `jwt` `key`) must be unique across users because the data plane resolves the consumer by them; reusing one is rejected with 400.
 
 ## Behavior notes
 

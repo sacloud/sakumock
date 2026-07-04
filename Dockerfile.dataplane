@@ -46,13 +46,16 @@ ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     APPRUN_DATA_PLANE_ADDR=0.0.0.0:28088 \
     APPRUN_DEDICATED_ENABLE_DATA_PLANE=true \
     APPRUN_DEDICATED_DATA_PLANE_ADDR=0.0.0.0:28089 \
-    WORKFLOWS_ENABLE_DATA_PLANE=true
+    WORKFLOWS_ENABLE_DATA_PLANE=true \
+    APIGW_ENABLE_DATA_PLANE=true \
+    APIGW_DATA_PLANE_ADDR=0.0.0.0:28091
 
 # One port per service (see the service table in README) plus the data planes
 # (Monitoring Suite telemetry ingest 28084, Object Storage S3 28086, AppRun
-# Docker proxy 28088, AppRun Dedicated Docker proxy 28089). EXPOSE is
+# Docker proxy 28088, AppRun Dedicated Docker proxy 28089, API Gateway 28091).
+# EXPOSE is
 # documentation only — publish the ports you need with `-p`.
-EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089 18090 18091 28084 28086 28088 28089
+EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089 18090 18091 28084 28086 28088 28089 28091
 
 ENTRYPOINT ["/sakumock"]
 # Run every service bound to 0.0.0.0 so published ports are reachable from

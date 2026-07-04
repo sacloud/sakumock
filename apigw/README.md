@@ -2,7 +2,7 @@
 
 An API Gateway compatible mock server for local development and testing. It implements the gateway management API (services, routes, route authorization/transformations, users, groups, domains, certificates, plans, subscriptions, OIDC configurations) with in-memory storage.
 
-Each service gets an auto-issued gateway hostname (`routeHost`) of the form `site-<id>.localhost`. The data plane (the gateway itself, routing requests on those hostnames to upstreams) will be added in a later phase; this package currently mocks the control plane.
+Each service gets an auto-issued gateway hostname (`routeHost`) of the form `site-<id>.localhost`. With `--enable-data-plane`, the gateway itself runs on a separate listener (default `127.0.0.1:28091`): requests are matched by Host header, path, and method against the configured routes and reverse proxied to the owning service's upstream. Authentication enforcement arrives in a later phase.
 
 ## Install
 
@@ -26,6 +26,8 @@ sakumock-apigw
 | `--latency` | `APIGW_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `APIGW_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `APIGW_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--enable-data-plane` | `APIGW_ENABLE_DATA_PLANE` | `false` | Enable the gateway data plane: a separate listener routing requests by Host header to the configured upstreams |
+| `--data-plane-addr` | `APIGW_DATA_PLANE_ADDR` | `127.0.0.1:28091` | Data plane listen address (control-plane port + 10000) |
 | `--debug` | `APIGW_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `APIGW_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `APIGW_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
@@ -57,6 +59,34 @@ srv := apigw.NewTestServer(apigw.Config{})
 defer srv.Close()
 fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 ```
+
+## Data plane
+
+With `--enable-data-plane`, the gateway listens on `--data-plane-addr` and serves the configured routes:
+
+```bash
+sakumock-apigw --enable-data-plane
+
+# Create a subscription, a service (upstream), and a route via the management
+# API, note the service's routeHost (site-<id>.localhost), then:
+curl http://site-0123456789ab.localhost:28091/your/path
+```
+
+`*.localhost` resolves to loopback on typical systems, so the auto-issued hostname works without DNS setup. Custom domains are reached by setting the Host header explicitly:
+
+```bash
+curl -H "Host: api.example.com" http://127.0.0.1:28091/your/path
+```
+
+Matching and forwarding semantics (Kong-style, per the spec):
+
+- A request matches a route when its Host is in the route's effective host set (`hosts`, or the auto-issued `host` when `hosts` is empty), its path matches the route `path`, and its method is in `methods`.
+- A route `path` starting with `~/` is a regular expression anchored at the start; anything else is a literal prefix. Regex routes rank above prefix routes; among regex routes the lowest `regexPriority` wins (0 is highest), among prefix routes the longest prefix wins.
+- `stripPath` (default true) removes the matched portion before forwarding; the service `path` is prepended. `preserveHost` (default false) keeps the client's Host header instead of the upstream host.
+- An http request matching an https-only route gets the `httpsRedirectStatusCode` response (3xx redirect, or the default 426 upgrade).
+- No match returns `404 {"message":"no Route matched with those values"}`; upstream failures return 502 and timeouts 504 — the same messages as the real gateway. `connectTimeout` bounds the dial; `readTimeout`/`writeTimeout` bound the idle time between successive read/write operations on the upstream connection (nginx-style semantics, as in the real gateway).
+- `retries` is best-effort: only connection-level failures of bodyless requests are retried. `X-Forwarded-For/-Proto/-Host` are set on forwarded requests. Upstream TLS certificates are **not verified** (mock convenience for self-signed local upstreams).
+- With the common `--tls-cert`/`--tls-key`, the data plane serves HTTPS and routes match the `https` protocol.
 
 ## Behavior notes
 

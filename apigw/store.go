@@ -390,6 +390,7 @@ type Store interface {
 
 	// Routes
 	CreateRoute(serviceID string, rt Route) (Route, error)
+	RoutesByHost(host string) []Route
 	ListRoutes(serviceID string) ([]Route, error)
 	GetRoute(serviceID, routeID string) (Route, error)
 	UpdateRoute(serviceID, routeID string, rt Route) error

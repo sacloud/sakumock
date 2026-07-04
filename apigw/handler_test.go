@@ -661,3 +661,44 @@ func TestServiceValidation(t *testing.T) {
 		t.Errorf("empty subscription.id: status = %d, want 400", got)
 	}
 }
+
+// TestCertificateValidation verifies the mock returns debuggable errors for
+// broken PEM input instead of a vague 400.
+func TestCertificateValidation(t *testing.T) {
+	srv := apigw.NewTestServer(apigw.Config{})
+	defer srv.Close()
+	ctx := t.Context()
+	client := newClient(t, srv.TestURL())
+	certOp := apigwsdk.NewCertificateOp(client)
+
+	certPEM, _ := testCertPEM(t)
+	_, otherKeyPEM := testCertPEM(t)
+
+	// Values that fail the spec pattern (e.g. a non-PEM string) are rejected
+	// by the ogen SDK client itself, so only pattern-passing garbage reaches
+	// the mock.
+	tests := []struct {
+		name, cert, key, wantErr string
+	}{
+		{"broken base64", "-----BEGIN CERTIFICATE-----\nA\n-----END CERTIFICATE-----\n", "", "no decodable PEM block found"},
+		{"not an x509 certificate", "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n", "", "invalid certificate: x509"},
+		{"key mismatch", certPEM, otherKeyPEM, "private key does not match"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := certOp.Create(ctx, &v1.Certificate{
+				Name: v1.NewOptName("bad_cert"),
+				Rsa: v1.NewOptCertificateDetails(v1.CertificateDetails{
+					Cert: v1.NewOptString(tt.cert),
+					Key:  v1.NewOptString(tt.key),
+				}),
+			})
+			if err == nil {
+				t.Fatal("expected error")
+			}
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("error = %q, want it to contain %q", err, tt.wantErr)
+			}
+		})
+	}
+}

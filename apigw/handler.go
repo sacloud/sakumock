@@ -1,6 +1,7 @@
 package apigw
 
 import (
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -572,14 +573,25 @@ type certificateDetailsRequest struct {
 }
 
 // parseCertificate derives expiredAt from the leaf certificate in the PEM.
+// The error messages are deliberately specific (wrong PEM block type, key
+// mismatch, ...) — a mock should make configuration mistakes easy to debug,
+// even where the real API might answer vaguely.
 func parseCertificate(req *certificateDetailsRequest) (*CertificateDetails, error) {
+	// The spec pattern (enforced by the body validator and even client-side by
+	// the ogen SDK) guarantees a CERTIFICATE-typed block shape, so the failure
+	// modes left here are broken base64 and non-x509 DER content.
 	block, _ := pem.Decode([]byte(req.Cert))
 	if block == nil {
-		return nil, errBadRequest("invalid certificate PEM")
+		return nil, errBadRequest("invalid certificate: no decodable PEM block found")
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		return nil, errBadRequest("invalid certificate: %v", err)
+	}
+	if req.Key != "" {
+		if _, err := tls.X509KeyPair([]byte(req.Cert), []byte(req.Key)); err != nil {
+			return nil, errBadRequest("invalid certificate/key pair: %v", err)
+		}
 	}
 	return &CertificateDetails{
 		ExpiredAt: cert.NotAfter.UTC(),

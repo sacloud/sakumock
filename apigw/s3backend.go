@@ -23,11 +23,17 @@ import (
 // MinIO, or real object storage — since the configuration is self-contained.
 func (dp *dataPlane) serveObjectStorage(w http.ResponseWriter, r *http.Request, m *matchResult) {
 	osc := m.service.ObjectStorage
+	applyCORSResponseHeaders(w.Header(), m.service.CorsConfig, r.Header.Get("Origin"))
 
 	switch r.Method {
 	case http.MethodGet, http.MethodHead:
 	case http.MethodOptions:
-		// CORS is not enforced by the mock; answer preflights permissively.
+		// Gateway-answered CORS preflights never reach this point; with
+		// preflightContinue the backend (bucket CORS) answers instead.
+		if isCORSPreflight(r) {
+			dp.forwardObjectStoragePreflight(w, r, m)
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 		return
 	default:
@@ -64,6 +70,39 @@ func (dp *dataPlane) serveObjectStorage(w http.ResponseWriter, r *http.Request, 
 	writeObjectHeaders(w, aws.ToString(out.ContentType), out.ContentLength)
 	w.WriteHeader(http.StatusOK)
 	io.Copy(w, out.Body)
+}
+
+// forwardObjectStoragePreflight relays a CORS preflight to the S3-compatible
+// endpoint (S3 answers preflights from its bucket CORS configuration).
+// Preflights are unsigned, as browsers send them.
+func (dp *dataPlane) forwardObjectStoragePreflight(w http.ResponseWriter, r *http.Request, m *matchResult) {
+	osc := m.service.ObjectStorage
+	u := strings.TrimSuffix(osc.Endpoint, "/") + "/" + osc.BucketName + "/" + objectKey(osc, m.upstreamPath)
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodOptions, u, nil)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "object storage preflight: "+err.Error())
+		return
+	}
+	for _, h := range []string{"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Request-Private-Network"} {
+		if v := r.Header.Get(h); v != "" {
+			req.Header.Set(h, v)
+		}
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "object storage preflight: "+err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	for k, vs := range resp.Header {
+		if strings.HasPrefix(k, "Access-Control-") || k == "Vary" {
+			for _, v := range vs {
+				w.Header().Add(k, v)
+			}
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
 }
 
 // objectKey maps the request path to the object key: the folder prefix is

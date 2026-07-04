@@ -118,7 +118,12 @@ func (dp *dataPlane) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rw := core.NewResponseRecorder(w)
 
 	m := dp.match(rw, r)
-	if m != nil && dp.authorize(rw, r, m) {
+	switch {
+	case m == nil:
+	case dp.handleCORSPreflight(rw, r, m):
+		// Preflights are answered before authentication: browsers send them
+		// without credentials.
+	case dp.authorize(rw, r, m):
 		dp.proxy(rw, r, m)
 	}
 
@@ -288,6 +293,7 @@ func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResul
 	svc := m.service
 	upstreamHost := net.JoinHostPort(svc.Host, fmt.Sprintf("%d", svc.Port))
 	originalHost := r.Host
+	requestOrigin := r.Header.Get("Origin")
 
 	proxy := &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
@@ -315,6 +321,7 @@ func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResul
 			}
 		},
 		ModifyResponse: func(resp *http.Response) error {
+			applyCORSResponseHeaders(resp.Header, svc.CorsConfig, requestOrigin)
 			return applyResponseTransformation(resp, m.route.ResponseTransform)
 		},
 		Transport: dp.transportFor(svc),

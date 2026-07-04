@@ -178,7 +178,6 @@ func (s *MemoryStore) publisher(code string) (Publisher, bool) {
 	return Publisher{}, false
 }
 
-// publisherHasVariant reports whether the publisher exposes the named variant.
 func (p Publisher) hasVariant(name string) bool {
 	for _, v := range p.Variants {
 		if v.Name == name {

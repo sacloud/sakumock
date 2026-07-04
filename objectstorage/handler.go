@@ -69,7 +69,6 @@ type bucketControlData struct {
 	CreatedAt  string `json:"created_at"`
 }
 
-// permissionData is a permission with its bucket controls.
 type permissionData struct {
 	ID             int64               `json:"id"`
 	DisplayName    string              `json:"display_name"`

@@ -71,7 +71,6 @@ type AllCmd struct {
 	EnableServiceLink bool           `name:"enable-service-link" help:"Enable cross-service forwarding over HTTP (e.g. EventBus fires to SimpleMQ)" env:"SAKUMOCK_ENABLE_SERVICE_LINK" default:"false"`
 }
 
-// serviceInstance pairs a service's config with its running server.
 type serviceInstance struct {
 	cfg    core.ServiceConfig
 	server core.Server

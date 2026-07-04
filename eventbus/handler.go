@@ -155,8 +155,6 @@ func providerClassFilter(rawQuery string) string {
 
 // validateSettings checks the per-class required settings fields. It returns a
 // message suitable for a 400 response, or "" when the settings are acceptable.
-// pcExists reports whether a process configuration with the given ID exists,
-// so schedules and triggers cannot reference a missing one.
 func (s *Server) validateSettings(class string, settings json.RawMessage) string {
 	if len(settings) == 0 {
 		return "Settings is required"

@@ -10,7 +10,6 @@ import (
 // accessControlAllowMethods is not configured.
 const corsDefaultMethods = "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
 
-// isCORSPreflight identifies a CORS preflight request.
 func isCORSPreflight(r *http.Request) bool {
 	return r.Method == http.MethodOptions &&
 		r.Header.Get("Origin") != "" &&

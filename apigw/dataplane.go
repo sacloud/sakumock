@@ -40,6 +40,7 @@ type dataPlane struct {
 	oidcProviders map[string]*oidc.Provider
 	pendingLogins map[string]pendingLogin
 	sessions      map[string]gwSession
+	s3Clients     map[string]*cachedS3Client
 }
 
 // cachedTransport is a per-service HTTP transport, rebuilt when the service's
@@ -69,6 +70,7 @@ func startDataPlane(cfg Config, store *MemoryStore, logger *slog.Logger) (*dataP
 		oidcProviders: make(map[string]*oidc.Provider),
 		pendingLogins: make(map[string]pendingLogin),
 		sessions:      make(map[string]gwSession),
+		s3Clients:     make(map[string]*cachedS3Client),
 	}
 
 	dp.server = &http.Server{Handler: dp}
@@ -279,6 +281,10 @@ func (dp *dataPlane) writeHTTPSRedirect(w http.ResponseWriter, r *http.Request, 
 }
 
 func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResult) {
+	if m.service.ObjectStorage != nil {
+		dp.serveObjectStorage(w, r, m)
+		return
+	}
 	svc := m.service
 	upstreamHost := net.JoinHostPort(svc.Host, fmt.Sprintf("%d", svc.Port))
 	originalHost := r.Host

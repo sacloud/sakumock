@@ -409,6 +409,9 @@ func (s *MemoryStore) CreateRoute(serviceID string, rt Route) (Route, error) {
 	if err := s.validateRouteHostsLocked(svc, rt.Hosts); err != nil {
 		return Route{}, err
 	}
+	if err := applyObjectStorageRouteRules(svc, &rt); err != nil {
+		return Route{}, err
+	}
 
 	rt.ID = uuid.NewString()
 	rt.CreatedAt = now()
@@ -439,6 +442,27 @@ func (s *MemoryStore) validateRouteHostsLocked(svc *Service, hosts []string) err
 		}
 		if !found {
 			return errBadRequest("host %s is neither the service routeHost nor a registered domain", h)
+		}
+	}
+	return nil
+}
+
+// applyObjectStorageRouteRules enforces the spec rule that routes of an
+// object-storage-backed service allow only GET, HEAD, and OPTIONS — including
+// when methods is omitted, which would otherwise default to all methods.
+func applyObjectStorageRouteRules(svc *Service, rt *Route) error {
+	if svc.ObjectStorage == nil {
+		return nil
+	}
+	if len(rt.Methods) == 0 {
+		rt.Methods = []string{"GET", "HEAD", "OPTIONS"}
+		return nil
+	}
+	for _, m := range rt.Methods {
+		switch m {
+		case "GET", "HEAD", "OPTIONS":
+		default:
+			return errBadRequest("routes for an object storage service allow only GET, HEAD, and OPTIONS")
 		}
 	}
 	return nil
@@ -537,6 +561,9 @@ func (s *MemoryStore) UpdateRoute(serviceID, routeID string, rt Route) error {
 		}
 	}
 	if err := s.validateRouteHostsLocked(s.services[serviceID], rt.Hosts); err != nil {
+		return err
+	}
+	if err := applyObjectStorageRouteRules(s.services[serviceID], &rt); err != nil {
 		return err
 	}
 	rt.ID = cur.ID

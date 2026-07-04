@@ -22,24 +22,26 @@ import (
 // echoUpstream records what the proxied request looked like from the
 // upstream's point of view.
 type echoUpstream struct {
-	Path    string `json:"path"`
-	Query   string `json:"query"`
-	Host    string `json:"host"`
-	XFHost  string `json:"xfHost"`
-	XFProto string `json:"xfProto"`
-	XFFor   string `json:"xfFor"`
+	Path          string `json:"path"`
+	Query         string `json:"query"`
+	Host          string `json:"host"`
+	XFHost        string `json:"xfHost"`
+	XFProto       string `json:"xfProto"`
+	XFFor         string `json:"xfFor"`
+	Authorization string `json:"authorization"`
 }
 
 func newEchoUpstream(t *testing.T) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(echoUpstream{
-			Path:    r.URL.Path,
-			Query:   r.URL.RawQuery,
-			Host:    r.Host,
-			XFHost:  r.Header.Get("X-Forwarded-Host"),
-			XFProto: r.Header.Get("X-Forwarded-Proto"),
-			XFFor:   r.Header.Get("X-Forwarded-For"),
+			Path:          r.URL.Path,
+			Query:         r.URL.RawQuery,
+			Host:          r.Host,
+			XFHost:        r.Header.Get("X-Forwarded-Host"),
+			XFProto:       r.Header.Get("X-Forwarded-Proto"),
+			XFFor:         r.Header.Get("X-Forwarded-For"),
+			Authorization: r.Header.Get("Authorization"),
 		})
 	}))
 	t.Cleanup(srv.Close)

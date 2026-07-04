@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -33,9 +34,10 @@ type dataPlane struct {
 	// TLS files are set), used for route protocol matching and redirects.
 	scheme string
 
-	mu         sync.Mutex
-	transports map[string]*cachedTransport
-	regexps    map[string]*regexp.Regexp
+	mu            sync.Mutex
+	transports    map[string]*cachedTransport
+	regexps       map[string]*regexp.Regexp
+	oidcProviders map[string]*oidc.Provider
 }
 
 // cachedTransport is a per-service HTTP transport, rebuilt when the service's
@@ -56,12 +58,13 @@ func startDataPlane(cfg Config, store *MemoryStore, logger *slog.Logger) (*dataP
 		scheme = "https"
 	}
 	dp := &dataPlane{
-		listener:   ln,
-		store:      store,
-		logger:     logger,
-		scheme:     scheme,
-		transports: make(map[string]*cachedTransport),
-		regexps:    make(map[string]*regexp.Regexp),
+		listener:      ln,
+		store:         store,
+		logger:        logger,
+		scheme:        scheme,
+		transports:    make(map[string]*cachedTransport),
+		regexps:       make(map[string]*regexp.Regexp),
+		oidcProviders: make(map[string]*oidc.Provider),
 	}
 
 	dp.server = &http.Server{Handler: dp}
@@ -97,6 +100,9 @@ type matchResult struct {
 	route        Route
 	service      Service
 	upstreamPath string
+	// stripAuthorization drops the Authorization header before proxying
+	// (the OIDC configuration's hideCredentials).
+	stripAuthorization bool
 }
 
 func (dp *dataPlane) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -282,6 +288,9 @@ func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResul
 			}
 			req.Header.Set("X-Forwarded-Proto", dp.scheme)
 			req.Header.Set("X-Forwarded-Host", originalHost)
+			if m.stripAuthorization {
+				req.Header.Del("Authorization")
+			}
 			// A request without a body may be retried safely; dropping the
 			// zero-length body makes that explicit for the retry transport.
 			if req.ContentLength == 0 {

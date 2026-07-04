@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.42.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.103.3
+	github.com/coreos/go-oidc/v3 v3.19.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/golang/snappy v1.0.0
 	github.com/google/uuid v1.6.0
@@ -36,6 +37,7 @@ require (
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-faster/jx v1.2.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
@@ -51,6 +53,7 @@ require (
 	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect

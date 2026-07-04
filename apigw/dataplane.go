@@ -119,12 +119,6 @@ func (dp *dataPlane) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dp.logger.Info("data plane request", args...)
 }
 
-// authorize is the seam where authentication, IP restriction, and group ACL
-// checks plug in (later phases). It reports whether the request may proceed.
-func (dp *dataPlane) authorize(http.ResponseWriter, *http.Request, *matchResult) bool {
-	return true
-}
-
 // match selects the route for the request, writing the error/redirect
 // response and returning nil when nothing should be proxied.
 func (dp *dataPlane) match(w http.ResponseWriter, r *http.Request) *matchResult {

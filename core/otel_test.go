@@ -7,13 +7,16 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
 
 	"go.opentelemetry.io/otel"
+	coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -199,5 +202,67 @@ func TestSetupTracingExport(t *testing.T) {
 	}
 	if got := hex.EncodeToString(span.SpanId); logLine.SpanID != got {
 		t.Errorf("log span_id = %q, want exported span ID %q", logLine.SpanID, got)
+	}
+}
+
+// captureTraceService is an in-test OTLP/gRPC collector.
+type captureTraceService struct {
+	coltracepb.UnimplementedTraceServiceServer
+	mu    sync.Mutex
+	spans []*tracepb.ResourceSpans
+}
+
+func (s *captureTraceService) Export(_ context.Context, req *coltracepb.ExportTraceServiceRequest) (*coltracepb.ExportTraceServiceResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.spans = append(s.spans, req.ResourceSpans...)
+	return &coltracepb.ExportTraceServiceResponse{}, nil
+}
+
+func TestSetupTracingExportGRPC(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	gs := grpc.NewServer()
+	svc := &captureTraceService{}
+	coltracepb.RegisterTraceServiceServer(gs, svc)
+	go gs.Serve(ln)
+	t.Cleanup(gs.Stop)
+
+	clearOTelEnv(t)
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://"+ln.Addr().String())
+	t.Setenv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
+
+	prevTP := otel.GetTracerProvider()
+	prevProp := otel.GetTextMapPropagator()
+	t.Cleanup(func() {
+		otel.SetTracerProvider(prevTP)
+		otel.SetTextMapPropagator(prevProp)
+	})
+
+	shutdown, err := SetupTracing(context.Background())
+	if err != nil {
+		t.Fatalf("SetupTracing: %v", err)
+	}
+
+	const wantTraceID = "1af7651916cd43dd8448eb211c80319c"
+	h := TraceHandler("kms", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest("GET", "/things/42", nil)
+	req.Header.Set("traceparent", "00-"+wantTraceID+"-b7ad6b7169203331-01")
+	h.ServeHTTP(httptest.NewRecorder(), req)
+
+	shutdown() // flushes the span over gRPC
+
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+	if len(svc.spans) != 1 || len(svc.spans[0].ScopeSpans) != 1 || len(svc.spans[0].ScopeSpans[0].Spans) != 1 {
+		t.Fatalf("expected exactly one span, got %+v", svc.spans)
+	}
+	span := svc.spans[0].ScopeSpans[0].Spans[0]
+	if got := hex.EncodeToString(span.TraceId); got != wantTraceID {
+		t.Errorf("trace ID = %s, want %s", got, wantTraceID)
 	}
 }

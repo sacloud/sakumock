@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	sdkresource "go.opentelemetry.io/otel/sdk/resource"
@@ -36,7 +37,7 @@ func TracingEnabled() bool {
 		os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != ""
 }
 
-// SetupTracing installs the global TracerProvider (OTLP/HTTP exporter) and
+// SetupTracing installs the global TracerProvider (OTLP exporter) and
 // the W3C tracecontext+baggage propagator when TracingEnabled(); otherwise it
 // is a no-op. The returned shutdown flushes remaining spans with an internal
 // timeout and logs failures, so callers just `defer shutdown()`.
@@ -45,16 +46,18 @@ func SetupTracing(ctx context.Context) (shutdown func(), err error) {
 		return func() {}, nil
 	}
 
-	// Only OTLP over HTTP is supported; the gRPC exporter is not linked.
+	// http/protobuf unless OTEL_EXPORTER_OTLP_(TRACES_)PROTOCOL selects grpc
+	// (the same default the Go contrib autoexport uses).
 	proto := os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
 	if proto == "" {
 		proto = os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL")
 	}
-	if strings.HasPrefix(proto, "grpc") {
-		slog.Warn("OTLP gRPC protocol is not supported; exporting traces over http/protobuf", "protocol", proto)
+	var exporter sdktrace.SpanExporter
+	if proto == "grpc" {
+		exporter, err = otlptracegrpc.New(ctx)
+	} else {
+		exporter, err = otlptracehttp.New(ctx)
 	}
-
-	exporter, err := otlptracehttp.New(ctx)
 	if err != nil {
 		return nil, err
 	}

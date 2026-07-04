@@ -180,7 +180,7 @@ sakumock can emit OpenTelemetry traces for every request it handles — one serv
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 sakumock all
 ```
 
-Tracing is enabled when `OTEL_EXPORTER_OTLP_ENDPOINT` or `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is set (and `OTEL_SDK_DISABLED` is not `true`); otherwise it is completely off. Only OTLP over HTTP is supported — `OTEL_EXPORTER_OTLP_PROTOCOL=grpc` is not.
+Tracing is enabled when `OTEL_EXPORTER_OTLP_ENDPOINT` or `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` is set (and `OTEL_SDK_DISABLED` is not `true`); otherwise it is completely off. Spans are exported over OTLP http/protobuf by default; set `OTEL_EXPORTER_OTLP_PROTOCOL=grpc` (or `OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc`) to export over gRPC instead (e.g. `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317`).
 
 - Spans are named after the matched route (e.g. `GET /cloud/zone/is1a/api/kms/1.0/keys/{id}`) and carry `http.route` plus a `sakumock.service` attribute identifying the service; the resource is `service.name=sakumock` (override with `OTEL_SERVICE_NAME`).
 - Every `request` log line gains `trace_id` and `span_id` attributes, so logs and traces correlate.

@@ -178,6 +178,13 @@ func TestDataPlaneProxy(t *testing.T) {
 		}
 	})
 
+	t.Run("host matching is case-insensitive", func(t *testing.T) {
+		resp := gwDo(t, dpAddr, "GET", strings.ToUpper(routeHost), "/api/items")
+		if resp.StatusCode != 200 {
+			t.Errorf("status = %d, want 200", resp.StatusCode)
+		}
+	})
+
 	t.Run("unknown host does not match", func(t *testing.T) {
 		resp := gwDo(t, dpAddr, "GET", "nope.localhost", "/api/items")
 		if resp.StatusCode != 404 {

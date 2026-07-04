@@ -91,6 +91,16 @@ func newRouteHost(serviceID string) string {
 
 func now() time.Time { return time.Now().UTC() }
 
+// createdBefore orders by creation time with the ID as a deterministic
+// tie-break: map iteration is random and timestamps can collide, so sorting
+// by CreatedAt alone would make list (and route-precedence) order flap.
+func createdBefore(t1 time.Time, id1 string, t2 time.Time, id2 string) bool {
+	if !t1.Equal(t2) {
+		return t1.Before(t2)
+	}
+	return id1 < id2
+}
+
 func ptr[T any](v T) *T { return &v }
 
 // --- copy helpers (stores hand out copies so callers never share memory) ---
@@ -305,7 +315,7 @@ func (s *MemoryStore) ListServices() []Service {
 	for _, v := range s.services {
 		out = append(out, copyService(v))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -459,7 +469,7 @@ func allHTTPMethods() []string {
 
 // RoutesByHost returns the routes whose effective host set (hosts, or the
 // auto-issued host when hosts is empty) contains host, in creation order.
-// The data plane calls this per request.
+// Hostnames compare case-insensitively. The data plane calls this per request.
 func (s *MemoryStore) RoutesByHost(host string) []Route {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -469,11 +479,11 @@ func (s *MemoryStore) RoutesByHost(host string) []Route {
 		if len(hosts) == 0 {
 			hosts = []string{rt.Host}
 		}
-		if slices.Contains(hosts, host) {
+		if slices.ContainsFunc(hosts, func(h string) bool { return strings.EqualFold(h, host) }) {
 			out = append(out, copyRoute(rt))
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -489,7 +499,7 @@ func (s *MemoryStore) ListRoutes(serviceID string) ([]Route, error) {
 			out = append(out, copyRoute(rt))
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out, nil
 }
 
@@ -638,7 +648,7 @@ func (s *MemoryStore) ListUsers() []User {
 	for _, u := range s.users {
 		out = append(out, s.userWithGroupsLocked(u))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -703,7 +713,9 @@ func (s *MemoryStore) ListUserGroups(userID string) ([]Group, map[string]bool, e
 	for _, g := range s.groups {
 		groups = append(groups, copyGroup(g))
 	}
-	sort.Slice(groups, func(i, j int) bool { return groups[i].CreatedAt.Before(groups[j].CreatedAt) })
+	sort.Slice(groups, func(i, j int) bool {
+		return createdBefore(groups[i].CreatedAt, groups[i].ID, groups[j].CreatedAt, groups[j].ID)
+	})
 	return groups, assigned, nil
 }
 
@@ -827,7 +839,7 @@ func (s *MemoryStore) ListGroups() []Group {
 	for _, g := range s.groups {
 		out = append(out, copyGroup(g))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -944,7 +956,7 @@ func (s *MemoryStore) ListDomains() []Domain {
 	for _, d := range s.domains {
 		out = append(out, *d)
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -1004,7 +1016,7 @@ func (s *MemoryStore) ListCertificates() []Certificate {
 	for _, c := range s.certificates {
 		out = append(out, copyCertificate(c))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -1110,7 +1122,7 @@ func (s *MemoryStore) ListSubscriptions() []Subscription {
 	for _, sub := range s.subscriptions {
 		out = append(out, copySubscription(sub))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -1188,7 +1200,7 @@ func (s *MemoryStore) ListOidcs() []OidcConfig {
 	for _, o := range s.oidcs {
 		out = append(out, copyOidc(o))
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	sort.Slice(out, func(i, j int) bool { return createdBefore(out[i].CreatedAt, out[i].ID, out[j].CreatedAt, out[j].ID) })
 	return out
 }
 
@@ -1205,7 +1217,9 @@ func (s *MemoryStore) GetOidc(id string) (OidcConfig, []Service, error) {
 			services = append(services, copyService(svc))
 		}
 	}
-	sort.Slice(services, func(i, j int) bool { return services[i].CreatedAt.Before(services[j].CreatedAt) })
+	sort.Slice(services, func(i, j int) bool {
+		return createdBefore(services[i].CreatedAt, services[i].ID, services[j].CreatedAt, services[j].ID)
+	})
 	return copyOidc(o), services, nil
 }
 

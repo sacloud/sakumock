@@ -348,7 +348,9 @@ type ResponseReplaceDetail struct {
 	IfStatusCode []int          `json:"ifStatusCode,omitempty"`
 	Headers      []KeyValuePair `json:"headers,omitempty"`
 	JSON         []KeyValuePair `json:"json,omitempty"`
-	Body         string         `json:"body,omitempty"`
+	// Body is a pointer so an explicit empty-string replacement is
+	// distinguishable from the field being absent.
+	Body *string `json:"body,omitempty"`
 }
 
 type ResponseModificationDetail struct {

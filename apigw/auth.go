@@ -42,7 +42,7 @@ func (dp *dataPlane) authorize(w http.ResponseWriter, r *http.Request, m *matchR
 	if user != nil && m.route.IPRestriction == nil && !dp.allowIP(w, user.IPRestriction, clientIP) {
 		return false
 	}
-	return dp.checkACL(w, m.route.Authorization, user)
+	return dp.checkACL(w, m, user)
 }
 
 // authenticate verifies the request against the service's authentication
@@ -59,9 +59,9 @@ func (dp *dataPlane) authenticate(w http.ResponseWriter, r *http.Request, m *mat
 	case "jwt":
 		return dp.authenticateJwt(w, r)
 	case "oidc":
-		// OIDC token validation arrives in a later phase.
-		writeError(w, http.StatusUnauthorized, "Unauthorized")
-		return nil, false
+		// OIDC consumers live at the IdP, not in the user store, so a
+		// successful validation yields no local User.
+		return nil, dp.authenticateOidc(w, r, m)
 	default:
 		writeError(w, http.StatusUnauthorized, "Unauthorized")
 		return nil, false
@@ -232,8 +232,14 @@ func (dp *dataPlane) authenticateJwt(w http.ResponseWriter, r *http.Request) (*U
 
 // checkACL enforces the route's group allow-list against the authenticated
 // consumer's groups.
-func (dp *dataPlane) checkACL(w http.ResponseWriter, cfg *RouteAuthorizationConfig, user *User) bool {
+func (dp *dataPlane) checkACL(w http.ResponseWriter, m *matchResult, user *User) bool {
+	cfg := m.route.Authorization
 	if cfg == nil || !cfg.IsACLEnabled {
+		return true
+	}
+	if m.service.Authentication == "oidc" {
+		// OIDC consumers are external to the user store, so the group
+		// allow-list cannot apply to them (documented in the README).
 		return true
 	}
 	if user == nil {

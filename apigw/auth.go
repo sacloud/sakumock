@@ -76,7 +76,16 @@ func (dp *dataPlane) authenticateBasic(w http.ResponseWriter, r *http.Request) (
 		return nil, false
 	}
 	u, found := dp.store.UserByBasicUserName(userName)
-	if !found || subtle.ConstantTimeCompare([]byte(u.Auth.BasicAuth.Password), []byte(password)) != 1 {
+	// Compare fixed-length digests so the comparison takes the same time
+	// regardless of password length or whether the user exists.
+	var stored string
+	if found {
+		stored = u.Auth.BasicAuth.Password
+	}
+	storedSum := sha256.Sum256([]byte(stored))
+	givenSum := sha256.Sum256([]byte(password))
+	if subtle.ConstantTimeCompare(storedSum[:], givenSum[:]) != 1 || !found {
+		w.Header().Set("WWW-Authenticate", `Basic realm="apigw"`)
 		writeError(w, http.StatusUnauthorized, "Invalid authentication credentials")
 		return nil, false
 	}
@@ -190,7 +199,7 @@ func (dp *dataPlane) authenticateJwt(w http.ResponseWriter, r *http.Request) (*U
 
 	unverified, _, err := jwt.NewParser().ParseUnverified(token, jwt.MapClaims{})
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, "Bad token; invalid JSON")
+		writeError(w, http.StatusUnauthorized, "Bad token")
 		return nil, false
 	}
 	iss, err := unverified.Claims.GetIssuer()

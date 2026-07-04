@@ -89,6 +89,9 @@ func TestDataPlaneBasicAuth(t *testing.T) {
 	t.Run("wrong password", func(t *testing.T) {
 		resp := gwDoWith(t, dpAddr, "GET", host, "/", func(r *http.Request) { r.SetBasicAuth("alice", "nope") })
 		assertStatus(t, resp, 401, "Invalid authentication credentials")
+		if got := resp.Header.Get("WWW-Authenticate"); !strings.HasPrefix(got, "Basic") {
+			t.Errorf("WWW-Authenticate = %q", got)
+		}
 	})
 	t.Run("unknown user", func(t *testing.T) {
 		resp := gwDoWith(t, dpAddr, "GET", host, "/", func(r *http.Request) { r.SetBasicAuth("mallory", "open sesame") })
@@ -135,6 +138,10 @@ func TestDataPlaneJwtAuth(t *testing.T) {
 	t.Run("missing token", func(t *testing.T) {
 		resp := gwDoWith(t, dpAddr, "GET", host, "/", nil)
 		assertStatus(t, resp, 401, "Unauthorized")
+	})
+	t.Run("malformed token", func(t *testing.T) {
+		resp := gwDoWith(t, dpAddr, "GET", host, "/", bearer("not.a.jwt"))
+		assertStatus(t, resp, 401, "Bad token")
 	})
 	t.Run("unknown iss", func(t *testing.T) {
 		resp := gwDoWith(t, dpAddr, "GET", host, "/", bearer(signJWT(t, jwt.SigningMethodHS256, "other-key", "jwt-secret", in1h)))

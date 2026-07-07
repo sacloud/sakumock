@@ -10,12 +10,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
 	"time"
 )
 
 // versitygwBinary is the external S3 gateway sakumock launches for the data
-// plane. It is looked up on PATH; sakumock never bundles it (it would bloat the
+// plane. It is looked up on PATH (exec.LookPath, which on Windows resolves
+// versitygw.exe via PATHEXT); sakumock never bundles it (it would bloat the
 // released single binary and the distroless image), so the data plane is a
 // local development / test convenience that the user opts into with
 // --enable-data-plane and must have installed.
@@ -71,8 +71,9 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		return nil, fmt.Errorf("create data plane dir %q: %w", dir, err)
 	}
 
-	// exec.CommandContext + Cancel/WaitDelay gives a graceful SIGTERM with a
-	// hard-kill fallback when Close cancels the context.
+	// exec.CommandContext + Cancel/WaitDelay gives a graceful stop
+	// (terminateProcess, per-OS) with a hard-kill fallback when Close cancels
+	// the context.
 	ctx, cancel := context.WithCancel(context.Background())
 	args := []string{
 		"--access", dataPlaneRootID,
@@ -87,7 +88,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	}
 	args = append(args, "posix", dir)
 	cmd := exec.CommandContext(ctx, path, args...)
-	cmd.Cancel = func() error { return cmd.Process.Signal(syscall.SIGTERM) }
+	cmd.Cancel = func() error { return terminateProcess(cmd.Process) }
 	cmd.WaitDelay = 5 * time.Second
 	lw := &logWriter{logger: logger}
 	cmd.Stdout, cmd.Stderr = lw, lw

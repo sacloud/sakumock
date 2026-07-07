@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -122,13 +124,13 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	go func() {
 		defer close(d.done)
 		if err := cmd.Wait(); err != nil && ctx.Err() == nil {
-			logger.Error("versitygw exited unexpectedly", "error", err)
+			logger.Error("versitygw exited unexpectedly", "error", err, "output", lw.tail())
 		}
 	}()
 
 	if err := waitListen(cfg.DataPlaneAddr, 10*time.Second); err != nil {
 		d.Close()
-		return nil, fmt.Errorf("data plane: versitygw did not start listening on %s: %w", cfg.DataPlaneAddr, err)
+		return nil, fmt.Errorf("data plane: versitygw did not start listening on %s: %w (recent output: %s)", cfg.DataPlaneAddr, err, lw.tail())
 	}
 
 	logger.Info("data plane (S3) started",
@@ -192,19 +194,41 @@ func sidecarDir(dir string) string {
 }
 
 // logWriter forwards a child process's stdout/stderr to slog at debug level,
-// one line per log entry.
+// one line per log entry, and keeps the most recent lines so a startup or
+// crash report can show why the process failed even when debug logging is off.
 type logWriter struct {
 	logger *slog.Logger
+
+	mu   sync.Mutex
+	last []string
 }
+
+// logWriterTailLines bounds the retained output.
+const logWriterTailLines = 20
 
 func (w *logWriter) Write(p []byte) (int, error) {
 	sc := bufio.NewScanner(bytes.NewReader(p))
 	for sc.Scan() {
-		if line := sc.Text(); line != "" {
-			w.logger.Debug("versitygw", "log", line)
+		line := sc.Text()
+		if line == "" {
+			continue
 		}
+		w.logger.Debug("versitygw", "log", line)
+		w.mu.Lock()
+		w.last = append(w.last, line)
+		if len(w.last) > logWriterTailLines {
+			w.last = w.last[1:]
+		}
+		w.mu.Unlock()
 	}
 	return len(p), nil
+}
+
+// tail returns the most recent output lines as one string.
+func (w *logWriter) tail() string {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return strings.Join(w.last, "\n")
 }
 
 // waitListen blocks until addr accepts a TCP connection or the timeout elapses.

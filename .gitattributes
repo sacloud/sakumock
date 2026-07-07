@@ -1,0 +1,4 @@
+# Force LF at checkout on every platform: the golden-file tests
+# (internal/genvalidate) and the generated-code diff check compare committed
+# bytes against LF output, so a CRLF checkout on Windows would break them.
+* text=auto eol=lf

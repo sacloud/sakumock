@@ -124,8 +124,9 @@ sakumock all --objectstorage-enable-data-plane
 
 The integration is **loose**:
 
-- **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw.
+- **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw. If the backend directory cannot be created (e.g. the bucket name is not a valid directory name on the local filesystem, such as a Windows reserved device name), bucket creation fails with `500` and is rolled back rather than leaving a control-plane bucket the data plane cannot serve.
 - **A single fixed root credential** (access key `sakumock`, secret key `sakumocksecret`) authenticates S3 requests. Control-plane access keys and permissions are **not** enforced on the data plane.
+- **On Windows**, where the filesystem lacks the xattr support of versitygw's default metadata store, sakumock passes `--sidecar` automatically: metadata is kept in a `meta-<dirname>` directory next to the backend dir.
 
 When the data plane is enabled, the startup log and `sakumock env` emit the `AWS_*` variables an aws-cli / aws-sdk client needs (`AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`). Load them and use any S3 client without passing `--endpoint-url`:
 

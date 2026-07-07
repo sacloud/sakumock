@@ -10,12 +10,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
+	"strings"
+	"sync"
 	"time"
 )
 
 // versitygwBinary is the external S3 gateway sakumock launches for the data
-// plane. It is looked up on PATH; sakumock never bundles it (it would bloat the
+// plane. It is looked up on PATH (exec.LookPath, which on Windows resolves
+// versitygw.exe via PATHEXT); sakumock never bundles it (it would bloat the
 // released single binary and the distroless image), so the data plane is a
 // local development / test convenience that the user opts into with
 // --enable-data-plane and must have installed.
@@ -71,8 +73,9 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		return nil, fmt.Errorf("create data plane dir %q: %w", dir, err)
 	}
 
-	// exec.CommandContext + Cancel/WaitDelay gives a graceful SIGTERM with a
-	// hard-kill fallback when Close cancels the context.
+	// exec.CommandContext + Cancel/WaitDelay gives a graceful stop
+	// (terminateProcess, per-OS) with a hard-kill fallback when Close cancels
+	// the context.
 	ctx, cancel := context.WithCancel(context.Background())
 	args := []string{
 		"--access", dataPlaneRootID,
@@ -85,9 +88,19 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	if cfg.tls.Enabled() {
 		args = append(args, "--cert", cfg.tls.CertFile, "--key", cfg.tls.KeyFile)
 	}
-	args = append(args, "posix", dir)
+	metaArgs, err := posixMetadataArgs(dir)
+	if err != nil {
+		cancel()
+		if tempDir {
+			_ = os.RemoveAll(dir)
+		}
+		return nil, err
+	}
+	args = append(args, "posix")
+	args = append(args, metaArgs...)
+	args = append(args, dir)
 	cmd := exec.CommandContext(ctx, path, args...)
-	cmd.Cancel = func() error { return cmd.Process.Signal(syscall.SIGTERM) }
+	cmd.Cancel = func() error { return terminateProcess(cmd.Process) }
 	cmd.WaitDelay = 5 * time.Second
 	lw := &logWriter{logger: logger}
 	cmd.Stdout, cmd.Stderr = lw, lw
@@ -111,13 +124,13 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	go func() {
 		defer close(d.done)
 		if err := cmd.Wait(); err != nil && ctx.Err() == nil {
-			logger.Error("versitygw exited unexpectedly", "error", err)
+			logger.Error("versitygw exited unexpectedly", "error", err, "output", lw.tail())
 		}
 	}()
 
 	if err := waitListen(cfg.DataPlaneAddr, 10*time.Second); err != nil {
 		d.Close()
-		return nil, fmt.Errorf("data plane: versitygw did not start listening on %s: %w", cfg.DataPlaneAddr, err)
+		return nil, fmt.Errorf("data plane: versitygw did not start listening on %s: %w (recent output: %s)", cfg.DataPlaneAddr, err, lw.tail())
 	}
 
 	logger.Info("data plane (S3) started",
@@ -134,14 +147,17 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 // createBucket mirrors a control-plane bucket into the data plane backend as a
 // directory, which versitygw's posix backend exposes as an S3 bucket. It is a
 // no-op on a nil receiver, so callers need not check whether the data plane is
-// enabled.
-func (d *dataPlane) createBucket(name string) {
+// enabled. A failure is returned rather than just logged so the control plane
+// never claims a bucket the data plane cannot serve (e.g. a name the local
+// filesystem rejects, such as a Windows reserved device name like "con").
+func (d *dataPlane) createBucket(name string) error {
 	if d == nil {
-		return
+		return nil
 	}
 	if err := os.Mkdir(filepath.Join(d.dir, name), 0o755); err != nil && !os.IsExist(err) {
-		d.logger.Warn("data plane: failed to create bucket directory", "bucket", name, "error", err)
+		return fmt.Errorf("data plane: create bucket directory: %w", err)
 	}
+	return nil
 }
 
 // deleteBucket removes a bucket (and its objects) from the data plane backend.
@@ -164,23 +180,58 @@ func (d *dataPlane) Close() {
 	<-d.done
 	if d.tempDir {
 		_ = os.RemoveAll(d.dir)
+		// Windows keeps sidecar metadata next to the backend dir (see
+		// posixMetadataArgs); a no-op elsewhere.
+		_ = os.RemoveAll(sidecarDir(d.dir))
 	}
 }
 
+// sidecarDir is where posixMetadataArgs places versitygw's sidecar metadata on
+// platforms without xattr support: a sibling of the backend dir (inside it,
+// versitygw's posix backend would list it as a bucket). The name prepends
+// "meta-" rather than appending a suffix because versitygw rejects any sidecar
+// path that string-prefix-matches the root dir — a naive containment check
+// that a "<dir>.meta" sibling would trip.
+func sidecarDir(dir string) string {
+	return filepath.Join(filepath.Dir(dir), "meta-"+filepath.Base(dir))
+}
+
 // logWriter forwards a child process's stdout/stderr to slog at debug level,
-// one line per log entry.
+// one line per log entry, and keeps the most recent lines so a startup or
+// crash report can show why the process failed even when debug logging is off.
 type logWriter struct {
 	logger *slog.Logger
+
+	mu   sync.Mutex
+	last []string
 }
+
+// logWriterTailLines bounds the retained output.
+const logWriterTailLines = 20
 
 func (w *logWriter) Write(p []byte) (int, error) {
 	sc := bufio.NewScanner(bytes.NewReader(p))
 	for sc.Scan() {
-		if line := sc.Text(); line != "" {
-			w.logger.Debug("versitygw", "log", line)
+		line := sc.Text()
+		if line == "" {
+			continue
 		}
+		w.logger.Debug("versitygw", "log", line)
+		w.mu.Lock()
+		w.last = append(w.last, line)
+		if len(w.last) > logWriterTailLines {
+			w.last = w.last[1:]
+		}
+		w.mu.Unlock()
 	}
 	return len(p), nil
+}
+
+// tail returns the most recent output lines as one string.
+func (w *logWriter) tail() string {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return strings.Join(w.last, "\n")
 }
 
 // waitListen blocks until addr accepts a TCP connection or the timeout elapses.

@@ -203,7 +203,7 @@ func TestInspectMessages(t *testing.T) {
 
 func TestSendMessage_Exec(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("exec test requires sh")
+		t.Skip("test script is sh-specific (the exec hook itself runs via cmd /c on Windows)")
 	}
 	out := filepath.Join(t.TempDir(), "out")
 	script := fmt.Sprintf(`{ printf "msg="; cat; printf "\ngroup=%%s\nid=%%s\n" "$SAKUMOCK_GROUP_ID" "$SAKUMOCK_MESSAGE_ID"; } > %s`, out)
@@ -232,9 +232,7 @@ func TestSendMessage_Exec(t *testing.T) {
 }
 
 func TestSendMessage_ExecFailureStillReturns202(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("exec test requires sh")
-	}
+	// "exit 1" works under both sh -c and cmd /c, so no OS skip.
 	srv := simplenotification.NewTestServer(simplenotification.Config{Exec: "exit 1"})
 	defer srv.Close()
 

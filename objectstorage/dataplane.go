@@ -86,7 +86,17 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	if cfg.tls.Enabled() {
 		args = append(args, "--cert", cfg.tls.CertFile, "--key", cfg.tls.KeyFile)
 	}
-	args = append(args, "posix", dir)
+	metaArgs, err := posixMetadataArgs(dir)
+	if err != nil {
+		cancel()
+		if tempDir {
+			_ = os.RemoveAll(dir)
+		}
+		return nil, err
+	}
+	args = append(args, "posix")
+	args = append(args, metaArgs...)
+	args = append(args, dir)
 	cmd := exec.CommandContext(ctx, path, args...)
 	cmd.Cancel = func() error { return terminateProcess(cmd.Process) }
 	cmd.WaitDelay = 5 * time.Second
@@ -168,7 +178,17 @@ func (d *dataPlane) Close() {
 	<-d.done
 	if d.tempDir {
 		_ = os.RemoveAll(d.dir)
+		// Windows keeps sidecar metadata next to the backend dir (see
+		// posixMetadataArgs); a no-op elsewhere.
+		_ = os.RemoveAll(sidecarDir(d.dir))
 	}
+}
+
+// sidecarDir is where posixMetadataArgs places versitygw's sidecar metadata on
+// platforms without xattr support: next to the backend dir, not inside it,
+// where versitygw's posix backend would list it as a bucket.
+func sidecarDir(dir string) string {
+	return dir + ".meta"
 }
 
 // logWriter forwards a child process's stdout/stderr to slog at debug level,

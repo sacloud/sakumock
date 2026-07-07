@@ -4,10 +4,36 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// TestPosixMetadataArgs asserts the per-OS metadata flags: none on Unix
+// (xattr, versitygw's default, works there), a pre-created sidecar directory
+// on Windows (NTFS has no xattrs and versitygw checks at startup).
+func TestPosixMetadataArgs(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "backend")
+	args, err := posixMetadataArgs(dir)
+	if err != nil {
+		t.Fatalf("posixMetadataArgs: %v", err)
+	}
+	if runtime.GOOS != "windows" {
+		if len(args) != 0 {
+			t.Fatalf("expected no extra args on %s, got %v", runtime.GOOS, args)
+		}
+		return
+	}
+	want := []string{"--sidecar", sidecarDir(dir)}
+	if len(args) != 2 || args[0] != want[0] || args[1] != want[1] {
+		t.Fatalf("args = %v, want %v", args, want)
+	}
+	if fi, err := os.Stat(sidecarDir(dir)); err != nil || !fi.IsDir() {
+		t.Fatalf("sidecar dir must exist as a directory (err=%v)", err)
+	}
+}
 
 func TestCreateBucket_NilDataPlane(t *testing.T) {
 	var d *dataPlane

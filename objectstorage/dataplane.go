@@ -187,10 +187,13 @@ func (d *dataPlane) Close() {
 }
 
 // sidecarDir is where posixMetadataArgs places versitygw's sidecar metadata on
-// platforms without xattr support: next to the backend dir, not inside it,
-// where versitygw's posix backend would list it as a bucket.
+// platforms without xattr support: a sibling of the backend dir (inside it,
+// versitygw's posix backend would list it as a bucket). The name prepends
+// "meta-" rather than appending a suffix because versitygw rejects any sidecar
+// path that string-prefix-matches the root dir — a naive containment check
+// that a "<dir>.meta" sibling would trip.
 func sidecarDir(dir string) string {
-	return dir + ".meta"
+	return filepath.Join(filepath.Dir(dir), "meta-"+filepath.Base(dir))
 }
 
 // logWriter forwards a child process's stdout/stderr to slog at debug level,

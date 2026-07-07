@@ -135,14 +135,17 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 // createBucket mirrors a control-plane bucket into the data plane backend as a
 // directory, which versitygw's posix backend exposes as an S3 bucket. It is a
 // no-op on a nil receiver, so callers need not check whether the data plane is
-// enabled.
-func (d *dataPlane) createBucket(name string) {
+// enabled. A failure is returned rather than just logged so the control plane
+// never claims a bucket the data plane cannot serve (e.g. a name the local
+// filesystem rejects, such as a Windows reserved device name like "con").
+func (d *dataPlane) createBucket(name string) error {
 	if d == nil {
-		return
+		return nil
 	}
 	if err := os.Mkdir(filepath.Join(d.dir, name), 0o755); err != nil && !os.IsExist(err) {
-		d.logger.Warn("data plane: failed to create bucket directory", "bucket", name, "error", err)
+		return fmt.Errorf("data plane: create bucket directory: %w", err)
 	}
+	return nil
 }
 
 // deleteBucket removes a bucket (and its objects) from the data plane backend.

@@ -257,7 +257,13 @@ func (s *Server) handleCreateBucket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, fmt.Sprintf("bucket %q already exists", name))
 		return
 	}
-	s.dataPlane.createBucket(name)
+	if err := s.dataPlane.createBucket(name); err != nil {
+		// Roll back so a retry with a usable name does not hit 409 and the
+		// control plane never lists a bucket the data plane cannot serve.
+		s.store.DeleteBucket(name)
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: bucketToJSON(b)})
 }
 

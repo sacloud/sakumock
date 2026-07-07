@@ -3,7 +3,6 @@ package simplenotification
 import (
 	"net/http"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -79,7 +78,8 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	core.WriteJSON(w, http.StatusAccepted, sendMessageResponse{IsOk: true})
 }
 
-// runExec spawns the configured shell command for an accepted message.
+// runExec spawns the configured shell command for an accepted message,
+// through the platform shell (sh -c on Unix, cmd /c on Windows).
 // The message body is piped to the command's stdin and metadata is exposed
 // via environment variables. The command's stdout and stderr are inherited
 // from the mock process so that output (e.g. from "cat") is visible in the
@@ -87,7 +87,7 @@ func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 // HTTP response remains 202 because the notification was successfully
 // accepted.
 func (s *Server) runExec(rec MessageRecord) {
-	cmd := exec.Command("sh", "-c", s.exec)
+	cmd := shellCommand(s.exec)
 	cmd.Stdin = strings.NewReader(rec.Message)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -10,20 +10,23 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	rl := func(h http.HandlerFunc) http.HandlerFunc {
 		return s.rateLimiter.Middleware(core.PathValueKey("queueName"), h)
 	}
-	// Data-plane routes: bearer auth outermost, then rate limit, then
-	// spec-derived body validation, then the handler.
+	// Data-plane routes: fault injection outermost (an injected fault is an
+	// infrastructure-level failure, so it may mask a would-be 401/429/400),
+	// then bearer auth, then rate limit, then spec-derived body validation,
+	// then the handler.
 	dp := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
 		return core.RegisteredRoute{
 			Route:   core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
-			Handler: s.authMiddleware(rl(s.validator.Middleware(method, path, h))),
+			Handler: s.fault.Middleware(s.authMiddleware(rl(s.validator.Middleware(method, path, h)))),
 		}
 	}
-	// Control-plane routes: basic auth outermost, then spec-derived body
-	// validation (standard-error shape), then the handler.
+	// Control-plane routes: fault injection outermost (standard-error shape),
+	// then basic auth, then spec-derived body validation (standard-error
+	// shape), then the handler.
 	cp := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
 		return core.RegisteredRoute{
 			Route:   core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
-			Handler: s.basicAuthMiddleware(s.cpValidator.Middleware(method, path, h)),
+			Handler: s.cpFault.Middleware(s.basicAuthMiddleware(s.cpValidator.Middleware(method, path, h))),
 		}
 	}
 	return []core.RegisteredRoute{

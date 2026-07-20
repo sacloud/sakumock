@@ -48,6 +48,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"addr", c.Addr,
 		"latency", c.Latency,
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
+		"fault", core.FaultHint(c.Fault),
 		"debug", c.Debug,
 	)
 	slog.Info("to use with sacloud-sdk-go",

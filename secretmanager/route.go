@@ -13,9 +13,11 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	route := func(method, path, desc string, h http.HandlerFunc) core.RegisteredRoute {
 		return core.RegisteredRoute{
 			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
-			// Rate limit outermost, then spec-derived body validation, then
-			// the handler.
-			Handler: rl(s.validator.Middleware(method, path, h)),
+			// Fault injection outermost (an injected fault is an
+			// infrastructure-level failure, so it may mask a would-be 429/400),
+			// then rate limit, then spec-derived body validation, then the
+			// handler.
+			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, h))),
 		}
 	}
 	const base = "/secretmanager/vaults/{vault_resource_id}"

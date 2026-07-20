@@ -15,6 +15,7 @@ type Config struct {
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"MONITORINGSUITE_LATENCY"`
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"MONITORINGSUITE_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"MONITORINGSUITE_RATE_LIMIT_WINDOW"`
+	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"MONITORINGSUITE_FAULT"`
 	Debug           bool          `help:"Enable debug mode" env:"MONITORINGSUITE_DEBUG" default:"false"`
 
 	// Telemetry data plane (ingest only) options. When enabled, a second
@@ -76,6 +77,7 @@ type Server struct {
 	store       *MemoryStore
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
+	fault       *core.FaultInjector
 	// validator rejects request bodies violating the spec-derived constraints
 	// in the generated bodySchemas table (validate_gen.go).
 	validator *core.BodyValidator
@@ -87,7 +89,12 @@ type Server struct {
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
 func NewHandler(cfg Config) (*Server, error) {
+	fault, err := core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(writeError))
+	if err != nil {
+		return nil, err
+	}
 	s := &Server{
+		fault:   fault,
 		store:   NewStore(),
 		latency: cfg.Latency,
 		rateLimiter: core.NewRateLimiter(

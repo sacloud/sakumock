@@ -26,6 +26,7 @@ sakumock-workflows
 | `--latency` | `WORKFLOWS_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `WORKFLOWS_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `WORKFLOWS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--fault` | `WORKFLOWS_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--enable-data-plane` | `WORKFLOWS_ENABLE_DATA_PLANE` | `false` | Enable the Runbook execution engine: executions actually run instead of completing immediately |
 | `--execution-timeout` | `WORKFLOWS_EXECUTION_TIMEOUT` | `10m` | Maximum execution time per runbook run (data plane only; real API allows up to 1 year) |
 | `--allow-local-net` | `WORKFLOWS_ALLOW_LOCAL_NET` | `true` | Allow HTTP calls to localhost and private networks; set `false` to simulate real API URL blocking |

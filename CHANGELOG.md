@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.7.1](https://github.com/sacloud/sakumock/compare/v0.7.0...v0.7.1) - 2026-07-20
+- Fix Windows compatibility issues by @fujiwara in https://github.com/sacloud/sakumock/pull/146
+- feat: fault injection by @fujiwara in https://github.com/sacloud/sakumock/pull/148
+
 ## [v0.7.0](https://github.com/sacloud/sakumock/compare/v0.6.0...v0.7.0) - 2026-07-04
 - Generate request-body validation from OpenAPI specs by @fujiwara in https://github.com/sacloud/sakumock/pull/128
 - Roll out generated spec-derived validation to six services by @fujiwara in https://github.com/sacloud/sakumock/pull/130

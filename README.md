@@ -152,7 +152,7 @@ Run `sakumock --help` to list services, and `sakumock <service> --help` for its 
 
 To test how a client (SDK, Terraform provider, your application) handles server errors and network failures, every service can probabilistically inject faults into its control-plane API with `--fault CODE:RATE[:PHASE]` (repeatable):
 
-- `CODE` — the HTTP status to return (100–599), or `reset` to drop the TCP connection abruptly (the client sees a transport error such as `connection reset by peer`, not an HTTP response).
+- `CODE` — the HTTP status to return (200–599), or `reset` to drop the TCP connection abruptly (the client sees a transport error such as `connection reset by peer`, not an HTTP response).
 - `RATE` — the probability in `(0, 1]`. Each request rolls once; the configured rates are exact and mutually exclusive, so they must sum to at most 1.
 - `PHASE` — when the fault fires, relative to the mock's own processing:
   - `before` (default): the request is rejected before the handler runs — no state changes, safe to retry.

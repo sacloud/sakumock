@@ -71,7 +71,7 @@ func WithFaultRand(fn func() float64) FaultOption {
 }
 
 // ParseFaultSpecs parses fault specs of the form "CODE:RATE" or
-// "CODE:RATE:PHASE", where CODE is an HTTP status (100-599) or "reset" (drop
+// "CODE:RATE:PHASE", where CODE is an HTTP status (200-599) or "reset" (drop
 // the TCP connection), RATE is a probability in (0, 1], and PHASE is "before"
 // (default: fire without running the handler, no side effects) or "after"
 // (run the handler first — side effects persist — then discard its response
@@ -98,9 +98,11 @@ func ParseFaultSpecs(specs []string, opts ...FaultOption) (*FaultInjector, error
 		}
 		var status int
 		if parts[0] != "reset" {
+			// 1xx statuses are informational, not final responses — injecting
+			// one would leave the client waiting, so only 2xx-5xx are allowed.
 			n, err := strconv.Atoi(parts[0])
-			if err != nil || n < 100 || n > 599 {
-				return nil, fmt.Errorf("invalid fault spec %q: code must be an HTTP status (100-599) or \"reset\"", spec)
+			if err != nil || n < 200 || n > 599 {
+				return nil, fmt.Errorf("invalid fault spec %q: code must be an HTTP status (200-599) or \"reset\"", spec)
 			}
 			status = n
 		}
@@ -153,25 +155,24 @@ func (fi *FaultInjector) inject(rule faultRule, w http.ResponseWriter, r *http.R
 		attribute.String("sakumock.fault.code", rule.codeString()),
 		attribute.String("sakumock.fault.phase", rule.phaseString()),
 	)
-	msg := "fault injection"
+	// Naming the replaced status distinguishes "the handler succeeded but the
+	// response was swapped" from a before-phase fault in logs.
+	var suffix string
 	if rule.after {
 		discard := newDiscardResponseWriter()
 		next(discard, r)
 		span.SetAttributes(attribute.Int("sakumock.fault.replaced_status", discard.status))
-		if rule.status != 0 {
-			// Naming the replaced status distinguishes "the handler succeeded
-			// but the response was swapped" from a before-phase fault in logs.
-			msg = fmt.Sprintf("fault injection (replaced status %d)", discard.status)
-		}
+		suffix = fmt.Sprintf(" (replaced status %d)", discard.status)
 	}
 	if rule.status == 0 {
 		// A dropped connection writes no status code for otelhttp to record,
 		// so mark the span failed explicitly.
-		span.SetStatus(codes.Error, "fault injection: connection reset")
-		abortConnection(w)
+		reason := "fault injection: connection reset" + suffix
+		span.SetStatus(codes.Error, reason)
+		abortConnection(w, reason)
 		return
 	}
-	fi.errWrite(w, rule.status, msg)
+	fi.errWrite(w, rule.status, "fault injection"+suffix)
 }
 
 func (r faultRule) codeString() string {
@@ -220,9 +221,9 @@ func (d *discardResponseWriter) Write(b []byte) (int, error) {
 // makes the close send an RST instead of a FIN; under TLS the raw connection
 // is closed directly so no close_notify alert is sent. Either way the client
 // sees a hard transport error, not a clean EOF.
-func abortConnection(w http.ResponseWriter) {
+func abortConnection(w http.ResponseWriter, reason string) {
 	if rec, ok := w.(*ResponseRecorder); ok {
-		rec.MarkDropped(499, "fault injection: connection reset")
+		rec.MarkDropped(499, reason)
 	}
 	conn, _, err := http.NewResponseController(w).Hijack()
 	if err != nil {

@@ -20,6 +20,8 @@ func TestParseFaultSpecsErrors(t *testing.T) {
 		{"500"},                // missing rate
 		{"abc:0.1"},            // non-numeric code
 		{"42:0.1"},             // status out of range
+		{"100:0.1"},            // 1xx is not a final response
+		{"199:0.1"},            // 1xx is not a final response
 		{"600:0.1"},            // status out of range
 		{"500:0"},              // rate must be > 0
 		{"500:-0.1"},           // rate must be > 0
@@ -248,6 +250,34 @@ func TestFaultInjectorSpanAnnotationReset(t *testing.T) {
 	}
 	if got := spans[0].Status().Code; got != codes.Error {
 		t.Errorf("span status = %v, want Error", got)
+	}
+}
+
+func TestFaultInjectorResetAfterLogsReplacedStatus(t *testing.T) {
+	fi, err := core.ParseFaultSpecs([]string{"reset:1:after"})
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	h := fi.Middleware(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+	})
+	// httptest.ResponseRecorder does not support hijacking, so the abort falls
+	// back to panic(http.ErrAbortHandler) — after MarkDropped has recorded the
+	// dropped reason, which is what this test asserts.
+	rec := core.NewResponseRecorder(httptest.NewRecorder())
+	func() {
+		defer func() {
+			if r := recover(); r != http.ErrAbortHandler {
+				t.Fatalf("expected panic(http.ErrAbortHandler), got %v", r)
+			}
+		}()
+		h(rec, httptest.NewRequest("POST", "/", nil))
+	}()
+	if rec.Status != 499 {
+		t.Errorf("expected status 499, got %d", rec.Status)
+	}
+	if got := rec.ErrorBody(); !strings.Contains(got, "replaced status 201") {
+		t.Errorf("dropped reason should name the replaced status, got %q", got)
 	}
 }
 

@@ -19,17 +19,23 @@ import (
 	"github.com/sacloud/sakumock/simplenotification"
 )
 
+// serviceLink pairs a service config with its test server URL for serviceLinkEnv.
+type serviceLink struct {
+	cfg     core.ServiceConfig
+	testURL string
+}
+
 // serviceLinkEnv builds a []core.EnvVar for testing by taking each service's
 // ClientEnv() and replacing the address with the test server's URL. This
 // mirrors what AllCmd.serviceLinkEnv() does for the real binary, keeping the
 // env var key names in the owning service package.
-func serviceLinkEnv(services map[core.ServiceConfig]string) []core.EnvVar {
+func serviceLinkEnv(services []serviceLink) []core.EnvVar {
 	var env []core.EnvVar
-	for cfg, testURL := range services {
-		for _, e := range cfg.ClientEnv() {
+	for _, svc := range services {
+		for _, e := range svc.cfg.ClientEnv() {
 			// ClientEnv values are "http://<configured-addr>..." — replace with the test URL.
 			if i := strings.Index(e.Value, "://"); i >= 0 {
-				e.Value = testURL
+				e.Value = svc.testURL
 			}
 			env = append(env, e)
 		}
@@ -44,8 +50,8 @@ func TestForwardToSimpleMQ(t *testing.T) {
 
 	createQueue(t, mqSrv.TestURL(), "test-queue-00001")
 
-	env := serviceLinkEnv(map[core.ServiceConfig]string{
-		simplemq.Config{}: mqSrv.TestURL(),
+	env := serviceLinkEnv([]serviceLink{
+		{cfg: simplemq.Config{}, testURL: mqSrv.TestURL()},
 	})
 	ebSrv := eventbus.NewTestServerWithServiceLink(eventbus.Config{}, env)
 	defer ebSrv.Close()
@@ -150,8 +156,8 @@ func TestForwardToSimpleNotification(t *testing.T) {
 
 	groupID := createNotificationGroup(t, snSrv.TestURL(), "test-group")
 
-	env := serviceLinkEnv(map[core.ServiceConfig]string{
-		simplenotification.Config{}: snSrv.TestURL(),
+	env := serviceLinkEnv([]serviceLink{
+		{cfg: simplenotification.Config{}, testURL: snSrv.TestURL()},
 	})
 	ebSrv := eventbus.NewTestServerWithServiceLink(eventbus.Config{}, env)
 	defer ebSrv.Close()

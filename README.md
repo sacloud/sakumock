@@ -148,6 +148,38 @@ sakumock workflows &
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
 
+## Fault Injection
+
+To test how a client (SDK, Terraform provider, your application) handles server errors and network failures, every service can probabilistically inject faults into its control-plane API with `--fault CODE:RATE[:PHASE]` (repeatable):
+
+- `CODE` — the HTTP status to return (200–599), or `reset` to drop the TCP connection abruptly (the client sees a transport error such as `connection reset by peer`, not an HTTP response).
+- `RATE` — the probability in `(0, 1]`. Each request rolls once; the configured rates are exact and mutually exclusive, so they must sum to at most 1.
+- `PHASE` — when the fault fires, relative to the mock's own processing:
+  - `before` (default): the request is rejected before the handler runs — no state changes, safe to retry.
+  - `after`: the handler runs first (state changes **do** happen), then its response is discarded and replaced by the fault — emulates "the server committed but the client got an error/disconnect", which is what exercises retry idempotency in a client.
+
+```bash
+# Standalone: 10% HTTP 500, 2% connection reset
+sakumock kms --fault 500:0.1 --fault reset:0.02
+
+# Under sakumock all, use the service prefix
+sakumock all --kms-fault 500:0.1 --kms-fault 500:0.1:after
+
+# Env var (comma-separated)
+KMS_FAULT=500:0.1,reset:0.02 sakumock all
+```
+
+Config file (quote the specs — unquoted `500:0.1` in YAML flow style would parse as a mapping):
+
+```yaml
+kms:
+  fault:
+    - "500:0.1"
+    - "reset:0.02:after"
+```
+
+An injected status is returned in the service's own error envelope with a `fault injection` message, and the request log records it (`reset` logs as status 499). When [tracing](#opentelemetry-tracing) is enabled, the request's span is annotated with `sakumock.fault.code` and `sakumock.fault.phase` (plus `sakumock.fault.replaced_status` for `after` faults), and a `reset` marks the span status as error — so an injected fault is distinguishable from a real one in traces. Faults fire before authentication, rate limiting, and validation — like an infrastructure failure, an injected fault can mask a would-be 401/429/400. They never apply to the mock-only `/_sakumock/` inspection endpoints, and in this iteration they cover control planes only (the separate-listener data planes — object storage S3, Monitoring Suite ingest, AppRun proxies, API Gateway — are not fault-injected).
+
 ## TLS
 
 Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SAKUMOCK_TLS_KEY`) to serve **every** listener over HTTPS — all control planes and data planes share the one cert (they run on the same host, only the port differs). TLS is enabled only when both files are set; otherwise everything stays plain HTTP. The object storage data plane is served by versitygw, which is handed the same cert/key (`--cert`/`--key`) so it terminates TLS itself. Standalone subcommands accept the same `--tls-cert`/`--tls-key` (env `<SERVICE>_TLS_CERT` / `<SERVICE>_TLS_KEY`). `sakumock env` emits `https://` endpoints when TLS is set; with a self-signed cert the client must be told to trust it.

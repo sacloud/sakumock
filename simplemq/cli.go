@@ -56,6 +56,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"database", databaseHint(c.Database),
 		"latency", c.Latency,
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, " per queue"),
+		"fault", core.FaultHint(c.Fault),
 		"debug", c.Debug,
 	)
 	slog.Info("to use with sacloud-sdk-go or simplemq-cli",

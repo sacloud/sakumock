@@ -15,6 +15,7 @@ type Config struct {
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"KMS_LATENCY"`
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"KMS_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"KMS_RATE_LIMIT_WINDOW"`
+	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"KMS_FAULT"`
 	Debug           bool          `help:"Enable debug mode" env:"KMS_DEBUG" default:"false"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
@@ -60,6 +61,7 @@ type Server struct {
 	store       *MemoryStore
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
+	fault       *core.FaultInjector
 	// validator rejects request bodies violating the spec-derived constraints
 	// in the generated bodySchemas table (validate_gen.go).
 	validator *core.BodyValidator
@@ -73,7 +75,12 @@ func NewHandler(cfg Config) (*Server, error) {
 		base = slog.Default()
 	}
 	logger := base.With("service", cfg.Name())
+	fault, err := core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(writeError))
+	if err != nil {
+		return nil, err
+	}
 	s := &Server{
+		fault:   fault,
 		store:   NewStore(logger),
 		latency: cfg.Latency,
 		logger:  logger,

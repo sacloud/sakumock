@@ -26,6 +26,7 @@ sakumock-eventbus
 | `--latency` | `EVENTBUS_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `EVENTBUS_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `EVENTBUS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--fault` | `EVENTBUS_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--enable-data-plane` | `EVENTBUS_ENABLE_DATA_PLANE` | `false` | Run the autonomous scheduler that fires schedules on the wall clock. The `/_sakumock` firing endpoints work regardless of this flag |
 | `--debug` | `EVENTBUS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `EVENTBUS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |

@@ -40,7 +40,7 @@ Endpoints that do not exist in the real SAKURA Cloud API — helpers to observe 
 
 - **Path**: under the `/_sakumock/` prefix (e.g. `GET /_sakumock/messages`, `POST /_sakumock/events`). The prefix is reserved and never used by a real API path.
 - **Route `Kind`**: `"inspection"` (the real API endpoints use `"api"`). `core.PrintRoutes` groups these under an `Inspection:` heading after the `API:` ones, so `--routes` shows at a glance what is mock-only. This holds even for endpoints that actively drive behavior (not just passive inspection/reset) — keep them all under `inspection` rather than introducing a new kind.
-- **Rate limiting**: mock-only endpoints do not consume rate-limit tokens (they are test/inspection helpers, not part of the simulated API budget).
+- **Rate limiting / fault injection**: mock-only endpoints do not consume rate-limit tokens and are never fault-injected (they are test/inspection helpers, not part of the simulated API budget).
 - **Naming**: `/_sakumock/<noun>` for state (`/messages`, `/events`); append a verb sub-path for an action on a resource (`/_sakumock/alerts/{id}/fire`).
 
 Precedent: simplenotification exposes `GET`/`DELETE /_sakumock/messages` to list and clear accepted notifications.
@@ -84,6 +84,15 @@ A data plane that is just additional HTTP paths or an internal engine serves on 
 - The TLS files reach a service's **data plane** (started inside `NewHandler` from `Config`) through an unexported `Config.tls` field — set by the standalone `cli.go` (`c.Config.tls = c.TLS`) and injected by the unified binary via `core.ServerOptions.TLS` in `NewServer` (same pattern as `idGen`/`logger`). The unified binary exposes one suite-wide `--tls-cert`/`--tls-key` (env `SAKUMOCK_TLS_*`) on `serviceConfigs`, so there are no per-service TLS flags under `sakumock all`/`env`.
 - An **externally served** data plane is handed the same files rather than sakumock terminating TLS: objectstorage passes `--cert`/`--key` to the versitygw subprocess. A new external data plane should do likewise.
 - `core.WithTLSScheme(vars, enabled)` upgrades `http://` endpoint values in the client env to `https://` (credentials/regions untouched), so `cli.go` startup logs and `sakumock env` output reflect a TLS listener. `ClientEnv()`/`ExtraClientEnv()` themselves stay `http://` (single source); the scheme is applied at the edges.
+
+### Fault injection
+
+- The primitive is `core.FaultInjector` (`core/fault.go`), following the rate-limiter shape: `core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(...))` returns nil when no specs are configured, and `Middleware` on a nil injector is a no-op — services wire it without branching.
+- Config is **per-service** (like latency/rate limit): each `Config` has `Fault []string` (kong tag with `env:"<SERVICE>_FAULT"`), specs of the form `CODE:RATE[:PHASE]` where CODE is an HTTP status or `reset` (abrupt TCP close via hijack + `SetLinger(0)`), RATE ∈ (0,1] (all rates sum ≤ 1; one roll per request against cumulative thresholds so rates are exact), PHASE is `before` (default; handler never runs) or `after` (handler runs — side effects persist — then its response is discarded and replaced, for retry-idempotency testing).
+- The injector is built in `NewHandler` with the service's own error writer (a service with two error envelopes builds two injectors, like simplemq's `fault`/`cpFault` mirroring its `validator`/`cpValidator` split) and wrapped **outermost** in `routeTable()` — outside auth/rate-limit/validation, so an injected fault can mask a would-be 401/429/400 (infrastructure-failure semantics). Inspection routes are raw entries outside the closures and stay exempt.
+- Scope is **control plane only**: separate-listener data planes (objectstorage versitygw, monitoringsuite ingest, apprun/apprundedicated proxies, apigw gateway) are not fault-injected. simplemq's same-port data plane and workflows' in-process engine are covered because their routes go through `routeTable()`.
+- A dropped connection is logged with synthetic status 499 via `core.ResponseRecorder.MarkDropped`; startup logs render the setting with `core.FaultHint`.
+- Injected faults annotate the request's span (`sakumock.fault.code`, `sakumock.fault.phase`, and `sakumock.fault.replaced_status` for `after`), and `reset` sets the span status to error since no HTTP status reaches otelhttp. The span comes from `r.Context()`, so this is a no-op without tracing and needs no per-service code.
 
 ### OpenTelemetry tracing
 

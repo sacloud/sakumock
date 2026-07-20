@@ -26,6 +26,7 @@ sakumock-monitoringsuite
 | `--latency` | `MONITORINGSUITE_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `MONITORINGSUITE_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `MONITORINGSUITE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--fault` | `MONITORINGSUITE_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `MONITORINGSUITE_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `MONITORINGSUITE_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, all listeners (control plane and data plane) serve HTTPS instead of plain HTTP |
 | `--tls-key` | `MONITORINGSUITE_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |

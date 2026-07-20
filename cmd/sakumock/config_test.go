@@ -69,6 +69,30 @@ func TestConfigFileJSON(t *testing.T) {
 	}
 }
 
+func TestConfigFileFaultList(t *testing.T) {
+	path := writeFile(t, "sakumock.yaml", "kms:\n  fault:\n    - \"500:0.1\"\n    - \"reset:0.02\"\n")
+
+	all := parseAll(t, "--config", path)
+	if len(all.Kms.Fault) != 2 || all.Kms.Fault[0] != "500:0.1" || all.Kms.Fault[1] != "reset:0.02" {
+		t.Errorf("kms fault = %v, want [500:0.1 reset:0.02]", all.Kms.Fault)
+	}
+
+	// A CLI flag overrides the file's list.
+	all = parseAll(t, "--config", path, "--kms-fault", "429:1")
+	if len(all.Kms.Fault) != 1 || all.Kms.Fault[0] != "429:1" {
+		t.Errorf("kms fault = %v, want [429:1] (CLI flag should override config)", all.Kms.Fault)
+	}
+}
+
+func TestConfigFileFaultListJSON(t *testing.T) {
+	path := writeFile(t, "sakumock.json", `{"kms":{"fault":["500:0.1"]}}`)
+
+	all := parseAll(t, "--config", path)
+	if len(all.Kms.Fault) != 1 || all.Kms.Fault[0] != "500:0.1" {
+		t.Errorf("kms fault = %v, want [500:0.1]", all.Kms.Fault)
+	}
+}
+
 func TestConfigFileFlagOverrides(t *testing.T) {
 	path := writeFile(t, "sakumock.yaml", "kms:\n  latency: 5s\n")
 

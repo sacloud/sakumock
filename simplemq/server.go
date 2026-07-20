@@ -19,6 +19,7 @@ type Config struct {
 	Latency           time.Duration `help:"Artificial latency added to every response" env:"SIMPLEMQ_LATENCY"`
 	RateLimit         float64       `help:"Per-queue HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"SIMPLEMQ_RATE_LIMIT"`
 	RateLimitWindow   time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"SIMPLEMQ_RATE_LIMIT_WINDOW"`
+	Fault             []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"SIMPLEMQ_FAULT"`
 	Strict            bool          `help:"Strict mode: the data plane only accepts queues created via the control plane, authenticated with the queue's issued API key (from rotate-apikey). Mutually exclusive with --api-key." env:"SIMPLEMQ_STRICT" xor:"auth"`
 	Debug             bool          `help:"Enable debug mode" env:"SIMPLEMQ_DEBUG" default:"false"`
 
@@ -73,6 +74,12 @@ type Server struct {
 	strict      bool
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
+	// fault and cpFault inject configured faults into the data-plane and
+	// control-plane routes respectively. They share the same specs but write
+	// injected errors in the data-plane ({"code","message"}) and control-plane
+	// (StandardError) envelopes.
+	fault   *core.FaultInjector
+	cpFault *core.FaultInjector
 	// validator and cpValidator reject request bodies violating the
 	// spec-derived constraints in the generated bodySchemas table
 	// (validate_gen.go). They share the schemas but write the 400 in the
@@ -91,11 +98,23 @@ func NewHandler(cfg Config) (*Server, error) {
 		base = slog.Default()
 	}
 	logger := base.With("service", cfg.Name())
+	fault, err := core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(writeError))
+	if err != nil {
+		return nil, err
+	}
+	cpFault, err := core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(func(w http.ResponseWriter, status int, message string) {
+		core.WriteStandardError(w, status, "", message)
+	}))
+	if err != nil {
+		return nil, err
+	}
 	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.Database, logger)
 	if err != nil {
 		return nil, err
 	}
 	s := &Server{
+		fault:   fault,
+		cpFault: cpFault,
 		store:   store,
 		apiKey:  cfg.APIKey,
 		strict:  cfg.Strict,

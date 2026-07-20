@@ -48,6 +48,16 @@ func (r *ResponseRecorder) ErrorBody() string {
 // interfaces (Flusher, Hijacker, ...).
 func (r *ResponseRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
 
+// MarkDropped records a synthetic status and reason for a request whose
+// connection was deliberately dropped without a response (fault injection),
+// so the per-request log can report it. Nothing is written to the client;
+// 499 (the nginx "client got no response" convention) is the expected status.
+func (r *ResponseRecorder) MarkDropped(status int, reason string) {
+	r.Status = status
+	r.errBody.Reset()
+	r.errBody.WriteString(reason)
+}
+
 // Flush forwards to the underlying writer so streaming responses (e.g. a
 // reverse-proxy data plane) keep flushing through the wrapper.
 func (r *ResponseRecorder) Flush() {

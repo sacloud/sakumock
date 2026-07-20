@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sacloud/sakumock/core"
 	"go.opentelemetry.io/otel/attribute"
@@ -165,17 +166,37 @@ func TestFaultInjectorResetAfterRunsHandler(t *testing.T) {
 		t.Fatalf("parse: %v", err)
 	}
 	handlerCalled := false
-	srv := httptest.NewServer(fi.Middleware(func(w http.ResponseWriter, _ *http.Request) {
+	// The client sees the RST before the server-side handler goroutine
+	// returns, so synchronize on handler completion before reading state
+	// written on the server side.
+	done := make(chan struct{})
+	inner := fi.Middleware(func(w http.ResponseWriter, _ *http.Request) {
 		handlerCalled = true
 		w.WriteHeader(http.StatusOK)
+	})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer close(done)
+		inner(w, r)
 	}))
 	defer srv.Close()
 
 	if _, err := http.Get(srv.URL); err == nil {
 		t.Fatal("expected a transport error, got response")
 	}
+	waitDone(t, done)
 	if !handlerCalled {
 		t.Error("after-phase reset must run the handler first")
+	}
+}
+
+// waitDone waits for a server-side handler to finish; the client observing a
+// transport error does not imply the handler goroutine has returned.
+func waitDone(t *testing.T, done <-chan struct{}) {
+	t.Helper()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("handler did not finish in time")
 	}
 }
 
@@ -230,8 +251,11 @@ func TestFaultInjectorSpanAnnotationReset(t *testing.T) {
 	}
 	inner := fi.Middleware(okHandler)
 	// Start a span per request the way TraceHandler would, over a real
-	// connection so the hijack path runs.
+	// connection so the hijack path runs. Deferred calls run LIFO, so the
+	// span ends before done is closed.
+	done := make(chan struct{})
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer close(done)
 		ctx, span := tracer.Start(r.Context(), "req")
 		defer span.End()
 		inner(w, r.WithContext(ctx))
@@ -241,6 +265,7 @@ func TestFaultInjectorSpanAnnotationReset(t *testing.T) {
 	if _, err := http.Get(srv.URL); err == nil {
 		t.Fatal("expected a transport error, got response")
 	}
+	waitDone(t, done)
 	spans := sr.Ended()
 	if len(spans) != 1 {
 		t.Fatalf("expected 1 span, got %d", len(spans))

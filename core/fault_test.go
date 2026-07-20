@@ -1,6 +1,7 @@
 package core_test
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,10 @@ import (
 	"testing"
 
 	"github.com/sacloud/sakumock/core"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestParseFaultSpecsErrors(t *testing.T) {
@@ -169,6 +174,80 @@ func TestFaultInjectorResetAfterRunsHandler(t *testing.T) {
 	}
 	if !handlerCalled {
 		t.Error("after-phase reset must run the handler first")
+	}
+}
+
+// spanAttr returns the value of the named attribute on the span, or "" if absent.
+func spanAttr(s sdktrace.ReadOnlySpan, key attribute.Key) string {
+	for _, kv := range s.Attributes() {
+		if kv.Key == key {
+			return kv.Value.String()
+		}
+	}
+	return ""
+}
+
+func TestFaultInjectorSpanAnnotationStatus(t *testing.T) {
+	sr := tracetest.NewSpanRecorder()
+	tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(sr)).Tracer("test")
+
+	fi, err := core.ParseFaultSpecs([]string{"500:1:after"})
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	h := fi.Middleware(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+	})
+	ctx, span := tracer.Start(context.Background(), "req")
+	rec := httptest.NewRecorder()
+	h(rec, httptest.NewRequest("POST", "/", nil).WithContext(ctx))
+	span.End()
+
+	spans := sr.Ended()
+	if len(spans) != 1 {
+		t.Fatalf("expected 1 span, got %d", len(spans))
+	}
+	for key, want := range map[attribute.Key]string{
+		"sakumock.fault.code":            "500",
+		"sakumock.fault.phase":           "after",
+		"sakumock.fault.replaced_status": "201",
+	} {
+		if got := spanAttr(spans[0], key); got != want {
+			t.Errorf("%s = %q, want %q", key, got, want)
+		}
+	}
+}
+
+func TestFaultInjectorSpanAnnotationReset(t *testing.T) {
+	sr := tracetest.NewSpanRecorder()
+	tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(sr)).Tracer("test")
+
+	fi, err := core.ParseFaultSpecs([]string{"reset:1"})
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	inner := fi.Middleware(okHandler)
+	// Start a span per request the way TraceHandler would, over a real
+	// connection so the hijack path runs.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := tracer.Start(r.Context(), "req")
+		defer span.End()
+		inner(w, r.WithContext(ctx))
+	}))
+	defer srv.Close()
+
+	if _, err := http.Get(srv.URL); err == nil {
+		t.Fatal("expected a transport error, got response")
+	}
+	spans := sr.Ended()
+	if len(spans) != 1 {
+		t.Fatalf("expected 1 span, got %d", len(spans))
+	}
+	if got := spanAttr(spans[0], "sakumock.fault.code"); got != "reset" {
+		t.Errorf("sakumock.fault.code = %q, want %q", got, "reset")
+	}
+	if got := spans[0].Status().Code; got != codes.Error {
+		t.Errorf("span status = %v, want Error", got)
 	}
 }
 

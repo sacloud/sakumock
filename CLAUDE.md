@@ -92,6 +92,7 @@ A data plane that is just additional HTTP paths or an internal engine serves on 
 - The injector is built in `NewHandler` with the service's own error writer (a service with two error envelopes builds two injectors, like simplemq's `fault`/`cpFault` mirroring its `validator`/`cpValidator` split) and wrapped **outermost** in `routeTable()` — outside auth/rate-limit/validation, so an injected fault can mask a would-be 401/429/400 (infrastructure-failure semantics). Inspection routes are raw entries outside the closures and stay exempt.
 - Scope is **control plane only**: separate-listener data planes (objectstorage versitygw, monitoringsuite ingest, apprun/apprundedicated proxies, apigw gateway) are not fault-injected. simplemq's same-port data plane and workflows' in-process engine are covered because their routes go through `routeTable()`.
 - A dropped connection is logged with synthetic status 499 via `core.ResponseRecorder.MarkDropped`; startup logs render the setting with `core.FaultHint`.
+- Injected faults annotate the request's span (`sakumock.fault.code`, `sakumock.fault.phase`, and `sakumock.fault.replaced_status` for `after`), and `reset` sets the span status to error since no HTTP status reaches otelhttp. The span comes from `r.Context()`, so this is a no-op without tracing and needs no per-service code.
 
 ### OpenTelemetry tracing
 

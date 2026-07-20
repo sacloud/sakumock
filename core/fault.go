@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // FaultErrorWriter writes the response body for an injected HTTP-status fault,
@@ -142,10 +146,18 @@ func (fi *FaultInjector) Middleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (fi *FaultInjector) inject(rule faultRule, w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	// Mark the request's span so an injected fault is distinguishable from a
+	// real error in traces. With tracing off the span is a no-op.
+	span := trace.SpanFromContext(r.Context())
+	span.SetAttributes(
+		attribute.String("sakumock.fault.code", rule.codeString()),
+		attribute.String("sakumock.fault.phase", rule.phaseString()),
+	)
 	msg := "fault injection"
 	if rule.after {
 		discard := newDiscardResponseWriter()
 		next(discard, r)
+		span.SetAttributes(attribute.Int("sakumock.fault.replaced_status", discard.status))
 		if rule.status != 0 {
 			// Naming the replaced status distinguishes "the handler succeeded
 			// but the response was swapped" from a before-phase fault in logs.
@@ -153,10 +165,27 @@ func (fi *FaultInjector) inject(rule faultRule, w http.ResponseWriter, r *http.R
 		}
 	}
 	if rule.status == 0 {
+		// A dropped connection writes no status code for otelhttp to record,
+		// so mark the span failed explicitly.
+		span.SetStatus(codes.Error, "fault injection: connection reset")
 		abortConnection(w)
 		return
 	}
 	fi.errWrite(w, rule.status, msg)
+}
+
+func (r faultRule) codeString() string {
+	if r.status == 0 {
+		return "reset"
+	}
+	return strconv.Itoa(r.status)
+}
+
+func (r faultRule) phaseString() string {
+	if r.after {
+		return "after"
+	}
+	return "before"
 }
 
 // discardResponseWriter swallows a handler's response so an "after" fault can

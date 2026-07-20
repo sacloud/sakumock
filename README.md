@@ -178,7 +178,7 @@ kms:
     - "reset:0.02:after"
 ```
 
-An injected status is returned in the service's own error envelope with a `fault injection` message, and the request log records it (`reset` logs as status 499). Faults fire before authentication, rate limiting, and validation — like an infrastructure failure, an injected fault can mask a would-be 401/429/400. They never apply to the mock-only `/_sakumock/` inspection endpoints, and in this iteration they cover control planes only (the separate-listener data planes — object storage S3, Monitoring Suite ingest, AppRun proxies, API Gateway — are not fault-injected).
+An injected status is returned in the service's own error envelope with a `fault injection` message, and the request log records it (`reset` logs as status 499). When [tracing](#opentelemetry-tracing) is enabled, the request's span is annotated with `sakumock.fault.code` and `sakumock.fault.phase` (plus `sakumock.fault.replaced_status` for `after` faults), and a `reset` marks the span status as error — so an injected fault is distinguishable from a real one in traces. Faults fire before authentication, rate limiting, and validation — like an infrastructure failure, an injected fault can mask a would-be 401/429/400. They never apply to the mock-only `/_sakumock/` inspection endpoints, and in this iteration they cover control planes only (the separate-listener data planes — object storage S3, Monitoring Suite ingest, AppRun proxies, API Gateway — are not fault-injected).
 
 ## TLS
 

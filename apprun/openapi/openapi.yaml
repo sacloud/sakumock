@@ -1651,6 +1651,7 @@ components:
           format: date-time
     handler.getApplicationStatus:
       type: object
+      x-go-name: HandlerGetApplicationOnlyStatus
       x-ogen-name: HandlerGetApplicationOnlyStatus
       required:
         - status
@@ -1895,6 +1896,7 @@ components:
           format: date-time
     handler.getVersionStatus:
       type: object
+      x-go-name: HandlerGetApplicationVersionOnlyStatus
       x-ogen-name: HandlerGetApplicationVersionOnlyStatus
       required:
         - status
@@ -2117,7 +2119,7 @@ components:
                 type: object
                 properties:
                   container_registry:
-                    description: コンテナレジストリ
+                    description: "コンテナレジストリ  \n以下のレジストリを利用できます。\n* さくらのクラウドで提供中のコンテナレジストリ\n* Docker Hub\n* GitHub Container Registry\n"
                     type: object
                     required:
                       - image
@@ -2129,7 +2131,7 @@ components:
                         minLength: 1
                         maxLength: 128
                       server:
-                        description: コンテナレジストリのサーバー名（認証が必要な場合は入力してください）
+                        description: "コンテナレジストリのサーバー名（認証が必要な場合は入力してください）  \nDocker Hub利用時は `index.docker.io` を指定してください。\n"
                         type: string
                         example: apprun-example.sakuracr.jp
                         minLength: 1
@@ -2143,7 +2145,7 @@ components:
                         maxLength: 63
                         nullable: true
                       password:
-                        description: コンテナレジストリのパスワード（認証が必要な場合は入力してください）
+                        description: "コンテナレジストリのパスワード（認証が必要な場合は入力してください）  \n※ 認証にトークンを使用する場合は、この欄に入力してください。\n"
                         type: string
                         example: apprun
                         minLength: 1
@@ -2277,7 +2279,7 @@ components:
                 type: object
                 properties:
                   container_registry:
-                    description: コンテナレジストリ
+                    description: "コンテナレジストリ  \n以下のレジストリを利用できます。\n* さくらのクラウドで提供中のコンテナレジストリ\n* Docker Hub\n* GitHub Container Registry\n"
                     type: object
                     required:
                       - image
@@ -2289,7 +2291,9 @@ components:
                         minLength: 1
                         maxLength: 128
                       server:
-                        description: コンテナレジストリのサーバー名（認証が必要な場合は入力してください）
+                        description: |
+                          コンテナレジストリのサーバー名（認証が必要な場合は入力してください）
+                          Docker Hub利用時は `index.docker.io` を指定してください。
                         type: string
                         example: apprun-example.sakuracr.jp
                         minLength: 1
@@ -2303,7 +2307,7 @@ components:
                         maxLength: 63
                         nullable: true
                       password:
-                        description: コンテナレジストリのパスワード（認証が必要な場合は入力してください）
+                        description: "コンテナレジストリのパスワード（認証が必要な場合は入力してください）  \n※ 認証にトークンを使用する場合は、この欄に入力してください。\n"
                         type: string
                         example: apprun
                         minLength: 1
@@ -2465,7 +2469,6 @@ components:
           required:
             - code
             - message
-            - errors
           properties:
             code:
               type: integer
@@ -2483,8 +2486,6 @@ components:
           - domain
           - reason
           - message
-          - location_type
-          # - location
         properties:
           domain:
             type: string

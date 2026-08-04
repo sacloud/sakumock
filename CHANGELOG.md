@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.7.2](https://github.com/sacloud/sakumock/compare/v0.7.1...v0.7.2) - 2026-08-04
+- Update sacloud-sdk-go to v0.0.1 by @fujiwara in https://github.com/sacloud/sakumock/pull/149
+- build(deps): Bump google.golang.org/grpc from 1.81.1 to 1.82.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/150
+
 ## [v0.7.1](https://github.com/sacloud/sakumock/compare/v0.7.0...v0.7.1) - 2026-07-20
 - Fix Windows compatibility issues by @fujiwara in https://github.com/sacloud/sakumock/pull/146
 - feat: fault injection by @fujiwara in https://github.com/sacloud/sakumock/pull/148

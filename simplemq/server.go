@@ -87,7 +87,12 @@ type Server struct {
 	// envelopes respectively.
 	validator   *core.BodyValidator
 	cpValidator *core.BodyValidator
-	logger      *slog.Logger
+	// respValidator checks handler responses against the generated
+	// responseSchemas table. One instance covers both planes: violations are
+	// logged and recorded, never written to the client, so no per-envelope
+	// split is needed. Inspectable via GET /_sakumock/spec-violations.
+	respValidator *core.ResponseValidator
+	logger        *slog.Logger
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -131,6 +136,7 @@ func NewHandler(cfg Config) (*Server, error) {
 		cpValidator: core.NewBodyValidator(bodySchemas, func(w http.ResponseWriter, status int, message string) {
 			core.WriteStandardError(w, status, "", message)
 		}, core.WithNonEmpty(bodyNonEmptyFields)),
+		respValidator: core.NewResponseValidator(responseSchemas, logger),
 	}
 	if cfg.idGen != nil {
 		if ms, ok := s.store.(*MemoryStore); ok {
@@ -155,6 +161,12 @@ func NewTestServer(cfg Config) *Server {
 // TestURL returns the base URL of the test server.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
+}
+
+// SpecViolations returns the OpenAPI spec violations recorded so far by the
+// response validator (also served at GET /_sakumock/spec-violations).
+func (s *Server) SpecViolations() []core.SpecViolation {
+	return s.respValidator.Violations()
 }
 
 // Close shuts down the test server (if running) and closes the store.

@@ -44,7 +44,7 @@ func sendURL(base, queue string) string {
 
 func TestRateLimitDisabled(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL(), "rate-test-queue")
 	body := `{"content":"aGVsbG8="}`
@@ -59,7 +59,7 @@ func TestRateLimitDisabled(t *testing.T) {
 func TestRateLimitExceeded(t *testing.T) {
 	// 2 req/sec with burst 2 -> first 2 pass, 3rd is rate limited.
 	srv := simplemq.NewTestServer(simplemq.Config{RateLimit: 2})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL(), "rate-test-queue")
 	body := `{"content":"aGVsbG8="}`
@@ -90,7 +90,7 @@ func TestRateLimitExceeded(t *testing.T) {
 
 func TestRateLimitPerQueue(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{RateLimit: 1})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	body := `{"content":"aGVsbG8="}`
 
@@ -113,7 +113,7 @@ func TestRateLimitPerQueue(t *testing.T) {
 func TestRateLimitRecovery(t *testing.T) {
 	// 10 req/sec -> a single token refills in ~100ms.
 	srv := simplemq.NewTestServer(simplemq.Config{RateLimit: 10})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL(), "rate-test-queue")
 	body := `{"content":"aGVsbG8="}`
@@ -149,7 +149,7 @@ func TestRateLimitWindow(t *testing.T) {
 		RateLimit:       5,
 		RateLimitWindow: time.Minute,
 	})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL(), "rate-test-queue")
 	body := `{"content":"aGVsbG8="}`
@@ -167,7 +167,7 @@ func TestRateLimitWindow(t *testing.T) {
 func TestRateLimitAppliesToAllMethods(t *testing.T) {
 	// 1 req/sec, burst 1 -> after one request of any kind, the next is limited.
 	srv := simplemq.NewTestServer(simplemq.Config{RateLimit: 1})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	queueURL := sendURL(srv.TestURL(), "rate-test-queue")
 

@@ -51,7 +51,7 @@ func eachBackend(t *testing.T, fn func(t *testing.T, srv *simplemq.Server)) {
 	for _, b := range controlPlaneBackends {
 		t.Run(b.name, func(t *testing.T) {
 			srv := simplemq.NewTestServer(b.config(t))
-			defer srv.Close()
+			defer closeAndCheck(t, srv)
 			fn(t, srv)
 		})
 	}
@@ -501,7 +501,7 @@ func TestStrictModeDataPlaneAuth(t *testing.T) {
 			cfg := b.config(t)
 			cfg.Strict = true
 			srv := simplemq.NewTestServer(cfg)
-			defer srv.Close()
+			defer closeAndCheck(t, srv)
 
 			ctx := t.Context()
 			cpClient := newTestQueueClient(t, srv.TestURL())

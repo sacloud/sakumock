@@ -16,11 +16,12 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 			// Fault injection outermost (an injected fault is an
 			// infrastructure-level failure, so it may mask a would-be 429/400),
 			// then rate limit, then spec-derived body validation, then the
-			// handler.
-			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, h))),
+			// handler. Response validation sits innermost so only what the
+			// handler itself produces is checked against the spec.
+			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h)))),
 		}
 	}
-	return []core.RegisteredRoute{
+	table := []core.RegisteredRoute{
 		route("POST", "/commonserviceitem", "Create a process configuration, schedule, or trigger", s.handleCreateItem),
 		route("GET", "/commonserviceitem", "List process configurations, schedules, or triggers", s.handleListItems),
 		route("GET", "/commonserviceitem/{id}", "Get a process configuration, schedule, or trigger", s.handleGetItem),
@@ -34,6 +35,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		{Route: core.Route{Method: "GET", Path: "/_sakumock/deliveries", Description: "List recorded firings", Kind: "inspection"}, Handler: s.handleListDeliveries},
 		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/deliveries", Description: "Clear recorded firings", Kind: "inspection"}, Handler: s.handleClearDeliveries},
 	}
+	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }
 
 // Routes returns metadata for every HTTP endpoint registered on the server.

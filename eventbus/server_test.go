@@ -98,6 +98,11 @@ func TestProcessConfigurationCRUD(t *testing.T) {
 	if _, err := op.Read(ctx, id); err == nil {
 		t.Fatal("expected error reading deleted item")
 	}
+
+	// The handlers above must not have drifted from the OpenAPI spec.
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
 }
 
 func TestScheduleCRUD(t *testing.T) {

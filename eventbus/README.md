@@ -153,3 +153,14 @@ The `autoscale` destination has no mock and is silently ignored.
 ### Not yet implemented
 
 - **Real event producers**: trigger events arrive only through `POST /_sakumock/events`. Wiring a producer such as a monitoringsuite alert-fire endpoint that emits events here is intentionally a separate service change. The `//eventbus.sakura.ad.jp/eventlog` source has no producer in sakumock and is out of scope.
+
+## Mock-only endpoints
+
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
+| `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.

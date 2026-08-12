@@ -79,15 +79,16 @@ type MemoryStore struct {
 	iamRoles []IAMRoleRecord
 	idRoles  []IDRoleRecord
 
-	mu                 sync.RWMutex
-	organization       organizationState
-	passwordPolicy     passwordPolicyState
-	authConditions     json.RawMessage
-	orgIAMPolicy       []PolicyBinding
-	orgIDPolicy        []PolicyBinding
-	projectIAMPolicies map[string][]PolicyBinding
-	folderIAMPolicies  map[string][]PolicyBinding
-	servicePolicyRules json.RawMessage
+	mu                   sync.RWMutex
+	organization         organizationState
+	passwordPolicy       passwordPolicyState
+	authConditions       json.RawMessage
+	orgIAMPolicy         []PolicyBinding
+	orgIDPolicy          []PolicyBinding
+	projectIAMPolicies   map[string][]PolicyBinding
+	folderIAMPolicies    map[string][]PolicyBinding
+	servicePolicyRules   json.RawMessage
+	servicePolicyEnabled bool
 }
 
 type organizationState struct {

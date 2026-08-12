@@ -27,6 +27,16 @@ func newTestSAClient(t *testing.T, serverURL string) *saclient.Client {
 	return &sa
 }
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *objectstorage.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 func newClients(t *testing.T, serverURL string) (*sdk.FedClient, *sdk.SiteClient) {
 	t.Helper()
 	sa := newTestSAClient(t, serverURL)
@@ -43,7 +53,7 @@ func newClients(t *testing.T, serverURL string) (*sdk.FedClient, *sdk.SiteClient
 
 func TestSiteAPI(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	fed, _ := newClients(t, srv.TestURL())
 	op := sdk.NewSiteOp(fed)
 
@@ -79,7 +89,7 @@ func TestSiteAPI(t *testing.T) {
 
 func TestAccountAndBucketLifecycle(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	fed, site := newClients(t, srv.TestURL())
 	ctx := t.Context()
 
@@ -171,7 +181,7 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 
 func TestPermissionCRUD(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	_, site := newClients(t, srv.TestURL())
 	ctx := t.Context()
 
@@ -245,7 +255,7 @@ func TestPermissionCRUD(t *testing.T) {
 
 func TestBucketEncryptionAndReplication(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	fed, site := newClients(t, srv.TestURL())
 	ctx := t.Context()
 
@@ -287,7 +297,7 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 // endpoints through the SDK, confirming their typed responses decode.
 func TestSiteStatusQuotaPenaltyMetering(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	fed, site := newClients(t, srv.TestURL())
 	ctx := t.Context()
 
@@ -322,7 +332,7 @@ func TestSiteStatusQuotaPenaltyMetering(t *testing.T) {
 
 func TestRoutes(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	if len(srv.Routes()) == 0 {
 		t.Fatal("expected routes")
 	}

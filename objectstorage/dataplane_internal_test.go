@@ -1,6 +1,7 @@
 package objectstorage
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +33,104 @@ func TestPosixMetadataArgs(t *testing.T) {
 	}
 	if fi, err := os.Stat(sidecarDir(dir)); err != nil || !fi.IsDir() {
 		t.Fatalf("sidecar dir must exist as a directory (err=%v)", err)
+	}
+}
+
+// TestIAMUserLifecycle asserts that createUser/deleteUser maintain
+// versitygw's users.json: registered keys appear as admin accounts (in the
+// exact schema versitygw's internal IAM service parses), existing entries
+// survive updates, and deletion removes only the targeted key.
+func TestIAMUserLifecycle(t *testing.T) {
+	d := &dataPlane{iamDir: t.TempDir(), logger: slog.Default()}
+
+	if err := d.createUser("KEYA", "secret-a"); err != nil {
+		t.Fatalf("createUser KEYA: %v", err)
+	}
+	if err := d.createUser("KEYB", "secret-b"); err != nil {
+		t.Fatalf("createUser KEYB: %v", err)
+	}
+
+	readConf := func() iamConfig {
+		t.Helper()
+		b, err := os.ReadFile(filepath.Join(d.iamDir, iamUsersFile))
+		if err != nil {
+			t.Fatalf("read %s: %v", iamUsersFile, err)
+		}
+		var conf iamConfig
+		if err := json.Unmarshal(b, &conf); err != nil {
+			t.Fatalf("parse %s: %v", iamUsersFile, err)
+		}
+		return conf
+	}
+
+	conf := readConf()
+	if len(conf.AccessAccounts) != 2 {
+		t.Fatalf("accounts = %d, want 2 (%v)", len(conf.AccessAccounts), conf.AccessAccounts)
+	}
+	want := iamAccount{Access: "KEYA", Secret: "secret-a", Role: iamRoleAdmin}
+	if got := conf.AccessAccounts["KEYA"]; got != want {
+		t.Errorf("KEYA = %+v, want %+v", got, want)
+	}
+
+	if err := d.deleteUser("KEYA"); err != nil {
+		t.Fatalf("deleteUser KEYA: %v", err)
+	}
+	conf = readConf()
+	if _, ok := conf.AccessAccounts["KEYA"]; ok {
+		t.Error("KEYA must be removed after deleteUser")
+	}
+	if _, ok := conf.AccessAccounts["KEYB"]; !ok {
+		t.Error("KEYB must survive deleting KEYA")
+	}
+}
+
+// TestIAMUser_NilDataPlane asserts key mirroring is a no-op without a data
+// plane, so handlers can call it unconditionally.
+func TestIAMUser_NilDataPlane(t *testing.T) {
+	var d *dataPlane
+	if err := d.createUser("KEY", "secret"); err != nil {
+		t.Fatalf("nil data plane createUser must be a no-op, got %v", err)
+	}
+	if err := d.deleteUser("KEY"); err != nil {
+		t.Fatalf("nil data plane deleteUser must be a no-op, got %v", err)
+	}
+}
+
+// TestHandleDeleteAccountKey_DataPlaneFailure asserts that a failure to
+// deregister a key from the data plane surfaces as a 500 with the key still
+// listed (deregistration happens before the store delete), so the control
+// plane never reports a key deleted while it still authenticates and the
+// delete stays retryable.
+func TestHandleDeleteAccountKey_DataPlaneFailure(t *testing.T) {
+	s, err := NewHandler(Config{})
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	defer s.Close()
+	s.store.CreateAccount("isk01")
+	k, ok := s.store.CreateAccountKey("isk01")
+	if !ok {
+		t.Fatal("CreateAccountKey failed")
+	}
+
+	done := make(chan struct{})
+	close(done)
+	s.dataPlane = &dataPlane{
+		// A missing IAM dir makes updateIAM fail at the temp-file step.
+		iamDir: filepath.Join(t.TempDir(), "missing"),
+		logger: s.logger,
+		cancel: func() {},
+		done:   done,
+	}
+
+	req := httptest.NewRequest(http.MethodDelete, "/isk01/v2/account/keys/"+k.ID, nil)
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d (body: %s)", rr.Code, rr.Body.String())
+	}
+	if _, ok := s.store.GetAccountKey("isk01", k.ID); !ok {
+		t.Fatal("key must remain in the store when data plane deregistration fails")
 	}
 }
 

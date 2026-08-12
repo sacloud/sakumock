@@ -145,3 +145,263 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /secretmanager/vaults/{vault_resource_id}": {
+		204: nil,
+	},
+	"DELETE /secretmanager/vaults/{vault_resource_id}/secrets": {
+		204: nil,
+	},
+	"GET /secretmanager/vaults": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "Vaults"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Total": {
+					Type: "integer",
+				},
+				"Vaults": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+						Properties: map[string]*core.BodySchema{
+							"CreatedAt": {
+								Type: "string",
+							},
+							"Description": {
+								Type: "string",
+							},
+							"ID": {
+								Type: "string",
+							},
+							"KmsKeyID": {
+								Type: "string",
+							},
+							"ModifiedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(255),
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /secretmanager/vaults/{vault_resource_id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Vault"},
+			Properties: map[string]*core.BodySchema{
+				"Vault": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KmsKeyID": {
+							Type: "string",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /secretmanager/vaults/{vault_resource_id}/secrets": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "Secrets"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Secrets": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"LatestVersion", "Name"},
+						Properties: map[string]*core.BodySchema{
+							"LatestVersion": {
+								Type: "integer",
+							},
+							"Name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(255),
+							},
+						},
+					},
+				},
+				"Total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"POST /secretmanager/vaults": {
+		201: {
+			Type:     "object",
+			Required: []string{"Vault"},
+			Properties: map[string]*core.BodySchema{
+				"Vault": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KmsKeyID": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /secretmanager/vaults/{vault_resource_id}/secrets": {
+		201: {
+			Type:     "object",
+			Required: []string{"Secret"},
+			Properties: map[string]*core.BodySchema{
+				"Secret": {
+					Type:     "object",
+					Required: []string{"LatestVersion", "Name"},
+					Properties: map[string]*core.BodySchema{
+						"LatestVersion": {
+							Type: "integer",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /secretmanager/vaults/{vault_resource_id}/secrets/unveil": {
+		200: {
+			Type:     "object",
+			Required: []string{"Secret"},
+			Properties: map[string]*core.BodySchema{
+				"Secret": {
+					Type:     "object",
+					Required: []string{"Name", "Value"},
+					Properties: map[string]*core.BodySchema{
+						"Name": {
+							Type: "string",
+						},
+						"Value": {
+							Type: "string",
+						},
+						"Version": {
+							Type:     "integer",
+							Nullable: true,
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /secretmanager/vaults/{vault_resource_id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Vault"},
+			Properties: map[string]*core.BodySchema{
+				"Vault": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KmsKeyID": {
+							Type: "string",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}

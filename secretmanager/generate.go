@@ -4,4 +4,4 @@ package secretmanager
 // verifies the generated file is up to date. The mapping file renames the
 // spec's {resource_id} path parameter to the {vault_resource_id} the mock
 // serves.
-//go:generate go run github.com/sacloud/sakumock/internal/genvalidate -spec openapi/openapi-fixed.json -mapping validate_mapping.json -out validate_gen.go
+//go:generate go run github.com/sacloud/sakumock/internal/genvalidate -spec openapi/openapi-fixed.json -mapping validate_mapping.json -responses -out validate_gen.go

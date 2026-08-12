@@ -16,12 +16,13 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 			// Fault injection outermost (an injected fault is an
 			// infrastructure-level failure, so it may mask a would-be 429/400),
 			// then rate limit, then spec-derived body validation, then the
-			// handler.
-			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, h))),
+			// handler. Response validation sits innermost so only what the
+			// handler itself produces is checked against the spec.
+			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h)))),
 		}
 	}
 	const base = "/secretmanager/vaults/{vault_resource_id}"
-	return []core.RegisteredRoute{
+	table := []core.RegisteredRoute{
 		route("GET", "/secretmanager/vaults", "List vaults", s.handleListVaults),
 		route("POST", "/secretmanager/vaults", "Create a vault", s.handleCreateVault),
 		route("GET", base, "Get a vault", s.handleGetVault),
@@ -32,6 +33,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", base+"/secrets", "Delete a secret", s.handleDeleteSecret),
 		route("POST", base+"/secrets/unveil", "Reveal a secret value", s.handleUnveil),
 	}
+	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }
 
 // Routes returns metadata for every HTTP endpoint registered on the server.

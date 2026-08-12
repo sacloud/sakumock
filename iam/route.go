@@ -21,7 +21,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h)))),
 		}
 	}
-	return []core.RegisteredRoute{
+	table := []core.RegisteredRoute{
 		// Users
 		route("GET", "/compat/users", "List users", s.handleListUsers),
 		route("POST", "/compat/users", "Create a user", s.handleCreateUser),
@@ -143,10 +143,6 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/organization-service-policy", "Get organization service policy", s.handleReadOrgServicePolicy),
 		route("PUT", "/organization-service-policy", "Update organization service policy", s.handleUpdateOrgServicePolicy),
 		route("GET", "/service-policy-rule-templates", "List service policy rule templates", s.handleServicePolicyRuleTemplates),
-
-		// Mock-only inspection endpoints: raw entries outside the fault /
-		// rate-limit / validation closures by convention.
-		{Route: core.Route{Method: "GET", Path: "/_sakumock/spec-violations", Description: "List recorded OpenAPI spec violations", Kind: "inspection"}, Handler: s.handleListSpecViolations},
-		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/spec-violations", Description: "Clear recorded OpenAPI spec violations", Kind: "inspection"}, Handler: s.handleClearSpecViolations},
 	}
+	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }

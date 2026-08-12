@@ -71,12 +71,25 @@ func TestResponseValidatorSchemaViolation(t *testing.T) {
 func TestResponseValidatorUndeclaredStatus(t *testing.T) {
 	rv := NewResponseValidator(respSchemas(), nil)
 	serve(t, rv, "POST", "/enable", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusCreated) // spec declares only 204
 		w.Write([]byte(`{}`))
 	})
 	got := rv.Violations()
-	if len(got) != 1 || got[0].Status != 409 {
+	if len(got) != 1 || got[0].Status != 201 {
 		t.Fatalf("expected undeclared-status violation, got %+v", got)
+	}
+}
+
+func TestResponseValidatorUndeclaredErrorStatusAllowed(t *testing.T) {
+	// Specs routinely omit error statuses the real API returns; an undeclared
+	// 4xx/5xx is a spec gap, not mock drift.
+	rv := NewResponseValidator(respSchemas(), nil)
+	serve(t, rv, "POST", "/enable", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"detail": "not found"}`))
+	})
+	if got := rv.Violations(); len(got) != 0 {
+		t.Fatalf("expected no violations for undeclared error status, got %+v", got)
 	}
 }
 

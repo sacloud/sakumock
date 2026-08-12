@@ -168,7 +168,15 @@ func (rv *ResponseValidator) Middleware(method, path string, next http.HandlerFu
 		schema, declared := statuses[capture.status]
 		switch {
 		case !declared:
-			rv.record(method, path, capture.status, fmt.Sprintf("status %d is not declared in the spec", capture.status))
+			// Only undeclared success statuses are violations. Specs routinely
+			// omit error statuses the real API does return (a 404 for a
+			// missing resource, say), and the SDK treats an undeclared error
+			// the same against the mock as against the real service — so an
+			// undeclared 4xx/5xx is a spec gap, not mock drift. Declared error
+			// statuses still get their body validated below.
+			if capture.status < 400 {
+				rv.record(method, path, capture.status, fmt.Sprintf("status %d is not declared in the spec", capture.status))
+			}
 		case schema != nil:
 			body := capture.body.Bytes()
 			if len(body) == 0 {

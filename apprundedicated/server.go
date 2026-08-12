@@ -60,7 +60,11 @@ type Server struct {
 	fault       *core.FaultInjector
 	// validator rejects request bodies violating the spec-derived constraints
 	// in the generated bodySchemas table (validate_gen.go).
-	validator     *core.BodyValidator
+	validator *core.BodyValidator
+	// respValidator checks handler responses against the generated
+	// responseSchemas table. Violations never alter the response: they are
+	// logged at Warn and inspectable via GET /_sakumock/spec-violations.
+	respValidator *core.ResponseValidator
 	logger        *slog.Logger
 	docker        *DockerManager
 	dp            *dataPlane
@@ -92,7 +96,8 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator: core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		validator:     core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		respValidator: core.NewResponseValidator(responseSchemas, logger),
 	}
 	s.mux = s.buildMux()
 
@@ -131,6 +136,12 @@ func NewTestServer(cfg Config) *Server {
 // TestURL returns the base URL of the test server.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
+}
+
+// SpecViolations returns the OpenAPI spec violations recorded so far by the
+// response validator (also served at GET /_sakumock/spec-violations).
+func (s *Server) SpecViolations() []core.SpecViolation {
+	return s.respValidator.Violations()
 }
 
 // DataPlaneAddr returns the data plane's listen address, or "" when disabled.

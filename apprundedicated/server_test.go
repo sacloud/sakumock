@@ -12,6 +12,16 @@ import (
 	"github.com/sacloud/sakumock/apprundedicated"
 )
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *apprundedicated.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 func newTestClient(t *testing.T, serverURL string) *v1.Client {
 	t.Helper()
 	var sa saclient.Client
@@ -46,7 +56,7 @@ func createTestCluster(t *testing.T, ctx context.Context, client *v1.Client) v1.
 
 func TestClusterLifecycle(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 
@@ -100,7 +110,7 @@ func TestClusterLifecycle(t *testing.T) {
 
 func TestApplicationVersionLifecycle(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 
@@ -202,7 +212,7 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 
 func TestCertificateLifecycle(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 
@@ -247,7 +257,7 @@ func TestCertificateLifecycle(t *testing.T) {
 
 func TestServiceClasses(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 

@@ -455,3 +455,45 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	// NOTE: DELETE /applications/{applicationID} declares a default or range response; response validation left permissive
+	// NOTE: DELETE /applications/{applicationID}/versions/{version} declares a default or range response; response validation left permissive
+	// NOTE: DELETE /clusters/{clusterID} declares a default or range response; response validation left permissive
+	// NOTE: DELETE /clusters/{clusterID}/asg/{autoScalingGroupID} declares a default or range response; response validation left permissive
+	// NOTE: DELETE /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID} declares a default or range response; response validation left permissive
+	// NOTE: DELETE /clusters/{clusterID}/certificates/{certificateID} declares a default or range response; response validation left permissive
+	// NOTE: GET /applications declares a default or range response; response validation left permissive
+	// NOTE: GET /applications/{applicationID} declares a default or range response; response validation left permissive
+	// NOTE: GET /applications/{applicationID}/containers declares a default or range response; response validation left permissive
+	// NOTE: GET /applications/{applicationID}/versions declares a default or range response; response validation left permissive
+	// NOTE: GET /applications/{applicationID}/versions/{version} declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID} declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID} declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID} declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes/{loadBalancerNodeID} declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID} declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/certificates declares a default or range response; response validation left permissive
+	// NOTE: GET /clusters/{clusterID}/certificates/{certificateID} declares a default or range response; response validation left permissive
+	// NOTE: GET /service_classes/lb declares a default or range response; response validation left permissive
+	// NOTE: GET /service_classes/worker declares a default or range response; response validation left permissive
+	// NOTE: POST /applications declares a default or range response; response validation left permissive
+	// NOTE: POST /applications/{applicationID}/versions declares a default or range response; response validation left permissive
+	// NOTE: POST /clusters declares a default or range response; response validation left permissive
+	// NOTE: POST /clusters/{clusterID}/asg declares a default or range response; response validation left permissive
+	// NOTE: POST /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers declares a default or range response; response validation left permissive
+	// NOTE: POST /clusters/{clusterID}/certificates declares a default or range response; response validation left permissive
+	// NOTE: PUT /applications/{applicationID} declares a default or range response; response validation left permissive
+	// NOTE: PUT /clusters/{clusterID} declares a default or range response; response validation left permissive
+	// NOTE: PUT /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}/draining declares a default or range response; response validation left permissive
+	// NOTE: PUT /clusters/{clusterID}/certificates/{certificateID} declares a default or range response; response validation left permissive
+}

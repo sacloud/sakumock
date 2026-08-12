@@ -123,6 +123,11 @@ func TestKeyLifecycle(t *testing.T) {
 	if len(keys) != 0 {
 		t.Fatalf("expected 0 keys after delete, got %d", len(keys))
 	}
+
+	// The handlers above must not have drifted from the OpenAPI spec.
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
 }
 
 func TestReadNotFound(t *testing.T) {

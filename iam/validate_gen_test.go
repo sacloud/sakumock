@@ -17,4 +17,9 @@ func TestBodySchemasMatchRoutes(t *testing.T) {
 			t.Errorf("bodySchemas key %q has no matching route", key)
 		}
 	}
+	for key := range responseSchemas {
+		if !routes[key] {
+			t.Errorf("responseSchemas key %q has no matching route", key)
+		}
+	}
 }

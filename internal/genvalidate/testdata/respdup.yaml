@@ -1,0 +1,14 @@
+openapi: "3.0.3"
+info: {title: "response duplicate fixture", version: "1.0.0"}
+paths:
+  /status/:
+    get:
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: {type: boolean}

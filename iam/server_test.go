@@ -8,6 +8,7 @@ package iam_test
 //   DELETE /compat/users/{user_id}/trusted-devices/{trusted_device_id}
 //   POST   /compat/users/{user_id}/clear-trusted-devices
 //   GET    /compat/users/{user_id}/security-keys
+//   GET    /compat/users/{user_id}/security-keys/{security_key_id}
 //   PUT    /compat/users/{user_id}/security-keys/{security_key_id}
 //   DELETE /compat/users/{user_id}/security-keys/{security_key_id}
 //   POST   /move-projects
@@ -20,14 +21,10 @@ package iam_test
 //   PUT    /organization-auth-conditions
 //   PUT    /sso-profiles/{sso_profile_id}
 //   POST   /service-principals/oauth2/token
-//   POST   /enable-service-policy
-//   POST   /disable-service-policy
-//   GET    /service-policy-status
-//   GET    /organization-service-policy
-//   PUT    /organization-service-policy
-//   GET    /service-policy-rule-templates
 
 import (
+	"encoding/json"
+	"net/http"
 	"testing"
 
 	iamsdk "github.com/sacloud/sacloud-sdk-go/api/iam"
@@ -42,12 +39,14 @@ import (
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/project"
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/projectapikey"
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/scim"
+	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/servicepolicy"
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/serviceprincipal"
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/sso"
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/user"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/iam/apis/v1"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/iam"
 )
 
@@ -814,5 +813,148 @@ func TestScimLifecycle(t *testing.T) {
 	// Delete
 	if err := scimOp.Delete(ctx, scimID); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestServicePolicyLifecycle(t *testing.T) {
+	srv := iam.NewTestServer(iam.Config{})
+	defer srv.Close()
+	ctx := t.Context()
+	client := newTestClient(t, srv.TestURL())
+	op := servicepolicy.NewServicePolicyOp(client)
+
+	// Initially disabled
+	enabled, err := op.IsEnabled(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enabled {
+		t.Fatal("expected service policy to start disabled")
+	}
+
+	// Enable, then verify
+	if err := op.Enable(ctx); err != nil {
+		t.Fatal(err)
+	}
+	enabled, err = op.IsEnabled(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !enabled {
+		t.Fatal("expected service policy to be enabled")
+	}
+
+	// Enabling again conflicts
+	if err := op.Enable(ctx); err == nil {
+		t.Fatal("expected conflict on double enable")
+	}
+
+	// Disable, then verify
+	if err := op.Disable(ctx); err != nil {
+		t.Fatal(err)
+	}
+	enabled, err = op.IsEnabled(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enabled {
+		t.Fatal("expected service policy to be disabled")
+	}
+
+	// Disabling again conflicts
+	if err := op.Disable(ctx); err == nil {
+		t.Fatal("expected conflict on double disable")
+	}
+
+	// Rule templates: an empty page
+	tpls, err := op.ListRuleTemplates(ctx, servicepolicy.ListRuleTemplatesParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tpls.Items) != 0 || tpls.Count != 0 {
+		t.Fatalf("unexpected rule templates: %+v", tpls)
+	}
+
+	// Organization service policy rules round-trip
+	putRes, err := client.OrganizationServicePolicyPut(ctx, &v1.OrganizationServicePolicyPutReq{
+		Rules: []v1.Rule{{
+			Code:     v1.NewOptString("example.rule.bool"),
+			IsActive: v1.NewOptBool(true),
+			IsDryRun: v1.NewOptBool(false),
+		}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := putRes.(*v1.OrganizationServicePolicyPutOK); !ok {
+		t.Fatalf("unexpected put response: %#v", putRes)
+	}
+	getRes, err := client.OrganizationServicePolicyGet(ctx, v1.OrganizationServicePolicyGetParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rules, ok := getRes.(*v1.OrganizationServicePolicyGetOK)
+	if !ok {
+		t.Fatalf("unexpected get response: %#v", getRes)
+	}
+	if len(rules.Rules) != 1 || rules.Rules[0].Code.Value != "example.rule.bool" {
+		t.Fatalf("unexpected rules: %+v", rules.Rules)
+	}
+
+	// A body-validation failure decodes as a structured 400
+	// (Http400BadRequest requires the errors map), not a decode error.
+	badRes, err := client.OrganizationServicePolicyPut(ctx, &v1.OrganizationServicePolicyPutReq{
+		Rules: []v1.Rule{{Code: v1.NewOptString("example.rule.bool")}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	badReq, ok := badRes.(*v1.Http400BadRequest)
+	if !ok {
+		t.Fatalf("expected Http400BadRequest, got %#v", badRes)
+	}
+	if len(badReq.Errors.AdditionalProps) == 0 && len(badReq.Errors.NonFieldErrors) == 0 {
+		t.Fatalf("expected non-empty errors: %+v", badReq.Errors)
+	}
+
+	// The handlers above must not have drifted from the OpenAPI spec.
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+}
+
+func TestSpecViolationsEndpoint(t *testing.T) {
+	srv := iam.NewTestServer(iam.Config{})
+	defer srv.Close()
+
+	res, err := http.Get(srv.TestURL() + "/_sakumock/spec-violations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status %d", res.StatusCode)
+	}
+	var body struct {
+		Violations []core.SpecViolation `json:"violations"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Violations) != 0 {
+		t.Fatalf("expected no violations, got %+v", body.Violations)
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, srv.TestURL()+"/_sakumock/spec-violations", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	delRes, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	delRes.Body.Close()
+	if delRes.StatusCode != http.StatusNoContent {
+		t.Fatalf("unexpected delete status %d", delRes.StatusCode)
 	}
 }

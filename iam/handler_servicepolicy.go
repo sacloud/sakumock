@@ -8,7 +8,7 @@ import (
 )
 
 type servicePolicyStatusJSON struct {
-	IsActive bool `json:"is_active"`
+	Enabled bool `json:"enabled"`
 }
 
 type servicePolicyRulesResponse struct {
@@ -16,15 +16,32 @@ type servicePolicyRulesResponse struct {
 }
 
 func (s *Server) handleEnableServicePolicy(w http.ResponseWriter, _ *http.Request) {
+	s.store.mu.Lock()
+	defer s.store.mu.Unlock()
+	if s.store.servicePolicyEnabled {
+		writeError(w, http.StatusConflict, "service policy is already enabled")
+		return
+	}
+	s.store.servicePolicyEnabled = true
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleDisableServicePolicy(w http.ResponseWriter, _ *http.Request) {
+	s.store.mu.Lock()
+	defer s.store.mu.Unlock()
+	if !s.store.servicePolicyEnabled {
+		writeError(w, http.StatusConflict, "service policy is already disabled")
+		return
+	}
+	s.store.servicePolicyEnabled = false
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleServicePolicyStatus(w http.ResponseWriter, _ *http.Request) {
-	core.WriteJSON(w, http.StatusOK, servicePolicyStatusJSON{IsActive: false})
+	s.store.mu.RLock()
+	enabled := s.store.servicePolicyEnabled
+	s.store.mu.RUnlock()
+	core.WriteJSON(w, http.StatusOK, servicePolicyStatusJSON{Enabled: enabled})
 }
 
 func (s *Server) handleReadOrgServicePolicy(w http.ResponseWriter, _ *http.Request) {
@@ -47,6 +64,17 @@ func (s *Server) handleUpdateOrgServicePolicy(w http.ResponseWriter, r *http.Req
 	core.WriteJSON(w, http.StatusOK, req)
 }
 
+// ruleTemplateJSON mirrors the spec's RuleTemplate; the mock ships no
+// built-in templates, so the list is always an empty page.
+type ruleTemplateJSON struct {
+	Code           string   `json:"code"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	Type           string   `json:"type"`
+	SupportsDryRun bool     `json:"supports_dry_run"`
+	Prefixes       []string `json:"prefixes"`
+}
+
 func (s *Server) handleServicePolicyRuleTemplates(w http.ResponseWriter, _ *http.Request) {
-	core.WriteJSON(w, http.StatusOK, []any{})
+	writePage(w, []ruleTemplateJSON{})
 }

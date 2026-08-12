@@ -72,7 +72,9 @@ func TestIAMUserLifecycle(t *testing.T) {
 		t.Errorf("KEYA = %+v, want %+v", got, want)
 	}
 
-	d.deleteUser("KEYA")
+	if err := d.deleteUser("KEYA"); err != nil {
+		t.Fatalf("deleteUser KEYA: %v", err)
+	}
 	conf = readConf()
 	if _, ok := conf.AccessAccounts["KEYA"]; ok {
 		t.Error("KEYA must be removed after deleteUser")
@@ -89,7 +91,47 @@ func TestIAMUser_NilDataPlane(t *testing.T) {
 	if err := d.createUser("KEY", "secret"); err != nil {
 		t.Fatalf("nil data plane createUser must be a no-op, got %v", err)
 	}
-	d.deleteUser("KEY")
+	if err := d.deleteUser("KEY"); err != nil {
+		t.Fatalf("nil data plane deleteUser must be a no-op, got %v", err)
+	}
+}
+
+// TestHandleDeleteAccountKey_DataPlaneFailure asserts that a failure to
+// deregister a key from the data plane surfaces as a 500 with the key still
+// listed (deregistration happens before the store delete), so the control
+// plane never reports a key deleted while it still authenticates and the
+// delete stays retryable.
+func TestHandleDeleteAccountKey_DataPlaneFailure(t *testing.T) {
+	s, err := NewHandler(Config{})
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	defer s.Close()
+	s.store.CreateAccount("isk01")
+	k, ok := s.store.CreateAccountKey("isk01")
+	if !ok {
+		t.Fatal("CreateAccountKey failed")
+	}
+
+	done := make(chan struct{})
+	close(done)
+	s.dataPlane = &dataPlane{
+		// A missing IAM dir makes updateIAM fail at the temp-file step.
+		iamDir: filepath.Join(t.TempDir(), "missing"),
+		logger: s.logger,
+		cancel: func() {},
+		done:   done,
+	}
+
+	req := httptest.NewRequest(http.MethodDelete, "/isk01/v2/account/keys/"+k.ID, nil)
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d (body: %s)", rr.Code, rr.Body.String())
+	}
+	if _, ok := s.store.GetAccountKey("isk01", k.ID); !ok {
+		t.Fatal("key must remain in the store when data plane deregistration fails")
+	}
 }
 
 func TestCreateBucket_NilDataPlane(t *testing.T) {

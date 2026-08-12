@@ -70,16 +70,20 @@ func (d *dataPlane) createUser(access, secret string) error {
 
 // deleteUser removes a control-plane access key from the data-plane accounts.
 // Deletion takes effect immediately because versitygw runs with its IAM cache
-// disabled (see startDataPlane).
-func (d *dataPlane) deleteUser(access string) {
+// disabled (see startDataPlane). A failure is returned rather than just logged
+// so the control plane never reports a key deleted while it still
+// authenticates; callers deregister before mutating the store, keeping a
+// failure retryable. Deregistering is idempotent.
+func (d *dataPlane) deleteUser(access string) error {
 	if d == nil {
-		return
+		return nil
 	}
 	if err := d.updateIAM(func(conf *iamConfig) {
 		delete(conf.AccessAccounts, access)
 	}); err != nil {
-		d.logger.Warn("data plane: failed to deregister access key", "access_key", access, "error", err)
+		return fmt.Errorf("data plane: deregister access key: %w", err)
 	}
+	return nil
 }
 
 // updateIAM applies update to users.json under a read-modify-write guarded by

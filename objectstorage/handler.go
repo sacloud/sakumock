@@ -392,15 +392,25 @@ func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
-	// Deleting the account deletes its access keys with it, so capture them
-	// first to deregister them from the data plane.
-	keys, _ := s.store.ListAccountKeys(r.PathValue("site"))
-	if !s.store.DeleteAccount(r.PathValue("site")) {
+	// Deleting the account deletes its access keys with it, so deregister
+	// them from the data plane first: a deregistration failure then leaves
+	// the store untouched (the account still lists its keys) and the request
+	// retryable, instead of the control plane reporting keys gone that still
+	// authenticate.
+	keys, ok := s.store.ListAccountKeys(r.PathValue("site"))
+	if !ok {
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
 	for _, k := range keys {
-		s.dataPlane.deleteUser(k.ID)
+		if err := s.dataPlane.deleteUser(k.ID); err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	if !s.store.DeleteAccount(r.PathValue("site")) {
+		writeError(w, http.StatusNotFound, "account does not exist")
+		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -456,11 +466,20 @@ func (s *Server) handleGetAccountKey(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteAccountKey(w http.ResponseWriter, r *http.Request) {
+	// Deregister from the data plane before touching the store, so a failure
+	// leaves the key listed and the request retryable (see handleDeleteAccount).
+	if _, ok := s.store.GetAccountKey(r.PathValue("site"), r.PathValue("id")); !ok {
+		writeError(w, http.StatusNotFound, "access key not found")
+		return
+	}
+	if err := s.dataPlane.deleteUser(r.PathValue("id")); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	if !s.store.DeleteAccountKey(r.PathValue("site"), r.PathValue("id")) {
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
-	s.dataPlane.deleteUser(r.PathValue("id"))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -563,15 +582,22 @@ func (s *Server) handleDeletePermission(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	// Deleting the permission deletes its access keys with it, so capture
-	// them first to deregister them from the data plane.
-	keys, _ := s.store.ListPermissionKeys(r.PathValue("site"), id)
-	if !s.store.DeletePermission(r.PathValue("site"), id) {
+	// Deleting the permission deletes its access keys with it, so deregister
+	// them from the data plane first (see handleDeleteAccount for why).
+	keys, ok := s.store.ListPermissionKeys(r.PathValue("site"), id)
+	if !ok {
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
 	for _, k := range keys {
-		s.dataPlane.deleteUser(k.ID)
+		if err := s.dataPlane.deleteUser(k.ID); err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	if !s.store.DeletePermission(r.PathValue("site"), id) {
+		writeError(w, http.StatusNotFound, "permission not found")
+		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -643,11 +669,20 @@ func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
+	// Deregister from the data plane before touching the store, so a failure
+	// leaves the key listed and the request retryable (see handleDeleteAccount).
+	if _, ok := s.store.GetPermissionKey(r.PathValue("site"), id, r.PathValue("key_id")); !ok {
+		writeError(w, http.StatusNotFound, "access key not found")
+		return
+	}
+	if err := s.dataPlane.deleteUser(r.PathValue("key_id")); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	if !s.store.DeletePermissionKey(r.PathValue("site"), id, r.PathValue("key_id")) {
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
-	s.dataPlane.deleteUser(r.PathValue("key_id"))
 	w.WriteHeader(http.StatusNoContent)
 }
 

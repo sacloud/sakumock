@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -21,6 +22,17 @@ type operation struct {
 	key    string
 	schema *core.BodySchema
 	notes  []string
+}
+
+// responseOp is one generated responseSchemas entry: a route key and the
+// per-status response schemas the spec declares for it. A nil schema means
+// the status is declared but its body carries no checkable constraints. A nil
+// statuses map means the whole route was degraded to permissive (default
+// response) and only notes are emitted.
+type responseOp struct {
+	key      string
+	statuses map[int]*core.BodySchema
+	notes    []string
 }
 
 // httpMethods lists the OpenAPI operation keys that can carry a request body.
@@ -93,11 +105,99 @@ func collectOperations(doc map[string]any, mapping *Mapping, warn io.Writer) ([]
 	return ops, nil
 }
 
+// collectResponses walks one spec document and compiles the response-body
+// schema of every status each operation declares. Statuses without an
+// application/json body (e.g. 204, or non-JSON content) are recorded with a
+// nil schema so status membership can still be checked.
+func collectResponses(doc map[string]any, mapping *Mapping, warn io.Writer) ([]responseOp, error) {
+	paths, _ := doc["paths"].(map[string]any)
+	var ops []responseOp
+	for path, rawItem := range paths {
+		item, ok := rawItem.(map[string]any)
+		if !ok {
+			continue
+		}
+		for _, method := range httpMethods {
+			op, ok := item[method].(map[string]any)
+			if !ok {
+				continue
+			}
+			key, skip := routeKey(strings.ToUpper(method), path, mapping)
+			if skip {
+				continue
+			}
+			resps, ok := op["responses"].(map[string]any)
+			if !ok {
+				continue
+			}
+			c := &compiler{doc: doc, warn: warn, resp: true}
+			statuses := map[int]*core.BodySchema{}
+			wildcard := false
+			for _, code := range slices.Sorted(maps.Keys(resps)) {
+				// "default" and range patterns like "4XX" accept statuses the
+				// int-keyed table cannot express, so the route degrades to
+				// permissive below.
+				if code == "default" || strings.HasSuffix(code, "XX") {
+					wildcard = true
+					continue
+				}
+				status, err := strconv.Atoi(code)
+				if err != nil {
+					c.note("response status %q at %s %s is not a status code; skipped", code, strings.ToUpper(method), path)
+					continue
+				}
+				resp, ok := resps[code].(map[string]any)
+				if !ok {
+					statuses[status] = nil
+					continue
+				}
+				resp, err = c.resolveRef(resp)
+				if err != nil {
+					return nil, fmt.Errorf("%s %s response %d: %w", method, path, status, err)
+				}
+				content, _ := resp["content"].(map[string]any)
+				js, ok := content["application/json"].(map[string]any)
+				if !ok {
+					// No JSON body declared for this status (204, or a
+					// non-JSON content type): membership only.
+					statuses[status] = nil
+					continue
+				}
+				rawSchema, ok := js["schema"]
+				if !ok {
+					statuses[status] = nil
+					continue
+				}
+				loc := fmt.Sprintf("%s %s response %d", strings.ToUpper(method), path, status)
+				statuses[status] = c.compile(rawSchema, loc, nil)
+			}
+			if wildcard {
+				// A default/range response accepts statuses the table cannot
+				// enumerate, so membership cannot be enforced; leave the whole
+				// route permissive.
+				c.note("%s %s declares a default or range response; response validation left permissive", strings.ToUpper(method), path)
+				ops = append(ops, responseOp{key: key, notes: c.notes})
+				continue
+			}
+			if len(statuses) == 0 && len(c.notes) == 0 {
+				continue
+			}
+			ops = append(ops, responseOp{key: key, statuses: statuses, notes: c.notes})
+		}
+	}
+	sort.Slice(ops, func(i, j int) bool { return ops[i].key < ops[j].key })
+	return ops, nil
+}
+
 // compiler compiles one operation's schema, accumulating notes about
 // constructs that were degraded to permissive.
 type compiler struct {
-	doc   map[string]any
-	warn  io.Writer
+	doc  map[string]any
+	warn io.Writer
+	// resp switches required-field handling to response semantics: writeOnly
+	// properties (request-only per the OpenAPI spec) are skipped instead of
+	// readOnly ones.
+	resp  bool
 	notes []string
 }
 
@@ -214,9 +314,23 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 				}
 				// readOnly properties are response-only; per the OpenAPI spec
 				// their required-ness does not apply to request bodies.
+				// writeOnly is the mirror for response schemas.
+				skipFlag := "readOnly"
+				if c.resp {
+					skipFlag = "writeOnly"
+				}
 				if props, ok := m["properties"].(map[string]any); ok {
+					// A required name with no property definition alongside it
+					// is a spec inconsistency (ogen-generated SDK types drop
+					// it too); enforcing it would reject bodies the SDK
+					// accepts. Schemas without a properties map keep their
+					// required list — that is the valid required-only form.
+					if _, defined := props[name]; !defined {
+						c.note("required property %q at %s is not defined in properties; requirement skipped", name, loc)
+						continue
+					}
 					if p, ok := props[name].(map[string]any); ok {
-						if ro, ok := p["readOnly"].(bool); ok && ro {
+						if ro, ok := p[skipFlag].(bool); ok && ro {
 							continue
 						}
 					}

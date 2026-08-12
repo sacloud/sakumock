@@ -27,6 +27,7 @@ func main() {
 	mappingPath := flag.String("mapping", "", "optional route-mapping JSON file")
 	varName := flag.String("var", "bodySchemas", "name of the generated map variable")
 	pkgName := flag.String("pkg", "", "package name (default: base name of the output directory)")
+	responses := flag.Bool("responses", false, "also generate the responseSchemas table (per-status response-body constraints)")
 	flag.Parse()
 
 	if len(specs) == 0 {
@@ -53,7 +54,7 @@ func main() {
 		mapping = m
 	}
 
-	src, err := Generate(specs, pkg, *varName, mapping, os.Stderr)
+	src, err := Generate(specs, pkg, *varName, mapping, *responses, os.Stderr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "genvalidate: %v\n", err)
 		os.Exit(1)

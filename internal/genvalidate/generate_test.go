@@ -12,27 +12,29 @@ var update = flag.Bool("update", false, "update golden files")
 
 func TestGenerateGolden(t *testing.T) {
 	cases := []struct {
-		name    string
-		specs   []string
-		mapping *Mapping
+		name      string
+		specs     []string
+		mapping   *Mapping
+		responses bool
 	}{
-		{"spec30", []string{"testdata/spec30.json"}, nil},
-		{"spec31", []string{"testdata/spec31.yaml"}, nil},
+		{"spec30", []string{"testdata/spec30.json"}, nil, false},
+		{"spec31", []string{"testdata/spec31.yaml"}, nil, false},
 		{"mapped", []string{"testdata/spec30.json"}, &Mapping{
 			Prefix:       "/{site}",
 			PathRewrites: map[string]string{"{id}": "{widget_id}"},
 			Routes:       map[string]string{"POST /widgets/": "POST /v2/widgets/"},
 			SkipPaths:    []string{"/nodes/"},
-		}},
+		}, false},
+		{"respspec", []string{"testdata/respspec.json"}, nil, true},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			var warn bytes.Buffer
-			got, err := Generate(c.specs, "fixture", "bodySchemas", c.mapping, &warn)
+			got, err := Generate(c.specs, "fixture", "bodySchemas", c.mapping, c.responses, &warn)
 			if err != nil {
 				t.Fatal(err)
 			}
-			again, err := Generate(c.specs, "fixture", "bodySchemas", c.mapping, &warn)
+			again, err := Generate(c.specs, "fixture", "bodySchemas", c.mapping, c.responses, &warn)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -59,7 +61,7 @@ func TestGenerateGolden(t *testing.T) {
 }
 
 func TestGenerateDuplicateRoute(t *testing.T) {
-	_, err := Generate([]string{"testdata/spec30.json", "testdata/spec30.json"}, "fixture", "bodySchemas", nil, os.Stderr)
+	_, err := Generate([]string{"testdata/spec30.json", "testdata/spec30.json"}, "fixture", "bodySchemas", nil, false, os.Stderr)
 	if err == nil {
 		t.Fatal("expected duplicate-route error")
 	}

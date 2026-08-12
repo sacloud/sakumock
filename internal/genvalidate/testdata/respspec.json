@@ -1,0 +1,109 @@
+{
+  "openapi": "3.0.3",
+  "info": {"title": "response fixture", "version": "1.0.0"},
+  "paths": {
+    "/status/": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["enabled", "secret", "ghost"],
+                  "properties": {
+                    "enabled": {"type": "boolean", "readOnly": true},
+                    "secret": {"type": "string", "writeOnly": true}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthorized"}
+        }
+      }
+    },
+    "/things/": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {"name": {"type": "string", "minLength": 1}}
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "required": ["items"],
+                      "properties": {
+                        "items": {"type": "array", "items": {"type": "string"}}
+                      }
+                    },
+                    {"$ref": "#/components/schemas/Pagination"}
+                  ]
+                }
+              }
+            }
+          },
+          "204": {"description": "empty"},
+          "418": {
+            "description": "teapot",
+            "content": {"text/plain": {"schema": {"type": "string"}}}
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "204": {"description": "gone"},
+          "default": {"description": "anything"}
+        }
+      }
+    },
+    "/ranges/": {
+      "get": {
+        "responses": {
+          "200": {"description": "ok"},
+          "4XX": {"description": "client error"}
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Unauthorized": {
+        "description": "unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["title"],
+              "properties": {"title": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Pagination": {
+        "type": "object",
+        "required": ["count", "next"],
+        "properties": {
+          "count": {"type": "integer"},
+          "next": {"type": "string", "nullable": true}
+        }
+      }
+    }
+  }
+}

@@ -272,14 +272,25 @@ func (s *Server) handleDeleteTrustedDevice(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// handleUpdateSecurityKey is a no-op that returns 200 with empty JSON.
+// The mock has no security-key registration path (WebAuthn happens in a
+// browser), so the per-key endpoints always report the key as absent.
+
+func (s *Server) handleReadSecurityKey(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("user_id")
+	if _, ok := s.store.users.get(id); !ok {
+		writeError(w, http.StatusNotFound, "user not found")
+		return
+	}
+	writeError(w, http.StatusNotFound, "security key not found")
+}
+
 func (s *Server) handleUpdateSecurityKey(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("user_id")
 	if _, ok := s.store.users.get(id); !ok {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, map[string]any{})
+	writeError(w, http.StatusNotFound, "security key not found")
 }
 
 // handleDeleteSecurityKey is a no-op that returns 204.

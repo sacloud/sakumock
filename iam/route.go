@@ -16,8 +16,9 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 			// Fault injection outermost (an injected fault is an
 			// infrastructure-level failure, so it may mask a would-be 429/400),
 			// then rate limit, then spec-derived body validation, then the
-			// handler.
-			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, h))),
+			// handler. Response validation sits innermost so only what the
+			// handler itself produces is checked against the spec.
+			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h)))),
 		}
 	}
 	return []core.RegisteredRoute{
@@ -34,6 +35,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", "/compat/users/{user_id}/trusted-devices/{trusted_device_id}", "Delete trusted device", s.handleDeleteTrustedDevice),
 		route("POST", "/compat/users/{user_id}/clear-trusted-devices", "Clear trusted devices", s.handleClearTrustedDevices),
 		route("GET", "/compat/users/{user_id}/security-keys", "List security keys", s.handleListUserSecurityKeys),
+		route("GET", "/compat/users/{user_id}/security-keys/{security_key_id}", "Get a security key", s.handleReadSecurityKey),
 		route("PUT", "/compat/users/{user_id}/security-keys/{security_key_id}", "Update security key", s.handleUpdateSecurityKey),
 		route("DELETE", "/compat/users/{user_id}/security-keys/{security_key_id}", "Delete security key", s.handleDeleteSecurityKey),
 
@@ -141,5 +143,10 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/organization-service-policy", "Get organization service policy", s.handleReadOrgServicePolicy),
 		route("PUT", "/organization-service-policy", "Update organization service policy", s.handleUpdateOrgServicePolicy),
 		route("GET", "/service-policy-rule-templates", "List service policy rule templates", s.handleServicePolicyRuleTemplates),
+
+		// Mock-only inspection endpoints: raw entries outside the fault /
+		// rate-limit / validation closures by convention.
+		{Route: core.Route{Method: "GET", Path: "/_sakumock/spec-violations", Description: "List recorded OpenAPI spec violations", Kind: "inspection"}, Handler: s.handleListSpecViolations},
+		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/spec-violations", Description: "Clear recorded OpenAPI spec violations", Kind: "inspection"}, Handler: s.handleClearSpecViolations},
 	}
 }

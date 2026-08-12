@@ -64,7 +64,7 @@ Run `sakumock-iam --routes` for the full list. The server implements the followi
 | User email | `POST /compat/users/{user_id}/register-email`, `POST /compat/users/{user_id}/unregister-email` |
 | User OTP | `POST /compat/users/{user_id}/deactivate-otp` |
 | Trusted devices | `GET /compat/users/{user_id}/trusted-devices`, `DELETE /compat/users/{user_id}/trusted-devices/{trusted_device_id}`, `POST /compat/users/{user_id}/clear-trusted-devices` |
-| Security keys | `GET /compat/users/{user_id}/security-keys`, `PUT /compat/users/{user_id}/security-keys/{security_key_id}`, `DELETE /compat/users/{user_id}/security-keys/{security_key_id}` |
+| Security keys | `GET /compat/users/{user_id}/security-keys`, `GET /compat/users/{user_id}/security-keys/{security_key_id}`, `PUT /compat/users/{user_id}/security-keys/{security_key_id}`, `DELETE /compat/users/{user_id}/security-keys/{security_key_id}` |
 | Groups | `GET /groups`, `POST /groups`, `GET /groups/{group_id}`, `PUT /groups/{group_id}`, `DELETE /groups/{group_id}` |
 | Group memberships | `GET /groups/{group_id}/memberships`, `PUT /groups/{group_id}/memberships` |
 | Projects | `GET /projects`, `POST /projects`, `GET /projects/{project_id}`, `PUT /projects/{project_id}`, `DELETE /projects/{project_id}`, `POST /move-projects` |
@@ -86,6 +86,24 @@ Run `sakumock-iam --routes` for the full list. The server implements the followi
 | SSO profiles | `GET /sso-profiles`, `POST /sso-profiles`, `GET /sso-profiles/{sso_profile_id}`, `PUT /sso-profiles/{sso_profile_id}`, `DELETE /sso-profiles/{sso_profile_id}`, `POST /sso-profiles/{sso_profile_id}/assign`, `POST /sso-profiles/{sso_profile_id}/unassign` |
 | SCIM configurations | `GET /scim-configurations`, `POST /scim-configurations`, `GET /scim-configurations/{id}`, `PUT /scim-configurations/{id}`, `DELETE /scim-configurations/{id}`, `POST /scim-configurations/{id}/regenerate-token` |
 | Service policy | `POST /enable-service-policy`, `POST /disable-service-policy`, `GET /service-policy-status`, `GET /organization-service-policy`, `PUT /organization-service-policy`, `GET /service-policy-rule-templates` |
+
+## Mock-only endpoints
+
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec (see below) |
+| `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection:
+
+```bash
+curl -s http://localhost:18087/_sakumock/spec-violations | jq
+# {"violations":[{"method":"GET","path":"/example","status":200,"message":"enabled is required","count":3}]}
+```
+
+An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.
 
 ## OpenAPI spec
 

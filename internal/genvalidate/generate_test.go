@@ -67,6 +67,19 @@ func TestGenerateDuplicateRoute(t *testing.T) {
 	}
 }
 
+func TestGenerateDuplicateResponseRoute(t *testing.T) {
+	// respdup.yaml redeclares respspec.json's GET /status/ without a request
+	// body, so only the response table sees the collision.
+	specs := []string{"testdata/respspec.json", "testdata/respdup.yaml"}
+	if _, err := Generate(specs, "fixture", "bodySchemas", nil, false, os.Stderr); err != nil {
+		t.Fatalf("request-only generation should not collide: %v", err)
+	}
+	_, err := Generate(specs, "fixture", "bodySchemas", nil, true, os.Stderr)
+	if err == nil {
+		t.Fatal("expected duplicate-route error for responseSchemas")
+	}
+}
+
 func TestRouteKey(t *testing.T) {
 	m := &Mapping{
 		Prefix:       "/{site}",

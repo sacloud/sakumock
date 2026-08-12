@@ -20,6 +20,7 @@ func Generate(specPaths []string, pkg, varName string, mapping *Mapping, respons
 	var ops []operation
 	var respOps []responseOp
 	seen := map[string]string{}
+	seenResp := map[string]string{}
 	for _, path := range specPaths {
 		doc, err := loadSpec(path)
 		if err != nil {
@@ -40,6 +41,16 @@ func Generate(specPaths []string, pkg, varName string, mapping *Mapping, respons
 			specResps, err := collectResponses(doc, mapping, warn)
 			if err != nil {
 				return nil, fmt.Errorf("%s: %w", path, err)
+			}
+			// The request-side seen map only covers operations with request
+			// bodies; response entries exist for nearly every operation, so
+			// cross-spec duplicates must be caught here too or the generated
+			// map literal would not compile.
+			for _, op := range specResps {
+				if prev, dup := seenResp[op.key]; dup {
+					return nil, fmt.Errorf("route %q defined in both %s and %s", op.key, prev, path)
+				}
+				seenResp[op.key] = path
 			}
 			respOps = append(respOps, specResps...)
 		}

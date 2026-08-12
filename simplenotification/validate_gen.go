@@ -130,3 +130,25 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	// NOTE: DELETE /commonserviceitem/{id} declares a default or range response; response validation left permissive
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Settings left permissive
+	// NOTE: GET /commonserviceitem declares a default or range response; response validation left permissive
+	// NOTE: GET /commonserviceitem/simplenotification/history declares a default or range response; response validation left permissive
+	// NOTE: GET /commonserviceitem/simplenotification/history/{request_id} declares a default or range response; response validation left permissive
+	// NOTE: GET /commonserviceitem/simplenotification/sources declares a default or range response; response validation left permissive
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	// NOTE: GET /commonserviceitem/{id} declares a default or range response; response validation left permissive
+	// NOTE: GET /commonserviceitem/{id}/simplenotification/status declares a default or range response; response validation left permissive
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Settings left permissive
+	// NOTE: POST /commonserviceitem declares a default or range response; response validation left permissive
+	// NOTE: POST /commonserviceitem/{id}/simplenotification/message declares a default or range response; response validation left permissive
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	// NOTE: PUT /commonserviceitem/{id} declares a default or range response; response validation left permissive
+}

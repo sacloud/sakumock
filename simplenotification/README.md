@@ -110,6 +110,8 @@ These endpoints are sakumock-specific (not part of the SAKURA Cloud API) and let
 |--------|------|-------------|
 | GET | `/_sakumock/messages` | Return all accepted messages in send order |
 | DELETE | `/_sakumock/messages` | Clear all accepted messages |
+| GET | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
+| DELETE | `/_sakumock/spec-violations` | Clear the recorded violations |
 
 `GET` response shape:
 
@@ -127,3 +129,6 @@ These endpoints are sakumock-specific (not part of the SAKURA Cloud API) and let
 ```
 
 Use `DELETE` between test cases to reset state when sharing a single server across tests.
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — under `/_sakumock/spec-violations`. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.
+

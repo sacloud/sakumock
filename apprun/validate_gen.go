@@ -324,3 +324,1009 @@ var bodySchemas = map[string]*core.BodySchema{
 		Type: "array",
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	// NOTE: oneOf at DELETE /applications/{id} response 400 left permissive
+	// NOTE: oneOf at DELETE /applications/{id} response 401 left permissive
+	// NOTE: oneOf at DELETE /applications/{id} response 403 left permissive
+	// NOTE: oneOf at DELETE /applications/{id} response 404 left permissive
+	// NOTE: oneOf at DELETE /applications/{id} response 500 left permissive
+	"DELETE /applications/{id}": {
+		204: nil,
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at DELETE /applications/{id}/versions/{version_id} response 400 left permissive
+	// NOTE: oneOf at DELETE /applications/{id}/versions/{version_id} response 401 left permissive
+	// NOTE: oneOf at DELETE /applications/{id}/versions/{version_id} response 403 left permissive
+	// NOTE: oneOf at DELETE /applications/{id}/versions/{version_id} response 404 left permissive
+	// NOTE: oneOf at DELETE /applications/{id}/versions/{version_id} response 500 left permissive
+	"DELETE /applications/{id}/versions/{version_id}": {
+		204: nil,
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications response 400 left permissive
+	// NOTE: oneOf at GET /applications response 401 left permissive
+	// NOTE: oneOf at GET /applications response 403 left permissive
+	// NOTE: oneOf at GET /applications response 500 left permissive
+	"GET /applications": {
+		200: {
+			Type:     "object",
+			Required: []string{"data", "meta"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created_at", "id", "name", "public_url", "status"},
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"id": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"public_url": {
+								Type: "string",
+							},
+							"status": {
+								Type: "string",
+								Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+							},
+						},
+					},
+				},
+				"meta": {
+					Type:     "object",
+					Required: []string{"object_total", "page_num", "page_size", "sort_field", "sort_order"},
+					Properties: map[string]*core.BodySchema{
+						"object_total": {
+							Type: "integer",
+						},
+						"page_num": {
+							Type: "integer",
+						},
+						"page_size": {
+							Type: "integer",
+						},
+						"sort_field": {
+							Type: "string",
+						},
+						"sort_order": {
+							Type: "string",
+							Enum: []any{"asc", "desc"},
+						},
+					},
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id} response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id} response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id} response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id} response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id} response 500 left permissive
+	"GET /applications/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"components", "created_at", "id", "max_scale", "min_scale", "name", "port", "public_url", "resource_id", "status", "timeout_seconds"},
+			Properties: map[string]*core.BodySchema{
+				"components": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"deploy_source", "max_cpu", "max_memory", "name"},
+						Properties: map[string]*core.BodySchema{
+							"deploy_source": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"container_registry": {
+										Type:     "object",
+										Required: []string{"image"},
+										Properties: map[string]*core.BodySchema{
+											"image": {
+												Type: "string",
+											},
+											"server": {
+												Type: "string",
+											},
+											"username": {
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+							"env": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
+										},
+										"value": {
+											Type: "string",
+										},
+									},
+								},
+							},
+							"max_cpu": {
+								Type: "string",
+							},
+							"max_memory": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"probe": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"http_get": {
+										Type:     "object",
+										Nullable: true,
+										Required: []string{"path", "port"},
+										Properties: map[string]*core.BodySchema{
+											"headers": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type: "object",
+													Properties: map[string]*core.BodySchema{
+														"name": {
+															Type: "string",
+														},
+														"value": {
+															Type: "string",
+														},
+													},
+												},
+											},
+											"path": {
+												Type: "string",
+											},
+											"port": {
+												Type:    "integer",
+												Minimum: core.Float64Ptr(1),
+												Maximum: core.Float64Ptr(65535),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type: "string",
+				},
+				"max_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(10),
+				},
+				"min_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(10),
+				},
+				"name": {
+					Type: "string",
+				},
+				"port": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(65535),
+				},
+				"public_url": {
+					Type: "string",
+				},
+				"resource_id": {
+					Type: "string",
+				},
+				"scale_target_concurrency": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(50),
+					Maximum: core.Float64Ptr(200),
+				},
+				"status": {
+					Type: "string",
+					Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+				},
+				"timeout_seconds": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(300),
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id}/packet_filter response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id}/packet_filter response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id}/packet_filter response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id}/packet_filter response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id}/packet_filter response 500 left permissive
+	"GET /applications/{id}/packet_filter": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_enabled", "settings"},
+			Properties: map[string]*core.BodySchema{
+				"is_enabled": {
+					Type: "boolean",
+				},
+				"settings": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"from_ip", "from_ip_prefix_length"},
+						Properties: map[string]*core.BodySchema{
+							"from_ip": {
+								Type: "string",
+							},
+							"from_ip_prefix_length": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(32),
+							},
+						},
+					},
+					MaxItems: core.IntPtr(10),
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id}/status response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id}/status response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id}/status response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id}/status response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id}/status response 500 left permissive
+	"GET /applications/{id}/status": {
+		200: {
+			Type:     "object",
+			Required: []string{"message", "status"},
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+					Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id}/traffics response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id}/traffics response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id}/traffics response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id}/traffics response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id}/traffics response 500 left permissive
+	"GET /applications/{id}/traffics": {
+		200: {
+			Type:     "object",
+			Required: []string{"data"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"is_latest_version", "percent", "version_name"},
+						Properties: map[string]*core.BodySchema{
+							"is_latest_version": {
+								Type: "boolean",
+							},
+							"percent": {
+								Type: "integer",
+							},
+							"version_name": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"meta": {
+					Type:     "object",
+					Nullable: true,
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id}/versions response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions response 500 left permissive
+	"GET /applications/{id}/versions": {
+		200: {
+			Type:     "object",
+			Required: []string{"data", "meta"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created_at", "id", "name", "status"},
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"id": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"status": {
+								Type: "string",
+								Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+							},
+						},
+					},
+				},
+				"meta": {
+					Type:     "object",
+					Required: []string{"object_total", "page_num", "page_size", "sort_field", "sort_order"},
+					Properties: map[string]*core.BodySchema{
+						"object_total": {
+							Type: "integer",
+						},
+						"page_num": {
+							Type: "integer",
+						},
+						"page_size": {
+							Type: "integer",
+						},
+						"sort_field": {
+							Type: "string",
+						},
+						"sort_order": {
+							Type: "string",
+							Enum: []any{"asc", "desc"},
+						},
+					},
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id} response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id} response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id} response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id} response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id} response 500 left permissive
+	"GET /applications/{id}/versions/{version_id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"components", "created_at", "id", "max_scale", "min_scale", "name", "port", "status", "timeout_seconds"},
+			Properties: map[string]*core.BodySchema{
+				"components": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"deploy_source", "max_cpu", "max_memory", "name"},
+						Properties: map[string]*core.BodySchema{
+							"deploy_source": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"container_registry": {
+										Type:     "object",
+										Required: []string{"image"},
+										Properties: map[string]*core.BodySchema{
+											"image": {
+												Type: "string",
+											},
+											"server": {
+												Type: "string",
+											},
+											"username": {
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+							"env": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
+										},
+										"value": {
+											Type: "string",
+										},
+									},
+								},
+							},
+							"max_cpu": {
+								Type: "string",
+							},
+							"max_memory": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"probe": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"http_get": {
+										Type:     "object",
+										Nullable: true,
+										Required: []string{"path", "port"},
+										Properties: map[string]*core.BodySchema{
+											"headers": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type: "object",
+													Properties: map[string]*core.BodySchema{
+														"name": {
+															Type: "string",
+														},
+														"value": {
+															Type: "string",
+														},
+													},
+												},
+											},
+											"path": {
+												Type: "string",
+											},
+											"port": {
+												Type:    "integer",
+												Minimum: core.Float64Ptr(1),
+												Maximum: core.Float64Ptr(65535),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type: "string",
+				},
+				"max_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(10),
+				},
+				"min_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(10),
+				},
+				"name": {
+					Type: "string",
+				},
+				"port": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(65535),
+				},
+				"scale_target_concurrency": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(50),
+					Maximum: core.Float64Ptr(200),
+				},
+				"status": {
+					Type: "string",
+					Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+				},
+				"timeout_seconds": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(300),
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id}/status response 400 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id}/status response 401 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id}/status response 403 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id}/status response 404 left permissive
+	// NOTE: oneOf at GET /applications/{id}/versions/{version_id}/status response 500 left permissive
+	"GET /applications/{id}/versions/{version_id}/status": {
+		200: {
+			Type:     "object",
+			Required: []string{"message", "status"},
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+					Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at GET /user response 401 left permissive
+	// NOTE: oneOf at GET /user response 403 left permissive
+	// NOTE: oneOf at GET /user response 404 left permissive
+	// NOTE: oneOf at GET /user response 500 left permissive
+	"GET /user": {
+		200: {
+			Type:     "object",
+			Required: []string{"limit"},
+			Properties: map[string]*core.BodySchema{
+				"limit": {
+					Type:     "object",
+					Required: []string{"application_count"},
+					Properties: map[string]*core.BodySchema{
+						"application_count": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at PATCH /applications/{id} response 400 left permissive
+	// NOTE: oneOf at PATCH /applications/{id} response 401 left permissive
+	// NOTE: oneOf at PATCH /applications/{id} response 403 left permissive
+	// NOTE: oneOf at PATCH /applications/{id} response 404 left permissive
+	// NOTE: oneOf at PATCH /applications/{id} response 409 left permissive
+	// NOTE: oneOf at PATCH /applications/{id} response 500 left permissive
+	"PATCH /applications/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"components", "id", "max_scale", "min_scale", "name", "port", "public_url", "resource_id", "status", "timeout_seconds", "updated_at"},
+			Properties: map[string]*core.BodySchema{
+				"components": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"deploy_source", "max_cpu", "max_memory", "name"},
+						Properties: map[string]*core.BodySchema{
+							"deploy_source": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"container_registry": {
+										Type:     "object",
+										Required: []string{"image"},
+										Properties: map[string]*core.BodySchema{
+											"image": {
+												Type: "string",
+											},
+											"server": {
+												Type: "string",
+											},
+											"username": {
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+							"env": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
+										},
+										"value": {
+											Type: "string",
+										},
+									},
+								},
+							},
+							"max_cpu": {
+								Type: "string",
+							},
+							"max_memory": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"probe": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"http_get": {
+										Type:     "object",
+										Nullable: true,
+										Required: []string{"path", "port"},
+										Properties: map[string]*core.BodySchema{
+											"headers": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type: "object",
+													Properties: map[string]*core.BodySchema{
+														"name": {
+															Type: "string",
+														},
+														"value": {
+															Type: "string",
+														},
+													},
+												},
+											},
+											"path": {
+												Type: "string",
+											},
+											"port": {
+												Type:    "integer",
+												Minimum: core.Float64Ptr(1),
+												Maximum: core.Float64Ptr(65535),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"id": {
+					Type: "string",
+				},
+				"max_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(10),
+				},
+				"min_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(10),
+				},
+				"name": {
+					Type: "string",
+				},
+				"port": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(65535),
+				},
+				"public_url": {
+					Type: "string",
+				},
+				"resource_id": {
+					Type: "string",
+				},
+				"scale_target_concurrency": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(50),
+					Maximum: core.Float64Ptr(200),
+				},
+				"status": {
+					Type: "string",
+					Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+				},
+				"timeout_seconds": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(300),
+				},
+				"updated_at": {
+					Type: "string",
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		409: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at PATCH /applications/{id}/packet_filter response 400 left permissive
+	// NOTE: oneOf at PATCH /applications/{id}/packet_filter response 401 left permissive
+	// NOTE: oneOf at PATCH /applications/{id}/packet_filter response 403 left permissive
+	// NOTE: oneOf at PATCH /applications/{id}/packet_filter response 404 left permissive
+	// NOTE: oneOf at PATCH /applications/{id}/packet_filter response 500 left permissive
+	"PATCH /applications/{id}/packet_filter": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_enabled", "settings"},
+			Properties: map[string]*core.BodySchema{
+				"is_enabled": {
+					Type: "boolean",
+				},
+				"settings": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"from_ip", "from_ip_prefix_length"},
+						Properties: map[string]*core.BodySchema{
+							"from_ip": {
+								Type: "string",
+							},
+							"from_ip_prefix_length": {
+								Type: "integer",
+							},
+						},
+					},
+					MaxItems: core.IntPtr(10),
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at POST /applications response 400 left permissive
+	// NOTE: oneOf at POST /applications response 401 left permissive
+	// NOTE: oneOf at POST /applications response 403 left permissive
+	// NOTE: oneOf at POST /applications response 409 left permissive
+	// NOTE: oneOf at POST /applications response 500 left permissive
+	"POST /applications": {
+		201: {
+			Type:     "object",
+			Required: []string{"components", "created_at", "id", "max_scale", "min_scale", "name", "port", "public_url", "resource_id", "status", "timeout_seconds"},
+			Properties: map[string]*core.BodySchema{
+				"components": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"deploy_source", "max_cpu", "max_memory", "name"},
+						Properties: map[string]*core.BodySchema{
+							"deploy_source": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"container_registry": {
+										Type:     "object",
+										Required: []string{"image"},
+										Properties: map[string]*core.BodySchema{
+											"image": {
+												Type: "string",
+											},
+											"server": {
+												Type: "string",
+											},
+											"username": {
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+							"env": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
+										},
+										"value": {
+											Type: "string",
+										},
+									},
+								},
+							},
+							"max_cpu": {
+								Type: "string",
+							},
+							"max_memory": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"probe": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"http_get": {
+										Type:     "object",
+										Nullable: true,
+										Required: []string{"path", "port"},
+										Properties: map[string]*core.BodySchema{
+											"headers": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type: "object",
+													Properties: map[string]*core.BodySchema{
+														"name": {
+															Type: "string",
+														},
+														"value": {
+															Type: "string",
+														},
+													},
+												},
+											},
+											"path": {
+												Type: "string",
+											},
+											"port": {
+												Type:    "integer",
+												Minimum: core.Float64Ptr(1),
+												Maximum: core.Float64Ptr(65535),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type: "string",
+				},
+				"max_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(10),
+				},
+				"min_scale": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(10),
+				},
+				"name": {
+					Type: "string",
+				},
+				"port": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(65535),
+				},
+				"public_url": {
+					Type: "string",
+				},
+				"resource_id": {
+					Type: "string",
+				},
+				"scale_target_concurrency": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(50),
+					Maximum: core.Float64Ptr(200),
+				},
+				"status": {
+					Type: "string",
+					Enum: []any{"Healthy", "UnHealthy", "Deploying"},
+				},
+				"timeout_seconds": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+					Maximum: core.Float64Ptr(300),
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		409: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at POST /user response 401 left permissive
+	// NOTE: oneOf at POST /user response 403 left permissive
+	// NOTE: oneOf at POST /user response 409 left permissive
+	// NOTE: oneOf at POST /user response 500 left permissive
+	"POST /user": {
+		201: {
+			Type:     "object",
+			Required: []string{"limit"},
+			Properties: map[string]*core.BodySchema{
+				"limit": {
+					Type:     "object",
+					Required: []string{"application_count"},
+					Properties: map[string]*core.BodySchema{
+						"application_count": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: nil,
+		403: nil,
+		409: nil,
+		500: nil,
+	},
+	// NOTE: oneOf at PUT /applications/{id}/traffics response 400 left permissive
+	// NOTE: oneOf at PUT /applications/{id}/traffics response 401 left permissive
+	// NOTE: oneOf at PUT /applications/{id}/traffics response 403 left permissive
+	// NOTE: oneOf at PUT /applications/{id}/traffics response 404 left permissive
+	// NOTE: oneOf at PUT /applications/{id}/traffics response 500 left permissive
+	"PUT /applications/{id}/traffics": {
+		200: {
+			Type:     "object",
+			Required: []string{"data", "meta"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"is_latest_version", "percent", "version_name"},
+						Properties: map[string]*core.BodySchema{
+							"is_latest_version": {
+								Type: "boolean",
+							},
+							"percent": {
+								Type: "integer",
+							},
+							"version_name": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"meta": {
+					Type:     "object",
+					Nullable: true,
+				},
+			},
+		},
+		400: nil,
+		401: nil,
+		403: nil,
+		404: nil,
+		500: nil,
+	},
+}

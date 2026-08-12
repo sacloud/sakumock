@@ -81,7 +81,11 @@ type Server struct {
 	// validator rejects request bodies violating the spec-derived constraints
 	// in the generated bodySchemas table (validate_gen.go).
 	validator *core.BodyValidator
-	logger    *slog.Logger
+	// respValidator checks handler responses against the generated
+	// responseSchemas table. Violations never alter the response: they are
+	// logged at Warn and inspectable via GET /_sakumock/spec-violations.
+	respValidator *core.ResponseValidator
+	logger        *slog.Logger
 	// dataPlane is the telemetry ingest listener when --enable-data-plane is set;
 	// nil otherwise (its methods are nil-safe).
 	dataPlane *dataPlane
@@ -93,10 +97,16 @@ func NewHandler(cfg Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	base := cfg.logger
+	if base == nil {
+		base = slog.Default()
+	}
+	logger := base.With("service", cfg.Name())
 	s := &Server{
 		fault:   fault,
 		store:   NewStore(),
 		latency: cfg.Latency,
+		logger:  logger,
 		rateLimiter: core.NewRateLimiter(
 			cfg.RateLimit,
 			core.WithRateLimitWindow(cfg.RateLimitWindow),
@@ -104,16 +114,12 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator: core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		validator:     core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		respValidator: core.NewResponseValidator(responseSchemas, logger),
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
 	}
-	base := cfg.logger
-	if base == nil {
-		base = slog.Default()
-	}
-	s.logger = base.With("service", cfg.Name())
 	s.mux = s.buildMux()
 	if cfg.EnableDataPlane {
 		dp, err := startDataPlane(cfg, s.logger)
@@ -139,6 +145,12 @@ func NewTestServer(cfg Config) *Server {
 // TestURL returns the base URL of the test server.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
+}
+
+// SpecViolations returns the OpenAPI spec violations recorded so far by the
+// response validator (also served at GET /_sakumock/spec-violations).
+func (s *Server) SpecViolations() []core.SpecViolation {
+	return s.respValidator.Violations()
 }
 
 // DataPlaneAddr returns the telemetry data plane's listen address, or "" when

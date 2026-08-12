@@ -973,3 +973,6837 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
+		204: nil,
+	},
+	"DELETE /alerts/projects/{project_resource_id}/notification-routings/{uid}/": {
+		204: nil,
+	},
+	"DELETE /alerts/projects/{project_resource_id}/notification-targets/{uid}/": {
+		204: nil,
+	},
+	"DELETE /alerts/projects/{project_resource_id}/rules/{uid}/": {
+		204: nil,
+	},
+	"DELETE /alerts/projects/{resource_id}/": {
+		204: nil,
+	},
+	"DELETE /dashboards/projects/{resource_id}/": {
+		204: nil,
+	},
+	"DELETE /logs/routings/{uid}/": {
+		204: nil,
+	},
+	"DELETE /logs/storages/{log_resource_id}/keys/{uid}/": {
+		204: nil,
+	},
+	"DELETE /logs/storages/{resource_id}/": {
+		204: nil,
+	},
+	"DELETE /metrics/routings/{uid}/": {
+		204: nil,
+	},
+	"DELETE /metrics/storages/{metrics_resource_id}/keys/{uid}/": {
+		204: nil,
+	},
+	"DELETE /metrics/storages/{resource_id}/": {
+		204: nil,
+	},
+	"DELETE /traces/storages/{resource_id}/": {
+		204: nil,
+	},
+	"DELETE /traces/storages/{trace_resource_id}/keys/{uid}/": {
+		204: nil,
+	},
+	"GET /alerts/projects/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"account_id", "created_at", "icon", "id", "resource_id", "tags"},
+						Properties: map[string]*core.BodySchema{
+							"account_id": {
+								Type: "string",
+							},
+							"created_at": {
+								Type: "string",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(512),
+							},
+							"icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"id": {
+										Type: "string",
+									},
+								},
+							},
+							"id": {
+								Type: "integer",
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(64),
+							},
+							"resource_id": {
+								Type:     "integer",
+								Nullable: true,
+								Minimum:  core.Float64Ptr(0),
+								Maximum:  core.Float64Ptr(999999999999),
+							},
+							"tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/histories/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"labels", "open", "project_id", "rule_uid", "severity", "startsAt", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"endsAt": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"labels": {
+								Type:      "string",
+								MaxLength: core.IntPtr(4096),
+							},
+							"open": {
+								Type: "boolean",
+							},
+							"project_id": {
+								Type: "integer",
+							},
+							"query": {
+								Type:      "string",
+								MaxLength: core.IntPtr(4096),
+							},
+							"rule_uid": {
+								Type: "string",
+							},
+							"severity": {
+								Type: "string",
+								Enum: []any{"warning", "critical"},
+							},
+							"startsAt": {
+								Type: "string",
+							},
+							"threshold": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"uid": {
+								Type: "string",
+							},
+							"value": {
+								Type: "number",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/histories/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"labels", "open", "project_id", "rule_uid", "severity", "startsAt", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"endsAt": {
+					Type:     "string",
+					Nullable: true,
+				},
+				"labels": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"open": {
+					Type: "boolean",
+				},
+				"project_id": {
+					Type: "integer",
+				},
+				"query": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"rule_uid": {
+					Type: "string",
+				},
+				"severity": {
+					Type: "string",
+					Enum: []any{"warning", "critical"},
+				},
+				"startsAt": {
+					Type: "string",
+				},
+				"threshold": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"uid": {
+					Type: "string",
+				},
+				"value": {
+					Type: "number",
+				},
+			},
+		},
+	},
+	// NOTE: anyOf at GET /alerts/projects/{project_resource_id}/log-measure-rules/ response 200.results[].rule.query.matchers[] left permissive
+	"GET /alerts/projects/{project_resource_id}/log-measure-rules/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created_at", "id", "log_storage", "metrics_storage", "project_id", "rule", "uid", "updated_at"},
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"id": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(999999999999),
+							},
+							"log_storage": {
+								Type:     "object",
+								Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+								Properties: map[string]*core.BodySchema{
+									"account_id": {
+										Type: "string",
+									},
+									"classification": {
+										Type: "string",
+										Enum: []any{"shared", "dedicated"},
+									},
+									"created_at": {
+										Type: "string",
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(512),
+									},
+									"endpoints": {
+										Type:     "object",
+										Required: []string{"ingester"},
+										Properties: map[string]*core.BodySchema{
+											"ingester": {
+												Type:     "object",
+												Required: []string{"address"},
+												Properties: map[string]*core.BodySchema{
+													"address": {
+														Type: "string",
+													},
+													"insecure": {
+														Type: "boolean",
+													},
+												},
+											},
+										},
+									},
+									"expire_day": {
+										Type: "integer",
+									},
+									"icon": {
+										Type:     "object",
+										Nullable: true,
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+										},
+									},
+									"id": {
+										Type: "integer",
+									},
+									"is_system": {
+										Type: "boolean",
+									},
+									"kms_key_id": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(0),
+										Maximum:  core.Float64Ptr(999999999999),
+									},
+									"name": {
+										Type:      "string",
+										MaxLength: core.IntPtr(64),
+									},
+									"resource_id": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(0),
+										Maximum:  core.Float64Ptr(999999999999),
+									},
+									"service_principal_id": {
+										Type:     "integer",
+										Nullable: true,
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"usage": {
+										Type:     "object",
+										Required: []string{"log_measure_rules", "log_routings"},
+										Properties: map[string]*core.BodySchema{
+											"log_measure_rules": {
+												Type: "integer",
+											},
+											"log_routings": {
+												Type: "integer",
+											},
+										},
+									},
+								},
+							},
+							"metrics_storage": {
+								Type:     "object",
+								Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+								Properties: map[string]*core.BodySchema{
+									"account_id": {
+										Type: "string",
+									},
+									"created_at": {
+										Type: "string",
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(512),
+									},
+									"endpoints": {
+										Type:     "object",
+										Required: []string{"address"},
+										Properties: map[string]*core.BodySchema{
+											"address": {
+												Type: "string",
+											},
+										},
+									},
+									"icon": {
+										Type:     "object",
+										Nullable: true,
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+										},
+									},
+									"id": {
+										Type: "integer",
+									},
+									"is_system": {
+										Type: "boolean",
+									},
+									"name": {
+										Type:      "string",
+										MaxLength: core.IntPtr(64),
+									},
+									"resource_id": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(0),
+										Maximum:  core.Float64Ptr(999999999999),
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"updated_at": {
+										Type: "string",
+									},
+									"usage": {
+										Type:     "object",
+										Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+										Properties: map[string]*core.BodySchema{
+											"alert_rules": {
+												Type: "integer",
+											},
+											"log_measure_rules": {
+												Type: "integer",
+											},
+											"metrics_routings": {
+												Type: "integer",
+											},
+										},
+									},
+								},
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+								Pattern:   "^[a-z\\d_-]*$",
+							},
+							"project_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"rule": {
+								Type:     "object",
+								Required: []string{"query", "version"},
+								Properties: map[string]*core.BodySchema{
+									"query": {
+										Type:     "object",
+										Required: []string{"matchers"},
+										Properties: map[string]*core.BodySchema{
+											"matchers": {
+												Type: "array",
+											},
+										},
+									},
+									"version": {
+										Type: "string",
+										Enum: []any{"v1"},
+									},
+								},
+							},
+							"uid": {
+								Type: "string",
+							},
+							"updated_at": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	// NOTE: anyOf at GET /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/ response 200.rule.query.matchers[] left permissive
+	"GET /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "log_storage", "metrics_storage", "project_id", "rule", "uid", "updated_at"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+					Pattern:   "^[a-z\\d_-]*$",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"rule": {
+					Type:     "object",
+					Required: []string{"query", "version"},
+					Properties: map[string]*core.BodySchema{
+						"query": {
+							Type:     "object",
+							Required: []string{"matchers"},
+							Properties: map[string]*core.BodySchema{
+								"matchers": {
+									Type: "array",
+								},
+							},
+						},
+						"version": {
+							Type: "string",
+							Enum: []any{"v1"},
+						},
+					},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/notification-routings/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"match_labels", "notification_target", "order", "project_id", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"match_labels": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"name", "value"},
+									Properties: map[string]*core.BodySchema{
+										"name": {
+											Type:      "string",
+											MaxLength: core.IntPtr(256),
+										},
+										"value": {
+											Type:      "string",
+											MaxLength: core.IntPtr(256),
+										},
+									},
+								},
+							},
+							"notification_target": {
+								Type:     "object",
+								Required: []string{"config", "project_id", "service_type", "uid"},
+								Properties: map[string]*core.BodySchema{
+									"config": {
+										Type: "object",
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(100),
+									},
+									"project_id": {
+										Type:     "integer",
+										Nullable: true,
+									},
+									"service_type": {
+										Type: "string",
+										Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+									},
+									"uid": {
+										Type: "string",
+									},
+									"url": {
+										Type:      "string",
+										MaxLength: core.IntPtr(1024),
+									},
+								},
+							},
+							"order": {
+								Type: "integer",
+							},
+							"project_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"resend_interval_minutes": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(720),
+							},
+							"uid": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/notification-routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"match_labels", "notification_target", "order", "project_id", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"match_labels": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name", "value"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"value": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+						},
+					},
+				},
+				"notification_target": {
+					Type:     "object",
+					Required: []string{"config", "project_id", "service_type", "uid"},
+					Properties: map[string]*core.BodySchema{
+						"config": {
+							Type: "object",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(100),
+						},
+						"project_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"service_type": {
+							Type: "string",
+							Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+						},
+						"uid": {
+							Type: "string",
+						},
+						"url": {
+							Type:      "string",
+							MaxLength: core.IntPtr(1024),
+						},
+					},
+				},
+				"order": {
+					Type: "integer",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"resend_interval_minutes": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(720),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/notification-targets/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"config", "project_id", "service_type", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"config": {
+								Type: "object",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(100),
+							},
+							"project_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"service_type": {
+								Type: "string",
+								Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+							},
+							"uid": {
+								Type: "string",
+							},
+							"url": {
+								Type:      "string",
+								MaxLength: core.IntPtr(1024),
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/notification-targets/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"config", "project_id", "service_type", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"config": {
+					Type: "object",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(100),
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"service_type": {
+					Type: "string",
+					Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"url": {
+					Type:      "string",
+					MaxLength: core.IntPtr(1024),
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/rules/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"metrics_storage_id", "open", "project_id", "query", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"enabled_critical": {
+								Type: "boolean",
+							},
+							"enabled_warning": {
+								Type: "boolean",
+							},
+							"format": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"metrics_storage_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"open": {
+								Type: "boolean",
+							},
+							"project_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"query": {
+								Type:      "string",
+								MaxLength: core.IntPtr(4096),
+							},
+							"template": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"threshold_critical": {
+								Type:      "string",
+								Nullable:  true,
+								MaxLength: core.IntPtr(256),
+							},
+							"threshold_duration_critical": {
+								Type: "integer",
+							},
+							"threshold_duration_warning": {
+								Type: "integer",
+							},
+							"threshold_warning": {
+								Type:      "string",
+								Nullable:  true,
+								MaxLength: core.IntPtr(256),
+							},
+							"uid": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/rules/{rule_uid}/histories/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"labels", "open", "project_id", "rule_uid", "severity", "startsAt", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"endsAt": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"labels": {
+								Type:      "string",
+								MaxLength: core.IntPtr(4096),
+							},
+							"open": {
+								Type: "boolean",
+							},
+							"project_id": {
+								Type: "integer",
+							},
+							"query": {
+								Type:      "string",
+								MaxLength: core.IntPtr(4096),
+							},
+							"rule_uid": {
+								Type: "string",
+							},
+							"severity": {
+								Type: "string",
+								Enum: []any{"warning", "critical"},
+							},
+							"startsAt": {
+								Type: "string",
+							},
+							"threshold": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"uid": {
+								Type: "string",
+							},
+							"value": {
+								Type: "number",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/rules/{rule_uid}/histories/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"labels", "open", "project_id", "rule_uid", "severity", "startsAt", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"endsAt": {
+					Type:     "string",
+					Nullable: true,
+				},
+				"labels": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"open": {
+					Type: "boolean",
+				},
+				"project_id": {
+					Type: "integer",
+				},
+				"query": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"rule_uid": {
+					Type: "string",
+				},
+				"severity": {
+					Type: "string",
+					Enum: []any{"warning", "critical"},
+				},
+				"startsAt": {
+					Type: "string",
+				},
+				"threshold": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"uid": {
+					Type: "string",
+				},
+				"value": {
+					Type: "number",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{project_resource_id}/rules/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"metrics_storage_id", "open", "project_id", "query", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"enabled_critical": {
+					Type: "boolean",
+				},
+				"enabled_warning": {
+					Type: "boolean",
+				},
+				"format": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"metrics_storage_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"open": {
+					Type: "boolean",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"query": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"template": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_critical": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_duration_critical": {
+					Type: "integer",
+				},
+				"threshold_duration_warning": {
+					Type: "integer",
+				},
+				"threshold_warning": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /alerts/projects/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "is_ok", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"GET /dashboards/projects/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"account_id", "created_at", "icon", "id", "resource_id", "tags"},
+						Properties: map[string]*core.BodySchema{
+							"account_id": {
+								Type: "string",
+							},
+							"created_at": {
+								Type: "string",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(512),
+							},
+							"icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"id": {
+										Type: "string",
+									},
+								},
+							},
+							"id": {
+								Type: "integer",
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(64),
+							},
+							"resource_id": {
+								Type:     "integer",
+								Nullable: true,
+								Minimum:  core.Float64Ptr(0),
+								Maximum:  core.Float64Ptr(999999999999),
+							},
+							"tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /dashboards/projects/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "is_ok", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"GET /logs/routings/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created_at", "id", "log_storage", "publisher", "uid", "updated_at", "variant"},
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"id": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(999999999999),
+							},
+							"log_storage": {
+								Type:     "object",
+								Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+								Properties: map[string]*core.BodySchema{
+									"account_id": {
+										Type: "string",
+									},
+									"classification": {
+										Type: "string",
+										Enum: []any{"shared", "dedicated"},
+									},
+									"created_at": {
+										Type: "string",
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(512),
+									},
+									"endpoints": {
+										Type:     "object",
+										Required: []string{"ingester"},
+										Properties: map[string]*core.BodySchema{
+											"ingester": {
+												Type:     "object",
+												Required: []string{"address"},
+												Properties: map[string]*core.BodySchema{
+													"address": {
+														Type: "string",
+													},
+													"insecure": {
+														Type: "boolean",
+													},
+												},
+											},
+										},
+									},
+									"expire_day": {
+										Type: "integer",
+									},
+									"icon": {
+										Type:     "object",
+										Nullable: true,
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+										},
+									},
+									"id": {
+										Type: "integer",
+									},
+									"is_system": {
+										Type: "boolean",
+									},
+									"kms_key_id": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(0),
+										Maximum:  core.Float64Ptr(999999999999),
+									},
+									"name": {
+										Type:      "string",
+										MaxLength: core.IntPtr(64),
+									},
+									"resource_id": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(0),
+										Maximum:  core.Float64Ptr(999999999999),
+									},
+									"service_principal_id": {
+										Type:     "integer",
+										Nullable: true,
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"usage": {
+										Type:     "object",
+										Required: []string{"log_measure_rules", "log_routings"},
+										Properties: map[string]*core.BodySchema{
+											"log_measure_rules": {
+												Type: "integer",
+											},
+											"log_routings": {
+												Type: "integer",
+											},
+										},
+									},
+								},
+							},
+							"publisher": {
+								Type:     "object",
+								Required: []string{"code", "variants"},
+								Properties: map[string]*core.BodySchema{
+									"code": {
+										Type:      "string",
+										MaxLength: core.IntPtr(256),
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(256),
+									},
+									"variants": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"label", "name", "storage", "system"},
+											Properties: map[string]*core.BodySchema{
+												"label": {
+													Type: "string",
+												},
+												"metrics_prefix": {
+													Type:     "string",
+													Nullable: true,
+												},
+												"name": {
+													Type: "string",
+												},
+												"storage": {
+													Type: "string",
+													Enum: []any{"metrics", "logs"},
+												},
+												"system": {
+													Type: "string",
+													Enum: []any{"disallow", "required"},
+												},
+											},
+										},
+									},
+								},
+							},
+							"resource_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"uid": {
+								Type: "string",
+							},
+							"updated_at": {
+								Type: "string",
+							},
+							"variant": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /logs/routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "log_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /logs/storages/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+						Properties: map[string]*core.BodySchema{
+							"account_id": {
+								Type: "string",
+							},
+							"classification": {
+								Type: "string",
+								Enum: []any{"shared", "dedicated"},
+							},
+							"created_at": {
+								Type: "string",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(512),
+							},
+							"endpoints": {
+								Type:     "object",
+								Required: []string{"ingester"},
+								Properties: map[string]*core.BodySchema{
+									"ingester": {
+										Type:     "object",
+										Required: []string{"address"},
+										Properties: map[string]*core.BodySchema{
+											"address": {
+												Type: "string",
+											},
+											"insecure": {
+												Type: "boolean",
+											},
+										},
+									},
+								},
+							},
+							"expire_day": {
+								Type: "integer",
+							},
+							"icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"id": {
+										Type: "string",
+									},
+								},
+							},
+							"id": {
+								Type: "integer",
+							},
+							"is_system": {
+								Type: "boolean",
+							},
+							"kms_key_id": {
+								Type:     "integer",
+								Nullable: true,
+								Minimum:  core.Float64Ptr(0),
+								Maximum:  core.Float64Ptr(999999999999),
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(64),
+							},
+							"resource_id": {
+								Type:     "integer",
+								Nullable: true,
+								Minimum:  core.Float64Ptr(0),
+								Maximum:  core.Float64Ptr(999999999999),
+							},
+							"service_principal_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+							"usage": {
+								Type:     "object",
+								Required: []string{"log_measure_rules", "log_routings"},
+								Properties: map[string]*core.BodySchema{
+									"log_measure_rules": {
+										Type: "integer",
+									},
+									"log_routings": {
+										Type: "integer",
+									},
+								},
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /logs/storages/{log_resource_id}/keys/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"id", "secret", "token", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"id": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(999999999999),
+							},
+							"secret": {
+								Type: "string",
+							},
+							"token": {
+								Type: "string",
+							},
+							"uid": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /logs/storages/{log_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /logs/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_ok", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"expire_day": {
+					Type: "integer",
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"log_measure_rules", "log_routings"},
+					Properties: map[string]*core.BodySchema{
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"log_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /logs/storages/{resource_id}/stats/daily/": {
+		200: {
+			Type:     "object",
+			Required: []string{"usages"},
+			Properties: map[string]*core.BodySchema{
+				"usages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"date", "ingested_bytes", "ingested_rows", "stored_bytes", "timestamp"},
+						Properties: map[string]*core.BodySchema{
+							"date": {
+								Type: "string",
+							},
+							"ingested_bytes": {
+								Type: "integer",
+							},
+							"ingested_rows": {
+								Type: "integer",
+							},
+							"stored_bytes": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"timestamp": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /logs/storages/{resource_id}/stats/monthly/": {
+		200: {
+			Type:     "object",
+			Required: []string{"usages"},
+			Properties: map[string]*core.BodySchema{
+				"usages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"ingested_bytes", "ingested_rows", "max_stored_bytes", "month", "timestamp", "year"},
+						Properties: map[string]*core.BodySchema{
+							"ingested_bytes": {
+								Type: "integer",
+							},
+							"ingested_rows": {
+								Type: "integer",
+							},
+							"max_stored_bytes": {
+								Type: "integer",
+							},
+							"month": {
+								Type: "integer",
+							},
+							"timestamp": {
+								Type: "string",
+							},
+							"year": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /management/limits/": {
+		200: {
+			Type:     "object",
+			Required: []string{"alerts", "dashboards", "logs", "metrics", "traces"},
+			Properties: map[string]*core.BodySchema{
+				"alerts": {
+					Type:     "object",
+					Required: []string{"max_user_count"},
+					Properties: map[string]*core.BodySchema{
+						"max_user_count": {
+							Type: "integer",
+						},
+						"max_user_dedicated_count": {
+							Type: "integer",
+						},
+					},
+				},
+				"dashboards": {
+					Type:     "object",
+					Required: []string{"max_user_count"},
+					Properties: map[string]*core.BodySchema{
+						"max_user_count": {
+							Type: "integer",
+						},
+						"max_user_dedicated_count": {
+							Type: "integer",
+						},
+					},
+				},
+				"logs": {
+					Type:     "object",
+					Required: []string{"max_user_count"},
+					Properties: map[string]*core.BodySchema{
+						"max_user_count": {
+							Type: "integer",
+						},
+						"max_user_dedicated_count": {
+							Type: "integer",
+						},
+					},
+				},
+				"metrics": {
+					Type:     "object",
+					Required: []string{"max_user_count"},
+					Properties: map[string]*core.BodySchema{
+						"max_user_count": {
+							Type: "integer",
+						},
+						"max_user_dedicated_count": {
+							Type: "integer",
+						},
+					},
+				},
+				"traces": {
+					Type:     "object",
+					Required: []string{"max_user_count"},
+					Properties: map[string]*core.BodySchema{
+						"max_user_count": {
+							Type: "integer",
+						},
+						"max_user_dedicated_count": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /management/provisioning/state/": {
+		200: {
+			Type:     "object",
+			Required: []string{"logs", "metrics"},
+			Properties: map[string]*core.BodySchema{
+				"logs": {
+					Type:     "object",
+					Required: []string{"system_exist", "user_exist"},
+					Properties: map[string]*core.BodySchema{
+						"system_exist": {
+							Type: "boolean",
+						},
+						"user_exist": {
+							Type: "boolean",
+						},
+					},
+				},
+				"metrics": {
+					Type:     "object",
+					Required: []string{"system_exist", "user_exist"},
+					Properties: map[string]*core.BodySchema{
+						"system_exist": {
+							Type: "boolean",
+						},
+						"user_exist": {
+							Type: "boolean",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /metrics/routings/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created_at", "id", "metrics_storage", "publisher", "uid", "updated_at", "variant"},
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"id": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(999999999999),
+							},
+							"metrics_storage": {
+								Type:     "object",
+								Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+								Properties: map[string]*core.BodySchema{
+									"account_id": {
+										Type: "string",
+									},
+									"created_at": {
+										Type: "string",
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(512),
+									},
+									"endpoints": {
+										Type:     "object",
+										Required: []string{"address"},
+										Properties: map[string]*core.BodySchema{
+											"address": {
+												Type: "string",
+											},
+										},
+									},
+									"icon": {
+										Type:     "object",
+										Nullable: true,
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+										},
+									},
+									"id": {
+										Type: "integer",
+									},
+									"is_system": {
+										Type: "boolean",
+									},
+									"name": {
+										Type:      "string",
+										MaxLength: core.IntPtr(64),
+									},
+									"resource_id": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(0),
+										Maximum:  core.Float64Ptr(999999999999),
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"updated_at": {
+										Type: "string",
+									},
+									"usage": {
+										Type:     "object",
+										Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+										Properties: map[string]*core.BodySchema{
+											"alert_rules": {
+												Type: "integer",
+											},
+											"log_measure_rules": {
+												Type: "integer",
+											},
+											"metrics_routings": {
+												Type: "integer",
+											},
+										},
+									},
+								},
+							},
+							"publisher": {
+								Type:     "object",
+								Required: []string{"code", "variants"},
+								Properties: map[string]*core.BodySchema{
+									"code": {
+										Type:      "string",
+										MaxLength: core.IntPtr(256),
+									},
+									"description": {
+										Type:      "string",
+										MaxLength: core.IntPtr(256),
+									},
+									"variants": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"label", "name", "storage", "system"},
+											Properties: map[string]*core.BodySchema{
+												"label": {
+													Type: "string",
+												},
+												"metrics_prefix": {
+													Type:     "string",
+													Nullable: true,
+												},
+												"name": {
+													Type: "string",
+												},
+												"storage": {
+													Type: "string",
+													Enum: []any{"metrics", "logs"},
+												},
+												"system": {
+													Type: "string",
+													Enum: []any{"disallow", "required"},
+												},
+											},
+										},
+									},
+								},
+							},
+							"resource_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"uid": {
+								Type: "string",
+							},
+							"updated_at": {
+								Type: "string",
+							},
+							"variant": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /metrics/routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "metrics_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /metrics/storages/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+						Properties: map[string]*core.BodySchema{
+							"account_id": {
+								Type: "string",
+							},
+							"created_at": {
+								Type: "string",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(512),
+							},
+							"endpoints": {
+								Type:     "object",
+								Required: []string{"address"},
+								Properties: map[string]*core.BodySchema{
+									"address": {
+										Type: "string",
+									},
+								},
+							},
+							"icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"id": {
+										Type: "string",
+									},
+								},
+							},
+							"id": {
+								Type: "integer",
+							},
+							"is_system": {
+								Type: "boolean",
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(64),
+							},
+							"resource_id": {
+								Type:     "integer",
+								Nullable: true,
+								Minimum:  core.Float64Ptr(0),
+								Maximum:  core.Float64Ptr(999999999999),
+							},
+							"tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+							"updated_at": {
+								Type: "string",
+							},
+							"usage": {
+								Type:     "object",
+								Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+								Properties: map[string]*core.BodySchema{
+									"alert_rules": {
+										Type: "integer",
+									},
+									"log_measure_rules": {
+										Type: "integer",
+									},
+									"metrics_routings": {
+										Type: "integer",
+									},
+								},
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /metrics/storages/{metrics_resource_id}/keys/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"id", "secret", "token", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"id": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(999999999999),
+							},
+							"secret": {
+								Type: "string",
+							},
+							"token": {
+								Type: "string",
+							},
+							"uid": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /metrics/storages/{metrics_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /metrics/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_ok", "is_system", "resource_id", "tags", "updated_at", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"address"},
+					Properties: map[string]*core.BodySchema{
+						"address": {
+							Type: "string",
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+					Properties: map[string]*core.BodySchema{
+						"alert_rules": {
+							Type: "integer",
+						},
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"metrics_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /metrics/storages/{resource_id}/stats/daily/": {
+		200: {
+			Type:     "object",
+			Required: []string{"usages"},
+			Properties: map[string]*core.BodySchema{
+				"usages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"date", "ingested_rows", "timestamp"},
+						Properties: map[string]*core.BodySchema{
+							"date": {
+								Type: "string",
+							},
+							"ingested_rows": {
+								Type: "integer",
+							},
+							"timestamp": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /metrics/storages/{resource_id}/stats/monthly/": {
+		200: {
+			Type:     "object",
+			Required: []string{"usages"},
+			Properties: map[string]*core.BodySchema{
+				"usages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"ingested_rows", "month", "timestamp", "year"},
+						Properties: map[string]*core.BodySchema{
+							"ingested_rows": {
+								Type: "integer",
+							},
+							"month": {
+								Type: "integer",
+							},
+							"timestamp": {
+								Type: "string",
+							},
+							"year": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /publishers/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"code", "variants"},
+						Properties: map[string]*core.BodySchema{
+							"code": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"variants": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"label", "name", "storage", "system"},
+									Properties: map[string]*core.BodySchema{
+										"label": {
+											Type: "string",
+										},
+										"metrics_prefix": {
+											Type:     "string",
+											Nullable: true,
+										},
+										"name": {
+											Type: "string",
+										},
+										"storage": {
+											Type: "string",
+											Enum: []any{"metrics", "logs"},
+										},
+										"system": {
+											Type: "string",
+											Enum: []any{"disallow", "required"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /publishers/{code}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"code", "is_ok", "variants"},
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"variants": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"label", "name", "storage", "system"},
+						Properties: map[string]*core.BodySchema{
+							"label": {
+								Type: "string",
+							},
+							"metrics_prefix": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"name": {
+								Type: "string",
+							},
+							"storage": {
+								Type: "string",
+								Enum: []any{"metrics", "logs"},
+							},
+							"system": {
+								Type: "string",
+								Enum: []any{"disallow", "required"},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /traces/storages/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"account_id", "classification", "created_at", "endpoints", "icon", "id", "kms_key_id", "resource_id", "retention_period_days", "tags"},
+						Properties: map[string]*core.BodySchema{
+							"account_id": {
+								Type: "string",
+							},
+							"classification": {
+								Type: "string",
+								Enum: []any{"shared", "dedicated"},
+							},
+							"created_at": {
+								Type: "string",
+							},
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(512),
+							},
+							"endpoints": {
+								Type:     "object",
+								Required: []string{"ingester"},
+								Properties: map[string]*core.BodySchema{
+									"ingester": {
+										Type:     "object",
+										Required: []string{"address"},
+										Properties: map[string]*core.BodySchema{
+											"address": {
+												Type: "string",
+											},
+											"insecure": {
+												Type: "boolean",
+											},
+										},
+									},
+								},
+							},
+							"icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"id": {
+										Type: "string",
+									},
+								},
+							},
+							"id": {
+								Type: "integer",
+							},
+							"kms_key_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(64),
+							},
+							"resource_id": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+								Maximum: core.Float64Ptr(999999999999),
+							},
+							"retention_period_days": {
+								Type: "integer",
+							},
+							"service_principal_id": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /traces/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "icon", "id", "is_ok", "kms_key_id", "resource_id", "retention_period_days", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"retention_period_days": {
+					Type: "integer",
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"GET /traces/storages/{resource_id}/stats/daily/": {
+		200: {
+			Type:     "object",
+			Required: []string{"usages"},
+			Properties: map[string]*core.BodySchema{
+				"usages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"date", "ingested_bytes", "ingested_rows", "stored_bytes", "timestamp"},
+						Properties: map[string]*core.BodySchema{
+							"date": {
+								Type: "string",
+							},
+							"ingested_bytes": {
+								Type: "integer",
+							},
+							"ingested_rows": {
+								Type: "integer",
+							},
+							"stored_bytes": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"timestamp": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /traces/storages/{resource_id}/stats/monthly/": {
+		200: {
+			Type:     "object",
+			Required: []string{"usages"},
+			Properties: map[string]*core.BodySchema{
+				"usages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"ingested_bytes", "ingested_rows", "max_stored_bytes", "month", "timestamp", "year"},
+						Properties: map[string]*core.BodySchema{
+							"ingested_bytes": {
+								Type: "integer",
+							},
+							"ingested_rows": {
+								Type: "integer",
+							},
+							"max_stored_bytes": {
+								Type: "integer",
+							},
+							"month": {
+								Type: "integer",
+							},
+							"timestamp": {
+								Type: "string",
+							},
+							"year": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /traces/storages/{trace_resource_id}/keys/": {
+		200: {
+			Type:     "object",
+			Required: []string{"count", "from", "results", "total"},
+			Properties: map[string]*core.BodySchema{
+				"count": {
+					Type: "integer",
+				},
+				"from": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"results": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"secret", "token", "uid"},
+						Properties: map[string]*core.BodySchema{
+							"description": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"secret": {
+								Type: "string",
+							},
+							"token": {
+								Type: "string",
+							},
+							"uid": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /traces/storages/{trace_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: anyOf at PATCH /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/ response 200.rule.query.matchers[] left permissive
+	"PATCH /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "log_storage", "metrics_storage", "project_id", "rule", "uid", "updated_at"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+					Pattern:   "^[a-z\\d_-]*$",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"rule": {
+					Type:     "object",
+					Required: []string{"query", "version"},
+					Properties: map[string]*core.BodySchema{
+						"query": {
+							Type:     "object",
+							Required: []string{"matchers"},
+							Properties: map[string]*core.BodySchema{
+								"matchers": {
+									Type: "array",
+								},
+							},
+						},
+						"version": {
+							Type: "string",
+							Enum: []any{"v1"},
+						},
+					},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /alerts/projects/{project_resource_id}/notification-routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"match_labels", "notification_target", "order", "project_id", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"match_labels": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name", "value"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"value": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+						},
+					},
+				},
+				"notification_target": {
+					Type:     "object",
+					Required: []string{"config", "project_id", "service_type", "uid"},
+					Properties: map[string]*core.BodySchema{
+						"config": {
+							Type: "object",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(100),
+						},
+						"project_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"service_type": {
+							Type: "string",
+							Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+						},
+						"uid": {
+							Type: "string",
+						},
+						"url": {
+							Type:      "string",
+							MaxLength: core.IntPtr(1024),
+						},
+					},
+				},
+				"order": {
+					Type: "integer",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"resend_interval_minutes": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(720),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /alerts/projects/{project_resource_id}/notification-targets/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"config", "project_id", "service_type", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"config": {
+					Type: "object",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(100),
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"service_type": {
+					Type: "string",
+					Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"url": {
+					Type:      "string",
+					MaxLength: core.IntPtr(1024),
+				},
+			},
+		},
+	},
+	"PATCH /alerts/projects/{project_resource_id}/rules/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"metrics_storage_id", "open", "project_id", "query", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"enabled_critical": {
+					Type: "boolean",
+				},
+				"enabled_warning": {
+					Type: "boolean",
+				},
+				"format": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"metrics_storage_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"open": {
+					Type: "boolean",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"query": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"template": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_critical": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_duration_critical": {
+					Type: "integer",
+				},
+				"threshold_duration_warning": {
+					Type: "integer",
+				},
+				"threshold_warning": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /alerts/projects/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "is_ok", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"PATCH /dashboards/projects/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "is_ok", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"PATCH /logs/routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "log_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /logs/storages/{log_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /logs/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_ok", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"expire_day": {
+					Type: "integer",
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"log_measure_rules", "log_routings"},
+					Properties: map[string]*core.BodySchema{
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"log_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PATCH /metrics/routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "metrics_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /metrics/storages/{metrics_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PATCH /metrics/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_ok", "is_system", "resource_id", "tags", "updated_at", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"address"},
+					Properties: map[string]*core.BodySchema{
+						"address": {
+							Type: "string",
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+					Properties: map[string]*core.BodySchema{
+						"alert_rules": {
+							Type: "integer",
+						},
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"metrics_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PATCH /traces/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "icon", "id", "is_ok", "kms_key_id", "resource_id", "retention_period_days", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"retention_period_days": {
+					Type: "integer",
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"PATCH /traces/storages/{trace_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /alerts/projects/": {
+		201: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	// NOTE: anyOf at POST /alerts/projects/{project_resource_id}/log-measure-rules/ response 201.rule.query.matchers[] left permissive
+	"POST /alerts/projects/{project_resource_id}/log-measure-rules/": {
+		201: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "log_storage", "metrics_storage", "project_id", "rule", "uid", "updated_at"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+					Pattern:   "^[a-z\\d_-]*$",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"rule": {
+					Type:     "object",
+					Required: []string{"query", "version"},
+					Properties: map[string]*core.BodySchema{
+						"query": {
+							Type:     "object",
+							Required: []string{"matchers"},
+							Properties: map[string]*core.BodySchema{
+								"matchers": {
+									Type: "array",
+								},
+							},
+						},
+						"version": {
+							Type: "string",
+							Enum: []any{"v1"},
+						},
+					},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /alerts/projects/{project_resource_id}/notification-routings/": {
+		201: {
+			Type:     "object",
+			Required: []string{"match_labels", "notification_target", "order", "project_id", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"match_labels": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name", "value"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"value": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+						},
+					},
+				},
+				"notification_target": {
+					Type:     "object",
+					Required: []string{"config", "project_id", "service_type", "uid"},
+					Properties: map[string]*core.BodySchema{
+						"config": {
+							Type: "object",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(100),
+						},
+						"project_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"service_type": {
+							Type: "string",
+							Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+						},
+						"uid": {
+							Type: "string",
+						},
+						"url": {
+							Type:      "string",
+							MaxLength: core.IntPtr(1024),
+						},
+					},
+				},
+				"order": {
+					Type: "integer",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"resend_interval_minutes": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(720),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /alerts/projects/{project_resource_id}/notification-targets/": {
+		201: {
+			Type:     "object",
+			Required: []string{"config", "project_id", "service_type", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"config": {
+					Type: "object",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(100),
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"service_type": {
+					Type: "string",
+					Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"url": {
+					Type:      "string",
+					MaxLength: core.IntPtr(1024),
+				},
+			},
+		},
+	},
+	"POST /alerts/projects/{project_resource_id}/rules/": {
+		201: {
+			Type:     "object",
+			Required: []string{"metrics_storage_id", "open", "project_id", "query", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"enabled_critical": {
+					Type: "boolean",
+				},
+				"enabled_warning": {
+					Type: "boolean",
+				},
+				"format": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"metrics_storage_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"open": {
+					Type: "boolean",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"query": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"template": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_critical": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_duration_critical": {
+					Type: "integer",
+				},
+				"threshold_duration_warning": {
+					Type: "integer",
+				},
+				"threshold_warning": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /dashboards/projects/": {
+		201: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"POST /logs/routings/": {
+		201: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "log_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /logs/storages/": {
+		201: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"expire_day": {
+					Type: "integer",
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"log_measure_rules", "log_routings"},
+					Properties: map[string]*core.BodySchema{
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"log_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /logs/storages/{log_resource_id}/keys/": {
+		201: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /logs/storages/{resource_id}/set-expire/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"expire_day": {
+					Type: "integer",
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"log_measure_rules", "log_routings"},
+					Properties: map[string]*core.BodySchema{
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"log_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /management/provisioning/initialize/": {
+		200: {
+			Type:     "object",
+			Required: []string{"logs", "metrics"},
+			Properties: map[string]*core.BodySchema{
+				"logs": {
+					Type:     "object",
+					Required: []string{"system_exist", "user_exist"},
+					Properties: map[string]*core.BodySchema{
+						"system_exist": {
+							Type: "boolean",
+						},
+						"user_exist": {
+							Type: "boolean",
+						},
+					},
+				},
+				"metrics": {
+					Type:     "object",
+					Required: []string{"system_exist", "user_exist"},
+					Properties: map[string]*core.BodySchema{
+						"system_exist": {
+							Type: "boolean",
+						},
+						"user_exist": {
+							Type: "boolean",
+						},
+					},
+				},
+			},
+		},
+		201: {
+			Type:     "object",
+			Required: []string{"logs", "metrics"},
+			Properties: map[string]*core.BodySchema{
+				"logs": {
+					Type:     "object",
+					Required: []string{"system_exist", "user_exist"},
+					Properties: map[string]*core.BodySchema{
+						"system_exist": {
+							Type: "boolean",
+						},
+						"user_exist": {
+							Type: "boolean",
+						},
+					},
+				},
+				"metrics": {
+					Type:     "object",
+					Required: []string{"system_exist", "user_exist"},
+					Properties: map[string]*core.BodySchema{
+						"system_exist": {
+							Type: "boolean",
+						},
+						"user_exist": {
+							Type: "boolean",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /metrics/routings/": {
+		201: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "metrics_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /metrics/storages/": {
+		201: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"address"},
+					Properties: map[string]*core.BodySchema{
+						"address": {
+							Type: "string",
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+					Properties: map[string]*core.BodySchema{
+						"alert_rules": {
+							Type: "integer",
+						},
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"metrics_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /metrics/storages/{metrics_resource_id}/keys/": {
+		201: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /traces/storages/": {
+		201: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "icon", "id", "kms_key_id", "resource_id", "retention_period_days", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"retention_period_days": {
+					Type: "integer",
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"POST /traces/storages/{resource_id}/set-expire/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "icon", "id", "kms_key_id", "resource_id", "retention_period_days", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"retention_period_days": {
+					Type: "integer",
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"POST /traces/storages/{trace_resource_id}/keys/": {
+		201: {
+			Type:     "object",
+			Required: []string{"is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: anyOf at PUT /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/ response 200.rule.query.matchers[] left permissive
+	"PUT /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "log_storage", "metrics_storage", "project_id", "rule", "uid", "updated_at"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+					Pattern:   "^[a-z\\d_-]*$",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"rule": {
+					Type:     "object",
+					Required: []string{"query", "version"},
+					Properties: map[string]*core.BodySchema{
+						"query": {
+							Type:     "object",
+							Required: []string{"matchers"},
+							Properties: map[string]*core.BodySchema{
+								"matchers": {
+									Type: "array",
+								},
+							},
+						},
+						"version": {
+							Type: "string",
+							Enum: []any{"v1"},
+						},
+					},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /alerts/projects/{project_resource_id}/notification-routings/reorder/": {
+		204: nil,
+	},
+	"PUT /alerts/projects/{project_resource_id}/notification-routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"match_labels", "notification_target", "order", "project_id", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"match_labels": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name", "value"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+							"value": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256),
+							},
+						},
+					},
+				},
+				"notification_target": {
+					Type:     "object",
+					Required: []string{"config", "project_id", "service_type", "uid"},
+					Properties: map[string]*core.BodySchema{
+						"config": {
+							Type: "object",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(100),
+						},
+						"project_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"service_type": {
+							Type: "string",
+							Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+						},
+						"uid": {
+							Type: "string",
+						},
+						"url": {
+							Type:      "string",
+							MaxLength: core.IntPtr(1024),
+						},
+					},
+				},
+				"order": {
+					Type: "integer",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"resend_interval_minutes": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(720),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /alerts/projects/{project_resource_id}/notification-targets/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"config", "project_id", "service_type", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"config": {
+					Type: "object",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(100),
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"service_type": {
+					Type: "string",
+					Enum: []any{"SAKURA_SIMPLE_NOTICE", "SAKURA_EVENT_BUS"},
+				},
+				"uid": {
+					Type: "string",
+				},
+				"url": {
+					Type:      "string",
+					MaxLength: core.IntPtr(1024),
+				},
+			},
+		},
+	},
+	"PUT /alerts/projects/{project_resource_id}/rules/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"metrics_storage_id", "open", "project_id", "query", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"enabled_critical": {
+					Type: "boolean",
+				},
+				"enabled_warning": {
+					Type: "boolean",
+				},
+				"format": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"metrics_storage_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"open": {
+					Type: "boolean",
+				},
+				"project_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"query": {
+					Type:      "string",
+					MaxLength: core.IntPtr(4096),
+				},
+				"template": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_critical": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"threshold_duration_critical": {
+					Type: "integer",
+				},
+				"threshold_duration_warning": {
+					Type: "integer",
+				},
+				"threshold_warning": {
+					Type:      "string",
+					Nullable:  true,
+					MaxLength: core.IntPtr(256),
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /alerts/projects/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "is_ok", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"PUT /dashboards/projects/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "icon", "id", "is_ok", "resource_id", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"PUT /logs/routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "log_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"log_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"classification": {
+							Type: "string",
+							Enum: []any{"shared", "dedicated"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"ingester"},
+							Properties: map[string]*core.BodySchema{
+								"ingester": {
+									Type:     "object",
+									Required: []string{"address"},
+									Properties: map[string]*core.BodySchema{
+										"address": {
+											Type: "string",
+										},
+										"insecure": {
+											Type: "boolean",
+										},
+									},
+								},
+							},
+						},
+						"expire_day": {
+							Type: "integer",
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"kms_key_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"service_principal_id": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"log_measure_rules", "log_routings"},
+							Properties: map[string]*core.BodySchema{
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"log_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /logs/storages/{log_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /logs/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "expire_day", "icon", "id", "is_ok", "is_system", "kms_key_id", "resource_id", "tags", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"expire_day": {
+					Type: "integer",
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"log_measure_rules", "log_routings"},
+					Properties: map[string]*core.BodySchema{
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"log_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /metrics/routings/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"created_at", "id", "is_ok", "metrics_storage", "publisher", "uid", "updated_at", "variant"},
+			Properties: map[string]*core.BodySchema{
+				"created_at": {
+					Type: "string",
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"metrics_storage": {
+					Type:     "object",
+					Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_system", "resource_id", "tags", "updated_at", "usage"},
+					Properties: map[string]*core.BodySchema{
+						"account_id": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"endpoints": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+							},
+						},
+						"icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "string",
+								},
+							},
+						},
+						"id": {
+							Type: "integer",
+						},
+						"is_system": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(64),
+						},
+						"resource_id": {
+							Type:     "integer",
+							Nullable: true,
+							Minimum:  core.Float64Ptr(0),
+							Maximum:  core.Float64Ptr(999999999999),
+						},
+						"tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated_at": {
+							Type: "string",
+						},
+						"usage": {
+							Type:     "object",
+							Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+							Properties: map[string]*core.BodySchema{
+								"alert_rules": {
+									Type: "integer",
+								},
+								"log_measure_rules": {
+									Type: "integer",
+								},
+								"metrics_routings": {
+									Type: "integer",
+								},
+							},
+						},
+					},
+				},
+				"publisher": {
+					Type:     "object",
+					Required: []string{"code", "variants"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"description": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256),
+						},
+						"variants": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"label", "name", "storage", "system"},
+								Properties: map[string]*core.BodySchema{
+									"label": {
+										Type: "string",
+									},
+									"metrics_prefix": {
+										Type:     "string",
+										Nullable: true,
+									},
+									"name": {
+										Type: "string",
+									},
+									"storage": {
+										Type: "string",
+										Enum: []any{"metrics", "logs"},
+									},
+									"system": {
+										Type: "string",
+										Enum: []any{"disallow", "required"},
+									},
+								},
+							},
+						},
+					},
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"uid": {
+					Type: "string",
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"variant": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /metrics/storages/{metrics_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"id", "is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /metrics/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "created_at", "endpoints", "icon", "id", "is_ok", "is_system", "resource_id", "tags", "updated_at", "usage"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"address"},
+					Properties: map[string]*core.BodySchema{
+						"address": {
+							Type: "string",
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"is_system": {
+					Type: "boolean",
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:     "integer",
+					Nullable: true,
+					Minimum:  core.Float64Ptr(0),
+					Maximum:  core.Float64Ptr(999999999999),
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+				"updated_at": {
+					Type: "string",
+				},
+				"usage": {
+					Type:     "object",
+					Required: []string{"alert_rules", "log_measure_rules", "metrics_routings"},
+					Properties: map[string]*core.BodySchema{
+						"alert_rules": {
+							Type: "integer",
+						},
+						"log_measure_rules": {
+							Type: "integer",
+						},
+						"metrics_routings": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /traces/storages/{resource_id}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"account_id", "classification", "created_at", "endpoints", "icon", "id", "is_ok", "kms_key_id", "resource_id", "retention_period_days", "tags"},
+			Properties: map[string]*core.BodySchema{
+				"account_id": {
+					Type: "string",
+				},
+				"classification": {
+					Type: "string",
+					Enum: []any{"shared", "dedicated"},
+				},
+				"created_at": {
+					Type: "string",
+				},
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(512),
+				},
+				"endpoints": {
+					Type:     "object",
+					Required: []string{"ingester"},
+					Properties: map[string]*core.BodySchema{
+						"ingester": {
+							Type:     "object",
+							Required: []string{"address"},
+							Properties: map[string]*core.BodySchema{
+								"address": {
+									Type: "string",
+								},
+								"insecure": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+				"icon": {
+					Type:     "object",
+					Nullable: true,
+					Properties: map[string]*core.BodySchema{
+						"id": {
+							Type: "string",
+						},
+					},
+				},
+				"id": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"kms_key_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"name": {
+					Type:      "string",
+					MaxLength: core.IntPtr(64),
+				},
+				"resource_id": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+					Maximum: core.Float64Ptr(999999999999),
+				},
+				"retention_period_days": {
+					Type: "integer",
+				},
+				"service_principal_id": {
+					Type:     "integer",
+					Nullable: true,
+				},
+				"tags": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "string",
+					},
+				},
+			},
+		},
+	},
+	"PUT /traces/storages/{trace_resource_id}/keys/{uid}/": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_ok", "secret", "token", "uid"},
+			Properties: map[string]*core.BodySchema{
+				"description": {
+					Type:      "string",
+					MaxLength: core.IntPtr(256),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+				"secret": {
+					Type: "string",
+				},
+				"token": {
+					Type: "string",
+				},
+				"uid": {
+					Type: "string",
+				},
+			},
+		},
+	},
+}

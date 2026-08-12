@@ -164,3 +164,317 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /kms/keys/{resource_id}": {
+		204: nil,
+	},
+	"GET /kms/keys": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "Keys"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Keys": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+						Properties: map[string]*core.BodySchema{
+							"CreatedAt": {
+								Type: "string",
+							},
+							"Description": {
+								Type: "string",
+							},
+							"ID": {
+								Type: "string",
+							},
+							"KeyOrigin": {
+								Type: "string",
+								Enum: []any{"generated", "imported"},
+							},
+							"LatestVersion": {
+								Type: "integer",
+							},
+							"ModifiedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type:      "string",
+								MaxLength: core.IntPtr(255),
+							},
+							"ServiceClass": {
+								Type: "string",
+								Enum: []any{"cloud/kms/key", "cloud/kms/key/legacy"},
+							},
+							"Status": {
+								Type: "string",
+								Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"Total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	"GET /kms/keys/{resource_id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Key"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KeyOrigin": {
+							Type: "string",
+							Enum: []any{"generated", "imported"},
+						},
+						"LatestVersion": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"ServiceClass": {
+							Type: "string",
+							Enum: []any{"cloud/kms/key", "cloud/kms/key/legacy"},
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /kms/keys": {
+		201: {
+			Type:     "object",
+			Required: []string{"Key"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "ID", "KeyOrigin", "ModifiedAt", "Name"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KeyOrigin": {
+							Type: "string",
+							Enum: []any{"generated", "imported"},
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"PlainKey": {
+							Type: "string",
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /kms/keys/{resource_id}/decrypt": {
+		200: {
+			Type:     "object",
+			Required: []string{"Key"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"Plain"},
+					Properties: map[string]*core.BodySchema{
+						"Algo": {
+							Type: "string",
+							Enum: []any{"aes-256-gcm", "aes-256-cbc", "aes-256-kw"},
+						},
+						"Plain": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /kms/keys/{resource_id}/encrypt": {
+		200: {
+			Type:     "object",
+			Required: []string{"Key"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"Cipher"},
+					Properties: map[string]*core.BodySchema{
+						"Cipher": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /kms/keys/{resource_id}/rotate": {
+		200: {
+			Type:     "object",
+			Required: []string{"Key"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KeyOrigin": {
+							Type: "string",
+							Enum: []any{"generated", "imported"},
+						},
+						"LatestVersion": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"ServiceClass": {
+							Type: "string",
+							Enum: []any{"cloud/kms/key", "cloud/kms/key/legacy"},
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+		403: nil,
+	},
+	"POST /kms/keys/{resource_id}/schedule-destruction": {
+		200: nil,
+	},
+	"POST /kms/keys/{resource_id}/status": {
+		200: nil,
+	},
+	"PUT /kms/keys/{resource_id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Key"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"KeyOrigin": {
+							Type: "string",
+							Enum: []any{"generated", "imported"},
+						},
+						"LatestVersion": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"ServiceClass": {
+							Type: "string",
+							Enum: []any{"cloud/kms/key", "cloud/kms/key/legacy"},
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}

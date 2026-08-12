@@ -68,3 +68,14 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 | POST | `/kms/keys/{resource_id}/schedule-destruction` | Schedule key destruction |
 | POST | `/kms/keys/{resource_id}/encrypt` | Encrypt data |
 | POST | `/kms/keys/{resource_id}/decrypt` | Decrypt data |
+
+## Mock-only endpoints
+
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
+| `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.

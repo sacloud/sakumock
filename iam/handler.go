@@ -54,26 +54,6 @@ func writeError(w http.ResponseWriter, status int, detail string) {
 	core.WriteJSON(w, status, pd)
 }
 
-// Inspection JSON types for the /_sakumock/spec-violations endpoint.
-// This namespace is sakumock-specific and not part of the SAKURA Cloud API.
-
-type specViolationList struct {
-	Violations []core.SpecViolation `json:"violations"`
-}
-
-func (s *Server) handleListSpecViolations(w http.ResponseWriter, _ *http.Request) {
-	violations := s.respValidator.Violations()
-	if violations == nil {
-		violations = []core.SpecViolation{}
-	}
-	core.WriteJSON(w, http.StatusOK, specViolationList{Violations: violations})
-}
-
-func (s *Server) handleClearSpecViolations(w http.ResponseWriter, _ *http.Request) {
-	s.respValidator.Reset()
-	w.WriteHeader(http.StatusNoContent)
-}
-
 type paginatedList[T any] struct {
 	Items    []T     `json:"items"`
 	Count    int     `json:"count"`

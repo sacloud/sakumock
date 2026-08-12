@@ -91,6 +91,41 @@ func (rv *ResponseValidator) record(method, path string, status int, message str
 		"method", method, "path", path, "status", status, "error", message)
 }
 
+// specViolationList is the response envelope of GET /_sakumock/spec-violations.
+type specViolationList struct {
+	Violations []SpecViolation `json:"violations"`
+}
+
+// ListHandler serves the recorded violations as {"violations": [...]}.
+func (rv *ResponseValidator) ListHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		violations := rv.Violations()
+		if violations == nil {
+			violations = []SpecViolation{}
+		}
+		WriteJSON(w, http.StatusOK, specViolationList{Violations: violations})
+	}
+}
+
+// ClearHandler clears the recorded violations and responds 204.
+func (rv *ResponseValidator) ClearHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		rv.Reset()
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// SpecViolationRoutes returns the standard mock-only inspection routes
+// exposing rv — GET/DELETE /_sakumock/spec-violations — for a service's
+// routeTable() to append as raw entries (outside the fault / rate-limit /
+// validation closures, per the /_sakumock/ convention).
+func SpecViolationRoutes(rv *ResponseValidator) []RegisteredRoute {
+	return []RegisteredRoute{
+		{Route: Route{Method: "GET", Path: "/_sakumock/spec-violations", Description: "List recorded OpenAPI spec violations", Kind: "inspection"}, Handler: rv.ListHandler()},
+		{Route: Route{Method: "DELETE", Path: "/_sakumock/spec-violations", Description: "Clear recorded OpenAPI spec violations", Kind: "inspection"}, Handler: rv.ClearHandler()},
+	}
+}
+
 // responseCapture records the status and body a handler writes while passing
 // everything through to the underlying writer.
 type responseCapture struct {

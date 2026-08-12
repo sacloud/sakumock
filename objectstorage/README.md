@@ -35,7 +35,7 @@ sakumock-objectstorage
 | `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses a temp dir removed on shutdown |
 | `--data-plane-region` | `OBJECT_STORAGE_DATA_PLANE_REGION` | `jp-north-1` | Region the S3 data plane signs/validates requests for |
 
-The data plane's root credentials are fixed development defaults (access key `sakumock`, secret key `sakumocksecret`) — not configurable, like the dummy SAKURA credentials.
+The data plane's root credentials are fixed development defaults (access key `sakumock`, secret key `sakumocksecret`) — not configurable, like the dummy SAKURA credentials. Access keys issued through the control plane also authenticate on the data plane (see [Data plane (S3)](#data-plane-s3)).
 
 (Under the unified binary these are prefixed, e.g. `--objectstorage-enable-data-plane`.)
 
@@ -126,7 +126,7 @@ sakumock all --objectstorage-enable-data-plane
 The integration is **loose**:
 
 - **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw. If the backend directory cannot be created (e.g. the bucket name is not a valid directory name on the local filesystem, such as a Windows reserved device name), bucket creation fails with `500` and is rolled back rather than leaving a control-plane bucket the data plane cannot serve.
-- **A single fixed root credential** (access key `sakumock`, secret key `sakumocksecret`) authenticates S3 requests. Control-plane access keys and permissions are **not** enforced on the data plane.
+- **Control-plane access keys authenticate S3 requests**: account keys and permission keys issued through the control plane (`POST /{site}/v2/account/keys`, `POST /{site}/v2/permissions/{id}/keys`) are mirrored into versitygw's internal IAM service, so the "issue a key, then use it against S3" flow works end to end. Deleting a key (or the account/permission owning it) revokes it immediately. A fixed root credential (access key `sakumock`, secret key `sakumocksecret`) always works alongside the issued keys. **Permissions are not enforced**: every issued key is registered with versitygw's `admin` role, so a permission key scoped to one bucket can still access all buckets — the mock authenticates keys but does not restrict them.
 - **On Windows**, where the filesystem lacks the xattr support of versitygw's default metadata store, sakumock passes `--sidecar` automatically: metadata is kept in a `meta-<dirname>` directory next to the backend dir.
 
 When the data plane is enabled, the startup log and `sakumock env` emit the `AWS_*` variables an aws-cli / aws-sdk client needs (`AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`). Load them and use any S3 client without passing `--endpoint-url`:

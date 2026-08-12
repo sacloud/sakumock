@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	sdk "github.com/sacloud/sacloud-sdk-go/api/object-storage"
+	v2 "github.com/sacloud/sacloud-sdk-go/api/object-storage/apis/v2"
 
 	"github.com/sacloud/sakumock/objectstorage"
 )
@@ -38,11 +40,11 @@ func freeLoopbackAddr(t *testing.T) string {
 }
 
 // newS3Client builds an aws-sdk-go-v2 S3 client pointed at the data plane
-// (path-style addressing, static root credentials, custom endpoint).
-func newS3Client(addr string) *s3.Client {
+// (path-style addressing, static credentials, custom endpoint).
+func newS3Client(addr, access, secret string) *s3.Client {
 	cfg := aws.Config{
 		Region:      dataPlaneRegion,
-		Credentials: credentials.NewStaticCredentialsProvider(dataPlaneAccessKey, dataPlaneSecretKey, ""),
+		Credentials: credentials.NewStaticCredentialsProvider(access, secret, ""),
 	}
 	return s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = aws.String("http://" + addr)
@@ -144,7 +146,7 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 			t.Fatalf("create %s: %v", name, err)
 		}
 	}
-	s3c := newS3Client(addr)
+	s3c := newS3Client(addr, dataPlaneAccessKey, dataPlaneSecretKey)
 	if !bucketListed(t, s3c, bucketA) || !bucketListed(t, s3c, bucketB) {
 		t.Fatalf("control-plane buckets not both visible over the S3 data plane")
 	}
@@ -184,5 +186,98 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 	}
 	if got := getObjectBody(t, s3c, bucketB, sharedKey); got != "content-b" {
 		t.Errorf("bucket B %s after deleting A = %q, want %q", sharedKey, got, "content-b")
+	}
+}
+
+// TestDataPlaneControlPlaneKeys drives the "issue key via the control plane,
+// use it against S3" flow (issue #152): account keys and permission keys
+// issued through the control plane authenticate S3 requests on the data plane
+// alongside the fixed root credential, and deleting a key (or the permission
+// owning it) revokes access immediately.
+func TestDataPlaneControlPlaneKeys(t *testing.T) {
+	if _, err := exec.LookPath("versitygw"); err != nil {
+		t.Skip("versitygw not found in PATH; skipping data plane test")
+	}
+
+	addr := freeLoopbackAddr(t)
+	srv := objectstorage.NewTestServer(objectstorage.Config{
+		EnableDataPlane: true,
+		DataPlaneAddr:   addr,
+		DataPlaneDir:    t.TempDir(),
+		DataPlaneRegion: dataPlaneRegion,
+	})
+	defer srv.Close()
+
+	ctx := t.Context()
+	fed, site := newClients(t, srv.TestURL())
+	const bucket, object = "key-test-bucket", "hello.txt"
+	if _, err := sdk.NewBucketOp(fed, site).Create(ctx, &sdk.BucketCreateParams{Bucket: bucket, SiteId: testSiteID}); err != nil {
+		t.Fatalf("create bucket: %v", err)
+	}
+
+	accountOp := sdk.NewAccountOp(site)
+	if _, err := accountOp.Create(ctx); err != nil {
+		t.Fatalf("create account: %v", err)
+	}
+	key, err := accountOp.CreateAccessKey(ctx)
+	if err != nil {
+		t.Fatalf("create account access key: %v", err)
+	}
+
+	// The issued key authenticates S3 requests...
+	issued := newS3Client(addr, string(key.ID.Value), string(key.Secret.Value))
+	putObject(t, issued, bucket, object, "issued-key")
+	if got := getObjectBody(t, issued, bucket, object); got != "issued-key" {
+		t.Errorf("object via issued key = %q, want %q", got, "issued-key")
+	}
+	if !bucketListed(t, issued, bucket) {
+		t.Error("bucket not listed via issued key")
+	}
+
+	// ...alongside the fixed root credential, and only for keys actually
+	// issued.
+	root := newS3Client(addr, dataPlaneAccessKey, dataPlaneSecretKey)
+	if got := getObjectBody(t, root, bucket, object); got != "issued-key" {
+		t.Errorf("object via root credential = %q, want %q", got, "issued-key")
+	}
+	unissued := newS3Client(addr, "UNISSUEDKEY00000", "unissued-secret-0000000000000000")
+	if _, err := unissued.ListBuckets(ctx, &s3.ListBucketsInput{}); err == nil {
+		t.Error("unissued key must not authenticate")
+	}
+
+	// Deleting the key revokes it immediately (versitygw runs with its IAM
+	// cache disabled).
+	if err := accountOp.DeleteAccessKey(ctx, string(key.ID.Value)); err != nil {
+		t.Fatalf("delete account access key: %v", err)
+	}
+	if _, err := issued.ListBuckets(ctx, &s3.ListBucketsInput{}); err == nil {
+		t.Error("deleted account key must not authenticate")
+	}
+
+	// Permission keys follow the same flow, revoked when their permission is
+	// deleted.
+	permOp := sdk.NewPermissionOp(site)
+	perm, err := permOp.Create(ctx, "dataplane-key-test", v2.BucketControls{{
+		BucketName: v2.NewOptBucketName(bucket),
+		CanRead:    v2.NewOptCanRead(true),
+		CanWrite:   v2.NewOptCanWrite(true),
+	}})
+	if err != nil {
+		t.Fatalf("create permission: %v", err)
+	}
+	permID := strconv.FormatInt(int64(perm.ID.Value), 10)
+	pkey, err := permOp.CreateAccessKey(ctx, permID)
+	if err != nil {
+		t.Fatalf("create permission access key: %v", err)
+	}
+	permClient := newS3Client(addr, string(pkey.ID.Value), string(pkey.Secret.Value))
+	if got := getObjectBody(t, permClient, bucket, object); got != "issued-key" {
+		t.Errorf("object via permission key = %q, want %q", got, "issued-key")
+	}
+	if err := permOp.Delete(ctx, permID); err != nil {
+		t.Fatalf("delete permission: %v", err)
+	}
+	if _, err := permClient.ListBuckets(ctx, &s3.ListBucketsInput{}); err == nil {
+		t.Error("key of a deleted permission must not authenticate")
 	}
 }

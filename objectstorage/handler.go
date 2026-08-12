@@ -392,9 +392,15 @@ func (s *Server) handleCreateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteAccount(w http.ResponseWriter, r *http.Request) {
+	// Deleting the account deletes its access keys with it, so capture them
+	// first to deregister them from the data plane.
+	keys, _ := s.store.ListAccountKeys(r.PathValue("site"))
 	if !s.store.DeleteAccount(r.PathValue("site")) {
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
+	}
+	for _, k := range keys {
+		s.dataPlane.deleteUser(k.ID)
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -430,6 +436,13 @@ func (s *Server) handleCreateAccountKey(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "account does not exist")
 		return
 	}
+	if err := s.dataPlane.createUser(k.ID, k.Secret); err != nil {
+		// Roll back so the control plane never lists a key the data plane
+		// does not authenticate.
+		s.store.DeleteAccountKey(r.PathValue("site"), k.ID)
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: toAccountKeyData(k, true)})
 }
 
@@ -447,6 +460,7 @@ func (s *Server) handleDeleteAccountKey(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
+	s.dataPlane.deleteUser(r.PathValue("id"))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -549,9 +563,15 @@ func (s *Server) handleDeletePermission(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
+	// Deleting the permission deletes its access keys with it, so capture
+	// them first to deregister them from the data plane.
+	keys, _ := s.store.ListPermissionKeys(r.PathValue("site"), id)
 	if !s.store.DeletePermission(r.PathValue("site"), id) {
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
+	}
+	for _, k := range keys {
+		s.dataPlane.deleteUser(k.ID)
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -593,6 +613,13 @@ func (s *Server) handleCreatePermissionKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
+	if err := s.dataPlane.createUser(k.ID, k.Secret); err != nil {
+		// Roll back so the control plane never lists a key the data plane
+		// does not authenticate.
+		s.store.DeletePermissionKey(r.PathValue("site"), id, k.ID)
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	core.WriteJSON(w, http.StatusCreated, dataResponse{Data: toPermissionKeyData(k, true)})
 }
 
@@ -620,6 +647,7 @@ func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "access key not found")
 		return
 	}
+	s.dataPlane.deleteUser(r.PathValue("key_id"))
 	w.WriteHeader(http.StatusNoContent)
 }
 

@@ -35,11 +35,12 @@ const (
 // dataPlane manages an external versitygw process that serves the S3-compatible
 // data plane backed by a local POSIX directory.
 //
-// The integration is intentionally loose: sakumock only mirrors bucket
-// existence into the backend (one directory per bucket, which versitygw's posix
-// backend exposes as an S3 bucket), and versitygw authenticates with a single
-// fixed root credential. Control-plane access keys and permissions are NOT
-// enforced on the data plane.
+// The integration is intentionally loose: sakumock mirrors bucket existence
+// into the backend (one directory per bucket, which versitygw's posix backend
+// exposes as an S3 bucket) and mirrors control-plane access keys into
+// versitygw's internal IAM service (see dataplane_iam.go), so both the fixed
+// root credential and issued keys authenticate. Permissions (per-bucket
+// controls) are NOT enforced on the data plane.
 type dataPlane struct {
 	cancel  context.CancelFunc
 	done    chan struct{}
@@ -47,6 +48,12 @@ type dataPlane struct {
 	tempDir bool
 	addr    string
 	logger  *slog.Logger
+
+	// iamDir holds versitygw's internal IAM database (users.json), where
+	// control-plane access keys are mirrored. Always a temp dir removed on
+	// Close; see startDataPlane for why it is never persisted.
+	iamDir string
+	iamMu  sync.Mutex
 }
 
 // startDataPlane launches versitygw with a POSIX backend. It returns an error
@@ -73,15 +80,39 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		return nil, fmt.Errorf("create data plane dir %q: %w", dir, err)
 	}
 
+	// The IAM dir is always a fresh temp dir, even when the backend dir is
+	// user-configured and persistent: the control-plane key store is in-memory
+	// and resets with the process, so persisting users.json would leave stale
+	// keys authenticating after a restart.
+	iamDir, err := os.MkdirTemp("", "sakumock-objectstorage-iam-")
+	if err != nil {
+		if tempDir {
+			_ = os.RemoveAll(dir)
+		}
+		return nil, fmt.Errorf("create data plane IAM dir: %w", err)
+	}
+	cleanupDirs := func() {
+		if tempDir {
+			_ = os.RemoveAll(dir)
+		}
+		_ = os.RemoveAll(iamDir)
+	}
+
 	// exec.CommandContext + Cancel/WaitDelay gives a graceful stop
 	// (terminateProcess, per-OS) with a hard-kill fallback when Close cancels
 	// the context.
 	ctx, cancel := context.WithCancel(context.Background())
+	// --iam-dir enables versitygw's internal IAM service so control-plane
+	// access keys mirrored into it (dataplane_iam.go) authenticate;
+	// --iam-cache-disable makes key deletion take effect immediately instead
+	// of after the cache TTL (the cache only fronts a local file read here).
 	args := []string{
 		"--access", dataPlaneRootID,
 		"--secret", dataPlaneRootValue,
 		"--region", cfg.DataPlaneRegion,
 		"--port", cfg.DataPlaneAddr,
+		"--iam-dir", iamDir,
+		"--iam-cache-disable",
 	}
 	// versitygw serves the data plane over TLS itself when given a cert/key, so
 	// the common TLS files are passed through rather than terminated by sakumock.
@@ -91,9 +122,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	metaArgs, err := posixMetadataArgs(dir)
 	if err != nil {
 		cancel()
-		if tempDir {
-			_ = os.RemoveAll(dir)
-		}
+		cleanupDirs()
 		return nil, err
 	}
 	args = append(args, "posix")
@@ -107,9 +136,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 
 	if err := cmd.Start(); err != nil {
 		cancel()
-		if tempDir {
-			_ = os.RemoveAll(dir)
-		}
+		cleanupDirs()
 		return nil, fmt.Errorf("start versitygw: %w", err)
 	}
 
@@ -120,6 +147,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		tempDir: tempDir,
 		addr:    cfg.DataPlaneAddr,
 		logger:  logger,
+		iamDir:  iamDir,
 	}
 	go func() {
 		defer close(d.done)
@@ -183,6 +211,10 @@ func (d *dataPlane) Close() {
 		// Windows keeps sidecar metadata next to the backend dir (see
 		// posixMetadataArgs); a no-op elsewhere.
 		_ = os.RemoveAll(sidecarDir(d.dir))
+	}
+	// The IAM dir is always temporary (see startDataPlane).
+	if d.iamDir != "" {
+		_ = os.RemoveAll(d.iamDir)
 	}
 }
 

@@ -1,6 +1,7 @@
 package objectstorage
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -33,6 +34,62 @@ func TestPosixMetadataArgs(t *testing.T) {
 	if fi, err := os.Stat(sidecarDir(dir)); err != nil || !fi.IsDir() {
 		t.Fatalf("sidecar dir must exist as a directory (err=%v)", err)
 	}
+}
+
+// TestIAMUserLifecycle asserts that createUser/deleteUser maintain
+// versitygw's users.json: registered keys appear as admin accounts (in the
+// exact schema versitygw's internal IAM service parses), existing entries
+// survive updates, and deletion removes only the targeted key.
+func TestIAMUserLifecycle(t *testing.T) {
+	d := &dataPlane{iamDir: t.TempDir(), logger: slog.Default()}
+
+	if err := d.createUser("KEYA", "secret-a"); err != nil {
+		t.Fatalf("createUser KEYA: %v", err)
+	}
+	if err := d.createUser("KEYB", "secret-b"); err != nil {
+		t.Fatalf("createUser KEYB: %v", err)
+	}
+
+	readConf := func() iamConfig {
+		t.Helper()
+		b, err := os.ReadFile(filepath.Join(d.iamDir, iamUsersFile))
+		if err != nil {
+			t.Fatalf("read %s: %v", iamUsersFile, err)
+		}
+		var conf iamConfig
+		if err := json.Unmarshal(b, &conf); err != nil {
+			t.Fatalf("parse %s: %v", iamUsersFile, err)
+		}
+		return conf
+	}
+
+	conf := readConf()
+	if len(conf.AccessAccounts) != 2 {
+		t.Fatalf("accounts = %d, want 2 (%v)", len(conf.AccessAccounts), conf.AccessAccounts)
+	}
+	want := iamAccount{Access: "KEYA", Secret: "secret-a", Role: iamRoleAdmin}
+	if got := conf.AccessAccounts["KEYA"]; got != want {
+		t.Errorf("KEYA = %+v, want %+v", got, want)
+	}
+
+	d.deleteUser("KEYA")
+	conf = readConf()
+	if _, ok := conf.AccessAccounts["KEYA"]; ok {
+		t.Error("KEYA must be removed after deleteUser")
+	}
+	if _, ok := conf.AccessAccounts["KEYB"]; !ok {
+		t.Error("KEYB must survive deleting KEYA")
+	}
+}
+
+// TestIAMUser_NilDataPlane asserts key mirroring is a no-op without a data
+// plane, so handlers can call it unconditionally.
+func TestIAMUser_NilDataPlane(t *testing.T) {
+	var d *dataPlane
+	if err := d.createUser("KEY", "secret"); err != nil {
+		t.Fatalf("nil data plane createUser must be a no-op, got %v", err)
+	}
+	d.deleteUser("KEY")
 }
 
 func TestCreateBucket_NilDataPlane(t *testing.T) {

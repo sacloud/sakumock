@@ -16,11 +16,12 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 			// Fault injection outermost (an injected fault is an
 			// infrastructure-level failure, so it may mask a would-be 429/400),
 			// then rate limit, then spec-derived body validation, then the
-			// handler.
-			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, h))),
+			// handler. Response validation sits innermost so only what the
+			// handler itself produces is checked against the spec.
+			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h)))),
 		}
 	}
-	return []core.RegisteredRoute{
+	table := []core.RegisteredRoute{
 		// Plans & Subscription
 		route("GET", "/plans", "List plans", s.handleListPlans),
 		route("GET", "/subscriptions", "Get subscription", s.handleGetSubscription),
@@ -50,6 +51,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", "/workflows/{id}/executions/{executionId}", "Delete an execution", s.handleDeleteExecution),
 		route("GET", "/workflows/{id}/executions/{executionId}/exec_history", "List execution history", s.handleListExecutionHistory),
 	}
+	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }
 
 func (s *Server) Routes() []core.Route {

@@ -11,6 +11,16 @@ import (
 	"github.com/sacloud/sakumock/workflows"
 )
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *workflows.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 const testRunbook = `
 meta:
   description: test
@@ -38,7 +48,7 @@ func newClient(t *testing.T, serverURL string) *v1.Client {
 
 func TestWorkflowLifecycle(t *testing.T) {
 	srv := workflows.NewTestServer(workflows.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	workflowOp := wf.NewWorkflowOp(client)
@@ -100,7 +110,7 @@ func TestWorkflowLifecycle(t *testing.T) {
 
 func TestRevisionLifecycle(t *testing.T) {
 	srv := workflows.NewTestServer(workflows.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	workflowOp := wf.NewWorkflowOp(client)
@@ -168,7 +178,7 @@ func TestRevisionLifecycle(t *testing.T) {
 
 func TestExecutionLifecycle(t *testing.T) {
 	srv := workflows.NewTestServer(workflows.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	workflowOp := wf.NewWorkflowOp(client)
@@ -223,7 +233,7 @@ func TestExecutionLifecycle(t *testing.T) {
 
 func TestExecutionRejectsInvalidArgsJSON(t *testing.T) {
 	srv := workflows.NewTestServer(workflows.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	workflowOp := wf.NewWorkflowOp(client)
@@ -266,7 +276,7 @@ steps:
     return: ${args.x * 2}
 `
 	srv := workflows.NewTestServer(workflows.Config{EnableDataPlane: true})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	workflowOp := wf.NewWorkflowOp(client)
@@ -346,7 +356,7 @@ steps:
 
 func TestSubscription(t *testing.T) {
 	srv := workflows.NewTestServer(workflows.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	subscriptionOp := wf.NewSubscriptionOp(client)

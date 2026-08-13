@@ -2,6 +2,7 @@ package apprun
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -185,4 +186,115 @@ func TestListEndpointReflectsStatusChange(t *testing.T) {
 	if got.Status != "UnHealthy" {
 		t.Fatalf("get endpoint: expected Unhealthy, got %s", got.Status)
 	}
+}
+
+func newTestApp(name string) *Application {
+	return &Application{
+		Name:           name,
+		TimeoutSeconds: 60,
+		Port:           8080,
+		MinScale:       0,
+		MaxScale:       1,
+		Components: []Component{{
+			Name: "web",
+			DeploySource: DeploySource{
+				ContainerRegistry: &ContainerRegistry{
+					Image: "nginx:latest",
+				},
+			},
+		}},
+	}
+}
+
+// CreatedAt is truncated to the second, so versions created by consecutive
+// updates usually share a timestamp. The listing must still return them in
+// creation order — handleDeleteVersion treats the first entry as the latest
+// version and refuses to delete it.
+func TestListVersionsOrderWithinSameSecond(t *testing.T) {
+	store := NewStore(func(appID string) string {
+		return "http://" + appID + ".localhost:28088"
+	})
+
+	app := newTestApp("test-app")
+	if err := store.CreateApplication(app); err != nil {
+		t.Fatal(err)
+	}
+	for i := range maxVersionsPerApp - 1 {
+		if err := store.UpdateApplication(app.ID, &Application{
+			TimeoutSeconds: 61 + i,
+			MinScale:       -1,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	created := make([]string, 0, maxVersionsPerApp)
+	for i := 1; i <= maxVersionsPerApp; i++ {
+		created = append(created, fmt.Sprintf("%s-%s-%d", app.Name, app.ID, i))
+	}
+
+	for _, tc := range []struct {
+		sortOrder string
+		want      []string
+	}{
+		{sortOrder: "", want: reversed(created)},
+		{sortOrder: "desc", want: reversed(created)},
+		{sortOrder: "asc", want: created},
+	} {
+		versions, total := store.ListVersions(app.ID, ListParams{SortOrder: tc.sortOrder})
+		if total != len(created) {
+			t.Fatalf("sort_order=%q: total = %d, want %d", tc.sortOrder, total, len(created))
+		}
+		for i, v := range versions {
+			if v.Name != tc.want[i] {
+				t.Errorf("sort_order=%q: version[%d] = %s, want %s", tc.sortOrder, i, v.Name, tc.want[i])
+			}
+		}
+	}
+}
+
+// Applications are held in a map, so without the creation-order tiebreak the
+// listing order of same-second applications varies between calls.
+func TestListApplicationsOrderWithinSameSecond(t *testing.T) {
+	store := NewStore(func(appID string) string {
+		return "http://" + appID + ".localhost:28088"
+	})
+
+	var created []string
+	for i := range 5 {
+		app := newTestApp(fmt.Sprintf("app-%d", i))
+		if err := store.CreateApplication(app); err != nil {
+			t.Fatal(err)
+		}
+		created = append(created, app.Name)
+	}
+
+	for range 20 {
+		for _, tc := range []struct {
+			sortOrder string
+			want      []string
+		}{
+			{sortOrder: "", want: reversed(created)},
+			{sortOrder: "desc", want: reversed(created)},
+			{sortOrder: "asc", want: created},
+		} {
+			apps, total := store.ListApplications(ListParams{SortOrder: tc.sortOrder})
+			if total != len(created) {
+				t.Fatalf("sort_order=%q: total = %d, want %d", tc.sortOrder, total, len(created))
+			}
+			for i, a := range apps {
+				if a.Name != tc.want[i] {
+					t.Fatalf("sort_order=%q: app[%d] = %s, want %s", tc.sortOrder, i, a.Name, tc.want[i])
+				}
+			}
+		}
+	}
+}
+
+func reversed(names []string) []string {
+	out := make([]string, len(names))
+	for i, n := range names {
+		out[len(names)-1-i] = n
+	}
+	return out
 }

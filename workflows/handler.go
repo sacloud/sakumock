@@ -166,6 +166,12 @@ type monthAppliedPlanJSON struct {
 	OveragePricePerUnit int     `json:"overagePricePerUnit"`
 }
 
+type getSubscriptionResponse struct {
+	IsOk             bool                  `json:"is_ok"`
+	CurrentPlan      *subscriptionJSON     `json:"CurrentPlan"`
+	MonthAppliedPlan *monthAppliedPlanJSON `json:"MonthAppliedPlan,omitempty"`
+}
+
 type suggestItemJSON struct {
 	Id   string `json:"Id"`
 	Name string `json:"Name"`
@@ -794,15 +800,15 @@ func (s *Server) handleListPlans(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) handleGetSubscription(w http.ResponseWriter, _ *http.Request) {
 	sub := s.store.GetSubscription()
-	var currentPlan any
-	var monthPlan any
+	var currentPlan *subscriptionJSON
+	var monthPlan *monthAppliedPlanJSON
 	if sub != nil {
 		var activateUntil *string
 		if sub.ActivateUntil != nil {
 			s := core.FormatRFC3339Nano(*sub.ActivateUntil)
 			activateUntil = &s
 		}
-		currentPlan = subscriptionJSON{
+		currentPlan = &subscriptionJSON{
 			Id:            sub.ID,
 			AccountId:     sub.AccountID,
 			ContractId:    sub.ContractID,
@@ -814,7 +820,7 @@ func (s *Server) handleGetSubscription(w http.ResponseWriter, _ *http.Request) {
 			PlanName:      sub.PlanName,
 		}
 		plan := plansByID[sub.PlanID]
-		monthPlan = monthAppliedPlanJSON{
+		monthPlan = &monthAppliedPlanJSON{
 			Id:                  sub.ID,
 			AccountId:           sub.AccountID,
 			ContractId:          sub.ContractID,
@@ -831,10 +837,12 @@ func (s *Server) handleGetSubscription(w http.ResponseWriter, _ *http.Request) {
 			OveragePricePerUnit: plan.OveragePricePerUnit,
 		}
 	}
-	core.WriteJSON(w, http.StatusOK, map[string]any{
-		"is_ok":            true,
-		"CurrentPlan":      currentPlan,
-		"MonthAppliedPlan": monthPlan,
+	// MonthAppliedPlan is not nullable in the spec (unlike CurrentPlan), so the
+	// key is omitted while unsubscribed instead of being sent as null.
+	core.WriteJSON(w, http.StatusOK, getSubscriptionResponse{
+		IsOk:             true,
+		CurrentPlan:      currentPlan,
+		MonthAppliedPlan: monthPlan,
 	})
 }
 

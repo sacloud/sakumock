@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.8.0](https://github.com/sacloud/sakumock/compare/v0.7.2...v0.8.0) - 2026-08-13
+- objectstorage: authenticate control-plane access keys on the S3 data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/153
+- iam: validate responses against the OpenAPI spec and fix service policy endpoints by @fujiwara in https://github.com/sacloud/sakumock/pull/155
+- core: share spec-violation inspection routes; roll response validation out to kms by @fujiwara in https://github.com/sacloud/sakumock/pull/156
+- Roll response validation out to all remaining services by @fujiwara in https://github.com/sacloud/sakumock/pull/157
+- simplenotification: implement history, sources, status, and routing reorder by @fujiwara in https://github.com/sacloud/sakumock/pull/159
+- Add CloudHSM mock service by @tokuhirom in https://github.com/sacloud/sakumock/pull/158
+- workflows: omit MonthAppliedPlan when unsubscribed by @fujiwara in https://github.com/sacloud/sakumock/pull/160
+- apprun: order listings by creation sequence, not timestamp alone by @fujiwara in https://github.com/sacloud/sakumock/pull/161
+- iam: back the two-factor endpoints with real state by @fujiwara in https://github.com/sacloud/sakumock/pull/162
+
 ## [v0.7.2](https://github.com/sacloud/sakumock/compare/v0.7.1...v0.7.2) - 2026-08-04
 - Update sacloud-sdk-go to v0.0.1 by @fujiwara in https://github.com/sacloud/sakumock/pull/149
 - build(deps): Bump google.golang.org/grpc from 1.81.1 to 1.82.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/150

@@ -26,8 +26,12 @@ var bodySchemas = map[string]*core.BodySchema{
 // status is declared but its body carries no checkable constraints; a
 // status absent from a route's map is not declared in the spec at all.
 var responseSchemas = map[string]map[int]*core.BodySchema{
-	// NOTE: DELETE /things/ declares a default or range response; response validation left permissive
-	// NOTE: GET /ranges/ declares a default or range response; response validation left permissive
+	"DELETE /things/": {
+		204: nil,
+	},
+	"GET /ranges/": {
+		200: nil,
+	},
 	// NOTE: required property "ghost" at GET /status/ response 200 is not defined in properties; requirement skipped
 	"GET /status/": {
 		200: {
@@ -52,6 +56,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
+	// NOTE: GET /successranges/ declares a success-range response; response validation left permissive
 	"POST /things/": {
 		201: {
 			Type:     "object",

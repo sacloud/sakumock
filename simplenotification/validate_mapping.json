@@ -1,5 +1,9 @@
 {
   "skipPaths": [
-    "/commonserviceitem/simplenotification/routing/reorder"
+    "/commonserviceitem/simplenotification/routing/reorder",
+    "/commonserviceitem/simplenotification/history",
+    "/commonserviceitem/simplenotification/history/{request_id}",
+    "/commonserviceitem/simplenotification/sources",
+    "/commonserviceitem/{id}/simplenotification/status"
   ]
 }

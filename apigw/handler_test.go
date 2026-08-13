@@ -20,6 +20,16 @@ import (
 	"github.com/sacloud/sakumock/apigw"
 )
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *apigw.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 func newClient(t *testing.T, serverURL string) *v1.Client {
 	t.Helper()
 	var sa saclient.Client
@@ -91,7 +101,7 @@ func createService(t *testing.T, client *v1.Client, name string, subscriptionID 
 
 func TestPlansAndSubscriptionLifecycle(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	subOp := apigwsdk.NewSubscriptionOp(client)
@@ -146,7 +156,7 @@ func TestPlansAndSubscriptionLifecycle(t *testing.T) {
 
 func TestServiceLifecycle(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	svcOp := apigwsdk.NewServiceOp(client)
@@ -214,7 +224,7 @@ func TestServiceLifecycle(t *testing.T) {
 
 func TestRouteLifecycle(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 
@@ -362,7 +372,7 @@ func TestRouteLifecycle(t *testing.T) {
 
 func TestUserGroupLifecycle(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	userOp := apigwsdk.NewUserOp(client)
@@ -478,7 +488,7 @@ func testCertPEM(t *testing.T) (string, string) {
 
 func TestDomainCertificateLifecycle(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	certOp := apigwsdk.NewCertificateOp(client)
@@ -549,7 +559,7 @@ func TestDomainCertificateLifecycle(t *testing.T) {
 
 func TestOidcLifecycle(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 
@@ -636,7 +646,7 @@ func TestOidcLifecycle(t *testing.T) {
 // SDK client cannot produce (it always sends well-formed typed values).
 func TestServiceValidation(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	post := func(body string) int {
 		t.Helper()
@@ -666,7 +676,7 @@ func TestServiceValidation(t *testing.T) {
 // broken PEM input instead of a vague 400.
 func TestCertificateValidation(t *testing.T) {
 	srv := apigw.NewTestServer(apigw.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newClient(t, srv.TestURL())
 	certOp := apigwsdk.NewCertificateOp(client)

@@ -139,3 +139,4259 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /fed/v1/buckets/{name}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"DELETE /fed/v1/buckets/{name}/replication": {
+		204: nil,
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"DELETE /{site}/v2/account": {
+		204: nil,
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"DELETE /{site}/v2/account/keys/{id}": {
+		204: nil,
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"DELETE /{site}/v2/buckets/{name}/encryption": {
+		204: nil,
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"DELETE /{site}/v2/permissions/{id}": {
+		204: nil,
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"DELETE /{site}/v2/permissions/{id}/keys/{key_id}": {
+		204: nil,
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /fed/v1/buckets/{name}/replicable-targets": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"cluster_id": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+							"plan": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"service_class_path": {
+										Type: "string",
+									},
+									"type": {
+										Type: "string",
+										Enum: []any{"standard", "archive"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /fed/v1/buckets/{name}/replication": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type:     "object",
+					Required: []string{"config_status", "created_at", "dest_bucket", "source_bucket"},
+					Properties: map[string]*core.BodySchema{
+						"config_status": {
+							Type: "string",
+							Enum: []any{"creating", "created"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"dest_bucket": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"cluster_id": {
+									Type: "string",
+								},
+								"name": {
+									Type: "string",
+								},
+								"plan": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"service_class_path": {
+											Type: "string",
+										},
+										"type": {
+											Type: "string",
+											Enum: []any{"standard", "archive"},
+										},
+									},
+								},
+							},
+						},
+						"source_bucket": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"cluster_id": {
+									Type: "string",
+								},
+								"name": {
+									Type: "string",
+								},
+								"plan": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"service_class_path": {
+											Type: "string",
+										},
+										"type": {
+											Type: "string",
+											Enum: []any{"standard", "archive"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /fed/v1/clusters": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"api_zone": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+							"control_panel_url": {
+								Type: "string",
+							},
+							"display_name": {
+								Type: "string",
+							},
+							"display_name_en_us": {
+								Type: "string",
+							},
+							"display_name_ja": {
+								Type: "string",
+							},
+							"display_order": {
+								Type: "integer",
+							},
+							"endpoint_base": {
+								Type: "string",
+							},
+							"iam_endpoint": {
+								Type: "string",
+							},
+							"iam_endpoint_for_control_panel": {
+								Type: "string",
+							},
+							"id": {
+								Type: "string",
+							},
+							"plan_family": {
+								Type: "string",
+								Enum: []any{"standard", "archive"},
+							},
+							"region": {
+								Type: "string",
+							},
+							"s3_endpoint": {
+								Type: "string",
+							},
+							"s3_endpoint_for_control_panel": {
+								Type: "string",
+							},
+							"storage_zone": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /fed/v1/clusters/{id}": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"api_zone": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"control_panel_url": {
+							Type: "string",
+						},
+						"display_name": {
+							Type: "string",
+						},
+						"display_name_en_us": {
+							Type: "string",
+						},
+						"display_name_ja": {
+							Type: "string",
+						},
+						"display_order": {
+							Type: "integer",
+						},
+						"endpoint_base": {
+							Type: "string",
+						},
+						"iam_endpoint": {
+							Type: "string",
+						},
+						"iam_endpoint_for_control_panel": {
+							Type: "string",
+						},
+						"id": {
+							Type: "string",
+						},
+						"plan_family": {
+							Type: "string",
+							Enum: []any{"standard", "archive"},
+						},
+						"region": {
+							Type: "string",
+						},
+						"s3_endpoint": {
+							Type: "string",
+						},
+						"s3_endpoint_for_control_panel": {
+							Type: "string",
+						},
+						"storage_zone": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/account": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"resource_id": {
+							Type:    "string",
+							Pattern: "\\d{1,12}",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/account/keys": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"id": {
+								Type:    "string",
+								Pattern: "^[\\w\\d\\/]{1,40}$",
+							},
+							"secret": {
+								Type:    "string",
+								Pattern: "^[\\w\\d\\/+=]{1,40}$",
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/account/keys/{id}": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"created_at": {
+							Type: "string",
+						},
+						"id": {
+							Type:    "string",
+							Pattern: "^[\\w\\d\\/]{1,40}$",
+						},
+						"secret": {
+							Type:    "string",
+							Pattern: "^[\\w\\d\\/+=]{1,40}$",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/buckets": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:    "string",
+								Pattern: "^[a-zA-Z][a-zA-Z0-9\\-]{2,}",
+							},
+							"plan": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"service_class_path": {
+										Type: "string",
+									},
+									"type": {
+										Type: "string",
+										Enum: []any{"standard", "archive"},
+									},
+								},
+							},
+							"resource_id": {
+								Type:    "string",
+								Pattern: "\\d{1,12}",
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/buckets/{name}/encryption": {
+		200: {
+			Type:     "object",
+			Required: []string{"data"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"configured_at": {
+							Type: "string",
+						},
+						"kms_key_id": {
+							Type:    "string",
+							Pattern: "\\d{1,12}",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/buckets/{name}/penalty": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"amount_gib_per_bucket": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"is_applied": {
+									Type: "boolean",
+								},
+								"quota": {
+									Type: "integer",
+								},
+								"val": {
+									Type: "number",
+								},
+							},
+						},
+						"num_objects_per_bucket": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"is_applied": {
+									Type: "boolean",
+								},
+								"quota": {
+									Type: "number",
+								},
+								"val": {
+									Type: "number",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/buckets/{name}/plan": {
+		200: {
+			Type:     "object",
+			Required: []string{"data"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"contract": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"created_at": {
+									Type: "string",
+								},
+								"deleted_at": {
+									Type:     "string",
+									Nullable: true,
+								},
+								"resource_id": {
+									Type: "string",
+								},
+								"status": {
+									Type: "string",
+									Enum: []any{"active", "terminated"},
+								},
+							},
+						},
+						"plan": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"capacity_gib": {
+									Type:     "integer",
+									Nullable: true,
+								},
+								"cluster_id": {
+									Type: "string",
+								},
+								"service_class_path": {
+									Type: "string",
+								},
+								"type": {
+									Type: "string",
+									Enum: []any{"standard", "archive"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/buckets/{name}/quota": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"amount_gib_per_bucket": {
+							Type: "number",
+						},
+						"num_objects_per_bucket": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/buckets/{name}/usage": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"amount_gib_per_bucket": {
+							Type: "number",
+						},
+						"num_objects_per_bucket": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/metering/buckets/{name}": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"basic": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"charge": {
+										Type: "integer",
+									},
+									"found": {
+										Type: "boolean",
+									},
+									"from": {
+										Type: "string",
+									},
+									"is_closing": {
+										Type: "boolean",
+									},
+									"to": {
+										Type: "string",
+									},
+									"usage": {
+										Type: "number",
+									},
+								},
+							},
+							"num_objects": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"charge": {
+										Type: "integer",
+									},
+									"found": {
+										Type: "boolean",
+									},
+									"from": {
+										Type: "string",
+									},
+									"is_closing": {
+										Type: "boolean",
+									},
+									"to": {
+										Type: "string",
+									},
+									"usage": {
+										Type: "number",
+									},
+								},
+							},
+							"num_transactions": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"charge": {
+										Type: "integer",
+									},
+									"found": {
+										Type: "boolean",
+									},
+									"from": {
+										Type: "string",
+									},
+									"is_closing": {
+										Type: "boolean",
+									},
+									"to": {
+										Type: "string",
+									},
+									"usage": {
+										Type: "number",
+									},
+								},
+							},
+							"storage_usage": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"charge": {
+										Type: "integer",
+									},
+									"found": {
+										Type: "boolean",
+									},
+									"from": {
+										Type: "string",
+									},
+									"is_closing": {
+										Type: "boolean",
+									},
+									"to": {
+										Type: "string",
+									},
+									"usage": {
+										Type: "number",
+									},
+								},
+							},
+							"transfer_amount": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"charge": {
+										Type: "integer",
+									},
+									"found": {
+										Type: "boolean",
+									},
+									"from": {
+										Type: "string",
+									},
+									"is_closing": {
+										Type: "boolean",
+									},
+									"to": {
+										Type: "string",
+									},
+									"usage": {
+										Type: "number",
+									},
+								},
+							},
+							"year_month": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/permissions": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"bucket_controls": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"bucket_name": {
+											Type:    "string",
+											Pattern: "^[a-zA-Z][a-zA-Z0-9\\-]{2,}",
+										},
+										"can_read": {
+											Type: "boolean",
+										},
+										"can_write": {
+											Type: "boolean",
+										},
+										"created_at": {
+											Type: "string",
+										},
+									},
+								},
+							},
+							"created_at": {
+								Type: "string",
+							},
+							"display_name": {
+								Type:    "string",
+								Pattern: "^.+$",
+							},
+							"id": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/permissions/{id}": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"bucket_controls": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"bucket_name": {
+										Type:    "string",
+										Pattern: "^[a-zA-Z][a-zA-Z0-9\\-]{2,}",
+									},
+									"can_read": {
+										Type: "boolean",
+									},
+									"can_write": {
+										Type: "boolean",
+									},
+									"created_at": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"display_name": {
+							Type:    "string",
+							Pattern: "^.+$",
+						},
+						"id": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/permissions/{id}/keys": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"created_at": {
+								Type: "string",
+							},
+							"id": {
+								Type: "string",
+							},
+							"secret": {
+								Type:    "string",
+								Pattern: "^[\\w\\d\\/+=]{1,40}$",
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/permissions/{id}/keys/{key_id}": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"created_at": {
+							Type: "string",
+						},
+						"id": {
+							Type: "string",
+						},
+						"secret": {
+							Type:    "string",
+							Pattern: "^[\\w\\d\\/+=]{1,40}$",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/plans": {
+		200: {
+			Type:     "object",
+			Required: []string{"data"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"capacity_gib": {
+								Type: "integer",
+							},
+							"cluster_id": {
+								Type: "string",
+							},
+							"fee": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"daily": {
+										Type: "integer",
+									},
+									"for_month": {
+										Type: "integer",
+									},
+									"hourly": {
+										Type: "integer",
+									},
+									"monthly": {
+										Type: "integer",
+									},
+								},
+							},
+							"service_class_path": {
+								Type: "string",
+							},
+							"type": {
+								Type: "string",
+								Enum: []any{"standard", "archive"},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/quota": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"amount_gib_per_bucket": {
+							Type: "number",
+						},
+						"num_buckets": {
+							Type: "integer",
+						},
+						"num_buckets_per_permission": {
+							Type: "integer",
+						},
+						"num_keys_per_permission": {
+							Type: "integer",
+						},
+						"num_objects_per_bucket": {
+							Type: "integer",
+						},
+						"num_permissions": {
+							Type: "integer",
+						},
+						"num_root_keys": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /{site}/v2/status": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"accept_new": {
+							Type: "boolean",
+						},
+						"message": {
+							Type: "string",
+						},
+						"started_at": {
+							Type: "string",
+						},
+						"status_code": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"id": {
+									Type: "integer",
+								},
+								"status": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /fed/v1/buckets/{name}/replication": {
+		201: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type:     "object",
+					Required: []string{"config_status", "created_at", "dest_bucket", "source_bucket"},
+					Properties: map[string]*core.BodySchema{
+						"config_status": {
+							Type: "string",
+							Enum: []any{"creating", "created"},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"dest_bucket": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"cluster_id": {
+									Type: "string",
+								},
+								"name": {
+									Type: "string",
+								},
+								"plan": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"service_class_path": {
+											Type: "string",
+										},
+										"type": {
+											Type: "string",
+											Enum: []any{"standard", "archive"},
+										},
+									},
+								},
+							},
+						},
+						"source_bucket": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"cluster_id": {
+									Type: "string",
+								},
+								"name": {
+									Type: "string",
+								},
+								"plan": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"service_class_path": {
+											Type: "string",
+										},
+										"type": {
+											Type: "string",
+											Enum: []any{"standard", "archive"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /{site}/v2/account": {
+		201: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "string",
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"resource_id": {
+							Type:    "string",
+							Pattern: "\\d{1,12}",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		403: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /{site}/v2/account/keys": {
+		201: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"created_at": {
+							Type: "string",
+						},
+						"id": {
+							Type:    "string",
+							Pattern: "^[\\w\\d\\/]{1,40}$",
+						},
+						"secret": {
+							Type:    "string",
+							Pattern: "^[\\w\\d\\/+=]{1,40}$",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /{site}/v2/permissions": {
+		201: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"bucket_controls": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"bucket_name": {
+										Type:    "string",
+										Pattern: "^[a-zA-Z][a-zA-Z0-9\\-]{2,}",
+									},
+									"can_read": {
+										Type: "boolean",
+									},
+									"can_write": {
+										Type: "boolean",
+									},
+									"created_at": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"display_name": {
+							Type:    "string",
+							Pattern: "^.+$",
+						},
+						"id": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /{site}/v2/permissions/{id}/keys": {
+		201: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"created_at": {
+							Type: "string",
+						},
+						"id": {
+							Type: "string",
+						},
+						"secret": {
+							Type:    "string",
+							Pattern: "^[\\w\\d\\/+=]{1,40}$",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /fed/v1/buckets/{name}": {
+		201: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"cluster_id": {
+							Type: "string",
+						},
+						"name": {
+							Type: "string",
+						},
+						"plan": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"service_class_path": {
+									Type: "string",
+								},
+								"type": {
+									Type: "string",
+									Enum: []any{"standard", "archive"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /{site}/v2/buckets/{name}/encryption": {
+		200: {
+			Type:     "object",
+			Required: []string{"data"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"configured_at": {
+							Type: "string",
+						},
+						"kms_key_id": {
+							Type:    "string",
+							Pattern: "\\d{1,12}",
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /{site}/v2/buckets/{name}/plan": {
+		200: {
+			Type:     "object",
+			Required: []string{"data"},
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"new_contract": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"created_at": {
+									Type: "string",
+								},
+								"deleted_at": {
+									Type:     "string",
+									Nullable: true,
+								},
+								"resource_id": {
+									Type: "string",
+								},
+								"status": {
+									Type: "string",
+									Enum: []any{"active", "terminated"},
+								},
+							},
+						},
+						"plan": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"capacity_gib": {
+									Type:     "integer",
+									Nullable: true,
+								},
+								"cluster_id": {
+									Type: "string",
+								},
+								"service_class_path": {
+									Type: "string",
+								},
+								"type": {
+									Type: "string",
+									Enum: []any{"standard", "archive"},
+								},
+							},
+						},
+						"previous_contract": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"created_at": {
+									Type: "string",
+								},
+								"deleted_at": {
+									Type:     "string",
+									Nullable: true,
+								},
+								"resource_id": {
+									Type: "string",
+								},
+								"status": {
+									Type: "string",
+									Enum: []any{"active", "terminated"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /{site}/v2/permissions/{id}": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"data": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"bucket_controls": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"bucket_name": {
+										Type:    "string",
+										Pattern: "^[a-zA-Z][a-zA-Z0-9\\-]{2,}",
+									},
+									"can_read": {
+										Type: "boolean",
+									},
+									"can_write": {
+										Type: "boolean",
+									},
+									"created_at": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"created_at": {
+							Type: "string",
+						},
+						"display_name": {
+							Type:    "string",
+							Pattern: "^.+$",
+						},
+						"id": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+}

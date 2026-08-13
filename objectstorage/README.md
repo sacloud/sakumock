@@ -143,3 +143,14 @@ aws s3 cp ./file.txt s3://my-bucket/file.txt
 (`AWS_ENDPOINT_URL_S3` and `AWS_DEFAULT_REGION` are honored by both aws-cli and aws-sdk-go-v2.)
 
 Note: the SAKURA Terraform provider's `sakura_object_storage_object` resource uses an S3 client with TLS forced on, so reaching this plain-HTTP data plane from that specific resource needs versitygw served over TLS; SDK/CLI/application clients (where you control the endpoint and TLS) work over HTTP.
+
+## Mock-only endpoints
+
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
+| `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.

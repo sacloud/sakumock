@@ -113,3 +113,14 @@ Authentication (the service's `authentication` field) is enforced before proxyin
 - **Referential integrity**: deleting a service with routes, a domain referenced by a route's `hosts`, a certificate referenced by a domain, or a subscription bound to a service is refused (400); deleting an OIDC configuration referenced by a service is refused (409). Deleting a group cascades out of user memberships and route authorizations.
 - **Secrets are echoed**: credential values (`password`, `secret`, OIDC `clientSecret`, object storage keys) are returned by GET endpoints because the SDK's generated client requires those fields on decode. Do not put real secrets into the mock.
 - **Certificates**: `expiredAt` is derived by parsing the uploaded PEM; the PEM material itself is never returned (writeOnly in the spec).
+
+## Mock-only endpoints
+
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
+| `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.

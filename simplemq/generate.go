@@ -4,4 +4,4 @@ package simplemq
 // verifies the generated file is up to date. Both specs feed one table: the
 // control plane (queue.yaml) and the data plane (message.yaml) share the
 // route table on different path families.
-//go:generate go run github.com/sacloud/sakumock/internal/genvalidate -spec openapi/queue.yaml -spec openapi/message.yaml -out validate_gen.go
+//go:generate go run github.com/sacloud/sakumock/internal/genvalidate -spec openapi/queue.yaml -spec openapi/message.yaml -responses -out validate_gen.go

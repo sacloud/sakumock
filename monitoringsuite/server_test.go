@@ -36,7 +36,15 @@ func newClient(t *testing.T, serverURL string) *v1.Client {
 func newServer(t *testing.T) (*v1.Client, func()) {
 	t.Helper()
 	srv := monitoringsuite.NewTestServer(monitoringsuite.Config{})
-	return newClient(t, srv.TestURL()), srv.Close
+	closeFn := func() {
+		// The handlers exercised by the test must not have drifted from the
+		// OpenAPI spec.
+		if v := srv.SpecViolations(); len(v) != 0 {
+			t.Errorf("spec violations recorded: %+v", v)
+		}
+		srv.Close()
+	}
+	return newClient(t, srv.TestURL()), closeFn
 }
 
 func ridOf(t *testing.T, opt v1.NilInt64) string {

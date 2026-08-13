@@ -97,3 +97,1490 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Description left permissive
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.ID left permissive
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Icon left permissive
+	"DELETE /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "ServiceClass", "Settings", "SettingsHash", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class", "ID", "Name", "ServiceClass"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"simplemq"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type: "string",
+						},
+						"Settings": {
+							Type:     "object",
+							Required: []string{"ExpireSeconds", "VisibilityTimeoutSeconds"},
+							Properties: map[string]*core.BodySchema{
+								"ExpireSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(60),
+									Maximum: core.Float64Ptr(1209600),
+								},
+								"VisibilityTimeoutSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(5),
+									Maximum: core.Float64Ptr(900),
+								},
+							},
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Required: []string{"QueueName"},
+							Properties: map[string]*core.BodySchema{
+								"QueueName": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Success": {
+					Type: "boolean",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /commonserviceitem/{id}/simplemq/messages": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"SimpleMQ": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"result": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /v1/queues/{queueName}/messages/{messageId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"result"},
+			Properties: map[string]*core.BodySchema{
+				"result": {
+					Type: "string",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		429: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Description left permissive
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].ID left permissive
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Icon left permissive
+	"GET /commonserviceitem": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItems"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItems": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "ServiceClass", "Settings", "SettingsHash", "Status", "Tags"},
+						Properties: map[string]*core.BodySchema{
+							"Availability": {
+								Type: "string",
+							},
+							"CreatedAt": {
+								Type: "string",
+							},
+							"ModifiedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type: "string",
+							},
+							"Provider": {
+								Type:     "object",
+								Required: []string{"Class", "ID", "Name", "ServiceClass"},
+								Properties: map[string]*core.BodySchema{
+									"Class": {
+										Type: "string",
+										Enum: []any{"simplemq"},
+									},
+									"ID": {
+										Type: "integer",
+									},
+									"Name": {
+										Type: "string",
+									},
+									"ServiceClass": {
+										Type: "string",
+									},
+								},
+							},
+							"ServiceClass": {
+								Type: "string",
+							},
+							"Settings": {
+								Type:     "object",
+								Required: []string{"ExpireSeconds", "VisibilityTimeoutSeconds"},
+								Properties: map[string]*core.BodySchema{
+									"ExpireSeconds": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(60),
+										Maximum: core.Float64Ptr(1209600),
+									},
+									"VisibilityTimeoutSeconds": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(5),
+										Maximum: core.Float64Ptr(900),
+									},
+								},
+							},
+							"SettingsHash": {
+								Type: "string",
+							},
+							"Status": {
+								Type:     "object",
+								Required: []string{"QueueName"},
+								Properties: map[string]*core.BodySchema{
+									"QueueName": {
+										Type: "string",
+									},
+								},
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Total": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Description left permissive
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.ID left permissive
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Icon left permissive
+	"GET /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "ServiceClass", "Settings", "SettingsHash", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class", "ID", "Name", "ServiceClass"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"simplemq"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type: "string",
+						},
+						"Settings": {
+							Type:     "object",
+							Required: []string{"ExpireSeconds", "VisibilityTimeoutSeconds"},
+							Properties: map[string]*core.BodySchema{
+								"ExpireSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(60),
+									Maximum: core.Float64Ptr(1209600),
+								},
+								"VisibilityTimeoutSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(5),
+									Maximum: core.Float64Ptr(900),
+								},
+							},
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Required: []string{"QueueName"},
+							Properties: map[string]*core.BodySchema{
+								"QueueName": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /commonserviceitem/{id}/simplemq/message-count": {
+		200: {
+			Type:     "object",
+			Required: []string{"SimpleMQ"},
+			Properties: map[string]*core.BodySchema{
+				"SimpleMQ": {
+					Type:     "object",
+					Required: []string{"count"},
+					Properties: map[string]*core.BodySchema{
+						"count": {
+							Type: "integer",
+						},
+						"result": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /v1/queues/{queueName}/messages": {
+		200: {
+			Type:     "object",
+			Required: []string{"messages", "result"},
+			Properties: map[string]*core.BodySchema{
+				"messages": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"acquired_at", "content", "created_at", "expires_at", "id", "updated_at", "visibility_timeout_at"},
+						Properties: map[string]*core.BodySchema{
+							"acquired_at": {
+								Type: "integer",
+							},
+							"content": {
+								Type:      "string",
+								MaxLength: core.IntPtr(256000),
+								Pattern:   "^[0-9a-zA-Z+/=]*$",
+							},
+							"created_at": {
+								Type: "integer",
+							},
+							"expires_at": {
+								Type: "integer",
+							},
+							"id": {
+								Type:      "string",
+								MinLength: core.IntPtr(36),
+								MaxLength: core.IntPtr(36),
+								Pattern:   "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+							},
+							"updated_at": {
+								Type: "integer",
+							},
+							"visibility_timeout_at": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+				"result": {
+					Type: "string",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		429: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Description left permissive
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.ID left permissive
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Icon left permissive
+	"POST /commonserviceitem": {
+		201: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "ServiceClass", "Settings", "SettingsHash", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class", "ID", "Name", "ServiceClass"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"simplemq"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type: "string",
+						},
+						"Settings": {
+							Type:     "object",
+							Required: []string{"ExpireSeconds", "VisibilityTimeoutSeconds"},
+							Properties: map[string]*core.BodySchema{
+								"ExpireSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(60),
+									Maximum: core.Float64Ptr(1209600),
+								},
+								"VisibilityTimeoutSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(5),
+									Maximum: core.Float64Ptr(900),
+								},
+							},
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Required: []string{"QueueName"},
+							Properties: map[string]*core.BodySchema{
+								"QueueName": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Success": {
+					Type: "boolean",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /v1/queues/{queueName}/messages": {
+		200: {
+			Type:     "object",
+			Required: []string{"message", "result"},
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type:     "object",
+					Required: []string{"content", "created_at", "expires_at", "id", "updated_at"},
+					Properties: map[string]*core.BodySchema{
+						"content": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256000),
+							Pattern:   "^[0-9a-zA-Z+/=]*$",
+						},
+						"created_at": {
+							Type: "integer",
+						},
+						"expires_at": {
+							Type: "integer",
+						},
+						"id": {
+							Type:      "string",
+							MinLength: core.IntPtr(36),
+							MaxLength: core.IntPtr(36),
+							Pattern:   "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+						},
+						"updated_at": {
+							Type: "integer",
+						},
+					},
+				},
+				"result": {
+					Type: "string",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		429: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Description left permissive
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.ID left permissive
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Icon left permissive
+	"PUT /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "ServiceClass", "Settings", "SettingsHash", "Status", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class", "ID", "Name", "ServiceClass"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"simplemq"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type: "string",
+						},
+						"Settings": {
+							Type:     "object",
+							Required: []string{"ExpireSeconds", "VisibilityTimeoutSeconds"},
+							Properties: map[string]*core.BodySchema{
+								"ExpireSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(60),
+									Maximum: core.Float64Ptr(1209600),
+								},
+								"VisibilityTimeoutSeconds": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(5),
+									Maximum: core.Float64Ptr(900),
+								},
+							},
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Required: []string{"QueueName"},
+							Properties: map[string]*core.BodySchema{
+								"QueueName": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Success": {
+					Type: "boolean",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /commonserviceitem/{id}/simplemq/rotate-apikey": {
+		200: {
+			Type:     "object",
+			Required: []string{"SimpleMQ"},
+			Properties: map[string]*core.BodySchema{
+				"SimpleMQ": {
+					Type:     "object",
+					Required: []string{"apikey"},
+					Properties: map[string]*core.BodySchema{
+						"apikey": {
+							Type: "string",
+						},
+						"result": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /v1/queues/{queueName}/messages/{messageId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"message", "result"},
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type:     "object",
+					Required: []string{"acquired_at", "content", "created_at", "expires_at", "id", "updated_at", "visibility_timeout_at"},
+					Properties: map[string]*core.BodySchema{
+						"acquired_at": {
+							Type: "integer",
+						},
+						"content": {
+							Type:      "string",
+							MaxLength: core.IntPtr(256000),
+							Pattern:   "^[0-9a-zA-Z+/=]*$",
+						},
+						"created_at": {
+							Type: "integer",
+						},
+						"expires_at": {
+							Type: "integer",
+						},
+						"id": {
+							Type:      "string",
+							MinLength: core.IntPtr(36),
+							MaxLength: core.IntPtr(36),
+							Pattern:   "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+						},
+						"updated_at": {
+							Type: "integer",
+						},
+						"visibility_timeout_at": {
+							Type: "integer",
+						},
+					},
+				},
+				"result": {
+					Type: "string",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		429: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"code": {
+					Type: "integer",
+				},
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+}

@@ -61,6 +61,11 @@ func TestSendMessage_Success(t *testing.T) {
 	if msgs[0].Message != "hello" {
 		t.Fatalf("unexpected message: %s", msgs[0].Message)
 	}
+
+	// The handlers above must not have drifted from the OpenAPI spec.
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
 }
 
 func TestSendMessage_Multiple(t *testing.T) {

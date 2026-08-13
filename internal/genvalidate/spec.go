@@ -134,11 +134,18 @@ func collectResponses(doc map[string]any, mapping *Mapping, warn io.Writer) ([]r
 			statuses := map[int]*core.BodySchema{}
 			wildcard := false
 			for _, code := range slices.Sorted(maps.Keys(resps)) {
-				// "default" and range patterns like "4XX" accept statuses the
-				// int-keyed table cannot express, so the route degrades to
-				// permissive below.
+				// "default" and error ranges ("4XX"/"5XX") are ignored: the
+				// validator tolerates undeclared error statuses anyway, so
+				// they add nothing, and dropping the whole route for them
+				// would disable validation of the explicitly declared
+				// statuses (specs routinely put a default error catch-all on
+				// every operation). A success range ("2XX"/"3XX") makes the
+				// set of valid success statuses non-enumerable, so the route
+				// degrades to permissive below.
 				if code == "default" || strings.HasSuffix(code, "XX") {
-					wildcard = true
+					if strings.HasPrefix(code, "2") || strings.HasPrefix(code, "3") {
+						wildcard = true
+					}
 					continue
 				}
 				status, err := strconv.Atoi(code)
@@ -172,10 +179,10 @@ func collectResponses(doc map[string]any, mapping *Mapping, warn io.Writer) ([]r
 				statuses[status] = c.compile(rawSchema, loc, nil)
 			}
 			if wildcard {
-				// A default/range response accepts statuses the table cannot
-				// enumerate, so membership cannot be enforced; leave the whole
-				// route permissive.
-				c.note("%s %s declares a default or range response; response validation left permissive", strings.ToUpper(method), path)
+				// A success-range response accepts success statuses the table
+				// cannot enumerate, so membership cannot be enforced; leave
+				// the whole route permissive.
+				c.note("%s %s declares a success-range response; response validation left permissive", strings.ToUpper(method), path)
 				ops = append(ops, responseOp{key: key, notes: c.notes})
 				continue
 			}

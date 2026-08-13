@@ -78,6 +78,14 @@
           "4XX": {"description": "client error"}
         }
       }
+    },
+    "/successranges/": {
+      "get": {
+        "responses": {
+          "2XX": {"description": "any success"},
+          "404": {"description": "not found"}
+        }
+      }
     }
   },
   "components": {

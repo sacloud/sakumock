@@ -118,6 +118,11 @@ func TestSecretLifecycle(t *testing.T) {
 	if len(secrets) != 0 {
 		t.Fatalf("expected 0 secrets after delete, got %d", len(secrets))
 	}
+
+	// The handlers above must not have drifted from the OpenAPI spec.
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
 }
 
 func TestUnveilNotFound(t *testing.T) {

@@ -22,6 +22,16 @@ func (s *testSecuritySource) ApiKeyAuth(_ context.Context, _ message.OperationNa
 	return message.ApiKeyAuth{Token: s.token}, nil
 }
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *simplemq.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 func newTestClient(t *testing.T, serverURL, token string) *message.Client {
 	t.Helper()
 	client, err := message.NewClient(serverURL, &testSecuritySource{token: token})
@@ -40,7 +50,7 @@ const nonexistentUUID = "00000000-0000-0000-0000-000000000000"
 
 func TestSendReceiveDelete(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
 	ctx := t.Context()
@@ -115,7 +125,7 @@ func TestSendReceiveDelete(t *testing.T) {
 
 func TestEmptyReceive(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
 	ctx := t.Context()
@@ -135,7 +145,7 @@ func TestEmptyReceive(t *testing.T) {
 
 func TestDeleteNotFound(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
 	ctx := t.Context()
@@ -154,7 +164,7 @@ func TestDeleteNotFound(t *testing.T) {
 
 func TestUnauthorized(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	// Use empty token to trigger 401
 	client := newTestClient(t, srv.TestURL(), "")
@@ -171,7 +181,7 @@ func TestUnauthorized(t *testing.T) {
 
 func TestAPIKeyValidation(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{APIKey: "correct-key"})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	ctx := t.Context()
 	queueName := "test-queue"
@@ -213,7 +223,7 @@ func TestAPIKeyValidation(t *testing.T) {
 
 func TestNoAPIKeyAcceptsAny(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	ctx := t.Context()
 	queueName := "test-queue"
@@ -232,7 +242,7 @@ func TestNoAPIKeyAcceptsAny(t *testing.T) {
 
 func TestExtendTimeout(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
 	ctx := t.Context()
@@ -285,7 +295,7 @@ func TestExtendTimeout(t *testing.T) {
 
 func TestVisibilityTimeout(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	client := newTestClient(t, srv.TestURL(), "test-api-key")
 	ctx := t.Context()
@@ -351,7 +361,7 @@ func doRequest(t *testing.T, method, url, token, body string) (int, map[string]a
 
 func TestValidationQueueName(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	tests := []struct {
 		name      string
@@ -383,7 +393,7 @@ func TestValidationQueueName(t *testing.T) {
 
 func TestValidationMessageContent(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	tests := []struct {
 		name    string
@@ -406,7 +416,7 @@ func TestValidationMessageContent(t *testing.T) {
 
 func TestValidationMessageID(t *testing.T) {
 	srv := simplemq.NewTestServer(simplemq.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	tests := []struct {
 		name      string

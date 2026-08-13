@@ -84,7 +84,11 @@ type Server struct {
 	// validator rejects request bodies violating the spec-derived constraints
 	// in the generated bodySchemas table (validate_gen.go).
 	validator *core.BodyValidator
-	logger    *slog.Logger
+	// respValidator checks handler responses against the generated
+	// responseSchemas table. Violations never alter the response: they are
+	// logged at Warn and inspectable via GET /_sakumock/spec-violations.
+	respValidator *core.ResponseValidator
+	logger        *slog.Logger
 }
 
 // NewHandler creates a Server as an http.Handler without starting a listener.
@@ -110,7 +114,8 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator: core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		validator:     core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		respValidator: core.NewResponseValidator(responseSchemas, logger),
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
@@ -147,6 +152,12 @@ func NewTestServerWithServiceLink(cfg Config, env []core.EnvVar) *Server {
 // TestURL returns the base URL of the test server.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
+}
+
+// SpecViolations returns the OpenAPI spec violations recorded so far by the
+// response validator (also served at GET /_sakumock/spec-violations).
+func (s *Server) SpecViolations() []core.SpecViolation {
+	return s.respValidator.Violations()
 }
 
 // Secret returns the secret set on the process configuration with the given

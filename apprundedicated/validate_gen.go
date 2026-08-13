@@ -455,3 +455,1402 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /applications/{applicationID}": {
+		204: nil,
+	},
+	"DELETE /applications/{applicationID}/versions/{version}": {
+		204: nil,
+	},
+	"DELETE /clusters/{clusterID}": {
+		204: nil,
+	},
+	"DELETE /clusters/{clusterID}/asg/{autoScalingGroupID}": {
+		204: nil,
+	},
+	"DELETE /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}": {
+		204: nil,
+	},
+	"DELETE /clusters/{clusterID}/certificates/{certificateID}": {
+		204: nil,
+	},
+	"GET /applications": {
+		200: {
+			Type:     "object",
+			Required: []string{"applications"},
+			Properties: map[string]*core.BodySchema{
+				"applications": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"activeVersion", "applicationID", "clusterID", "clusterName", "desiredCount", "name", "scalingCooldownSeconds"},
+						Properties: map[string]*core.BodySchema{
+							"activeVersion": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"applicationID": {
+								Type: "string",
+							},
+							"clusterID": {
+								Type: "string",
+							},
+							"clusterName": {
+								Type: "string",
+							},
+							"desiredCount": {
+								Type:     "integer",
+								Nullable: true,
+							},
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(20),
+								Pattern:   "^[a-zA-Z0-9_-]+$",
+							},
+							"scalingCooldownSeconds": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+				"nextCursor": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /applications/{applicationID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"application"},
+			Properties: map[string]*core.BodySchema{
+				"application": {
+					Type:     "object",
+					Required: []string{"activeVersion", "applicationID", "clusterID", "clusterName", "desiredCount", "name", "scalingCooldownSeconds"},
+					Properties: map[string]*core.BodySchema{
+						"activeVersion": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"applicationID": {
+							Type: "string",
+						},
+						"clusterID": {
+							Type: "string",
+						},
+						"clusterName": {
+							Type: "string",
+						},
+						"desiredCount": {
+							Type:     "integer",
+							Nullable: true,
+						},
+						"name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(20),
+							Pattern:   "^[a-zA-Z0-9_-]+$",
+						},
+						"scalingCooldownSeconds": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /applications/{applicationID}/containers": {
+		200: {
+			Type:     "object",
+			Required: []string{"nodes"},
+			Properties: map[string]*core.BodySchema{
+				"nodes": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"containersStats", "desired", "nodeID"},
+						Properties: map[string]*core.BodySchema{
+							"containersStats": {
+								Type:     "object",
+								Nullable: true,
+								Required: []string{"collectedAtSec", "containers"},
+								Properties: map[string]*core.BodySchema{
+									"collectedAtSec": {
+										Type: "integer",
+									},
+									"containers": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"applicationID", "applicationVersion", "cpuUsagePercent", "id", "image", "state", "status"},
+											Properties: map[string]*core.BodySchema{
+												"applicationID": {
+													Type: "string",
+												},
+												"applicationVersion": {
+													Type: "integer",
+												},
+												"cpuUsagePercent": {
+													Type: "number",
+												},
+												"id": {
+													Type: "string",
+												},
+												"image": {
+													Type: "string",
+												},
+												"state": {
+													Type: "string",
+												},
+												"status": {
+													Type: "string",
+												},
+											},
+										},
+									},
+								},
+							},
+							"desired": {
+								Type:     "object",
+								Nullable: true,
+								Required: []string{"containers"},
+								Properties: map[string]*core.BodySchema{
+									"containers": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"applicationID", "applicationVersion", "cpuMillis", "image", "memoryMB"},
+											Properties: map[string]*core.BodySchema{
+												"applicationID": {
+													Type: "string",
+												},
+												"applicationVersion": {
+													Type: "integer",
+												},
+												"cpuMillis": {
+													Type: "integer",
+												},
+												"image": {
+													Type: "string",
+												},
+												"memoryMB": {
+													Type: "integer",
+												},
+											},
+										},
+									},
+								},
+							},
+							"nodeID": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /applications/{applicationID}/versions": {
+		200: {
+			Type:     "object",
+			Required: []string{"versions"},
+			Properties: map[string]*core.BodySchema{
+				"nextCursor": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(1),
+				},
+				"versions": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"activeNodeCount", "created", "image", "version"},
+						Properties: map[string]*core.BodySchema{
+							"activeNodeCount": {
+								Type: "integer",
+							},
+							"created": {
+								Type: "integer",
+							},
+							"image": {
+								Type:      "string",
+								MaxLength: core.IntPtr(512),
+							},
+							"version": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(1),
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /applications/{applicationID}/versions/{version}": {
+		200: {
+			Type:     "object",
+			Required: []string{"applicationVersion"},
+			Properties: map[string]*core.BodySchema{
+				"applicationVersion": {
+					Type:     "object",
+					Required: []string{"activeNodeCount", "cpu", "created", "env", "exposedPorts", "image", "memory", "registryPassword", "registryUsername", "scalingMode", "version"},
+					Properties: map[string]*core.BodySchema{
+						"activeNodeCount": {
+							Type: "integer",
+						},
+						"cmd": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+							MaxItems: core.IntPtr(20),
+						},
+						"cpu": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(100),
+							Maximum: core.Float64Ptr(64000),
+						},
+						"created": {
+							Type: "integer",
+						},
+						"env": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"key", "secret", "value"},
+								Properties: map[string]*core.BodySchema{
+									"key": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+									"secret": {
+										Type: "boolean",
+									},
+									"value": {
+										Type:      "string",
+										Nullable:  true,
+										MaxLength: core.IntPtr(4096),
+									},
+								},
+							},
+						},
+						"exposedPorts": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"healthCheck", "loadBalancerPort", "targetPort", "useLetsEncrypt"},
+								Properties: map[string]*core.BodySchema{
+									"healthCheck": {
+										Type:     "object",
+										Nullable: true,
+										Required: []string{"intervalSeconds", "path", "timeoutSeconds"},
+										Properties: map[string]*core.BodySchema{
+											"intervalSeconds": {
+												Type:    "integer",
+												Minimum: core.Float64Ptr(3),
+												Maximum: core.Float64Ptr(60),
+											},
+											"path": {
+												Type:      "string",
+												MaxLength: core.IntPtr(200),
+											},
+											"timeoutSeconds": {
+												Type:    "integer",
+												Maximum: core.Float64Ptr(60),
+											},
+										},
+									},
+									"host": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+										MaxItems: core.IntPtr(5),
+									},
+									"loadBalancerPort": {
+										Type:     "integer",
+										Nullable: true,
+										Minimum:  core.Float64Ptr(1),
+										Maximum:  core.Float64Ptr(65535),
+									},
+									"targetPort": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(1),
+										Maximum: core.Float64Ptr(65535),
+									},
+									"useLetsEncrypt": {
+										Type: "boolean",
+									},
+								},
+							},
+							MaxItems: core.IntPtr(5),
+						},
+						"fixedScale": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+							Maximum: core.Float64Ptr(50),
+						},
+						"image": {
+							Type:      "string",
+							MaxLength: core.IntPtr(512),
+						},
+						"maxScale": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+							Maximum: core.Float64Ptr(50),
+						},
+						"memory": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(128),
+							Maximum: core.Float64Ptr(131072),
+						},
+						"minScale": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+							Maximum: core.Float64Ptr(50),
+						},
+						"registryPassword": {
+							Type:      "string",
+							Nullable:  true,
+							MaxLength: core.IntPtr(255),
+						},
+						"registryUsername": {
+							Type:      "string",
+							Nullable:  true,
+							MaxLength: core.IntPtr(255),
+						},
+						"scaleInThreshold": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(30),
+							Maximum: core.Float64Ptr(70),
+						},
+						"scaleOutThreshold": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(50),
+							Maximum: core.Float64Ptr(99),
+						},
+						"scalingMode": {
+							Type: "string",
+							Enum: []any{"manual", "cpu"},
+						},
+						"version": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters": {
+		200: {
+			Type:     "object",
+			Required: []string{"clusters"},
+			Properties: map[string]*core.BodySchema{
+				"clusters": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"clusterID", "created", "name"},
+						Properties: map[string]*core.BodySchema{
+							"clusterID": {
+								Type: "string",
+							},
+							"created": {
+								Type: "integer",
+							},
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(20),
+							},
+						},
+					},
+				},
+				"nextCursor": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"cluster"},
+			Properties: map[string]*core.BodySchema{
+				"cluster": {
+					Type:     "object",
+					Required: []string{"clusterID", "created", "hasLetsEncryptEmail", "name", "ports", "servicePrincipalID"},
+					Properties: map[string]*core.BodySchema{
+						"clusterID": {
+							Type: "string",
+						},
+						"created": {
+							Type: "integer",
+						},
+						"hasLetsEncryptEmail": {
+							Type: "boolean",
+						},
+						"name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(20),
+							Pattern:   "^[a-zA-Z0-9_-]+$",
+						},
+						"ports": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"port", "protocol"},
+								Properties: map[string]*core.BodySchema{
+									"port": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(1),
+										Maximum: core.Float64Ptr(65535),
+									},
+									"protocol": {
+										Type: "string",
+										Enum: []any{"http", "https", "tcp"},
+									},
+								},
+							},
+						},
+						"servicePrincipalID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg": {
+		200: {
+			Type:     "object",
+			Required: []string{"autoScalingGroups"},
+			Properties: map[string]*core.BodySchema{
+				"autoScalingGroups": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"autoScalingGroupID", "deleting", "interfaces", "maxNodes", "minNodes", "name", "workerNodeCount", "workerServiceClassPath", "zone"},
+						Properties: map[string]*core.BodySchema{
+							"autoScalingGroupID": {
+								Type: "string",
+							},
+							"deleting": {
+								Type: "boolean",
+							},
+							"interfaces": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"connectsToLB", "interfaceIndex", "upstream"},
+									Properties: map[string]*core.BodySchema{
+										"connectsToLB": {
+											Type: "boolean",
+										},
+										"defaultGateway": {
+											Type: "string",
+										},
+										"interfaceIndex": {
+											Type: "integer",
+										},
+										"ipPool": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:     "object",
+												Required: []string{"end", "start"},
+												Properties: map[string]*core.BodySchema{
+													"end": {
+														Type:    "string",
+														Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+													},
+													"start": {
+														Type:    "string",
+														Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+													},
+												},
+											},
+											MaxItems: core.IntPtr(20),
+										},
+										"netmaskLen": {
+											Type:    "integer",
+											Minimum: core.Float64Ptr(8),
+											Maximum: core.Float64Ptr(29),
+										},
+										"packetFilterID": {
+											Type: "string",
+										},
+										"upstream": {
+											Type: "string",
+										},
+									},
+								},
+								MinItems: core.IntPtr(1),
+								MaxItems: core.IntPtr(5),
+							},
+							"maxNodes": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(1),
+								Maximum: core.Float64Ptr(10),
+							},
+							"minNodes": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(1),
+								Maximum: core.Float64Ptr(10),
+							},
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(20),
+								Pattern:   "^[a-zA-Z0-9_-]+$",
+							},
+							"nameServers": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:    "string",
+									Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+								},
+								MinItems: core.IntPtr(1),
+								MaxItems: core.IntPtr(3),
+							},
+							"workerNodeCount": {
+								Type: "integer",
+							},
+							"workerServiceClassPath": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(255),
+							},
+							"zone": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"nextCursor": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"autoScalingGroup"},
+			Properties: map[string]*core.BodySchema{
+				"autoScalingGroup": {
+					Type:     "object",
+					Required: []string{"autoScalingGroupID", "deleting", "interfaces", "maxNodes", "minNodes", "name", "workerNodeCount", "workerServiceClassPath", "zone"},
+					Properties: map[string]*core.BodySchema{
+						"autoScalingGroupID": {
+							Type: "string",
+						},
+						"deleting": {
+							Type: "boolean",
+						},
+						"interfaces": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"connectsToLB", "interfaceIndex", "upstream"},
+								Properties: map[string]*core.BodySchema{
+									"connectsToLB": {
+										Type: "boolean",
+									},
+									"defaultGateway": {
+										Type: "string",
+									},
+									"interfaceIndex": {
+										Type: "integer",
+									},
+									"ipPool": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"end", "start"},
+											Properties: map[string]*core.BodySchema{
+												"end": {
+													Type:    "string",
+													Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+												},
+												"start": {
+													Type:    "string",
+													Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+												},
+											},
+										},
+										MaxItems: core.IntPtr(20),
+									},
+									"netmaskLen": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(8),
+										Maximum: core.Float64Ptr(29),
+									},
+									"packetFilterID": {
+										Type: "string",
+									},
+									"upstream": {
+										Type: "string",
+									},
+								},
+							},
+							MinItems: core.IntPtr(1),
+							MaxItems: core.IntPtr(5),
+						},
+						"maxNodes": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+							Maximum: core.Float64Ptr(10),
+						},
+						"minNodes": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+							Maximum: core.Float64Ptr(10),
+						},
+						"name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(20),
+							Pattern:   "^[a-zA-Z0-9_-]+$",
+						},
+						"nameServers": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:    "string",
+								Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+							},
+							MinItems: core.IntPtr(1),
+							MaxItems: core.IntPtr(3),
+						},
+						"workerNodeCount": {
+							Type: "integer",
+						},
+						"workerServiceClassPath": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(255),
+						},
+						"zone": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers": {
+		200: {
+			Type:     "object",
+			Required: []string{"loadBalancers"},
+			Properties: map[string]*core.BodySchema{
+				"loadBalancers": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created", "deleting", "loadBalancerID", "name", "serviceClassPath"},
+						Properties: map[string]*core.BodySchema{
+							"created": {
+								Type: "integer",
+							},
+							"deleting": {
+								Type: "boolean",
+							},
+							"loadBalancerID": {
+								Type: "string",
+							},
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(20),
+								Pattern:   "^[a-zA-Z0-9_-]+$",
+							},
+							"nameServers": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:    "string",
+									Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+								},
+								MinItems: core.IntPtr(1),
+								MaxItems: core.IntPtr(3),
+							},
+							"serviceClassPath": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(255),
+							},
+						},
+					},
+				},
+				"nextCursor": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"loadBalancer"},
+			Properties: map[string]*core.BodySchema{
+				"loadBalancer": {
+					Type:     "object",
+					Required: []string{"created", "deleting", "interfaces", "loadBalancerID", "name", "serviceClassPath"},
+					Properties: map[string]*core.BodySchema{
+						"created": {
+							Type: "integer",
+						},
+						"deleting": {
+							Type: "boolean",
+						},
+						"interfaces": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"interfaceIndex", "upstream"},
+								Properties: map[string]*core.BodySchema{
+									"defaultGateway": {
+										Type: "string",
+									},
+									"interfaceIndex": {
+										Type: "integer",
+									},
+									"ipPool": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"end", "start"},
+											Properties: map[string]*core.BodySchema{
+												"end": {
+													Type:    "string",
+													Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+												},
+												"start": {
+													Type:    "string",
+													Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+												},
+											},
+										},
+										MaxItems: core.IntPtr(20),
+									},
+									"netmaskLen": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(8),
+										Maximum: core.Float64Ptr(29),
+									},
+									"packetFilterID": {
+										Type: "string",
+									},
+									"upstream": {
+										Type: "string",
+									},
+									"vip": {
+										Type:    "string",
+										Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+									},
+									"virtualRouterID": {
+										Type: "integer",
+									},
+								},
+							},
+							MinItems: core.IntPtr(1),
+							MaxItems: core.IntPtr(5),
+						},
+						"loadBalancerID": {
+							Type: "string",
+						},
+						"name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(20),
+							Pattern:   "^[a-zA-Z0-9_-]+$",
+						},
+						"nameServers": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:    "string",
+								Pattern: "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",
+							},
+							MinItems: core.IntPtr(1),
+							MaxItems: core.IntPtr(3),
+						},
+						"serviceClassPath": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(255),
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes": {
+		200: {
+			Type:     "object",
+			Required: []string{"loadBalancerNodes"},
+			Properties: map[string]*core.BodySchema{
+				"loadBalancerNodes": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created", "interfaces", "loadBalancerNodeID", "resourceID", "status"},
+						Properties: map[string]*core.BodySchema{
+							"archiveVersion": {
+								Type: "string",
+							},
+							"createErrorMessage": {
+								Type: "string",
+							},
+							"created": {
+								Type: "integer",
+							},
+							"interfaces": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"addresses", "interfaceIndex"},
+									Properties: map[string]*core.BodySchema{
+										"addresses": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:     "object",
+												Required: []string{"address", "vip"},
+												Properties: map[string]*core.BodySchema{
+													"address": {
+														Type: "string",
+													},
+													"vip": {
+														Type: "boolean",
+													},
+												},
+											},
+										},
+										"interfaceIndex": {
+											Type:    "integer",
+											Minimum: core.Float64Ptr(0),
+										},
+									},
+								},
+							},
+							"loadBalancerNodeID": {
+								Type: "string",
+							},
+							"resourceID": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"status": {
+								Type: "string",
+								Enum: []any{"healthy", "unhealthy", "creating", "starting"},
+							},
+						},
+					},
+				},
+				"nextCursor": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes/{loadBalancerNodeID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"loadBalancerNode"},
+			Properties: map[string]*core.BodySchema{
+				"loadBalancerNode": {
+					Type:     "object",
+					Required: []string{"created", "interfaces", "loadBalancerNodeID", "resourceID", "status"},
+					Properties: map[string]*core.BodySchema{
+						"archiveVersion": {
+							Type: "string",
+						},
+						"createErrorMessage": {
+							Type: "string",
+						},
+						"created": {
+							Type: "integer",
+						},
+						"interfaces": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"addresses", "interfaceIndex"},
+								Properties: map[string]*core.BodySchema{
+									"addresses": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"address", "vip"},
+											Properties: map[string]*core.BodySchema{
+												"address": {
+													Type: "string",
+												},
+												"vip": {
+													Type: "boolean",
+												},
+											},
+										},
+									},
+									"interfaceIndex": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+									},
+								},
+							},
+						},
+						"loadBalancerNodeID": {
+							Type: "string",
+						},
+						"resourceID": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"status": {
+							Type: "string",
+							Enum: []any{"healthy", "unhealthy", "creating", "starting"},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes": {
+		200: {
+			Type:     "object",
+			Required: []string{"workerNodes"},
+			Properties: map[string]*core.BodySchema{
+				"nextCursor": {
+					Type: "string",
+				},
+				"workerNodes": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"created", "draining", "networkInterfaces", "resourceID", "status", "workerNodeID"},
+						Properties: map[string]*core.BodySchema{
+							"archiveVersion": {
+								Type: "string",
+							},
+							"createErrorMessage": {
+								Type: "string",
+							},
+							"created": {
+								Type: "integer",
+							},
+							"draining": {
+								Type: "boolean",
+							},
+							"networkInterfaces": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"addresses", "interfaceIndex"},
+									Properties: map[string]*core.BodySchema{
+										"addresses": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:     "object",
+												Required: []string{"address"},
+												Properties: map[string]*core.BodySchema{
+													"address": {
+														Type: "string",
+													},
+												},
+											},
+										},
+										"interfaceIndex": {
+											Type:    "integer",
+											Minimum: core.Float64Ptr(0),
+										},
+									},
+								},
+							},
+							"resourceID": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"status": {
+								Type: "string",
+								Enum: []any{"healthy", "unhealthy", "creating", "starting"},
+							},
+							"workerNodeID": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"workerNode"},
+			Properties: map[string]*core.BodySchema{
+				"workerNode": {
+					Type:     "object",
+					Required: []string{"created", "creating", "draining", "healthy", "networkInterfaces", "resourceID", "runningContainers", "status", "workerNodeID"},
+					Properties: map[string]*core.BodySchema{
+						"archiveVersion": {
+							Type: "string",
+						},
+						"createErrorMessage": {
+							Type: "string",
+						},
+						"created": {
+							Type: "integer",
+						},
+						"creating": {
+							Type: "boolean",
+						},
+						"draining": {
+							Type: "boolean",
+						},
+						"healthy": {
+							Type: "boolean",
+						},
+						"networkInterfaces": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"addresses", "interfaceIndex"},
+								Properties: map[string]*core.BodySchema{
+									"addresses": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"address"},
+											Properties: map[string]*core.BodySchema{
+												"address": {
+													Type: "string",
+												},
+											},
+										},
+									},
+									"interfaceIndex": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+									},
+								},
+							},
+						},
+						"resourceID": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"runningContainers": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"applicationID", "applicationVersion", "containerID", "image", "name", "startedAt", "state", "status"},
+								Properties: map[string]*core.BodySchema{
+									"applicationID": {
+										Type: "string",
+									},
+									"applicationVersion": {
+										Type: "integer",
+									},
+									"containerID": {
+										Type: "string",
+									},
+									"image": {
+										Type: "string",
+									},
+									"name": {
+										Type: "string",
+									},
+									"startedAt": {
+										Type: "integer",
+									},
+									"state": {
+										Type: "string",
+									},
+									"status": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"status": {
+							Type: "string",
+							Enum: []any{"healthy", "unhealthy", "creating", "starting"},
+						},
+						"workerNodeID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/certificates": {
+		200: {
+			Type:     "object",
+			Required: []string{"certificates"},
+			Properties: map[string]*core.BodySchema{
+				"certificates": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"certificateID", "commonName", "created", "name", "notAfterSec", "notBeforeSec", "subjectAlternativeNames", "updated"},
+						Properties: map[string]*core.BodySchema{
+							"certificateID": {
+								Type: "string",
+							},
+							"commonName": {
+								Type:      "string",
+								MaxLength: core.IntPtr(255),
+							},
+							"created": {
+								Type: "integer",
+							},
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(20),
+								Pattern:   "^[a-zA-Z0-9_.-]+$",
+							},
+							"notAfterSec": {
+								Type: "integer",
+							},
+							"notBeforeSec": {
+								Type: "integer",
+							},
+							"subjectAlternativeNames": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+							"updated": {
+								Type: "integer",
+							},
+						},
+					},
+				},
+				"nextCursor": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /clusters/{clusterID}/certificates/{certificateID}": {
+		200: {
+			Type:     "object",
+			Required: []string{"certificate"},
+			Properties: map[string]*core.BodySchema{
+				"certificate": {
+					Type:     "object",
+					Required: []string{"certificateID", "commonName", "created", "name", "notAfterSec", "notBeforeSec", "subjectAlternativeNames", "updated"},
+					Properties: map[string]*core.BodySchema{
+						"certificateID": {
+							Type: "string",
+						},
+						"commonName": {
+							Type:      "string",
+							MaxLength: core.IntPtr(255),
+						},
+						"created": {
+							Type: "integer",
+						},
+						"name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(20),
+							Pattern:   "^[a-zA-Z0-9_.-]+$",
+						},
+						"notAfterSec": {
+							Type: "integer",
+						},
+						"notBeforeSec": {
+							Type: "integer",
+						},
+						"subjectAlternativeNames": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+						"updated": {
+							Type: "integer",
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /service_classes/lb": {
+		200: {
+			Type:     "object",
+			Required: []string{"lbServiceClasses"},
+			Properties: map[string]*core.BodySchema{
+				"lbServiceClasses": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name", "nodeCount", "path"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(255),
+							},
+							"nodeCount": {
+								Type: "integer",
+							},
+							"path": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /service_classes/worker": {
+		200: {
+			Type:     "object",
+			Required: []string{"workerServiceClasses"},
+			Properties: map[string]*core.BodySchema{
+				"workerServiceClasses": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"name", "path"},
+						Properties: map[string]*core.BodySchema{
+							"name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(255),
+							},
+							"path": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /applications": {
+		200: {
+			Type:     "object",
+			Required: []string{"application"},
+			Properties: map[string]*core.BodySchema{
+				"application": {
+					Type:     "object",
+					Required: []string{"applicationID"},
+					Properties: map[string]*core.BodySchema{
+						"applicationID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /applications/{applicationID}/versions": {
+		200: {
+			Type:     "object",
+			Required: []string{"applicationVersion"},
+			Properties: map[string]*core.BodySchema{
+				"applicationVersion": {
+					Type:     "object",
+					Required: []string{"version"},
+					Properties: map[string]*core.BodySchema{
+						"version": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /clusters": {
+		200: {
+			Type:     "object",
+			Required: []string{"cluster"},
+			Properties: map[string]*core.BodySchema{
+				"cluster": {
+					Type:     "object",
+					Required: []string{"clusterID"},
+					Properties: map[string]*core.BodySchema{
+						"clusterID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /clusters/{clusterID}/asg": {
+		200: {
+			Type:     "object",
+			Required: []string{"autoScalingGroup"},
+			Properties: map[string]*core.BodySchema{
+				"autoScalingGroup": {
+					Type:     "object",
+					Required: []string{"autoScalingGroupID"},
+					Properties: map[string]*core.BodySchema{
+						"autoScalingGroupID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers": {
+		200: {
+			Type:     "object",
+			Required: []string{"loadBalancer"},
+			Properties: map[string]*core.BodySchema{
+				"loadBalancer": {
+					Type:     "object",
+					Required: []string{"loadBalancerID"},
+					Properties: map[string]*core.BodySchema{
+						"loadBalancerID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /clusters/{clusterID}/certificates": {
+		200: {
+			Type:     "object",
+			Required: []string{"certificate"},
+			Properties: map[string]*core.BodySchema{
+				"certificate": {
+					Type:     "object",
+					Required: []string{"certificateID"},
+					Properties: map[string]*core.BodySchema{
+						"certificateID": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+	},
+	"PUT /applications/{applicationID}": {
+		204: nil,
+	},
+	"PUT /clusters/{clusterID}": {
+		204: nil,
+	},
+	"PUT /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}/draining": {
+		204: nil,
+	},
+	"PUT /clusters/{clusterID}/certificates/{certificateID}": {
+		204: nil,
+	},
+}

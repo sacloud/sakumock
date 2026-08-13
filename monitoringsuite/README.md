@@ -110,3 +110,14 @@ On top of that validation, you can inspect what was sent:
 `openapi/openapi.json` is copied from the `github.com/sacloud/sacloud-sdk-go`
 module (`api/monitoring-suite/openapi`). Run `make openapi` to refresh it after
 upgrading the SDK dependency.
+
+## Mock-only endpoints
+
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
+| `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.

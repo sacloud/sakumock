@@ -133,7 +133,7 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 		DataPlaneDir:    t.TempDir(),
 		DataPlaneRegion: dataPlaneRegion,
 	})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	ctx := t.Context()
 	fed, site := newClients(t, srv.TestURL())
@@ -206,7 +206,7 @@ func TestDataPlaneControlPlaneKeys(t *testing.T) {
 		DataPlaneDir:    t.TempDir(),
 		DataPlaneRegion: dataPlaneRegion,
 	})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	ctx := t.Context()
 	fed, site := newClients(t, srv.TestURL())

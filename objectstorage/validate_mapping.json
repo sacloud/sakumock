@@ -2,6 +2,12 @@
   "prefix": "/{site}/v2",
   "routes": {
     "PUT /buckets/{name}": "PUT /fed/v1/buckets/{name}",
-    "POST /buckets/{name}/replication": "POST /fed/v1/buckets/{name}/replication"
+    "DELETE /buckets/{name}": "DELETE /fed/v1/buckets/{name}",
+    "GET /buckets/{name}/replication": "GET /fed/v1/buckets/{name}/replication",
+    "POST /buckets/{name}/replication": "POST /fed/v1/buckets/{name}/replication",
+    "DELETE /buckets/{name}/replication": "DELETE /fed/v1/buckets/{name}/replication",
+    "GET /buckets/{name}/replicable-targets": "GET /fed/v1/buckets/{name}/replicable-targets",
+    "GET /clusters": "GET /fed/v1/clusters",
+    "GET /clusters/{id}": "GET /fed/v1/clusters/{id}"
   }
 }

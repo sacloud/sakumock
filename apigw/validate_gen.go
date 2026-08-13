@@ -1639,3 +1639,4231 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /certificates/{certificateId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /domains/{domainId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /groups/{groupId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /oidc/{oidcId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /services/{serviceId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /services/{serviceId}/routes/{routeId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /subscriptions/{subscriptionId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"DELETE /users/{userId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /certificates": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"certificates": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"createdAt": {
+										Type: "string",
+									},
+									"ecdsa": {
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"cert": {
+												Type:    "string",
+												Pattern: "^-----BEGIN CERTIFICATE-----\\r?\\n(?:[A-Za-z0-9+/=\\r\\n]+)-----END CERTIFICATE-----\\r?\\n?$",
+											},
+											"expiredAt": {
+												Type: "string",
+											},
+											"key": {
+												Type: "string",
+											},
+										},
+									},
+									"id": {
+										Type: "string",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"rsa": {
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"cert": {
+												Type:    "string",
+												Pattern: "^-----BEGIN CERTIFICATE-----\\r?\\n(?:[A-Za-z0-9+/=\\r\\n]+)-----END CERTIFICATE-----\\r?\\n?$",
+											},
+											"expiredAt": {
+												Type: "string",
+											},
+											"key": {
+												Type: "string",
+											},
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /domains": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"domains": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"domainName"},
+								Properties: map[string]*core.BodySchema{
+									"certificateId": {
+										Type: "string",
+									},
+									"certificateName": {
+										Type: "string",
+									},
+									"createdAt": {
+										Type: "string",
+									},
+									"domainName": {
+										Type:    "string",
+										Pattern: "^\\s*(([a-z\\d]([a-z\\d-]*[a-z\\d])?)\\.)+([a-z\\d-]{2,})(\\.)?\\s*$",
+									},
+									"id": {
+										Type: "string",
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /groups response 200.apigw.groups[].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /groups": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"groups": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"name"},
+								Properties: map[string]*core.BodySchema{
+									"createdAt": {
+										Type: "string",
+									},
+									"id": {
+										Type: "string",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:      "string",
+											MinLength: core.IntPtr(1),
+											MaxLength: core.IntPtr(255),
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /groups/{groupId} response 200.apigw.group.allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /groups/{groupId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"group": {
+							Type:     "object",
+							Required: []string{"name"},
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"id": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /oidc": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"oidcs": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"authenticationMethods", "clientId", "clientSecret", "issuer", "name"},
+								Properties: map[string]*core.BodySchema{
+									"authenticationMethods": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+											Enum: []any{"authorizationCodeFlow", "accessToken"},
+										},
+									},
+									"clientId": {
+										Type: "string",
+									},
+									"clientSecret": {
+										Type: "string",
+									},
+									"createdAt": {
+										Type: "string",
+									},
+									"hideCredentials": {
+										Type: "boolean",
+									},
+									"id": {
+										Type: "string",
+									},
+									"issuer": {
+										Type: "string",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"refreshTokenParamName": {
+										Type: "string",
+									},
+									"scopes": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"tokenAudiences": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+									"useSession": {
+										Type: "boolean",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /oidc/{oidcId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"oidc": {
+							Type:     "object",
+							Required: []string{"authenticationMethods", "clientId", "clientSecret", "issuer", "name"},
+							Properties: map[string]*core.BodySchema{
+								"authenticationMethods": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+										Enum: []any{"authorizationCodeFlow", "accessToken"},
+									},
+								},
+								"clientId": {
+									Type: "string",
+								},
+								"clientSecret": {
+									Type: "string",
+								},
+								"createdAt": {
+									Type: "string",
+								},
+								"hideCredentials": {
+									Type: "boolean",
+								},
+								"id": {
+									Type: "string",
+								},
+								"issuer": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"refreshTokenParamName": {
+									Type: "string",
+								},
+								"scopes": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"services": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+											},
+										},
+									},
+								},
+								"tokenAudiences": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+								"useSession": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /plans": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"plans": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"createdAt": {
+										Type: "string",
+									},
+									"description": {
+										Type: "string",
+									},
+									"id": {
+										Type: "string",
+									},
+									"maxRequests": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+									},
+									"maxRequestsUnit": {
+										Type: "string",
+										Enum: []any{"second", "minute", "hour", "day", "month", "year"},
+									},
+									"maxServices": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+									},
+									"name": {
+										Type: "string",
+									},
+									"overage": {
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"unitPrice": {
+												Type: "string",
+											},
+											"unitRequests": {
+												Type:    "integer",
+												Minimum: core.Float64Ptr(0),
+											},
+										},
+									},
+									"price": {
+										Type: "string",
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /services response 200.apigw.services[].allOf[0].allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /services": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"services": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"host", "name", "protocol", "subscription"},
+								Properties: map[string]*core.BodySchema{
+									"authentication": {
+										Type: "string",
+										Enum: []any{"none", "basic", "hmac", "jwt", "oidc"},
+									},
+									"connectTimeout": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(1),
+										Maximum: core.Float64Ptr(2147483646),
+									},
+									"corsConfig": {
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"accessControlAllowHeaders": {
+												Type:      "string",
+												MaxLength: core.IntPtr(4000),
+											},
+											"accessControlAllowMethods": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type: "string",
+													Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+												},
+											},
+											"accessControlAllowOrigins": {
+												Type:      "string",
+												MaxLength: core.IntPtr(4000),
+											},
+											"accessControlExposedHeaders": {
+												Type:      "string",
+												MaxLength: core.IntPtr(4000),
+											},
+											"credentials": {
+												Type: "boolean",
+											},
+											"maxAge": {
+												Type: "integer",
+											},
+											"preflightContinue": {
+												Type: "boolean",
+											},
+											"privateNetwork": {
+												Type: "boolean",
+											},
+										},
+									},
+									"createdAt": {
+										Type: "string",
+									},
+									"host": {
+										Type:      "string",
+										MaxLength: core.IntPtr(253),
+										Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
+									},
+									"id": {
+										Type: "string",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"objectStorageConfig": {
+										Type:     "object",
+										Required: []string{"bucketName", "endpoint", "region", "useDocumentIndex"},
+										Properties: map[string]*core.BodySchema{
+											"accessKeyID": {
+												Type: "string",
+											},
+											"bucketName": {
+												Type:    "string",
+												Pattern: "^[a-z0-9.\\-]*$",
+											},
+											"endpoint": {
+												Type: "string",
+											},
+											"folderName": {
+												Type:    "string",
+												Pattern: "^[a-zA-Z0-9_\\-\\/!.*'()]*$",
+											},
+											"region": {
+												Type: "string",
+											},
+											"secretAccessKey": {
+												Type: "string",
+											},
+											"useDocumentIndex": {
+												Type: "boolean",
+											},
+										},
+									},
+									"oidc": {
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type: "string",
+											},
+										},
+									},
+									"path": {
+										Type:      "string",
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
+									},
+									"port": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+										Maximum: core.Float64Ptr(65535),
+									},
+									"protocol": {
+										Type: "string",
+										Enum: []any{"http", "https"},
+									},
+									"readTimeout": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(1),
+										Maximum: core.Float64Ptr(2147483646),
+									},
+									"retries": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+										Maximum: core.Float64Ptr(32767),
+									},
+									"routeHost": {
+										Type:      "string",
+										MaxLength: core.IntPtr(253),
+									},
+									"subscription": {
+										Type:     "object",
+										Required: []string{"id", "name"},
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type: "string",
+											},
+										},
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:      "string",
+											MinLength: core.IntPtr(1),
+											MaxLength: core.IntPtr(255),
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+									"writeTimeout": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(1),
+										Maximum: core.Float64Ptr(2147483646),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /services/{serviceId} response 200.apigw.service.allOf[0].allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /services/{serviceId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"service": {
+							Type:     "object",
+							Required: []string{"host", "name", "protocol", "subscription"},
+							Properties: map[string]*core.BodySchema{
+								"authentication": {
+									Type: "string",
+									Enum: []any{"none", "basic", "hmac", "jwt", "oidc"},
+								},
+								"connectTimeout": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(1),
+									Maximum: core.Float64Ptr(2147483646),
+								},
+								"corsConfig": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"accessControlAllowHeaders": {
+											Type:      "string",
+											MaxLength: core.IntPtr(4000),
+										},
+										"accessControlAllowMethods": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+												Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+											},
+										},
+										"accessControlAllowOrigins": {
+											Type:      "string",
+											MaxLength: core.IntPtr(4000),
+										},
+										"accessControlExposedHeaders": {
+											Type:      "string",
+											MaxLength: core.IntPtr(4000),
+										},
+										"credentials": {
+											Type: "boolean",
+										},
+										"maxAge": {
+											Type: "integer",
+										},
+										"preflightContinue": {
+											Type: "boolean",
+										},
+										"privateNetwork": {
+											Type: "boolean",
+										},
+									},
+								},
+								"createdAt": {
+									Type: "string",
+								},
+								"host": {
+									Type:      "string",
+									MaxLength: core.IntPtr(253),
+									Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
+								},
+								"id": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"objectStorageConfig": {
+									Type:     "object",
+									Required: []string{"bucketName", "endpoint", "region", "useDocumentIndex"},
+									Properties: map[string]*core.BodySchema{
+										"accessKeyID": {
+											Type: "string",
+										},
+										"bucketName": {
+											Type:    "string",
+											Pattern: "^[a-z0-9.\\-]*$",
+										},
+										"endpoint": {
+											Type: "string",
+										},
+										"folderName": {
+											Type:    "string",
+											Pattern: "^[a-zA-Z0-9_\\-\\/!.*'()]*$",
+										},
+										"region": {
+											Type: "string",
+										},
+										"secretAccessKey": {
+											Type: "string",
+										},
+										"useDocumentIndex": {
+											Type: "boolean",
+										},
+									},
+								},
+								"oidc": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"id": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+									},
+								},
+								"path": {
+									Type:      "string",
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
+								},
+								"port": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(0),
+									Maximum: core.Float64Ptr(65535),
+								},
+								"protocol": {
+									Type: "string",
+									Enum: []any{"http", "https"},
+								},
+								"readTimeout": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(1),
+									Maximum: core.Float64Ptr(2147483646),
+								},
+								"retries": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(0),
+									Maximum: core.Float64Ptr(32767),
+								},
+								"routeHost": {
+									Type:      "string",
+									MaxLength: core.IntPtr(253),
+								},
+								"subscription": {
+									Type:     "object",
+									Required: []string{"id", "name"},
+									Properties: map[string]*core.BodySchema{
+										"id": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+									},
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+								"writeTimeout": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(1),
+									Maximum: core.Float64Ptr(2147483646),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /services/{serviceId}/routes response 200.apigw.routes[].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /services/{serviceId}/routes": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"routes": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"methods", "name", "protocols"},
+								Properties: map[string]*core.BodySchema{
+									"createdAt": {
+										Type: "string",
+									},
+									"host": {
+										Type: "string",
+									},
+									"hosts": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"httpsRedirectStatusCode": {
+										Type: "integer",
+										Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+									},
+									"id": {
+										Type: "string",
+									},
+									"methods": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+											Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+										},
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"path": {
+										Type:      "string",
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^(\\/|~\\/).*",
+									},
+									"preserveHost": {
+										Type: "boolean",
+									},
+									"protocols": {
+										Type: "string",
+										Enum: []any{"http,https", "http", "https"},
+									},
+									"regexPriority": {
+										Type:    "integer",
+										Minimum: core.Float64Ptr(0),
+										Maximum: core.Float64Ptr(255),
+									},
+									"requestBuffering": {
+										Type: "boolean",
+									},
+									"responseBuffering": {
+										Type: "boolean",
+									},
+									"serviceId": {
+										Type: "string",
+									},
+									"stripPath": {
+										Type: "boolean",
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:      "string",
+											MinLength: core.IntPtr(1),
+											MaxLength: core.IntPtr(255),
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /services/{serviceId}/routes/{routeId} response 200.apigw.route.allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /services/{serviceId}/routes/{routeId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"route": {
+							Type:     "object",
+							Required: []string{"methods", "name", "protocols"},
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"host": {
+									Type: "string",
+								},
+								"hosts": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"httpsRedirectStatusCode": {
+									Type: "integer",
+									Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+								},
+								"id": {
+									Type: "string",
+								},
+								"ipRestrictionConfig": {
+									Type:     "object",
+									Required: []string{"ips", "protocols", "restrictedBy"},
+									Properties: map[string]*core.BodySchema{
+										"ips": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "string",
+												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
+											},
+											MinItems: core.IntPtr(1),
+										},
+										"protocols": {
+											Type: "string",
+											Enum: []any{"http,https", "http", "https"},
+										},
+										"restrictedBy": {
+											Type: "string",
+											Enum: []any{"allowIps", "denyIps"},
+										},
+									},
+								},
+								"methods": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+										Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+									},
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"path": {
+									Type:      "string",
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^(\\/|~\\/).*",
+								},
+								"preserveHost": {
+									Type: "boolean",
+								},
+								"protocols": {
+									Type: "string",
+									Enum: []any{"http,https", "http", "https"},
+								},
+								"regexPriority": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(0),
+									Maximum: core.Float64Ptr(255),
+								},
+								"requestBuffering": {
+									Type: "boolean",
+								},
+								"responseBuffering": {
+									Type: "boolean",
+								},
+								"serviceId": {
+									Type: "string",
+								},
+								"stripPath": {
+									Type: "boolean",
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /services/{serviceId}/routes/{routeId}/authorization": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"routeAuthorization": {
+							Type:     "object",
+							Required: []string{"groups", "isACLEnabled"},
+							Properties: map[string]*core.BodySchema{
+								"groups": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "object",
+										Properties: map[string]*core.BodySchema{
+											"enabled": {
+												Type: "boolean",
+											},
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+											},
+										},
+									},
+									MinItems: core.IntPtr(1),
+								},
+								"isACLEnabled": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /services/{serviceId}/routes/{routeId}/request": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"requestTransformation": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"add": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+										},
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[\\x20-\\x7E]*$",
+													},
+												},
+											},
+										},
+										"queryParams": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_.]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
+													},
+												},
+											},
+										},
+									},
+								},
+								"allow": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+											},
+										},
+									},
+								},
+								"append": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+										},
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[\\x20-\\x7E]*$",
+													},
+												},
+											},
+										},
+										"queryParams": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_.]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
+													},
+												},
+											},
+										},
+									},
+								},
+								"httpMethod": {
+									Type: "string",
+									Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+								},
+								"remove": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+											},
+										},
+										"headerKeys": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[a-zA-Z0-9-_]+$",
+											},
+										},
+										"queryParams": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[a-zA-Z0-9-_.]+$",
+											},
+										},
+									},
+								},
+								"rename": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"from": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"to": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+												},
+											},
+										},
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"from": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_]+$",
+													},
+													"to": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_]+$",
+													},
+												},
+											},
+										},
+										"queryParams": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"from": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_.]+$",
+													},
+													"to": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_.]+$",
+													},
+												},
+											},
+										},
+									},
+								},
+								"replace": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+										},
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[\\x20-\\x7E]*$",
+													},
+												},
+											},
+										},
+										"queryParams": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-_.]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /services/{serviceId}/routes/{routeId}/response": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"responseTransformation": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"add": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[\\x20-\\x7E]*$",
+													},
+												},
+											},
+										},
+										"ifStatusCode": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "integer",
+												Minimum: core.Float64Ptr(100),
+												Maximum: core.Float64Ptr(999),
+											},
+										},
+										"json": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+								},
+								"allow": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"jsonKeys": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+											},
+										},
+									},
+								},
+								"append": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[\\x20-\\x7E]*$",
+													},
+												},
+											},
+										},
+										"ifStatusCode": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "integer",
+												Minimum: core.Float64Ptr(100),
+												Maximum: core.Float64Ptr(999),
+											},
+										},
+										"json": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+								},
+								"remove": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"headerKeys": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[a-zA-Z0-9-]+$",
+											},
+										},
+										"ifStatusCode": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "integer",
+												Minimum: core.Float64Ptr(100),
+												Maximum: core.Float64Ptr(999),
+											},
+										},
+										"jsonKeys": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:      "string",
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+											},
+										},
+									},
+								},
+								"rename": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"from": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-]+$",
+													},
+													"to": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-]+$",
+													},
+												},
+											},
+										},
+										"ifStatusCode": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "integer",
+												Minimum: core.Float64Ptr(100),
+												Maximum: core.Float64Ptr(999),
+											},
+										},
+										"json": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"from": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"to": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+												},
+											},
+										},
+									},
+								},
+								"replace": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"body": {
+											Type: "string",
+										},
+										"headers": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[a-zA-Z0-9-]+$",
+													},
+													"value": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^[\\x20-\\x7E]*$",
+													},
+												},
+											},
+										},
+										"ifStatusCode": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "integer",
+												Minimum: core.Float64Ptr(100),
+												Maximum: core.Float64Ptr(999),
+											},
+										},
+										"json": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"key": {
+														Type:      "string",
+														MaxLength: core.IntPtr(255),
+														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /subscriptions": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"maxSubscription": {
+							Type: "integer",
+						},
+						"subscriptions": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"createdAt": {
+										Type: "string",
+									},
+									"id": {
+										Type: "string",
+									},
+									"monthlyRequest": {
+										Type: "integer",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"planId": {
+										Type: "string",
+									},
+									"resourceId": {
+										Type: "integer",
+									},
+									"service": {
+										Type:     "object",
+										Required: []string{"id", "name"},
+										Properties: map[string]*core.BodySchema{
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type: "string",
+											},
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /subscriptions/{subscriptionId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"subscription": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"id": {
+									Type: "string",
+								},
+								"monthlyRequest": {
+									Type: "integer",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"plan": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"maxRequests": {
+											Type:    "integer",
+											Minimum: core.Float64Ptr(0),
+										},
+										"maxRequestsUnit": {
+											Type: "string",
+											Enum: []any{"second", "minute", "hour", "day", "month", "year"},
+										},
+										"maxServices": {
+											Type:    "integer",
+											Minimum: core.Float64Ptr(0),
+										},
+										"overage": {
+											Type: "object",
+											Properties: map[string]*core.BodySchema{
+												"unitPrice": {
+													Type: "string",
+												},
+												"unitRequests": {
+													Type:    "integer",
+													Minimum: core.Float64Ptr(0),
+												},
+											},
+										},
+										"planID": {
+											Type: "string",
+										},
+										"planName": {
+											Type: "string",
+										},
+										"price": {
+											Type: "string",
+										},
+									},
+								},
+								"resourceId": {
+									Type: "integer",
+								},
+								"service": {
+									Type:     "object",
+									Required: []string{"id", "name"},
+									Properties: map[string]*core.BodySchema{
+										"id": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /users response 200.apigw.users[].allOf[1].groups[].allOf[1].tags[] is not RE2-compatible; skipped
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /users response 200.apigw.users[].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /users": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"users": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"name"},
+								Properties: map[string]*core.BodySchema{
+									"createdAt": {
+										Type: "string",
+									},
+									"customID": {
+										Type: "string",
+									},
+									"groups": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"name"},
+											Properties: map[string]*core.BodySchema{
+												"createdAt": {
+													Type: "string",
+												},
+												"id": {
+													Type: "string",
+												},
+												"name": {
+													Type:      "string",
+													MinLength: core.IntPtr(1),
+													MaxLength: core.IntPtr(255),
+													Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+												},
+												"tags": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type:      "string",
+														MinLength: core.IntPtr(1),
+														MaxLength: core.IntPtr(255),
+													},
+												},
+												"updatedAt": {
+													Type: "string",
+												},
+											},
+										},
+									},
+									"id": {
+										Type: "string",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+									"tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:      "string",
+											MinLength: core.IntPtr(1),
+											MaxLength: core.IntPtr(255),
+										},
+									},
+									"updatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /users/{userId} response 200.apigw.user.allOf[0].allOf[1].groups[].allOf[1].tags[] is not RE2-compatible; skipped
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at GET /users/{userId} response 200.apigw.user.allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"GET /users/{userId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"user": {
+							Type:     "object",
+							Required: []string{"name"},
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"customID": {
+									Type: "string",
+								},
+								"groups": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:     "object",
+										Required: []string{"name"},
+										Properties: map[string]*core.BodySchema{
+											"createdAt": {
+												Type: "string",
+											},
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+											},
+											"tags": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type:      "string",
+													MinLength: core.IntPtr(1),
+													MaxLength: core.IntPtr(255),
+												},
+											},
+											"updatedAt": {
+												Type: "string",
+											},
+										},
+									},
+								},
+								"id": {
+									Type: "string",
+								},
+								"ipRestrictionConfig": {
+									Type:     "object",
+									Required: []string{"ips", "protocols", "restrictedBy"},
+									Properties: map[string]*core.BodySchema{
+										"ips": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "string",
+												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
+											},
+											MinItems: core.IntPtr(1),
+										},
+										"protocols": {
+											Type: "string",
+											Enum: []any{"http,https", "http", "https"},
+										},
+										"restrictedBy": {
+											Type: "string",
+											Enum: []any{"allowIps", "denyIps"},
+										},
+									},
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /users/{userId}/authentication": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"userAuthentication": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"basicAuth": {
+									Type:     "object",
+									Required: []string{"password", "userName"},
+									Properties: map[string]*core.BodySchema{
+										"createdAt": {
+											Type: "string",
+										},
+										"id": {
+											Type: "string",
+										},
+										"password": {
+											Type: "string",
+										},
+										"updatedAt": {
+											Type: "string",
+										},
+										"userName": {
+											Type: "string",
+										},
+									},
+								},
+								"hmacAuth": {
+									Type:     "object",
+									Required: []string{"secret", "userName"},
+									Properties: map[string]*core.BodySchema{
+										"createdAt": {
+											Type: "string",
+										},
+										"id": {
+											Type: "string",
+										},
+										"secret": {
+											Type: "string",
+										},
+										"updatedAt": {
+											Type: "string",
+										},
+										"userName": {
+											Type: "string",
+										},
+									},
+								},
+								"jwt": {
+									Type:     "object",
+									Required: []string{"algorithm", "key", "secret"},
+									Properties: map[string]*core.BodySchema{
+										"algorithm": {
+											Type: "string",
+											Enum: []any{"HS256", "HS384", "HS512"},
+										},
+										"createdAt": {
+											Type: "string",
+										},
+										"id": {
+											Type: "string",
+										},
+										"key": {
+											Type: "string",
+										},
+										"secret": {
+											Type: "string",
+										},
+										"updatedAt": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"GET /users/{userId}/groups": {
+		200: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"groups": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"id", "isAssigned", "name"},
+								Properties: map[string]*core.BodySchema{
+									"id": {
+										Type: "string",
+									},
+									"isAssigned": {
+										Type: "boolean",
+									},
+									"name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /certificates": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"certificate": {
+							Type: "object",
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"ecdsa": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"cert": {
+											Type:    "string",
+											Pattern: "^-----BEGIN CERTIFICATE-----\\r?\\n(?:[A-Za-z0-9+/=\\r\\n]+)-----END CERTIFICATE-----\\r?\\n?$",
+										},
+										"expiredAt": {
+											Type: "string",
+										},
+										"key": {
+											Type: "string",
+										},
+									},
+								},
+								"id": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"rsa": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"cert": {
+											Type:    "string",
+											Pattern: "^-----BEGIN CERTIFICATE-----\\r?\\n(?:[A-Za-z0-9+/=\\r\\n]+)-----END CERTIFICATE-----\\r?\\n?$",
+										},
+										"expiredAt": {
+											Type: "string",
+										},
+										"key": {
+											Type: "string",
+										},
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		422: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /domains": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"domain": {
+							Type:     "object",
+							Required: []string{"domainName"},
+							Properties: map[string]*core.BodySchema{
+								"certificateId": {
+									Type: "string",
+								},
+								"certificateName": {
+									Type: "string",
+								},
+								"createdAt": {
+									Type: "string",
+								},
+								"domainName": {
+									Type:    "string",
+									Pattern: "^\\s*(([a-z\\d]([a-z\\d-]*[a-z\\d])?)\\.)+([a-z\\d-]{2,})(\\.)?\\s*$",
+								},
+								"id": {
+									Type: "string",
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at POST /groups response 201.apigw.group.allOf[1].tags[] is not RE2-compatible; skipped
+	"POST /groups": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"group": {
+							Type:     "object",
+							Required: []string{"name"},
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"id": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /oidc": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"oidc": {
+							Type:     "object",
+							Required: []string{"authenticationMethods", "clientId", "clientSecret", "issuer", "name"},
+							Properties: map[string]*core.BodySchema{
+								"authenticationMethods": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+										Enum: []any{"authorizationCodeFlow", "accessToken"},
+									},
+								},
+								"clientId": {
+									Type: "string",
+								},
+								"clientSecret": {
+									Type: "string",
+								},
+								"createdAt": {
+									Type: "string",
+								},
+								"hideCredentials": {
+									Type: "boolean",
+								},
+								"id": {
+									Type: "string",
+								},
+								"issuer": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"refreshTokenParamName": {
+									Type: "string",
+								},
+								"scopes": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"tokenAudiences": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+								"useSession": {
+									Type: "boolean",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		422: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at POST /services response 201.apigw.service.allOf[0].allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"POST /services": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"service": {
+							Type:     "object",
+							Required: []string{"host", "name", "protocol", "subscription"},
+							Properties: map[string]*core.BodySchema{
+								"authentication": {
+									Type: "string",
+									Enum: []any{"none", "basic", "hmac", "jwt", "oidc"},
+								},
+								"connectTimeout": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(1),
+									Maximum: core.Float64Ptr(2147483646),
+								},
+								"corsConfig": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"accessControlAllowHeaders": {
+											Type:      "string",
+											MaxLength: core.IntPtr(4000),
+										},
+										"accessControlAllowMethods": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+												Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+											},
+										},
+										"accessControlAllowOrigins": {
+											Type:      "string",
+											MaxLength: core.IntPtr(4000),
+										},
+										"accessControlExposedHeaders": {
+											Type:      "string",
+											MaxLength: core.IntPtr(4000),
+										},
+										"credentials": {
+											Type: "boolean",
+										},
+										"maxAge": {
+											Type: "integer",
+										},
+										"preflightContinue": {
+											Type: "boolean",
+										},
+										"privateNetwork": {
+											Type: "boolean",
+										},
+									},
+								},
+								"createdAt": {
+									Type: "string",
+								},
+								"host": {
+									Type:      "string",
+									MaxLength: core.IntPtr(253),
+									Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
+								},
+								"id": {
+									Type: "string",
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"objectStorageConfig": {
+									Type:     "object",
+									Required: []string{"bucketName", "endpoint", "region", "useDocumentIndex"},
+									Properties: map[string]*core.BodySchema{
+										"accessKeyID": {
+											Type: "string",
+										},
+										"bucketName": {
+											Type:    "string",
+											Pattern: "^[a-z0-9.\\-]*$",
+										},
+										"endpoint": {
+											Type: "string",
+										},
+										"folderName": {
+											Type:    "string",
+											Pattern: "^[a-zA-Z0-9_\\-\\/!.*'()]*$",
+										},
+										"region": {
+											Type: "string",
+										},
+										"secretAccessKey": {
+											Type: "string",
+										},
+										"useDocumentIndex": {
+											Type: "boolean",
+										},
+									},
+								},
+								"oidc": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"id": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+									},
+								},
+								"path": {
+									Type:      "string",
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
+								},
+								"port": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(0),
+									Maximum: core.Float64Ptr(65535),
+								},
+								"protocol": {
+									Type: "string",
+									Enum: []any{"http", "https"},
+								},
+								"readTimeout": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(1),
+									Maximum: core.Float64Ptr(2147483646),
+								},
+								"retries": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(0),
+									Maximum: core.Float64Ptr(32767),
+								},
+								"routeHost": {
+									Type:      "string",
+									MaxLength: core.IntPtr(253),
+								},
+								"subscription": {
+									Type:     "object",
+									Required: []string{"id"},
+									Properties: map[string]*core.BodySchema{
+										"id": {
+											Type: "string",
+										},
+									},
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+								"writeTimeout": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(1),
+									Maximum: core.Float64Ptr(2147483646),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		422: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at POST /services/{serviceId}/routes response 201.apigw.route.allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"POST /services/{serviceId}/routes": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"route": {
+							Type:     "object",
+							Required: []string{"methods", "name", "protocols"},
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"host": {
+									Type: "string",
+								},
+								"hosts": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"httpsRedirectStatusCode": {
+									Type: "integer",
+									Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+								},
+								"id": {
+									Type: "string",
+								},
+								"ipRestrictionConfig": {
+									Type:     "object",
+									Required: []string{"ips", "protocols", "restrictedBy"},
+									Properties: map[string]*core.BodySchema{
+										"ips": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "string",
+												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
+											},
+											MinItems: core.IntPtr(1),
+										},
+										"protocols": {
+											Type: "string",
+											Enum: []any{"http,https", "http", "https"},
+										},
+										"restrictedBy": {
+											Type: "string",
+											Enum: []any{"allowIps", "denyIps"},
+										},
+									},
+								},
+								"methods": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+										Enum: []any{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "CONNECT", "TRACE"},
+									},
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"path": {
+									Type:      "string",
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^(\\/|~\\/).*",
+								},
+								"preserveHost": {
+									Type: "boolean",
+								},
+								"protocols": {
+									Type: "string",
+									Enum: []any{"http,https", "http", "https"},
+								},
+								"regexPriority": {
+									Type:    "integer",
+									Minimum: core.Float64Ptr(0),
+									Maximum: core.Float64Ptr(255),
+								},
+								"requestBuffering": {
+									Type: "boolean",
+								},
+								"responseBuffering": {
+									Type: "boolean",
+								},
+								"serviceId": {
+									Type: "string",
+								},
+								"stripPath": {
+									Type: "boolean",
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"POST /subscriptions": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at POST /users response 201.apigw.user.allOf[0].allOf[1].groups[].allOf[1].tags[] is not RE2-compatible; skipped
+	// NOTE: pattern "^[^\\/\\s\\u3000]+$" at POST /users response 201.apigw.user.allOf[0].allOf[1].tags[] is not RE2-compatible; skipped
+	"POST /users": {
+		201: {
+			Type:     "object",
+			Required: []string{"apigw"},
+			Properties: map[string]*core.BodySchema{
+				"apigw": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"user": {
+							Type:     "object",
+							Required: []string{"name"},
+							Properties: map[string]*core.BodySchema{
+								"createdAt": {
+									Type: "string",
+								},
+								"customID": {
+									Type: "string",
+								},
+								"groups": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:     "object",
+										Required: []string{"name"},
+										Properties: map[string]*core.BodySchema{
+											"createdAt": {
+												Type: "string",
+											},
+											"id": {
+												Type: "string",
+											},
+											"name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(255),
+												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+											},
+											"tags": {
+												Type: "array",
+												Items: &core.BodySchema{
+													Type:      "string",
+													MinLength: core.IntPtr(1),
+													MaxLength: core.IntPtr(255),
+												},
+											},
+											"updatedAt": {
+												Type: "string",
+											},
+										},
+									},
+								},
+								"id": {
+									Type: "string",
+								},
+								"ipRestrictionConfig": {
+									Type:     "object",
+									Required: []string{"ips", "protocols", "restrictedBy"},
+									Properties: map[string]*core.BodySchema{
+										"ips": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type:    "string",
+												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
+											},
+											MinItems: core.IntPtr(1),
+										},
+										"protocols": {
+											Type: "string",
+											Enum: []any{"http,https", "http", "https"},
+										},
+										"restrictedBy": {
+											Type: "string",
+											Enum: []any{"allowIps", "denyIps"},
+										},
+									},
+								},
+								"name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(255),
+									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
+								},
+								"tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(255),
+									},
+								},
+								"updatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /certificates/{certificateId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		422: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /domains/{domainId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /groups/{groupId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /oidc/{oidcId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /services/{serviceId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /services/{serviceId}/routes/{routeId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /services/{serviceId}/routes/{routeId}/authorization": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /services/{serviceId}/routes/{routeId}/request": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /services/{serviceId}/routes/{routeId}/response": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /subscriptions/{subscriptionId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /users/{userId}": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /users/{userId}/authentication": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /users/{userId}/groups": {
+		204: nil,
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"message": {
+					Type: "string",
+				},
+			},
+		},
+	},
+}

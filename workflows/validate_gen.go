@@ -163,3 +163,2993 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	"DELETE /subscriptions": {
+		204: nil,
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"DELETE /workflows/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		409: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"DELETE /workflows/{id}/executions/{executionId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		409: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"DELETE /workflows/{id}/revisions/{revisionId}/revision_alias": {
+		200: {
+			Type:     "object",
+			Required: []string{"Revision", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Revision": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "RevisionId", "Runbook", "UpdatedAt", "WorkflowId"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RevisionId": {
+							Type: "integer",
+						},
+						"Runbook": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"WorkflowId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"GET /plans": {
+		200: {
+			Type:     "object",
+			Required: []string{"Plans", "TaxRate", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Plans": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"basePrice", "grade", "id", "includedSteps", "name", "overagePricePerUnit", "overageStepUnit", "serviceClassPath"},
+						Properties: map[string]*core.BodySchema{
+							"basePrice": {
+								Type: "integer",
+							},
+							"grade": {
+								Type: "integer",
+							},
+							"id": {
+								Type: "integer",
+							},
+							"includedSteps": {
+								Type: "integer",
+							},
+							"name": {
+								Type: "string",
+							},
+							"overagePricePerUnit": {
+								Type: "integer",
+							},
+							"overageStepUnit": {
+								Type: "integer",
+							},
+							"serviceClassPath": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"TaxRate": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"GET /subscriptions": {
+		200: {
+			Type:     "object",
+			Required: []string{"is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"CurrentPlan": {
+					Type:     "object",
+					Nullable: true,
+					Required: []string{"accountId", "activateFrom", "activateUntil", "contractId", "createdAt", "id", "planId", "planName", "updatedAt"},
+					Properties: map[string]*core.BodySchema{
+						"accountId": {
+							Type: "string",
+						},
+						"activateFrom": {
+							Type: "string",
+						},
+						"activateUntil": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"contractId": {
+							Type: "string",
+						},
+						"createdAt": {
+							Type: "string",
+						},
+						"id": {
+							Type: "string",
+						},
+						"planId": {
+							Type: "integer",
+						},
+						"planName": {
+							Type: "string",
+						},
+						"updatedAt": {
+							Type: "string",
+						},
+					},
+				},
+				"MonthAppliedPlan": {
+					Type:     "object",
+					Required: []string{"accountId", "activateFrom", "activateUntil", "basePrice", "contractId", "createdAt", "id", "includedSteps", "overagePricePerUnit", "overageStepUnit", "planGrade", "planId", "planName", "updatedAt"},
+					Properties: map[string]*core.BodySchema{
+						"accountId": {
+							Type: "string",
+						},
+						"activateFrom": {
+							Type: "string",
+						},
+						"activateUntil": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"basePrice": {
+							Type: "integer",
+						},
+						"contractId": {
+							Type: "string",
+						},
+						"createdAt": {
+							Type: "string",
+						},
+						"id": {
+							Type: "string",
+						},
+						"includedSteps": {
+							Type: "integer",
+						},
+						"overagePricePerUnit": {
+							Type: "integer",
+						},
+						"overageStepUnit": {
+							Type: "integer",
+						},
+						"planGrade": {
+							Type: "integer",
+						},
+						"planId": {
+							Type: "integer",
+						},
+						"planName": {
+							Type: "string",
+						},
+						"updatedAt": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /workflows response 200.Workflows[].ServicePrincipalId left permissive
+	"GET /workflows": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "From", "Total", "Workflows", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"From": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Total": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Workflows": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+						Properties: map[string]*core.BodySchema{
+							"ConcurrencyMode": {
+								Type: "string",
+								Enum: []any{"parallel", "lock", "queue"},
+							},
+							"CreatedAt": {
+								Type: "string",
+							},
+							"Description": {
+								Type:      "string",
+								MinLength: core.IntPtr(0),
+								MaxLength: core.IntPtr(1024),
+							},
+							"Id": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(36),
+							},
+							"Logging": {
+								Type: "boolean",
+							},
+							"Name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(64),
+								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+							},
+							"Publish": {
+								Type: "boolean",
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"Name"},
+									Properties: map[string]*core.BodySchema{
+										"Name": {
+											Type:      "string",
+											MinLength: core.IntPtr(1),
+											MaxLength: core.IntPtr(64),
+										},
+									},
+								},
+							},
+							"UpdatedAt": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"GET /workflows/suggest": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "From", "Suggests", "Total", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"From": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Suggests": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"Count", "Name"},
+						Properties: map[string]*core.BodySchema{
+							"Count": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(1),
+							},
+							"Name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(64),
+								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+							},
+						},
+					},
+				},
+				"Total": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /workflows/{id} response 200.Workflow.ServicePrincipalId left permissive
+	"GET /workflows/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Workflow", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Workflow": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+					Properties: map[string]*core.BodySchema{
+						"ConcurrencyMode": {
+							Type: "string",
+							Enum: []any{"parallel", "lock", "queue"},
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(1024),
+						},
+						"Id": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"Logging": {
+							Type: "boolean",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Publish": {
+							Type: "boolean",
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"Name"},
+								Properties: map[string]*core.BodySchema{
+									"Name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(64),
+									},
+								},
+							},
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /workflows/{id}/executions response 200.Executions[].Workflow.ServicePrincipalId left permissive
+	"GET /workflows/{id}/executions": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "Executions", "From", "Total", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Executions": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"Args", "CreatedAt", "Error", "ExecutionId", "Name", "Result", "Revision", "RevisionAlias", "Status", "StepCount", "UpdatedAt", "Workflow"},
+						Properties: map[string]*core.BodySchema{
+							"Args": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(65536),
+							},
+							"CancelRequestedAt": {
+								Type: "string",
+							},
+							"CanceledAt": {
+								Type: "string",
+							},
+							"CreatedAt": {
+								Type: "string",
+							},
+							"Error": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(65536),
+							},
+							"ExecutionId": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(36),
+							},
+							"FailedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(64),
+								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+							},
+							"Result": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(65536),
+							},
+							"Revision": {
+								Type: "integer",
+							},
+							"RevisionAlias": {
+								Type:      "string",
+								MinLength: core.IntPtr(0),
+								MaxLength: core.IntPtr(64),
+								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+							},
+							"RunAt": {
+								Type: "string",
+							},
+							"Status": {
+								Type: "string",
+								Enum: []any{"Queued", "Running", "Succeeded", "Failed", "Canceling", "Canceled"},
+							},
+							"StepCount": {
+								Type:    "integer",
+								Minimum: core.Float64Ptr(0),
+							},
+							"SucceededAt": {
+								Type: "string",
+							},
+							"UpdatedAt": {
+								Type: "string",
+							},
+							"Workflow": {
+								Type:     "object",
+								Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+								Properties: map[string]*core.BodySchema{
+									"ConcurrencyMode": {
+										Type: "string",
+										Enum: []any{"parallel", "lock", "queue"},
+									},
+									"CreatedAt": {
+										Type: "string",
+									},
+									"Description": {
+										Type:      "string",
+										MinLength: core.IntPtr(0),
+										MaxLength: core.IntPtr(1024),
+									},
+									"Id": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(36),
+									},
+									"Logging": {
+										Type: "boolean",
+									},
+									"Name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(64),
+										Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+									},
+									"Publish": {
+										Type: "boolean",
+									},
+									"Tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type:     "object",
+											Required: []string{"Name"},
+											Properties: map[string]*core.BodySchema{
+												"Name": {
+													Type:      "string",
+													MinLength: core.IntPtr(1),
+													MaxLength: core.IntPtr(64),
+												},
+											},
+										},
+									},
+									"UpdatedAt": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+				"From": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Total": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /workflows/{id}/executions/{executionId} response 200.Execution.Workflow.ServicePrincipalId left permissive
+	"GET /workflows/{id}/executions/{executionId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Execution", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Execution": {
+					Type:     "object",
+					Required: []string{"Args", "CreatedAt", "Error", "ExecutionId", "Name", "Result", "Revision", "RevisionAlias", "Status", "StepCount", "UpdatedAt", "Workflow"},
+					Properties: map[string]*core.BodySchema{
+						"Args": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"CancelRequestedAt": {
+							Type: "string",
+						},
+						"CanceledAt": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Error": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"ExecutionId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"FailedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Result": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"Revision": {
+							Type: "integer",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RunAt": {
+							Type: "string",
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"Queued", "Running", "Succeeded", "Failed", "Canceling", "Canceled"},
+						},
+						"StepCount": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(0),
+						},
+						"SucceededAt": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"Workflow": {
+							Type:     "object",
+							Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+							Properties: map[string]*core.BodySchema{
+								"ConcurrencyMode": {
+									Type: "string",
+									Enum: []any{"parallel", "lock", "queue"},
+								},
+								"CreatedAt": {
+									Type: "string",
+								},
+								"Description": {
+									Type:      "string",
+									MinLength: core.IntPtr(0),
+									MaxLength: core.IntPtr(1024),
+								},
+								"Id": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(36),
+								},
+								"Logging": {
+									Type: "boolean",
+								},
+								"Name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(64),
+									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+								},
+								"Publish": {
+									Type: "boolean",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:     "object",
+										Required: []string{"Name"},
+										Properties: map[string]*core.BodySchema{
+											"Name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(64),
+											},
+										},
+									},
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"GET /workflows/{id}/executions/{executionId}/exec_history": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "From", "Histories", "Total", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"From": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Histories": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "JobId", "Meta", "StackTrace", "ThreadId", "Type", "Variables", "WorkflowExecutionId"},
+						Properties: map[string]*core.BodySchema{
+							"CreatedAt": {
+								Type: "string",
+							},
+							"JobId": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(64),
+							},
+							"Meta": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+							},
+							"StackTrace": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+							},
+							"ThreadId": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(64),
+							},
+							"Type": {
+								Type: "string",
+								Enum: []any{"workflowWillStart", "workflowDidSuspended", "workflowWillResume", "workflowDidCompleted", "workflowDidFailed", "workflowDidCanceled", "stepWillExecute", "stepDidExecuted", "functionWillCall", "functionWillRun", "functionDidRun", "functionDidFailed"},
+							},
+							"Variables": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+							},
+							"WorkflowExecutionId": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(36),
+							},
+						},
+					},
+				},
+				"Total": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"GET /workflows/{id}/revisions": {
+		200: {
+			Type:     "object",
+			Required: []string{"Count", "From", "Revisions", "Total", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Count": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"From": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"Revisions": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "RevisionId", "Runbook", "UpdatedAt", "WorkflowId"},
+						Properties: map[string]*core.BodySchema{
+							"CreatedAt": {
+								Type: "string",
+							},
+							"RevisionAlias": {
+								Type:      "string",
+								MinLength: core.IntPtr(0),
+								MaxLength: core.IntPtr(64),
+								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+							},
+							"RevisionId": {
+								Type: "integer",
+							},
+							"Runbook": {
+								Type: "string",
+							},
+							"UpdatedAt": {
+								Type: "string",
+							},
+							"WorkflowId": {
+								Type:      "string",
+								MinLength: core.IntPtr(1),
+								MaxLength: core.IntPtr(36),
+							},
+						},
+					},
+				},
+				"Total": {
+					Type:    "integer",
+					Minimum: core.Float64Ptr(0),
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"GET /workflows/{id}/revisions/{revisionId}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Revision", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Revision": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "RevisionId", "Runbook", "UpdatedAt", "WorkflowId"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RevisionId": {
+							Type: "integer",
+						},
+						"Runbook": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"WorkflowId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at PATCH /workflows/{id} response 200.Workflow.ServicePrincipalId left permissive
+	"PATCH /workflows/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"Workflow", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Workflow": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+					Properties: map[string]*core.BodySchema{
+						"ConcurrencyMode": {
+							Type: "string",
+							Enum: []any{"parallel", "lock", "queue"},
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(1024),
+						},
+						"Id": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"Logging": {
+							Type: "boolean",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Publish": {
+							Type: "boolean",
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"Name"},
+								Properties: map[string]*core.BodySchema{
+									"Name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(64),
+									},
+								},
+							},
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"POST /subscriptions": {
+		204: nil,
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at POST /workflows response 201.Workflow.ServicePrincipalId left permissive
+	"POST /workflows": {
+		201: {
+			Type:     "object",
+			Required: []string{"Workflow", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Workflow": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+					Properties: map[string]*core.BodySchema{
+						"ConcurrencyMode": {
+							Type: "string",
+							Enum: []any{"parallel", "lock", "queue"},
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(1024),
+						},
+						"Id": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"Logging": {
+							Type: "boolean",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Publish": {
+							Type: "boolean",
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"Name"},
+								Properties: map[string]*core.BodySchema{
+									"Name": {
+										Type:      "string",
+										MinLength: core.IntPtr(1),
+										MaxLength: core.IntPtr(64),
+									},
+								},
+							},
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at POST /workflows/{id}/executions response 201.Execution.Workflow.ServicePrincipalId left permissive
+	"POST /workflows/{id}/executions": {
+		201: {
+			Type:     "object",
+			Required: []string{"Execution", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Execution": {
+					Type:     "object",
+					Required: []string{"Args", "CreatedAt", "Error", "ExecutionId", "Name", "Result", "Revision", "RevisionAlias", "Status", "StepCount", "UpdatedAt", "Workflow"},
+					Properties: map[string]*core.BodySchema{
+						"Args": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"CancelRequestedAt": {
+							Type: "string",
+						},
+						"CanceledAt": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Error": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"ExecutionId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"FailedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Result": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"Revision": {
+							Type: "integer",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RunAt": {
+							Type: "string",
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"Queued", "Running", "Succeeded", "Failed", "Canceling", "Canceled"},
+						},
+						"StepCount": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(0),
+						},
+						"SucceededAt": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"Workflow": {
+							Type:     "object",
+							Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+							Properties: map[string]*core.BodySchema{
+								"ConcurrencyMode": {
+									Type: "string",
+									Enum: []any{"parallel", "lock", "queue"},
+								},
+								"CreatedAt": {
+									Type: "string",
+								},
+								"Description": {
+									Type:      "string",
+									MinLength: core.IntPtr(0),
+									MaxLength: core.IntPtr(1024),
+								},
+								"Id": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(36),
+								},
+								"Logging": {
+									Type: "boolean",
+								},
+								"Name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(64),
+									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+								},
+								"Publish": {
+									Type: "boolean",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:     "object",
+										Required: []string{"Name"},
+										Properties: map[string]*core.BodySchema{
+											"Name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(64),
+											},
+										},
+									},
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		409: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at POST /workflows/{id}/executions/{executionId}/cancel response 200.Execution.Workflow.ServicePrincipalId left permissive
+	// NOTE: oneOf at POST /workflows/{id}/executions/{executionId}/cancel response 202.Execution.Workflow.ServicePrincipalId left permissive
+	"POST /workflows/{id}/executions/{executionId}/cancel": {
+		200: {
+			Type:     "object",
+			Required: []string{"Execution", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Execution": {
+					Type:     "object",
+					Required: []string{"Args", "CreatedAt", "Error", "ExecutionId", "Name", "Result", "Revision", "RevisionAlias", "Status", "StepCount", "UpdatedAt", "Workflow"},
+					Properties: map[string]*core.BodySchema{
+						"Args": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"CancelRequestedAt": {
+							Type: "string",
+						},
+						"CanceledAt": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Error": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"ExecutionId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"FailedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Result": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"Revision": {
+							Type: "integer",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RunAt": {
+							Type: "string",
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"Queued", "Running", "Succeeded", "Failed", "Canceling", "Canceled"},
+						},
+						"StepCount": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(0),
+						},
+						"SucceededAt": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"Workflow": {
+							Type:     "object",
+							Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+							Properties: map[string]*core.BodySchema{
+								"ConcurrencyMode": {
+									Type: "string",
+									Enum: []any{"parallel", "lock", "queue"},
+								},
+								"CreatedAt": {
+									Type: "string",
+								},
+								"Description": {
+									Type:      "string",
+									MinLength: core.IntPtr(0),
+									MaxLength: core.IntPtr(1024),
+								},
+								"Id": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(36),
+								},
+								"Logging": {
+									Type: "boolean",
+								},
+								"Name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(64),
+									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+								},
+								"Publish": {
+									Type: "boolean",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:     "object",
+										Required: []string{"Name"},
+										Properties: map[string]*core.BodySchema{
+											"Name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(64),
+											},
+										},
+									},
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		202: {
+			Type:     "object",
+			Required: []string{"Execution", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Execution": {
+					Type:     "object",
+					Required: []string{"Args", "CreatedAt", "Error", "ExecutionId", "Name", "Result", "Revision", "RevisionAlias", "Status", "StepCount", "UpdatedAt", "Workflow"},
+					Properties: map[string]*core.BodySchema{
+						"Args": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"CancelRequestedAt": {
+							Type: "string",
+						},
+						"CanceledAt": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Error": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"ExecutionId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+						"FailedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+						},
+						"Result": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(65536),
+						},
+						"Revision": {
+							Type: "integer",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RunAt": {
+							Type: "string",
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"Queued", "Running", "Succeeded", "Failed", "Canceling", "Canceled"},
+						},
+						"StepCount": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(0),
+						},
+						"SucceededAt": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"Workflow": {
+							Type:     "object",
+							Required: []string{"CreatedAt", "Id", "Logging", "Name", "Publish", "Tags", "UpdatedAt"},
+							Properties: map[string]*core.BodySchema{
+								"ConcurrencyMode": {
+									Type: "string",
+									Enum: []any{"parallel", "lock", "queue"},
+								},
+								"CreatedAt": {
+									Type: "string",
+								},
+								"Description": {
+									Type:      "string",
+									MinLength: core.IntPtr(0),
+									MaxLength: core.IntPtr(1024),
+								},
+								"Id": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(36),
+								},
+								"Logging": {
+									Type: "boolean",
+								},
+								"Name": {
+									Type:      "string",
+									MinLength: core.IntPtr(1),
+									MaxLength: core.IntPtr(64),
+									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
+								},
+								"Publish": {
+									Type: "boolean",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type:     "object",
+										Required: []string{"Name"},
+										Properties: map[string]*core.BodySchema{
+											"Name": {
+												Type:      "string",
+												MinLength: core.IntPtr(1),
+												MaxLength: core.IntPtr(64),
+											},
+										},
+									},
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		409: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"POST /workflows/{id}/revisions": {
+		201: {
+			Type:     "object",
+			Required: []string{"Revision", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Revision": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "RevisionId", "Runbook", "UpdatedAt", "WorkflowId"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RevisionId": {
+							Type: "integer",
+						},
+						"Runbook": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"WorkflowId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		409: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"PUT /workflows/{id}/revisions/{revisionId}/revision_alias": {
+		200: {
+			Type:     "object",
+			Required: []string{"Revision", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Revision": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "RevisionId", "Runbook", "UpdatedAt", "WorkflowId"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"RevisionAlias": {
+							Type:      "string",
+							MinLength: core.IntPtr(0),
+							MaxLength: core.IntPtr(64),
+							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
+						},
+						"RevisionId": {
+							Type: "integer",
+						},
+						"Runbook": {
+							Type: "string",
+						},
+						"UpdatedAt": {
+							Type: "string",
+						},
+						"WorkflowId": {
+							Type:      "string",
+							MinLength: core.IntPtr(1),
+							MaxLength: core.IntPtr(36),
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		401: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		402: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		403: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		404: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		409: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		500: {
+			Type:     "object",
+			Required: []string{"Message", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Message": {
+					Type: "string",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+}

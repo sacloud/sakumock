@@ -130,3 +130,403 @@ var bodySchemas = map[string]*core.BodySchema{
 		},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	"DELETE /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "Icon", "ModifiedAt", "Name", "Provider", "Settings", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Required: []string{"ID"},
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"Index": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Settings left permissive
+	"GET /commonserviceitem": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItems"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItems": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "Description", "ID", "Icon", "ModifiedAt", "Name", "Provider", "Settings", "Tags"},
+						Properties: map[string]*core.BodySchema{
+							"CreatedAt": {
+								Type: "string",
+							},
+							"Description": {
+								Type: "string",
+							},
+							"ID": {
+								Type: "string",
+							},
+							"Icon": {
+								Type:     "object",
+								Nullable: true,
+								Required: []string{"ID"},
+								Properties: map[string]*core.BodySchema{
+									"ID": {
+										Type: "string",
+									},
+									"Name": {
+										Type: "string",
+									},
+									"Scope": {
+										Type: "string",
+									},
+									"URL": {
+										Type: "string",
+									},
+								},
+							},
+							"Index": {
+								Type: "integer",
+							},
+							"ModifiedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type: "string",
+							},
+							"Provider": {
+								Type:     "object",
+								Required: []string{"Class"},
+								Properties: map[string]*core.BodySchema{
+									"Class": {
+										Type: "string",
+										Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
+									},
+									"Name": {
+										Type: "string",
+									},
+									"ServiceClass": {
+										Type: "string",
+									},
+								},
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Total": {
+					Type: "integer",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	"GET /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "Icon", "ModifiedAt", "Name", "Provider", "Settings", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Required: []string{"ID"},
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"Index": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Settings left permissive
+	"POST /commonserviceitem": {
+		201: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "Icon", "ModifiedAt", "Name", "Provider", "Settings", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Required: []string{"ID"},
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"Index": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"POST /commonserviceitem/{id}/simplenotification/message": {
+		202: {
+			Type:     "object",
+			Required: []string{"is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	"PUT /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"CreatedAt", "Description", "ID", "Icon", "ModifiedAt", "Name", "Provider", "Settings", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type: "string",
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Required: []string{"ID"},
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"Index": {
+							Type: "integer",
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+}

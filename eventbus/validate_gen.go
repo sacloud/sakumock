@@ -152,3 +152,1049 @@ var bodySchemas = map[string]*core.BodySchema{
 		Required: []string{"Secret"},
 	},
 }
+
+// responseSchemas maps "METHOD /path" to the response constraints the
+// OpenAPI spec declares, keyed by status code. A nil schema means the
+// status is declared but its body carries no checkable constraints; a
+// status absent from a route's map is not declared in the spec at all.
+var responseSchemas = map[string]map[int]*core.BodySchema{
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	"DELETE /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "Settings", "SettingsHash", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"eventbusprocessconfiguration", "eventbusschedule", "eventbustrigger"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Message": {
+									Type: "string",
+								},
+								"Success": {
+									Type: "boolean",
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Success": {
+					Type: "boolean",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Settings left permissive
+	"GET /commonserviceitem": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItems"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItems": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "Settings", "SettingsHash", "Tags"},
+						Properties: map[string]*core.BodySchema{
+							"Availability": {
+								Type: "string",
+							},
+							"CreatedAt": {
+								Type: "string",
+							},
+							"Description": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"ID": {
+								Type: "string",
+							},
+							"Icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"ID": {
+										Type: "string",
+									},
+									"Name": {
+										Type: "string",
+									},
+									"Scope": {
+										Type: "string",
+									},
+									"Tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"URL": {
+										Type: "string",
+									},
+								},
+							},
+							"ModifiedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type: "string",
+							},
+							"Provider": {
+								Type:     "object",
+								Required: []string{"Class"},
+								Properties: map[string]*core.BodySchema{
+									"Class": {
+										Type: "string",
+										Enum: []any{"eventbusprocessconfiguration", "eventbusschedule", "eventbustrigger"},
+									},
+									"ID": {
+										Type: "integer",
+									},
+									"Name": {
+										Type: "string",
+									},
+									"ServiceClass": {
+										Type: "string",
+									},
+								},
+							},
+							"ServiceClass": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"SettingsHash": {
+								Type: "string",
+							},
+							"Status": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"Message": {
+										Type: "string",
+									},
+									"Success": {
+										Type: "boolean",
+									},
+									"UpdatedAt": {
+										Type: "string",
+									},
+								},
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Total": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	"GET /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "Settings", "SettingsHash", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"eventbusprocessconfiguration", "eventbusschedule", "eventbustrigger"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Message": {
+									Type: "string",
+								},
+								"Success": {
+									Type: "boolean",
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Settings left permissive
+	"POST /commonserviceitem": {
+		201: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "Settings", "SettingsHash", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"eventbusprocessconfiguration", "eventbusschedule", "eventbustrigger"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Message": {
+									Type: "string",
+								},
+								"Success": {
+									Type: "boolean",
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Success": {
+					Type: "boolean",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		409: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
+	"PUT /commonserviceitem/{id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"CommonServiceItem"},
+			Properties: map[string]*core.BodySchema{
+				"CommonServiceItem": {
+					Type:     "object",
+					Required: []string{"Availability", "CreatedAt", "ID", "ModifiedAt", "Name", "Provider", "Settings", "SettingsHash", "Tags"},
+					Properties: map[string]*core.BodySchema{
+						"Availability": {
+							Type: "string",
+						},
+						"CreatedAt": {
+							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"ID": {
+							Type: "string",
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"ID": {
+									Type: "string",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
+						},
+						"ModifiedAt": {
+							Type: "string",
+						},
+						"Name": {
+							Type: "string",
+						},
+						"Provider": {
+							Type:     "object",
+							Required: []string{"Class"},
+							Properties: map[string]*core.BodySchema{
+								"Class": {
+									Type: "string",
+									Enum: []any{"eventbusprocessconfiguration", "eventbusschedule", "eventbustrigger"},
+								},
+								"ID": {
+									Type: "integer",
+								},
+								"Name": {
+									Type: "string",
+								},
+								"ServiceClass": {
+									Type: "string",
+								},
+							},
+						},
+						"ServiceClass": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"SettingsHash": {
+							Type: "string",
+						},
+						"Status": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Message": {
+									Type: "string",
+								},
+								"Success": {
+									Type: "boolean",
+								},
+								"UpdatedAt": {
+									Type: "string",
+								},
+							},
+						},
+						"Tags": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Success": {
+					Type: "boolean",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+	"PUT /commonserviceitem/{id}/eventbus/processconfiguration/set-secret": {
+		200: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"is_ok": {
+					Type: "boolean",
+				},
+				"process": {
+					Type: "object",
+					Properties: map[string]*core.BodySchema{
+						"result": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		400: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		401: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		404: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+		500: {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"error_code": {
+					Type: "string",
+				},
+				"error_msg": {
+					Type: "string",
+				},
+				"is_fatal": {
+					Type: "boolean",
+				},
+				"serial": {
+					Type: "string",
+				},
+				"status": {
+					Type: "string",
+				},
+			},
+		},
+	},
+}

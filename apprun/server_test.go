@@ -12,6 +12,16 @@ import (
 	"github.com/sacloud/sakumock/apprun"
 )
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *apprun.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 func newTestClient(t *testing.T, serverURL string) *v1.Client {
 	t.Helper()
 	var sa saclient.Client
@@ -31,7 +41,7 @@ func newTestClient(t *testing.T, serverURL string) *v1.Client {
 
 func TestUserLifecycle(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	userOp := apprunsdk.NewUserOp(client)
@@ -86,7 +96,7 @@ func createTestApp(ctx context.Context, t *testing.T, appOp apprunsdk.Applicatio
 
 func TestApplicationLifecycle(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
@@ -162,7 +172,7 @@ func TestApplicationLifecycle(t *testing.T) {
 
 func TestVersionLifecycle(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
@@ -226,7 +236,7 @@ func TestVersionLifecycle(t *testing.T) {
 
 func TestTrafficManagement(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
@@ -276,7 +286,7 @@ func TestTrafficManagement(t *testing.T) {
 
 func TestPacketFilter(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
@@ -316,7 +326,7 @@ func TestPacketFilter(t *testing.T) {
 
 func TestApplicationNotFound(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
@@ -329,7 +339,7 @@ func TestApplicationNotFound(t *testing.T) {
 
 func TestValidation(t *testing.T) {
 	srv := apprun.NewTestServer(apprun.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)

@@ -2,15 +2,8 @@ package iam_test
 
 // TODO: The following routes are not covered by SDK-based tests because the SDK
 // does not yet expose operations for them. Add tests when SDK support arrives.
+// (The user-2fa routes are covered in handler_user2fa_test.go.)
 //
-//   POST   /compat/users/{user_id}/deactivate-otp
-//   GET    /compat/users/{user_id}/trusted-devices
-//   DELETE /compat/users/{user_id}/trusted-devices/{trusted_device_id}
-//   POST   /compat/users/{user_id}/clear-trusted-devices
-//   GET    /compat/users/{user_id}/security-keys
-//   GET    /compat/users/{user_id}/security-keys/{security_key_id}
-//   PUT    /compat/users/{user_id}/security-keys/{security_key_id}
-//   DELETE /compat/users/{user_id}/security-keys/{security_key_id}
 //   POST   /move-projects
 //   POST   /move-folders
 //   GET    /folders/{folder_id}/iam-policy
@@ -50,6 +43,16 @@ import (
 	"github.com/sacloud/sakumock/iam"
 )
 
+// closeAndCheck closes srv, failing the test if any handler response
+// diverged from the OpenAPI spec.
+func closeAndCheck(t *testing.T, srv *iam.Server) {
+	t.Helper()
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations recorded: %+v", v)
+	}
+	srv.Close()
+}
+
 func newTestClient(t *testing.T, serverURL string) *v1.Client {
 	t.Helper()
 	var sa saclient.Client
@@ -69,7 +72,7 @@ func newTestClient(t *testing.T, serverURL string) *v1.Client {
 
 func TestUserLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	userOp := user.NewUserOp(client)
@@ -171,7 +174,7 @@ func TestUserLifecycle(t *testing.T) {
 
 func TestGroupLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	groupOp := group.NewGroupOp(client)
@@ -237,7 +240,7 @@ func TestGroupLifecycle(t *testing.T) {
 
 func TestProjectLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	projectOp := project.NewProjectOp(client)
@@ -282,7 +285,7 @@ func TestProjectLifecycle(t *testing.T) {
 
 func TestFolderLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	folderOp := folder.NewFolderOp(client)
@@ -325,7 +328,7 @@ func TestFolderLifecycle(t *testing.T) {
 
 func TestServicePrincipalLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	spOp := serviceprincipal.NewServicePrincipalOp(client)
@@ -423,7 +426,7 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 
 func TestProjectAPIKeyLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	apiKeyOp := projectapikey.NewProjectAPIKeyOp(client)
@@ -488,7 +491,7 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 
 func TestIAMRoleListAndRead(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	roleOp := iamrole.NewIAMRoleOp(client)
@@ -514,7 +517,7 @@ func TestIAMRoleListAndRead(t *testing.T) {
 
 func TestIDRoleListAndRead(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	roleOp := idrole.NewIdRoleOp(client)
@@ -540,7 +543,7 @@ func TestIDRoleListAndRead(t *testing.T) {
 
 func TestIAMPolicyProject(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	policyOp := iampolicy.NewIAMPolicyOp(client)
@@ -598,7 +601,7 @@ func TestIAMPolicyProject(t *testing.T) {
 
 func TestIDPolicyOrganization(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	policyOp := idpolicy.NewIDPolicyOp(client)
@@ -638,7 +641,7 @@ func TestIDPolicyOrganization(t *testing.T) {
 
 func TestOrganizationReadUpdate(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	orgOp := organization.NewOrganizationOp(client)
@@ -664,7 +667,7 @@ func TestOrganizationReadUpdate(t *testing.T) {
 
 func TestPasswordPolicy(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	authOp := auth.NewAuthOp(client)
@@ -695,7 +698,7 @@ func TestPasswordPolicy(t *testing.T) {
 
 func TestAuthContext(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	authOp := auth.NewAuthOp(client)
@@ -711,7 +714,7 @@ func TestAuthContext(t *testing.T) {
 
 func TestSSOProfileLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	ssoOp := sso.NewSSOOp(client)
@@ -768,7 +771,7 @@ func TestSSOProfileLifecycle(t *testing.T) {
 
 func TestScimLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	scimOp := scim.NewScimOp(client)
@@ -818,7 +821,7 @@ func TestScimLifecycle(t *testing.T) {
 
 func TestServicePolicyLifecycle(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	client := newTestClient(t, srv.TestURL())
 	op := servicepolicy.NewServicePolicyOp(client)
@@ -917,15 +920,11 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatalf("expected non-empty errors: %+v", badReq.Errors)
 	}
 
-	// The handlers above must not have drifted from the OpenAPI spec.
-	if v := srv.SpecViolations(); len(v) != 0 {
-		t.Errorf("spec violations recorded: %+v", v)
-	}
 }
 
 func TestSpecViolationsEndpoint(t *testing.T) {
 	srv := iam.NewTestServer(iam.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	res, err := http.Get(srv.TestURL() + "/_sakumock/spec-violations")
 	if err != nil {

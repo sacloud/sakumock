@@ -14,6 +14,29 @@ type UserRecord struct {
 	UpdatedAt   time.Time
 }
 
+// UserTrustedDeviceRecord is a device the user marked as trusted during a
+// two-factor login. The real API has no endpoint that creates one (it happens
+// in the browser), so the mock seeds them through /_sakumock/.
+type UserTrustedDeviceRecord struct {
+	ID        int
+	UserID    int
+	Name      string
+	CreatedAt time.Time
+}
+
+// UserSecurityKeyRecord is a WebAuthn authenticator registered by the user.
+// Like trusted devices, registration happens in the browser, so the mock seeds
+// them through /_sakumock/.
+type UserSecurityKeyRecord struct {
+	ID           int
+	UserID       int
+	Name         string
+	SignCount    int
+	AAGUID       string
+	RegisteredAt time.Time
+	LastUsedAt   *time.Time
+}
+
 type GroupRecord struct {
 	ID          int
 	Name        string

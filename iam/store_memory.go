@@ -67,6 +67,8 @@ type MemoryStore struct {
 	logger *slog.Logger
 
 	users             *table[UserRecord]
+	trustedDevices    *table[UserTrustedDeviceRecord]
+	securityKeys      *table[UserSecurityKeyRecord]
 	groups            *table[GroupRecord]
 	projects          *table[ProjectRecord]
 	folders           *table[FolderRecord]
@@ -112,6 +114,8 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		logger: logger,
 
 		users:             newTable[UserRecord](),
+		trustedDevices:    newTable[UserTrustedDeviceRecord](),
+		securityKeys:      newTable[UserSecurityKeyRecord](),
 		groups:            newTable[GroupRecord](),
 		projects:          newTable[ProjectRecord](),
 		folders:           newTable[FolderRecord](),
@@ -164,3 +168,36 @@ func (s *MemoryStore) Close() error { return nil }
 func newUUID() string { return uuid.NewString() }
 
 func idKey(id int) string { return strconv.Itoa(id) }
+
+// userTrustedDevices returns the user's trusted devices in creation order.
+func (s *MemoryStore) userTrustedDevices(userID int) []*UserTrustedDeviceRecord {
+	var out []*UserTrustedDeviceRecord
+	for _, d := range s.trustedDevices.all() {
+		if d.UserID == userID {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
+// userSecurityKeys returns the user's security keys in registration order.
+func (s *MemoryStore) userSecurityKeys(userID int) []*UserSecurityKeyRecord {
+	var out []*UserSecurityKeyRecord
+	for _, k := range s.securityKeys.all() {
+		if k.UserID == userID {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
+// deleteUser2FA drops every trusted device and security key of the user, so a
+// deleted user leaves nothing behind.
+func (s *MemoryStore) deleteUser2FA(userID int) {
+	for _, d := range s.userTrustedDevices(userID) {
+		s.trustedDevices.delete(idKey(d.ID))
+	}
+	for _, k := range s.userSecurityKeys(userID) {
+		s.securityKeys.delete(idKey(k.ID))
+	}
+}

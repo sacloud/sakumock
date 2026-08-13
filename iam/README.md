@@ -89,12 +89,27 @@ Run `sakumock-iam --routes` for the full list. The server implements the followi
 
 ## Mock-only endpoints
 
-Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.
+Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe or drive the mock itself.
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `POST` | `/_sakumock/users/{user_id}/trusted-devices` | Register a trusted device for the user |
+| `POST` | `/_sakumock/users/{user_id}/security-keys` | Register a security key for the user |
 | `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec (see below) |
 | `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
+
+The real API creates trusted devices and security keys in the browser — the user ticks "trust this device" during a two-factor login, and a security key is registered over WebAuthn — so there is no API call the mock could implement to seed them. These two endpoints stand in for it, letting you exercise the listing, update and deletion endpoints:
+
+```bash
+# Every field is optional; name defaults to mock-device / mock-security-key and
+# aaguid to a generated UUID.
+curl -s -XPOST http://localhost:18087/_sakumock/users/123456789012/trusted-devices \
+  -d '{"name":"laptop"}'
+curl -s -XPOST http://localhost:18087/_sakumock/users/123456789012/security-keys \
+  -d '{"name":"yubikey","sign_count":3}'
+```
+
+A user's trusted devices and security keys are removed with the user.
 
 Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection:
 
@@ -107,6 +122,6 @@ An empty list after exercising the endpoints you care about means the mock's res
 
 ## OpenAPI spec
 
-`openapi/openapi.yaml` is copied from the `github.com/sacloud/sacloud-sdk-go`
+`openapi/openapi.json` is copied from the `github.com/sacloud/sacloud-sdk-go`
 module (`api/iam/openapi`). Run `make openapi` to refresh it after
 upgrading the SDK dependency.

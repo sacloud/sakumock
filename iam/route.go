@@ -38,6 +38,11 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/compat/users/{user_id}/security-keys/{security_key_id}", "Get a security key", s.handleReadSecurityKey),
 		route("PUT", "/compat/users/{user_id}/security-keys/{security_key_id}", "Update security key", s.handleUpdateSecurityKey),
 		route("DELETE", "/compat/users/{user_id}/security-keys/{security_key_id}", "Delete security key", s.handleDeleteSecurityKey),
+		// Trusted devices and security keys are created in the browser (a
+		// two-factor login and a WebAuthn registration), so the real API has no
+		// endpoint the mock could implement to seed them.
+		{Route: core.Route{Method: "POST", Path: "/_sakumock/users/{user_id}/trusted-devices", Description: "Register a trusted device", Kind: "inspection"}, Handler: s.handleSeedTrustedDevice},
+		{Route: core.Route{Method: "POST", Path: "/_sakumock/users/{user_id}/security-keys", Description: "Register a security key", Kind: "inspection"}, Handler: s.handleSeedSecurityKey},
 
 		// Groups
 		route("GET", "/groups", "List groups", s.handleListGroups),

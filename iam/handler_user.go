@@ -52,18 +52,19 @@ type registerEmailRequest struct {
 	Email string `json:"email"`
 }
 
-func userToJSON(r *UserRecord) userJSON {
+func (s *Server) userToJSON(r *UserRecord) userJSON {
 	return userJSON{
-		ID:          r.ID,
-		Member:      userMember{ID: 1, Code: "mem00001"},
-		Name:        r.Name,
-		Code:        r.Code,
-		Status:      r.Status,
-		Description: r.Description,
-		Otp:         userOtp{Status: "deactivated"},
-		Email:       r.Email,
-		CreatedAt:   core.FormatRFC3339(r.CreatedAt),
-		UpdatedAt:   core.FormatRFC3339(r.UpdatedAt),
+		ID:                      r.ID,
+		Member:                  userMember{ID: 1, Code: "mem00001"},
+		Name:                    r.Name,
+		Code:                    r.Code,
+		Status:                  r.Status,
+		Description:             r.Description,
+		Otp:                     userOtp{Status: "deactivated"},
+		IsSecurityKeyRegistered: len(s.store.userSecurityKeys(r.ID)) > 0,
+		Email:                   r.Email,
+		CreatedAt:               core.FormatRFC3339(r.CreatedAt),
+		UpdatedAt:               core.FormatRFC3339(r.UpdatedAt),
 	}
 }
 
@@ -71,7 +72,7 @@ func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	records := s.store.users.all()
 	items := make([]userJSON, 0, len(records))
 	for _, rec := range records {
-		items = append(items, userToJSON(rec))
+		items = append(items, s.userToJSON(rec))
 	}
 	writePage(w, items)
 }
@@ -149,7 +150,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	s.store.users.set(idKey(rec.ID), rec)
 	s.logger.Debug("user created", "id", rec.ID, "name", rec.Name)
-	core.WriteJSON(w, http.StatusCreated, userToJSON(rec))
+	core.WriteJSON(w, http.StatusCreated, s.userToJSON(rec))
 }
 
 func (s *Server) handleReadUser(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +160,7 @@ func (s *Server) handleReadUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, userToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, s.userToJSON(rec))
 }
 
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -188,15 +189,18 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	rec.UpdatedAt = time.Now()
 	s.store.users.set(id, rec)
 	s.logger.Debug("user updated", "id", id)
-	core.WriteJSON(w, http.StatusOK, userToJSON(rec))
+	core.WriteJSON(w, http.StatusOK, s.userToJSON(rec))
 }
 
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("user_id")
-	if !s.store.users.delete(id) {
+	rec, ok := s.store.users.get(id)
+	if !ok {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
 	}
+	s.store.users.delete(id)
+	s.store.deleteUser2FA(rec.ID)
 	s.logger.Debug("user deleted", "id", id)
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -232,73 +236,4 @@ func (s *Server) handleUnregisterEmail(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// handleListUserTrustedDevices returns an empty list of trusted devices.
-func (s *Server) handleListUserTrustedDevices(w http.ResponseWriter, _ *http.Request) {
-	core.WriteJSON(w, http.StatusOK, []any{})
-}
-
-// handleListUserSecurityKeys returns an empty list of security keys.
-func (s *Server) handleListUserSecurityKeys(w http.ResponseWriter, _ *http.Request) {
-	core.WriteJSON(w, http.StatusOK, []any{})
-}
-
-// handleDeactivateOTP is a no-op that returns 204.
-func (s *Server) handleDeactivateOTP(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-	if _, ok := s.store.users.get(id); !ok {
-		writeError(w, http.StatusNotFound, "user not found")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// handleClearTrustedDevices is a no-op that returns 204.
-func (s *Server) handleClearTrustedDevices(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-	if _, ok := s.store.users.get(id); !ok {
-		writeError(w, http.StatusNotFound, "user not found")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// handleDeleteTrustedDevice is a no-op that returns 204.
-func (s *Server) handleDeleteTrustedDevice(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-	if _, ok := s.store.users.get(id); !ok {
-		writeError(w, http.StatusNotFound, "user not found")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// The mock has no security-key registration path (WebAuthn happens in a
-// browser), so the per-key endpoints always report the key as absent.
-
-func (s *Server) handleReadSecurityKey(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-	if _, ok := s.store.users.get(id); !ok {
-		writeError(w, http.StatusNotFound, "user not found")
-		return
-	}
-	writeError(w, http.StatusNotFound, "security key not found")
-}
-
-func (s *Server) handleUpdateSecurityKey(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-	if _, ok := s.store.users.get(id); !ok {
-		writeError(w, http.StatusNotFound, "user not found")
-		return
-	}
-	writeError(w, http.StatusNotFound, "security key not found")
-}
-
-// handleDeleteSecurityKey is a no-op that returns 204.
-func (s *Server) handleDeleteSecurityKey(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("user_id")
-	if _, ok := s.store.users.get(id); !ok {
-		writeError(w, http.StatusNotFound, "user not found")
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
+// The two-factor endpoints live in handler_user2fa.go.

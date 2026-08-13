@@ -22,6 +22,7 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [apprundedicated](apprundedicated/) | 18089 | `github.com/sacloud/sakumock/apprundedicated` | AppRun Dedicated control-plane API (optional Docker data plane) |
 | [workflows](workflows/) | 18090 | `github.com/sacloud/sakumock/workflows` | Workflows control-plane API (optional Runbook execution engine) |
 | [apigw](apigw/) | 18091 | `github.com/sacloud/sakumock/apigw` | API Gateway control-plane API (optional gateway data plane) |
+| [cloudhsm](cloudhsm/) | 18092 | `github.com/sacloud/sakumock/cloudhsm` | CloudHSM control-plane API |
 
 ## Quick Start
 
@@ -144,6 +145,7 @@ sakumock iam &
 sakumock apprun &
 sakumock apprun-dedicated &
 sakumock workflows &
+sakumock cloudhsm &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
@@ -285,7 +287,7 @@ The default command runs every service bound to `0.0.0.0`, so published ports ar
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 -p 18092:18092 \
   ghcr.io/sacloud/sakumock:latest
 ```
 
@@ -295,7 +297,7 @@ A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every se
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 -p 18092:18092 \
   -p 28084:28084 -p 28086:28086 -p 28091:28091 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
@@ -322,7 +324,7 @@ If you do not need the AppRun data planes, disable them with environment variabl
 docker run --rm \
   -e APPRUN_ENABLE_DATA_PLANE=false \
   -e APPRUN_DEDICATED_ENABLE_DATA_PLANE=false \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 \
+  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 -p 18092:18092 \
   -p 28084:28084 -p 28086:28086 -p 28091:28091 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```

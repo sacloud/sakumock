@@ -11,6 +11,7 @@ import (
 	"github.com/sacloud/sakumock/apigw"
 	"github.com/sacloud/sakumock/apprun"
 	"github.com/sacloud/sakumock/apprundedicated"
+	"github.com/sacloud/sakumock/cloudhsm"
 	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/eventbus"
 	"github.com/sacloud/sakumock/iam"
@@ -42,6 +43,7 @@ type CLI struct {
 	ApprunDedicated    apprundedicated.Command    `cmd:"" name:"apprun-dedicated" help:"AppRun Dedicated mock server"`
 	Workflows          workflows.Command          `cmd:"" name:"workflows" help:"Workflows mock server"`
 	Apigw              apigw.Command              `cmd:"" name:"apigw" help:"API Gateway mock server"`
+	Cloudhsm           cloudhsm.Command           `cmd:"" name:"cloudhsm" help:"CloudHSM mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

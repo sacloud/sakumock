@@ -1,0 +1,1918 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "KMS/SecretManager/CloudHSM API",
+    "version": "1.0.0",
+    "description": "さくらのクラウド KMS / SecretManager / CloudHSM API"
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1",
+      "description": "石狩第1ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/is1b/api/cloud/1.1",
+      "description": "石狩第2ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/tk1a/api/cloud/1.1",
+      "description": "東京第1ゾーン"
+    },
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/zone/tk1b/api/cloud/1.1",
+      "description": "東京第2ゾーン"
+    }
+  ],
+  "paths": {
+    "/cloudhsm/cloudhsms": {
+      "get": {
+        "operationId": "cloudhsm_cloudhsms_list",
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCloudHSMList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "cloudhsm_cloudhsms_create",
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateCloudHSM"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCreateCloudHSM"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cloudhsm/cloudhsms/{cloudhsm_resource_id}/clients": {
+      "get": {
+        "operationId": "cloudhsm_cloudhsms_clients_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cloudhsm_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCloudHSMClientList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "cloudhsm_cloudhsms_clients_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cloudhsm_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateCloudHSMClient"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCreateCloudHSMClient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cloudhsm/cloudhsms/{cloudhsm_resource_id}/clients/{id}": {
+      "get": {
+        "operationId": "cloudhsm_cloudhsms_clients_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cloudhsm_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A unique value identifying this CloudHSMクライアント.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCloudHSMClient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "cloudhsm_cloudhsms_clients_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cloudhsm_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A unique value identifying this CloudHSMクライアント.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCloudHSMClient"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCloudHSMClient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "cloudhsm_cloudhsms_clients_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cloudhsm_resource_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A unique value identifying this CloudHSMクライアント.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/cloudhsm/cloudhsms/{resource_id}": {
+      "get": {
+        "operationId": "cloudhsm_cloudhsms_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCloudHSM"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "cloudhsm_cloudhsms_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCloudHSM"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCloudHSM"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "cloudhsm_cloudhsms_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/cloudhsm/cloudhsms/{resource_id}/peers": {
+      "get": {
+        "operationId": "cloudhsm_cloudhsms_peers_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudHSMPeerList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "cloudhsm_cloudhsms_peers_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateCloudHSMPeer"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "no content"
+          }
+        }
+      }
+    },
+    "/cloudhsm/cloudhsms/{resource_id}/peers/{peer_id}": {
+      "delete": {
+        "operationId": "cloudhsm_cloudhsms_peers_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "peer_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/cloudhsm/licenses": {
+      "get": {
+        "operationId": "cloudhsm_licenses_list",
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCloudHSMSoftwareLicenseList"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "cloudhsm_licenses_create",
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCreateCloudHSMSoftwareLicense"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCreateCloudHSMSoftwareLicense"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cloudhsm/licenses/{resource_id}": {
+      "get": {
+        "operationId": "cloudhsm_licenses_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCloudHSMSoftwareLicense"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "cloudhsm_licenses_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WrappedCloudHSMSoftwareLicense"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrappedCloudHSMSoftwareLicense"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "cloudhsm_licenses_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "string",
+              "title": "リソースID"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "cloudhsm"
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "basicAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "APIキーとシークレットをご利用ください"
+      }
+    },
+    "schemas": {
+      "DateTime": {
+        "type": "string",
+        "format": "iso8601",
+        "example": "2025-02-05T12:19:22.551827+09:00"
+      },
+      "AvailabilityEnum": {
+        "enum": [
+          "precreate",
+          "available",
+          "discontinued"
+        ],
+        "type": "string",
+        "description": "* `precreate` - 準備中\n* `available` - 利用可能\n* `discontinued` - 廃止"
+      },
+      "CloudHSMLocalRouter": {
+        "type": "object",
+        "properties": {
+          "ResourceID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "SecretKey": {
+            "type": "string",
+            "readOnly": true,
+            "example": "PAIRINGSECRETKEY"
+          }
+        }
+      },
+      "CloudHSM": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "ServiceClass": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceClassEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "サービスクラス"
+          },
+          "Availability": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AvailabilityEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "状態"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Ipv4NetworkAddress": {
+            "type": "string",
+            "title": "IPv4ネットワークアドレス",
+            "example": "192.168.100.0"
+          },
+          "Ipv4PrefixLength": {
+            "type": "integer",
+            "title": "IPv4プレフィックス長",
+            "example": 24
+          },
+          "Ipv4Address": {
+            "type": "string",
+            "readOnly": true,
+            "example": "192.168.100.11"
+          },
+          "LocalRouter": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CloudHSMLocalRouter"
+              }
+            ],
+            "readOnly": true,
+            "nullable": true
+          }
+        },
+        "required": [
+          "Availability",
+          "CreatedAt",
+          "ID",
+          "initial_data",
+          "Ipv4Address",
+          "Ipv4NetworkAddress",
+          "Ipv4PrefixLength",
+          "LocalRouter",
+          "ModifiedAt",
+          "Name",
+          "ServiceClass"
+        ]
+      },
+      "CloudHSMClient": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "01JP9500000000000000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Availability": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AvailabilityEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "状態"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Certificate": {
+            "type": "string",
+            "readOnly": true,
+            "title": "クライアント証明書",
+            "example": "-----BEGIN CERTIFICATE-----\\nMIIC0DCCAbigAwIBAgIJAJ.....\\n-----END CERTIFICATE-----"
+          }
+        },
+        "required": [
+          "Availability",
+          "Certificate",
+          "CreatedAt",
+          "ID",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "CloudHSMSoftwareLicense": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "ServiceClass": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CloudHSMSoftwareLicenseServiceClassEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "サービスクラス"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ID",
+          "CreatedAt",
+          "ModifiedAt",
+          "Name",
+          "Description",
+          "Tags",
+          "ServiceClass"
+        ]
+      },
+      "CreateCloudHSM": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "ServiceClass": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceClassEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "サービスクラス"
+          },
+          "Availability": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AvailabilityEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "状態"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Ipv4NetworkAddress": {
+            "type": "string",
+            "title": "IPv4ネットワークアドレス",
+            "example": "192.168.100.0"
+          },
+          "Ipv4PrefixLength": {
+            "type": "integer",
+            "title": "IPv4プレフィックス長",
+            "example": 24
+          },
+          "Ipv4Address": {
+            "type": "string",
+            "readOnly": true,
+            "example": "192.168.100.11"
+          }
+        },
+        "required": [
+          "Availability",
+          "CreatedAt",
+          "ID",
+          "Ipv4Address",
+          "Ipv4NetworkAddress",
+          "Ipv4PrefixLength",
+          "ModifiedAt",
+          "Name",
+          "ServiceClass"
+        ]
+      },
+      "CreateCloudHSMClient": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Availability": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AvailabilityEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "状態"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Certificate": {
+            "type": "string",
+            "example": "-----BEGIN CERTIFICATE-----\\nMIIC0DCCAbigAwIBAgIJAJ.....\\n-----END CERTIFICATE-----"
+          }
+        },
+        "required": [
+          "Availability",
+          "Certificate",
+          "CreatedAt",
+          "ID",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "CreateCloudHSMPeer": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "example": "110000000000"
+          },
+          "SecretKey": {
+            "type": "string",
+            "example": "PAIRINGSECRETKEY"
+          }
+        },
+        "required": [
+          "ID",
+          "SecretKey"
+        ]
+      },
+      "CreateCloudHSMSoftwareLicense": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "ServiceClass": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CloudHSMSoftwareLicenseServiceClassEnum"
+              }
+            ],
+            "title": "サービスクラス"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ID",
+          "CreatedAt",
+          "ModifiedAt",
+          "Name",
+          "Tags",
+          "ServiceClass"
+        ]
+      },
+      "CloudHSMPeer": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "Index": {
+            "type": "integer",
+            "readOnly": true,
+            "example": 1
+          },
+          "Status": {
+            "type": "string",
+            "readOnly": true,
+            "enum": [
+              "DOWN",
+              "UP",
+              "CLEANING",
+              ""
+            ]
+          },
+          "Routes": {
+            "type": "array",
+            "readOnly": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ID"
+        ]
+      },
+      "CloudHSMPeerList": {
+        "type": "object",
+        "required": [
+          "Peers"
+        ],
+        "properties": {
+          "Peers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CloudHSMPeer"
+            }
+          }
+        }
+      },
+      "CreateKey": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KeyOrigin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyOriginEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "鍵の生成元"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "PlainKey": {
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "CreatedAt",
+          "ID",
+          "KeyOrigin",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "CreateSecret": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Value": {
+            "type": "string",
+            "writeOnly": true
+          },
+          "LatestVersion": {
+            "type": "integer",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "LatestVersion",
+          "Name",
+          "Value"
+        ]
+      },
+      "DeleteSecret": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "Name"
+        ]
+      },
+      "CreateVault": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KmsKeyID": {
+            "type": "string",
+            "title": "KMS 鍵ID",
+            "maxLength": 255
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "CreatedAt",
+          "ID",
+          "KmsKeyID",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "Key": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "ServiceClass": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyServiceClassEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "サービスクラス"
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KeyOrigin": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyOriginEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "鍵の生成元"
+          },
+          "LatestVersion": {
+            "type": "integer",
+            "readOnly": true,
+            "title": "最新のキーマテリアルバージョン",
+            "example": 0
+          },
+          "Status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "title": "鍵のステータス"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ID",
+          "CreatedAt",
+          "ModifiedAt",
+          "Name",
+          "Description",
+          "KeyOrigin",
+          "Status",
+          "Tags"
+        ]
+      },
+      "KeyServiceClassEnum": {
+        "enum": [
+          "cloud/kms/key",
+          "cloud/kms/key/legacy"
+        ],
+        "type": "string"
+      },
+      "KeyOriginEnum": {
+        "enum": [
+          "generated",
+          "imported"
+        ],
+        "type": "string",
+        "description": "* `generated` - 生成\n* `imported` - インポート"
+      },
+      "KeyStatusEnum": {
+        "enum": [
+          "active",
+          "restricted",
+          "suspended",
+          "pending_destruction"
+        ],
+        "type": "string",
+        "description": "* `active` - 有効\n* `restricted` - 復号と署名検証にのみ利用可能\n* `suspended` - 利用不可\n* `pending_destruction` - 削除猶予"
+      },
+      "ChangeKeyStatus": {
+        "type": "object",
+        "properties": {
+          "Status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "restricted",
+              "suspended"
+            ]
+          }
+        }
+      },
+      "ScheduleDestructionKey": {
+        "type": "object",
+        "properties": {
+          "PendingDays": {
+            "type": "integer",
+            "title": "削除猶予日数",
+            "example": 7,
+            "description": "鍵を削除するまでの猶予期間を日数で指定します。\n7日から14日を指定できます。実際に削除されるのはこの予定時刻よりも後ろになります。"
+          }
+        },
+        "required": [
+          "PendingDays"
+        ]
+      },
+      "KeyPlain": {
+        "type": "object",
+        "properties": {
+          "Plain": {
+            "type": "string",
+            "title": "平文",
+            "description": "Base64でエンコードされた平文"
+          },
+          "Algo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KeyEncryptAlgoEnum"
+              }
+            ],
+            "title": "暗号化アルゴリズム",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "Plain"
+        ]
+      },
+      "KeyEncryptAlgoEnum": {
+        "enum": [
+          "aes-256-gcm",
+          "aes-256-cbc",
+          "aes-256-kw"
+        ],
+        "type": "string",
+        "description": "* `aes-256-gcm` - AES256-GCMモードでの暗号化(default)\n* `aes-256-cbc` - AES256-CBCモードでの暗号化\n* `aes-256-kw` - AES256-KWモードでの暗号化"
+      },
+      "KeyCipher": {
+        "type": "object",
+        "properties": {
+          "Cipher": {
+            "type": "string",
+            "title": "暗号文",
+            "description": "暗号化エンドポイントのレスポンス"
+          }
+        },
+        "required": [
+          "Cipher"
+        ]
+      },
+      "PaginatedCloudHSMClientList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Clients"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Clients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CloudHSMClient"
+            }
+          }
+        }
+      },
+      "PaginatedCloudHSMList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "CloudHSMs"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "CloudHSMs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CloudHSM"
+            }
+          }
+        }
+      },
+      "PaginatedCloudHSMSoftwareLicenseList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Licenses"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Licenses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CloudHSMSoftwareLicense"
+            }
+          }
+        }
+      },
+      "PaginatedKeyList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Keys"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Key"
+            }
+          }
+        }
+      },
+      "PaginatedSecretList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Secrets"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Secrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Secret"
+            }
+          }
+        }
+      },
+      "PaginatedVaultList": {
+        "type": "object",
+        "required": [
+          "Count",
+          "Vaults"
+        ],
+        "properties": {
+          "Count": {
+            "type": "integer",
+            "example": 10
+          },
+          "From": {
+            "type": "integer",
+            "example": 0
+          },
+          "Total": {
+            "type": "integer",
+            "example": 10
+          },
+          "Vaults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vault"
+            }
+          }
+        }
+      },
+      "Secret": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "LatestVersion": {
+            "type": "integer",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "LatestVersion",
+          "Name"
+        ]
+      },
+      "ServiceClassEnum": {
+        "enum": [
+          "cloud/cloudhsm/partition"
+        ],
+        "type": "string",
+        "description": "* `cloud/cloudhsm/partition` - Type-L7"
+      },
+      "CloudHSMSoftwareLicenseServiceClassEnum": {
+        "enum": [
+          "cloud/cloudhsm/license/l7"
+        ],
+        "type": "string",
+        "description": "* `cloud/cloudhsm/license/l7` - for Type-L7 Client"
+      },
+      "Unvail": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string"
+          },
+          "Version": {
+            "type": "integer",
+            "nullable": true
+          },
+          "Value": {
+            "type": "string",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "Name",
+          "Value"
+        ]
+      },
+      "Vault": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "readOnly": true,
+            "example": "110000000000"
+          },
+          "CreatedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true,
+            "title": "登録日時"
+          },
+          "ModifiedAt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "readOnly": true
+          },
+          "Name": {
+            "type": "string",
+            "title": "名前",
+            "maxLength": 255
+          },
+          "Description": {
+            "type": "string",
+            "title": "説明"
+          },
+          "KmsKeyID": {
+            "type": "string",
+            "readOnly": true,
+            "title": "KMS 鍵ID",
+            "example": "110000000000"
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "CreatedAt",
+          "ID",
+          "KmsKeyID",
+          "ModifiedAt",
+          "Name"
+        ]
+      },
+      "WrappedCloudHSM": {
+        "type": "object",
+        "properties": {
+          "CloudHSM": {
+            "$ref": "#/components/schemas/CloudHSM"
+          }
+        },
+        "required": [
+          "CloudHSM"
+        ]
+      },
+      "WrappedCloudHSMClient": {
+        "type": "object",
+        "properties": {
+          "Client": {
+            "$ref": "#/components/schemas/CloudHSMClient"
+          }
+        },
+        "required": [
+          "Client"
+        ]
+      },
+      "WrappedCloudHSMSoftwareLicense": {
+        "type": "object",
+        "properties": {
+          "License": {
+            "$ref": "#/components/schemas/CloudHSMSoftwareLicense"
+          }
+        },
+        "required": [
+          "CloudHSM"
+        ]
+      },
+      "WrappedCreateCloudHSM": {
+        "type": "object",
+        "properties": {
+          "CloudHSM": {
+            "$ref": "#/components/schemas/CreateCloudHSM"
+          }
+        },
+        "required": [
+          "CloudHSM"
+        ]
+      },
+      "WrappedCreateCloudHSMClient": {
+        "type": "object",
+        "properties": {
+          "Client": {
+            "$ref": "#/components/schemas/CreateCloudHSMClient"
+          }
+        },
+        "required": [
+          "Client"
+        ]
+      },
+      "WrappedCreateCloudHSMSoftwareLicense": {
+        "type": "object",
+        "properties": {
+          "License": {
+            "$ref": "#/components/schemas/CreateCloudHSMSoftwareLicense"
+          }
+        },
+        "required": [
+          "CloudHSM"
+        ]
+      },
+      "WrappedCloudHSMPeer": {
+        "type": "object",
+        "properties": {
+          "Peer": {
+            "$ref": "#/components/schemas/CloudHSMPeer"
+          }
+        },
+        "required": [
+          "Peer"
+        ]
+      },
+      "WrappedCreateCloudHSMPeer": {
+        "type": "object",
+        "properties": {
+          "Peer": {
+            "$ref": "#/components/schemas/CreateCloudHSMPeer"
+          }
+        },
+        "required": [
+          "Peer"
+        ]
+      },
+      "WrappedCreateKey": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/CreateKey"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedCreateSecret": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/CreateSecret"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedDeleteSecret": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/DeleteSecret"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedCreateVault": {
+        "type": "object",
+        "properties": {
+          "Vault": {
+            "$ref": "#/components/schemas/CreateVault"
+          }
+        },
+        "required": [
+          "Vault"
+        ]
+      },
+      "WrappedKey": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/Key"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedChangeKeyStatus": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/ChangeKeyStatus"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedScheduleDestructionKey": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/ScheduleDestructionKey"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedKeyPlain": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/KeyPlain"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedKeyCipher": {
+        "type": "object",
+        "properties": {
+          "Key": {
+            "$ref": "#/components/schemas/KeyCipher"
+          }
+        },
+        "required": [
+          "Key"
+        ]
+      },
+      "WrappedUnvail": {
+        "type": "object",
+        "properties": {
+          "Secret": {
+            "$ref": "#/components/schemas/Unvail"
+          }
+        },
+        "required": [
+          "Secret"
+        ]
+      },
+      "WrappedVault": {
+        "type": "object",
+        "properties": {
+          "Vault": {
+            "$ref": "#/components/schemas/Vault"
+          }
+        },
+        "required": [
+          "Vault"
+        ]
+      }
+    }
+  }
+}

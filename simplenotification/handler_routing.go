@@ -74,7 +74,12 @@ func (s *Server) handleReorderRouting(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	for _, o := range req.Orders {
-		it, _ := s.store.GetItem(o.RoutingID)
+		it, ok := s.store.GetItem(o.RoutingID)
+		if !ok {
+			// Deleted between the validation loop and here.
+			writeError(w, http.StatusNotFound, "対象が見つかりません。")
+			return
+		}
 		var settings map[string]any
 		if err := json.Unmarshal(it.Settings, &settings); err != nil || settings == nil {
 			settings = map[string]any{}
@@ -85,7 +90,10 @@ func (s *Server) handleReorderRouting(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		s.store.UpdateItemSettings(o.RoutingID, raw)
+		if _, ok := s.store.UpdateItemSettings(o.RoutingID, raw); !ok {
+			writeError(w, http.StatusNotFound, "対象が見つかりません。")
+			return
+		}
 	}
 	s.logger.Debug("routings reordered", "count", len(req.Orders))
 	core.WriteJSON(w, http.StatusAccepted, reorderResponse{IsOk: true})

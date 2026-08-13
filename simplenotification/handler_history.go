@@ -66,15 +66,20 @@ const (
 // else becomes the body of a default-styled message. The defaults match the
 // spec's documented example ("default" / "#7d7d7d").
 func parseMessagePayload(raw string) notificationMessageJSON {
-	var parsed notificationMessageJSON
-	if err := json.Unmarshal([]byte(raw), &parsed); err == nil && parsed.Body != "" {
-		if parsed.Color == "" {
-			parsed.Color = "default"
+	var keys map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &keys); err == nil {
+		if _, hasBody := keys["body"]; hasBody {
+			var parsed notificationMessageJSON
+			if err := json.Unmarshal([]byte(raw), &parsed); err == nil {
+				if parsed.Color == "" {
+					parsed.Color = "default"
+				}
+				if parsed.ColorCode == "" {
+					parsed.ColorCode = "#7d7d7d"
+				}
+				return parsed
+			}
 		}
-		if parsed.ColorCode == "" {
-			parsed.ColorCode = "#7d7d7d"
-		}
-		return parsed
 	}
 	return notificationMessageJSON{
 		Body:      raw,
@@ -85,6 +90,9 @@ func parseMessagePayload(raw string) notificationMessageJSON {
 
 // groupDestinations extracts the Destinations list from a group item's
 // verbatim Settings JSON; a missing group or unparsable settings yield nil.
+// Entries not matching the spec's 12-digit ID pattern are dropped: group
+// settings are stored permissively (oneOf), but the history response schema
+// requires conformant destination IDs.
 func (s *Server) groupDestinations(groupID string) []string {
 	it, ok := s.store.GetItem(groupID)
 	if !ok {
@@ -96,7 +104,13 @@ func (s *Server) groupDestinations(groupID string) []string {
 	if err := json.Unmarshal(it.Settings, &settings); err != nil {
 		return nil
 	}
-	return settings.Destinations
+	out := settings.Destinations[:0]
+	for _, dest := range settings.Destinations {
+		if groupIDRe.MatchString(dest) {
+			out = append(out, dest)
+		}
+	}
+	return out
 }
 
 // historyOf renders one accepted message as a spec-shaped history entry.

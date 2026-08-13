@@ -14,6 +14,7 @@ type MemoryStore struct {
 	mu          sync.RWMutex
 	userCreated bool
 	ids         *core.IDGenerator
+	appSeq      int
 	versionSeq  int
 
 	appVersions   map[string][]*appVersionEntry
@@ -50,6 +51,22 @@ func (s *MemoryStore) CreateUser() {
 	s.userCreated = true
 }
 
+// lessByCreation orders two resources by creation time, falling back to their
+// creation sequence when the timestamps are equal — several resources can share
+// a timestamp because it is truncated to the second.
+func lessByCreation(iAt time.Time, iSeq int, jAt time.Time, jSeq int, sortOrder string) bool {
+	if iAt.Equal(jAt) {
+		if sortOrder == "desc" {
+			return iSeq > jSeq
+		}
+		return iSeq < jSeq
+	}
+	if sortOrder == "desc" {
+		return iAt.After(jAt)
+	}
+	return iAt.Before(jAt)
+}
+
 func (s *MemoryStore) ListApplications(params ListParams) ([]*Application, int) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -73,10 +90,7 @@ func (s *MemoryStore) ListApplications(params ListParams) ([]*Application, int) 
 	sort.Slice(apps, func(i, j int) bool {
 		switch sortField {
 		case "created_at":
-			if sortOrder == "desc" {
-				return apps[i].CreatedAt.After(apps[j].CreatedAt)
-			}
-			return apps[i].CreatedAt.Before(apps[j].CreatedAt)
+			return lessByCreation(apps[i].CreatedAt, apps[i].seq, apps[j].CreatedAt, apps[j].seq, sortOrder)
 		default:
 			return false
 		}
@@ -101,10 +115,12 @@ func (s *MemoryStore) CreateApplication(app *Application) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.appSeq++
 	app.ID = uuid.NewString()
 	app.ResourceID = s.ids.Next()
 	app.Status = "Healthy"
 	app.CreatedAt = time.Now().UTC().Truncate(time.Second)
+	app.seq = s.appSeq
 	app.PublicURL = s.publicURLFunc(app.ID)
 
 	if app.ScaleTargetConcurrency == 0 {
@@ -201,10 +217,7 @@ func (s *MemoryStore) ListVersions(appID string, params ListParams) ([]*Version,
 		sortOrder = "desc"
 	}
 	sort.Slice(versions, func(i, j int) bool {
-		if sortOrder == "desc" {
-			return versions[i].CreatedAt.After(versions[j].CreatedAt)
-		}
-		return versions[i].CreatedAt.Before(versions[j].CreatedAt)
+		return lessByCreation(versions[i].CreatedAt, versions[i].seq, versions[j].CreatedAt, versions[j].seq, sortOrder)
 	})
 
 	total := len(versions)
@@ -328,5 +341,6 @@ func (s *MemoryStore) createVersionLocked(app *Application) *Version {
 		ScaleTargetConcurrency: app.ScaleTargetConcurrency,
 		Components:             app.Components,
 		CreatedAt:              now,
+		seq:                    s.versionSeq,
 	}
 }

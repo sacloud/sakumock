@@ -16,6 +16,11 @@ type Application struct {
 	ResourceID             string
 	CreatedAt              time.Time
 	UpdatedAt              time.Time
+
+	// seq records the creation order. CreatedAt is truncated to the second
+	// (as the real API reports it), so resources created within the same
+	// second compare equal; seq keeps list ordering deterministic.
+	seq int
 }
 
 type Component struct {
@@ -69,6 +74,9 @@ type Version struct {
 	ScaleTargetConcurrency int
 	Components             []Component
 	CreatedAt              time.Time
+
+	// seq records the creation order; see Application.seq.
+	seq int
 }
 
 type TrafficItem struct {

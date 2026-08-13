@@ -369,6 +369,19 @@ func TestSubscription(t *testing.T) {
 		t.Fatal("expected at least one plan")
 	}
 
+	// Reading while unsubscribed must decode: MonthAppliedPlan is not nullable
+	// in the spec, so it is omitted rather than sent as null.
+	unsubscribed, err := subscriptionOp.Read(ctx)
+	if err != nil {
+		t.Fatalf("read subscription (unsubscribed): %v", err)
+	}
+	if v, ok := unsubscribed.CurrentPlan.Get(); ok {
+		t.Errorf("current plan = %+v, want unset", v)
+	}
+	if v, ok := unsubscribed.MonthAppliedPlan.Get(); ok {
+		t.Errorf("month applied plan = %+v, want unset", v)
+	}
+
 	if err := subscriptionOp.Create(ctx, v1.CreateSubscriptionReq{PlanId: 1}); err != nil {
 		t.Fatalf("create subscription: %v", err)
 	}

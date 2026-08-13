@@ -28,6 +28,11 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("PUT", "/commonserviceitem/{id}", "Update a destination, group, or routing", s.handleUpdateItem),
 		route("DELETE", "/commonserviceitem/{id}", "Delete a destination, group, or routing", s.handleDeleteItem),
 		route("POST", "/commonserviceitem/{id}/simplenotification/message", "Send a notification message to the specified group", s.handleSendMessage),
+		route("GET", "/commonserviceitem/{id}/simplenotification/status", "Get destination/group validity status", s.handleGetItemStatus),
+		route("PUT", "/commonserviceitem/simplenotification/routing/reorder", "Reorder routing priorities", s.handleReorderRouting),
+		route("GET", "/commonserviceitem/simplenotification/sources", "List notification sources", s.handleListSources),
+		route("GET", "/commonserviceitem/simplenotification/history", "List notification histories", s.handleListHistories),
+		route("GET", "/commonserviceitem/simplenotification/history/{request_id}", "Get a notification history", s.handleGetHistory),
 		{Route: core.Route{Method: "GET", Path: "/_sakumock/messages", Description: "List accepted notification messages", Kind: "inspection"}, Handler: s.handleInspectMessages},
 		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/messages", Description: "Clear accepted notification messages", Kind: "inspection"}, Handler: s.handleResetMessages},
 	}

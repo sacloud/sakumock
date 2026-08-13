@@ -39,7 +39,7 @@ func newTestGroupOp(t *testing.T, serverURL string) sdk.GroupAPI {
 
 func TestSendMessage_Success(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	groupOp := newTestGroupOp(t, srv.TestURL())
 
@@ -70,7 +70,7 @@ func TestSendMessage_Success(t *testing.T) {
 
 func TestSendMessage_Multiple(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	groupOp := newTestGroupOp(t, srv.TestURL())
 
@@ -118,7 +118,7 @@ func rawSend(t *testing.T, baseURL, id string, body any) (*http.Response, []byte
 
 func TestSendMessage_InvalidID(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	resp, body := rawSend(t, srv.TestURL(), "abc", map[string]string{"Message": "hi"})
 	if resp.StatusCode != http.StatusBadRequest {
@@ -145,7 +145,7 @@ func TestSendMessage_InvalidID(t *testing.T) {
 
 func TestSendMessage_EmptyMessage(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": ""})
 	if resp.StatusCode != http.StatusBadRequest {
@@ -155,7 +155,7 @@ func TestSendMessage_EmptyMessage(t *testing.T) {
 
 func TestSendMessage_TooLongMessage(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": strings.Repeat("a", 2049)})
 	if resp.StatusCode != http.StatusBadRequest {
@@ -165,7 +165,7 @@ func TestSendMessage_TooLongMessage(t *testing.T) {
 
 func TestSendMessage_MaxLengthMessage(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": strings.Repeat("a", 2048)})
 	if resp.StatusCode != http.StatusAccepted {
@@ -178,7 +178,7 @@ func TestSendMessage_MaxLengthMessage(t *testing.T) {
 
 func TestInspectMessages(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	for _, m := range []string{"first", "second"} {
@@ -213,7 +213,7 @@ func TestSendMessage_Exec(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "out")
 	script := fmt.Sprintf(`{ printf "msg="; cat; printf "\ngroup=%%s\nid=%%s\n" "$SAKUMOCK_GROUP_ID" "$SAKUMOCK_MESSAGE_ID"; } > %s`, out)
 	srv := simplenotification.NewTestServer(simplenotification.Config{Exec: script})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "exec-me"})
 	if resp.StatusCode != http.StatusAccepted {
@@ -239,7 +239,7 @@ func TestSendMessage_Exec(t *testing.T) {
 func TestSendMessage_ExecFailureStillReturns202(t *testing.T) {
 	// "exit 1" works under both sh -c and cmd /c, so no OS skip.
 	srv := simplenotification.NewTestServer(simplenotification.Config{Exec: "exit 1"})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	resp, _ := rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "doomed"})
 	if resp.StatusCode != http.StatusAccepted {
@@ -252,7 +252,7 @@ func TestSendMessage_ExecFailureStillReturns202(t *testing.T) {
 
 func TestResetMessages(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	rawSend(t, srv.TestURL(), "123456789012", map[string]string{"Message": "to be reset"})

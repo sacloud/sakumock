@@ -42,6 +42,9 @@ type Store interface {
 	GetItem(id string) (ServiceItem, bool)
 	ListItems(providerClass string) []ServiceItem // empty providerClass returns all
 	UpdateItem(id, name, description string, tags []string, settings, icon json.RawMessage) (ServiceItem, bool)
+	// UpdateItemSettings replaces only the item's Settings, leaving the other
+	// fields untouched (used by routing reorder to patch PriorityRank).
+	UpdateItemSettings(id string, settings json.RawMessage) (ServiceItem, bool)
 	DeleteItem(id string) (ServiceItem, bool)
 
 	Close() error

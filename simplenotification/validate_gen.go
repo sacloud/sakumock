@@ -84,6 +84,30 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
+	"PUT /commonserviceitem/simplenotification/routing/reorder": {
+		Type:     "object",
+		Required: []string{"Orders"},
+		Properties: map[string]*core.BodySchema{
+			"Orders": {
+				Type: "array",
+				Items: &core.BodySchema{
+					Type:     "object",
+					Required: []string{"PriorityRank", "RoutingID"},
+					Properties: map[string]*core.BodySchema{
+						"PriorityRank": {
+							Type:    "integer",
+							Minimum: core.Float64Ptr(1),
+							Maximum: core.Float64Ptr(100),
+						},
+						"RoutingID": {
+							Type:    "string",
+							Pattern: "^[0-9]{1,12}$",
+						},
+					},
+				},
+			},
+		},
+	},
 	// NOTE: oneOf at PUT /commonserviceitem/{id}.CommonServiceItem.Settings left permissive
 	"PUT /commonserviceitem/{id}": {
 		Type:     "object",
@@ -296,6 +320,198 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
+	"GET /commonserviceitem/simplenotification/history": {
+		200: {
+			Type:     "object",
+			Required: []string{"NotificationHistories"},
+			Properties: map[string]*core.BodySchema{
+				"NotificationHistories": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"message", "received_at", "request_id", "source_id", "statuses"},
+						Properties: map[string]*core.BodySchema{
+							"message": {
+								Type:     "object",
+								Required: []string{"body", "color", "color_code", "icon_url", "image_url", "title"},
+								Properties: map[string]*core.BodySchema{
+									"body": {
+										Type: "string",
+									},
+									"color": {
+										Type: "string",
+									},
+									"color_code": {
+										Type: "string",
+									},
+									"icon_url": {
+										Type: "string",
+									},
+									"image_url": {
+										Type: "string",
+									},
+									"title": {
+										Type: "string",
+									},
+								},
+							},
+							"received_at": {
+								Type: "string",
+							},
+							"request_id": {
+								Type: "string",
+							},
+							"source_id": {
+								Type: "string",
+							},
+							"statuses": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"created_at", "destination_id", "error_info", "group_id", "id", "notification_request_id", "status", "updated_at"},
+									Properties: map[string]*core.BodySchema{
+										"created_at": {
+											Type: "string",
+										},
+										"destination_id": {
+											Type:    "string",
+											Pattern: "^[0-9]{12}$",
+										},
+										"error_info": {
+											Type: "string",
+										},
+										"group_id": {
+											Type:    "string",
+											Pattern: "^[0-9]{12}$",
+										},
+										"id": {
+											Type: "string",
+										},
+										"notification_request_id": {
+											Type: "string",
+										},
+										"status": {
+											Type: "integer",
+											Enum: []any{float64(0), float64(1), float64(2), float64(3), float64(9)},
+										},
+										"updated_at": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /commonserviceitem/simplenotification/history/{request_id}": {
+		200: {
+			Type:     "object",
+			Required: []string{"NotificationHistory"},
+			Properties: map[string]*core.BodySchema{
+				"NotificationHistory": {
+					Type:     "object",
+					Required: []string{"message", "received_at", "request_id", "source_id", "statuses"},
+					Properties: map[string]*core.BodySchema{
+						"message": {
+							Type:     "object",
+							Required: []string{"body", "color", "color_code", "icon_url", "image_url", "title"},
+							Properties: map[string]*core.BodySchema{
+								"body": {
+									Type: "string",
+								},
+								"color": {
+									Type: "string",
+								},
+								"color_code": {
+									Type: "string",
+								},
+								"icon_url": {
+									Type: "string",
+								},
+								"image_url": {
+									Type: "string",
+								},
+								"title": {
+									Type: "string",
+								},
+							},
+						},
+						"received_at": {
+							Type: "string",
+						},
+						"request_id": {
+							Type: "string",
+						},
+						"source_id": {
+							Type: "string",
+						},
+						"statuses": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"created_at", "destination_id", "error_info", "group_id", "id", "notification_request_id", "status", "updated_at"},
+								Properties: map[string]*core.BodySchema{
+									"created_at": {
+										Type: "string",
+									},
+									"destination_id": {
+										Type:    "string",
+										Pattern: "^[0-9]{12}$",
+									},
+									"error_info": {
+										Type: "string",
+									},
+									"group_id": {
+										Type:    "string",
+										Pattern: "^[0-9]{12}$",
+									},
+									"id": {
+										Type: "string",
+									},
+									"notification_request_id": {
+										Type: "string",
+									},
+									"status": {
+										Type: "integer",
+										Enum: []any{float64(0), float64(1), float64(2), float64(3), float64(9)},
+									},
+									"updated_at": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /commonserviceitem/simplenotification/sources": {
+		200: {
+			Type:     "object",
+			Required: []string{"Sources"},
+			Properties: map[string]*core.BodySchema{
+				"Sources": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"id", "name"},
+						Properties: map[string]*core.BodySchema{
+							"id": {
+								Type: "string",
+							},
+							"name": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
 	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Settings left permissive
 	"GET /commonserviceitem/{id}": {
 		200: {
@@ -364,6 +580,26 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Items: &core.BodySchema{
 								Type: "string",
 							},
+						},
+					},
+				},
+			},
+		},
+	},
+	"GET /commonserviceitem/{id}/simplenotification/status": {
+		200: {
+			Type:     "object",
+			Required: []string{"NotificationStatus"},
+			Properties: map[string]*core.BodySchema{
+				"NotificationStatus": {
+					Type:     "object",
+					Required: []string{"IsValid", "ModifiedAt"},
+					Properties: map[string]*core.BodySchema{
+						"IsValid": {
+							Type: "boolean",
+						},
+						"ModifiedAt": {
+							Type: "string",
 						},
 					},
 				},
@@ -448,6 +684,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 		202: {
 			Type:     "object",
 			Required: []string{"is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"PUT /commonserviceitem/simplenotification/routing/reorder": {
+		202: {
+			Type: "object",
 			Properties: map[string]*core.BodySchema{
 				"is_ok": {
 					Type: "boolean",

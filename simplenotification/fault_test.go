@@ -23,7 +23,7 @@ func getStatus(t *testing.T, url string) int {
 
 func TestFaultInjected(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{Fault: []string{"500:1"}})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	if status := getStatus(t, srv.TestURL()+"/commonserviceitem"); status != http.StatusInternalServerError {
 		t.Fatalf("expected 500, got %d", status)
@@ -33,7 +33,7 @@ func TestFaultInjected(t *testing.T) {
 func TestFaultInspectionBypassed(t *testing.T) {
 	// Inspection endpoints (/_sakumock/...) are exempt from fault injection.
 	srv := simplenotification.NewTestServer(simplenotification.Config{Fault: []string{"500:1"}})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	if status := getStatus(t, srv.TestURL()+"/_sakumock/messages"); status != http.StatusOK {
 		t.Fatalf("expected 200, got %d", status)

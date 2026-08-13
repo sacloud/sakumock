@@ -10,7 +10,7 @@ import (
 
 func TestInspectionClientMessages(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	groupOp := newTestGroupOp(t, srv.TestURL())
 	ic := simplenotification.NewInspectionClient(srv.TestURL())
@@ -41,7 +41,7 @@ func TestInspectionClientMessages(t *testing.T) {
 
 func TestInspectionClientClearMessages(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	groupOp := newTestGroupOp(t, srv.TestURL())
 	ic := simplenotification.NewInspectionClient(srv.TestURL())

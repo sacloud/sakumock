@@ -37,7 +37,7 @@ func postSend(t *testing.T, url string) (int, http.Header) {
 
 func TestRateLimitDisabled(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL())
 	for range 30 {
@@ -49,7 +49,7 @@ func TestRateLimitDisabled(t *testing.T) {
 
 func TestRateLimitExceeded(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{RateLimit: 2})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL())
 	for i := range 2 {
@@ -74,7 +74,7 @@ func TestRateLimitExceeded(t *testing.T) {
 func TestRateLimitInspectionBypassed(t *testing.T) {
 	// Inspection endpoints (/_sakumock/messages) must not consume tokens.
 	srv := simplenotification.NewTestServer(simplenotification.Config{RateLimit: 1})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	// Drain the API bucket first.
@@ -98,7 +98,7 @@ func TestRateLimitWindow(t *testing.T) {
 		RateLimit:       5,
 		RateLimitWindow: time.Minute,
 	})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := sendURL(srv.TestURL())
 	for i := range 5 {

@@ -99,8 +99,15 @@ _ = ic.ClearMessages(ctx)          // reset
 | PUT | `/commonserviceitem/{id}` | Update a destination, group, or routing |
 | DELETE | `/commonserviceitem/{id}` | Delete a destination, group, or routing |
 | POST | `/commonserviceitem/{id}/simplenotification/message` | Send a notification message to the specified group |
+| GET | `/commonserviceitem/{id}/simplenotification/status` | Get destination/group validity status |
+| PUT | `/commonserviceitem/simplenotification/routing/reorder` | Reorder routing priorities |
+| GET | `/commonserviceitem/simplenotification/sources` | List notification sources |
+| GET | `/commonserviceitem/simplenotification/history` | List notification histories (latest 100 within 30 days) |
+| GET | `/commonserviceitem/simplenotification/history/{request_id}` | Get a notification history |
 
 Messages are validated to be non-empty and at most 2048 characters long. On success the server responds with `202 Accepted` and `{"is_ok": true}`.
+
+Notification histories are derived from the accepted messages (the same data behind `/_sakumock/messages`): each send appears as one history whose per-destination statuses come from the target group's `Destinations` at read time, always reported as sent. A `Message` that is itself a JSON object with a `body` key keeps its own `title`/`color`/... fields; any other message becomes the `body` of a default-styled entry. The sources list is a static catalog with a single `sakumock` entry, and an item's status reports `IsValid: false` only when its settings carry `Disabled: true`.
 
 ## Inspection endpoints
 

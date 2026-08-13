@@ -104,6 +104,19 @@ func (s *MemoryStore) UpdateItem(id, name, description string, tags []string, se
 	return cloneItem(it), true
 }
 
+// UpdateItemSettings replaces only the item's Settings.
+func (s *MemoryStore) UpdateItemSettings(id string, settings json.RawMessage) (ServiceItem, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	it, ok := s.items[id]
+	if !ok {
+		return ServiceItem{}, false
+	}
+	it.Settings = append(json.RawMessage(nil), settings...)
+	it.ModifiedAt = time.Now()
+	return cloneItem(it), true
+}
+
 // DeleteItem removes the item and returns a copy of what was deleted.
 func (s *MemoryStore) DeleteItem(id string) (ServiceItem, bool) {
 	s.mu.Lock()

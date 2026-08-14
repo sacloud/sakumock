@@ -16,8 +16,6 @@ import (
 	v1 "github.com/sacloud/sacloud-sdk-go/api/apigw/apis/v1"
 )
 
-// gwDoWith sends a request to the data plane with the Host header set,
-// letting the caller decorate the request (credentials etc.).
 func gwDoWith(t *testing.T, dpAddr, method, host, path string, decorate func(*http.Request)) *http.Response {
 	t.Helper()
 	req, err := http.NewRequestWithContext(t.Context(), method, "http://"+dpAddr+path, nil)
@@ -49,7 +47,6 @@ func assertStatus(t *testing.T, resp *http.Response, want int, wantBody string) 
 	}
 }
 
-// createAuthUser creates a user with the given credentials and returns its ID.
 func createAuthUser(t *testing.T, client *v1.Client, name string, auth v1.UserAuthentication) uuid.UUID {
 	t.Helper()
 	user, err := apigwsdk.NewUserOp(client).Create(t.Context(), &v1.UserDetail{Name: v1.Name(name)})

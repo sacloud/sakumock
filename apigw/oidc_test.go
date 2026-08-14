@@ -117,7 +117,6 @@ func newFakeIdP(t *testing.T) *fakeIdP {
 
 func (idp *fakeIdP) issuer() string { return idp.srv.URL }
 
-// sign issues an RS256 ID token with the given audience and expiry.
 func (idp *fakeIdP) sign(t *testing.T, aud string, exp time.Time) string {
 	t.Helper()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
@@ -135,7 +134,6 @@ func (idp *fakeIdP) sign(t *testing.T, aud string, exp time.Time) string {
 	return signed
 }
 
-// createOidcConfig registers an OIDC configuration and returns its ID.
 func createOidcConfig(t *testing.T, client *v1.Client, cfg *v1.Oidc) uuid.UUID {
 	t.Helper()
 	res, err := client.AddOidc(t.Context(), cfg)
@@ -149,8 +147,6 @@ func createOidcConfig(t *testing.T, client *v1.Client, cfg *v1.Oidc) uuid.UUID {
 	return created.Apigw.Oidc.Value.ID.Value
 }
 
-// setupOidcGateway wires a gateway service protected by the fake IdP and
-// returns the data plane address and the service.
 func setupOidcGateway(t *testing.T, client *v1.Client, name string, upstreamURL string, oidcID uuid.UUID) *v1.ServiceDetailResponse {
 	t.Helper()
 	svc := createUpstreamService(t, client, name, upstreamURL, func(req *v1.ServiceDetailRequest) {

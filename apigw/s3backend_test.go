@@ -50,7 +50,6 @@ func newFakeS3(t *testing.T, objects map[string]string) *httptest.Server {
 	return srv
 }
 
-// createObjectStorageService creates a service backed by the fake S3.
 func createObjectStorageService(t *testing.T, client *v1.Client, name, endpoint, bucket, folder string) *v1.ServiceDetailResponse {
 	t.Helper()
 	sub := createSubscription(t, client, name+"_sub")

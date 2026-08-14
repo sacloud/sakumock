@@ -30,14 +30,13 @@ type ServiceItem struct {
 	ModifiedAt    time.Time
 }
 
-// Store is the interface for Simple Notification storage backends.
+// Store is the storage backend for accepted notifications and control-plane
+// items.
 type Store interface {
-	// Notification messages (data plane).
 	Send(groupID, message string, now time.Time) (MessageRecord, error)
 	List() []MessageRecord
 	Reset()
 
-	// Control-plane service items (destinations, groups, routings).
 	CreateItem(item ServiceItem) ServiceItem
 	GetItem(id string) (ServiceItem, bool)
 	ListItems(providerClass string) []ServiceItem // empty providerClass returns all

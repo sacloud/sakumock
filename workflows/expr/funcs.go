@@ -16,29 +16,24 @@ import (
 
 func builtinFuncs() map[string]Func {
 	return map[string]Func{
-		// array
 		"array.fill":   arrayFill,
 		"array.range":  arrayRange,
 		"array.push":   arrayPush,
 		"array.set":    arraySet,
 		"array.length": arrayLength,
 
-		// json
 		"json.decode": jsonDecode,
 		"json.encode": jsonEncode,
 
-		// list
 		"list.concat":  listConcat,
 		"list.prepend": listPrepend,
 
-		// map
 		"map.delete":      mapDelete,
 		"map.get":         mapGet,
 		"map.put":         mapPut,
 		"map.merge":       mapMerge,
 		"map.mergeNested": mapMergeNested,
 
-		// math
 		"math.ceil":    mathCeil,
 		"math.sqrt":    mathSqrt,
 		"math.abs":     mathAbs,
@@ -46,7 +41,6 @@ func builtinFuncs() map[string]Func {
 		"math.min":     mathMin,
 		"math.randint": mathRandint,
 
-		// text
 		"text.decode":          textDecode,
 		"text.encode":          textEncode,
 		"text.findAll":         textFindAll,
@@ -62,16 +56,13 @@ func builtinFuncs() map[string]Func {
 		"text.urlEncode":       textURLEncode,
 		"text.urlEncodePlus":   textURLEncodePlus,
 
-		// time
 		"time.format": timeFormat,
 		"time.parse":  timeParse,
 		"time.now":    timeNow,
 
-		// test
 		"test.count":      testCount,
 		"test.resetCount": testResetCount,
 
-		// uuid
 		"uuid.v7":  uuidV7,
 		"uuid.nil": uuidNil,
 	}
@@ -86,8 +77,6 @@ func requireArgs(name string, args []Value, min, max int) error {
 	}
 	return nil
 }
-
-// array functions
 
 func arrayFill(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("array.fill", args, 2, 2); err != nil {
@@ -187,8 +176,6 @@ func arrayLength(env *Env, args []Value) (Value, error) {
 	return Number(float64(len(args[0].aval))), nil
 }
 
-// json functions
-
 func jsonDecode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("json.decode", args, 1, 1); err != nil {
 		return Null, err
@@ -211,8 +198,6 @@ func jsonEncode(env *Env, args []Value) (Value, error) {
 	return String(string(b)), nil
 }
 
-// list functions
-
 func listConcat(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("list.concat", args, 2, 2); err != nil {
 		return Null, err
@@ -233,8 +218,6 @@ func listPrepend(env *Env, args []Value) (Value, error) {
 	copy(result[1:], arr.aval)
 	return Array(result...), nil
 }
-
-// map functions
 
 func mapDelete(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("map.delete", args, 2, 2); err != nil {
@@ -319,8 +302,6 @@ func mergeDeep(base, override Value) Value {
 	return Object(result)
 }
 
-// math functions
-
 func mathCeil(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("math.ceil", args, 1, 1); err != nil {
 		return Null, err
@@ -367,8 +348,6 @@ func mathRandint(env *Env, args []Value) (Value, error) {
 	}
 	return Number(float64(lo + rand.IntN(hi-lo+1))), nil
 }
-
-// text functions
 
 func textDecode(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("text.decode", args, 1, 2); err != nil {
@@ -534,8 +513,6 @@ func textURLEncodePlus(env *Env, args []Value) (Value, error) {
 	return String(url.QueryEscape(args[0].ToString())), nil
 }
 
-// time functions
-
 func timeFormat(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("time.format", args, 1, 2); err != nil {
 		return Null, err
@@ -572,8 +549,6 @@ func timeNow(env *Env, args []Value) (Value, error) {
 	return Number(float64(time.Now().Unix())), nil
 }
 
-// test functions
-
 func testCount(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("test.count", args, 0, 0); err != nil {
 		return Null, err
@@ -589,8 +564,6 @@ func testResetCount(env *Env, args []Value) (Value, error) {
 	env.testCounter = 0
 	return Number(0), nil
 }
-
-// uuid functions
 
 func uuidV7(env *Env, args []Value) (Value, error) {
 	if err := requireArgs("uuid.v7", args, 0, 0); err != nil {

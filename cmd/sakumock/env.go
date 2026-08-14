@@ -16,9 +16,6 @@ import (
 // actually uses:
 //
 //	docker run --rm ghcr.io/sacloud/sakumock env --host localhost > sakumock.env
-//
-// --host substitutes the host the client actually uses (the published host, or
-// the compose service name) into every endpoint URL, keeping the port.
 type EnvCmd struct {
 	serviceConfigs
 
@@ -28,8 +25,6 @@ type EnvCmd struct {
 	Config configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file (same format as 'all --config')"`
 }
 
-// clientEnv builds the endpoint overrides (with --host applied to the URL host)
-// plus the shared dummy credentials.
 func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 	var vars []core.EnvVar
 	for _, cfg := range c.configs() {
@@ -74,8 +69,6 @@ func (c *EnvCmd) Run(_ context.Context) error {
 	return nil
 }
 
-// withHost replaces the host of rawURL with host, preserving the port (and the
-// rest of the URL). It leaves a port-less host as just host.
 func withHost(rawURL, host string) (string, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {

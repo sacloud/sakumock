@@ -71,14 +71,12 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 		"HOME=" + os.Getenv("HOME"),
 	}
 
-	// Deploy
 	deploy := exec.Command("apprun-cli", "deploy")
 	deploy.Env = env
 	if out, err := deploy.CombinedOutput(); err != nil {
 		t.Fatalf("apprun-cli deploy failed: %v\n%s", err, out)
 	}
 
-	// Get the public URL
 	urlCmd := exec.Command("apprun-cli", "url")
 	urlCmd.Env = env
 	urlOut, err := urlCmd.Output()
@@ -112,7 +110,6 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 	}
 	t.Logf("nginx responded with %d", resp.StatusCode)
 
-	// Delete
 	del := exec.Command("apprun-cli", "delete", "--force")
 	del.Env = env
 	if out, err := del.CombinedOutput(); err != nil {

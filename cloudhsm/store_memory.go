@@ -26,7 +26,7 @@ func firstUsableAddress(ipv4Net string) string {
 	return addr.String()
 }
 
-// MemoryStore is an in-memory Store for CloudHSM resources.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu       sync.RWMutex
 	hsms     map[string]*CloudHSMRecord
@@ -37,8 +37,7 @@ type MemoryStore struct {
 	logger   *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -57,8 +56,7 @@ func (s *MemoryStore) generateID() string {
 	return s.ids.Next()
 }
 
-// --- CloudHSM ---
-
+// ListCloudHSMs returns every CloudHSM, oldest first.
 func (s *MemoryStore) ListCloudHSMs() []CloudHSMRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -71,6 +69,7 @@ func (s *MemoryStore) ListCloudHSMs() []CloudHSMRecord {
 	return result
 }
 
+// ReadCloudHSM returns the CloudHSM with the given ID.
 func (s *MemoryStore) ReadCloudHSM(id string) (CloudHSMRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -82,6 +81,7 @@ func (s *MemoryStore) ReadCloudHSM(id string) (CloudHSMRecord, error) {
 	return *h, nil
 }
 
+// CreateCloudHSM stores a new CloudHSM and returns it.
 func (s *MemoryStore) CreateCloudHSM(name, description string, tags []string, ipv4Net string, ipv4Prefix int) (CloudHSMRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -110,6 +110,7 @@ func (s *MemoryStore) CreateCloudHSM(name, description string, tags []string, ip
 	return *h, nil
 }
 
+// UpdateCloudHSM applies the given values to an existing CloudHSM.
 func (s *MemoryStore) UpdateCloudHSM(id, name, description string, tags []string, ipv4Net string, ipv4Prefix int) (CloudHSMRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -132,6 +133,7 @@ func (s *MemoryStore) UpdateCloudHSM(id, name, description string, tags []string
 	return *h, nil
 }
 
+// DeleteCloudHSM removes the CloudHSM together with its clients and peers.
 func (s *MemoryStore) DeleteCloudHSM(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -146,8 +148,7 @@ func (s *MemoryStore) DeleteCloudHSM(id string) error {
 	return nil
 }
 
-// --- Clients ---
-
+// ListClients returns the clients registered against the CloudHSM.
 func (s *MemoryStore) ListClients(hsmID string) ([]ClientRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -164,6 +165,7 @@ func (s *MemoryStore) ListClients(hsmID string) ([]ClientRecord, error) {
 	return result, nil
 }
 
+// CreateClient registers a client certificate against the CloudHSM.
 func (s *MemoryStore) CreateClient(hsmID, name, certificate string) (ClientRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -188,6 +190,7 @@ func (s *MemoryStore) CreateClient(hsmID, name, certificate string) (ClientRecor
 	return *c, nil
 }
 
+// ReadClient returns one client of the CloudHSM.
 func (s *MemoryStore) ReadClient(hsmID, id string) (ClientRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -203,6 +206,7 @@ func (s *MemoryStore) ReadClient(hsmID, id string) (ClientRecord, error) {
 	return *c, nil
 }
 
+// UpdateClient applies the given values to an existing client.
 func (s *MemoryStore) UpdateClient(hsmID, id, name, certificate string) (ClientRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -222,6 +226,7 @@ func (s *MemoryStore) UpdateClient(hsmID, id, name, certificate string) (ClientR
 	return *c, nil
 }
 
+// DeleteClient removes the client from the CloudHSM.
 func (s *MemoryStore) DeleteClient(hsmID, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -238,8 +243,7 @@ func (s *MemoryStore) DeleteClient(hsmID, id string) error {
 	return nil
 }
 
-// --- Peers ---
-
+// ListPeers returns the IPsec peers registered against the CloudHSM.
 func (s *MemoryStore) ListPeers(hsmID string) ([]PeerRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -256,6 +260,7 @@ func (s *MemoryStore) ListPeers(hsmID string) ([]PeerRecord, error) {
 	return result, nil
 }
 
+// CreatePeer registers an IPsec peer against the CloudHSM.
 func (s *MemoryStore) CreatePeer(hsmID, peerID string) (PeerRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -279,6 +284,7 @@ func (s *MemoryStore) CreatePeer(hsmID, peerID string) (PeerRecord, error) {
 	return *p, nil
 }
 
+// DeletePeer removes the IPsec peer from the CloudHSM.
 func (s *MemoryStore) DeletePeer(hsmID, peerID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -295,8 +301,7 @@ func (s *MemoryStore) DeletePeer(hsmID, peerID string) error {
 	return nil
 }
 
-// --- Licenses ---
-
+// ListLicenses returns every software license, oldest first.
 func (s *MemoryStore) ListLicenses() []LicenseRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -309,6 +314,7 @@ func (s *MemoryStore) ListLicenses() []LicenseRecord {
 	return result
 }
 
+// CreateLicense stores a new software license and returns it.
 func (s *MemoryStore) CreateLicense(name, description string, tags []string) (LicenseRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -331,6 +337,7 @@ func (s *MemoryStore) CreateLicense(name, description string, tags []string) (Li
 	return *l, nil
 }
 
+// ReadLicense returns the software license with the given ID.
 func (s *MemoryStore) ReadLicense(id string) (LicenseRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -342,6 +349,7 @@ func (s *MemoryStore) ReadLicense(id string) (LicenseRecord, error) {
 	return *l, nil
 }
 
+// UpdateLicense applies the given values to an existing license.
 func (s *MemoryStore) UpdateLicense(id, name, description string, tags []string) (LicenseRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -361,6 +369,7 @@ func (s *MemoryStore) UpdateLicense(id, name, description string, tags []string)
 	return *l, nil
 }
 
+// DeleteLicense removes the software license.
 func (s *MemoryStore) DeleteLicense(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -373,6 +382,7 @@ func (s *MemoryStore) DeleteLicense(id string) error {
 	return nil
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

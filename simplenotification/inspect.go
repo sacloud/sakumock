@@ -27,7 +27,7 @@ func NewInspectionClient(baseURL string) *InspectionClient {
 	}
 }
 
-// Messages returns all accepted notification messages.
+// Messages returns every notification the server has accepted, in send order.
 func (c *InspectionClient) Messages(ctx context.Context) ([]MessageRecord, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/_sakumock/messages", nil)
 	if err != nil {
@@ -61,7 +61,7 @@ func (c *InspectionClient) Messages(ctx context.Context) ([]MessageRecord, error
 	return records, nil
 }
 
-// ClearMessages discards all accepted messages.
+// ClearMessages discards the accepted notifications.
 func (c *InspectionClient) ClearMessages(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, c.baseURL+"/_sakumock/messages", nil)
 	if err != nil {

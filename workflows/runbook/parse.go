@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Parse decodes a runbook from its YAML definition.
 func Parse(yamlData []byte) (*Runbook, error) {
 	var doc yaml.Node
 	if err := yaml.Unmarshal(yamlData, &doc); err != nil {

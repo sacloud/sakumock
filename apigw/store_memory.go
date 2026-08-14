@@ -16,6 +16,7 @@ import (
 // maxSubscriptions caps the number of concurrent subscriptions per account.
 const maxSubscriptions = 10
 
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu            sync.RWMutex
 	services      map[string]*Service
@@ -33,6 +34,7 @@ type MemoryStore struct {
 
 var _ Store = (*MemoryStore)(nil)
 
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -79,6 +81,7 @@ func seedPlans() []Plan {
 	}
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() {}
 
 // newRouteHost derives the auto-issued gateway hostname for a service. The
@@ -220,8 +223,7 @@ func copyOidc(v *OidcConfig) OidcConfig {
 	return c
 }
 
-// --- Services ---
-
+// CreateService creates a service and binds it to the subscription.
 func (s *MemoryStore) CreateService(svc Service, subscriptionID string) (Service, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -258,7 +260,6 @@ func (s *MemoryStore) CreateService(svc Service, subscriptionID string) (Service
 	return svc, nil
 }
 
-// resolveOidcLocked validates the OIDC reference and fills its display name.
 func (s *MemoryStore) resolveOidcLocked(svc *Service) error {
 	if svc.Oidc == nil || svc.Oidc.ID == "" {
 		svc.Oidc = nil
@@ -308,6 +309,7 @@ func applyServiceDefaults(svc *Service) {
 	}
 }
 
+// ListServices returns every service, in creation order.
 func (s *MemoryStore) ListServices() []Service {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -319,6 +321,7 @@ func (s *MemoryStore) ListServices() []Service {
 	return out
 }
 
+// GetService returns the service with the given ID.
 func (s *MemoryStore) GetService(id string) (Service, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -329,6 +332,7 @@ func (s *MemoryStore) GetService(id string) (Service, error) {
 	return copyService(v), nil
 }
 
+// UpdateService applies the given values to an existing service.
 func (s *MemoryStore) UpdateService(id string, svc Service) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -358,6 +362,8 @@ func (s *MemoryStore) UpdateService(id string, svc Service) error {
 	return nil
 }
 
+// DeleteService removes the service and releases its subscription. It refuses
+// while the service still has routes.
 func (s *MemoryStore) DeleteService(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -379,6 +385,8 @@ func (s *MemoryStore) DeleteService(id string) error {
 	return nil
 }
 
+// SubscriptionNameOf returns the name of the subscription the service is bound
+// to.
 func (s *MemoryStore) SubscriptionNameOf(serviceID string) string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -392,8 +400,7 @@ func (s *MemoryStore) SubscriptionNameOf(serviceID string) string {
 	return ""
 }
 
-// --- Routes ---
-
+// CreateRoute adds a route to the service.
 func (s *MemoryStore) CreateRoute(serviceID string, rt Route) (Route, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -511,6 +518,7 @@ func (s *MemoryStore) RoutesByHost(host string) []Route {
 	return out
 }
 
+// ListRoutes returns the service's routes, in creation order.
 func (s *MemoryStore) ListRoutes(serviceID string) ([]Route, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -538,6 +546,7 @@ func (s *MemoryStore) getRouteLocked(serviceID, routeID string) (*Route, error) 
 	return rt, nil
 }
 
+// GetRoute returns one route of the service.
 func (s *MemoryStore) GetRoute(serviceID, routeID string) (Route, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -548,6 +557,8 @@ func (s *MemoryStore) GetRoute(serviceID, routeID string) (Route, error) {
 	return copyRoute(rt), nil
 }
 
+// UpdateRoute applies the given values to an existing route, keeping its
+// authorization and transformations.
 func (s *MemoryStore) UpdateRoute(serviceID, routeID string, rt Route) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -580,6 +591,7 @@ func (s *MemoryStore) UpdateRoute(serviceID, routeID string, rt Route) error {
 	return nil
 }
 
+// DeleteRoute removes the route from the service.
 func (s *MemoryStore) DeleteRoute(serviceID, routeID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -590,6 +602,7 @@ func (s *MemoryStore) DeleteRoute(serviceID, routeID string) error {
 	return nil
 }
 
+// SetRouteAuthorization replaces the route's group allow-list.
 func (s *MemoryStore) SetRouteAuthorization(serviceID, routeID string, cfg *RouteAuthorizationConfig) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -611,6 +624,7 @@ func (s *MemoryStore) SetRouteAuthorization(serviceID, routeID string, cfg *Rout
 	return nil
 }
 
+// SetRequestTransformation replaces the route's request transformation.
 func (s *MemoryStore) SetRequestTransformation(serviceID, routeID string, tr *RequestTransformation) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -623,6 +637,7 @@ func (s *MemoryStore) SetRequestTransformation(serviceID, routeID string, tr *Re
 	return nil
 }
 
+// SetResponseTransformation replaces the route's response transformation.
 func (s *MemoryStore) SetResponseTransformation(serviceID, routeID string, tr *ResponseTransformation) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -635,8 +650,7 @@ func (s *MemoryStore) SetResponseTransformation(serviceID, routeID string, tr *R
 	return nil
 }
 
-// --- Users ---
-
+// CreateUser creates an API consumer with its credentials.
 func (s *MemoryStore) CreateUser(u User) (User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -656,7 +670,6 @@ func (s *MemoryStore) CreateUser(u User) (User, error) {
 	return s.userWithGroupsLocked(&stored), nil
 }
 
-// userWithGroupsLocked returns a copy with Groups resolved from GroupIDs.
 func (s *MemoryStore) userWithGroupsLocked(u *User) User {
 	c := copyUser(u)
 	c.Groups = []Group{}
@@ -668,6 +681,7 @@ func (s *MemoryStore) userWithGroupsLocked(u *User) User {
 	return c
 }
 
+// ListUsers returns every consumer, in creation order.
 func (s *MemoryStore) ListUsers() []User {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -679,6 +693,7 @@ func (s *MemoryStore) ListUsers() []User {
 	return out
 }
 
+// GetUser returns the consumer with the given ID.
 func (s *MemoryStore) GetUser(id string) (User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -689,6 +704,7 @@ func (s *MemoryStore) GetUser(id string) (User, error) {
 	return s.userWithGroupsLocked(u), nil
 }
 
+// UpdateUser applies the given values to an existing consumer.
 func (s *MemoryStore) UpdateUser(id string, u User) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -715,6 +731,7 @@ func (s *MemoryStore) UpdateUser(id string, u User) error {
 	return nil
 }
 
+// DeleteUser removes the consumer and its credentials.
 func (s *MemoryStore) DeleteUser(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -725,6 +742,7 @@ func (s *MemoryStore) DeleteUser(id string) error {
 	return nil
 }
 
+// ListUserGroups returns every group together with the consumer's membership.
 func (s *MemoryStore) ListUserGroups(userID string) ([]Group, map[string]bool, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -746,6 +764,8 @@ func (s *MemoryStore) ListUserGroups(userID string) ([]Group, map[string]bool, e
 	return groups, assigned, nil
 }
 
+// AssignUserGroup adds the consumer to a group, or removes it when assigned is
+// false. The group may be addressed by ID or by name.
 func (s *MemoryStore) AssignUserGroup(userID, groupIDOrName string, assigned bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -784,6 +804,7 @@ func (s *MemoryStore) AssignUserGroup(userID, groupIDOrName string, assigned boo
 	return nil
 }
 
+// GetUserAuthentication returns the consumer's credentials.
 func (s *MemoryStore) GetUserAuthentication(userID string) (*UserAuthentication, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -807,7 +828,7 @@ func (s *MemoryStore) UserByBasicUserName(name string) (User, bool) {
 	})
 }
 
-// UserByHmacUserName finds the user owning the HMAC credential userName.
+// UserByHmacUserName finds the consumer owning the HMAC credential userName.
 func (s *MemoryStore) UserByHmacUserName(name string) (User, bool) {
 	return s.findUser(func(u *User) bool {
 		return u.Auth != nil && u.Auth.HmacAuth != nil && u.Auth.HmacAuth.UserName == name
@@ -892,8 +913,7 @@ func (s *MemoryStore) UpsertUserAuthentication(userID string, auth UserAuthentic
 	return nil
 }
 
-// --- Groups ---
-
+// CreateGroup creates a consumer group.
 func (s *MemoryStore) CreateGroup(g Group) (Group, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -910,6 +930,7 @@ func (s *MemoryStore) CreateGroup(g Group) (Group, error) {
 	return g, nil
 }
 
+// ListGroups returns every group, in creation order.
 func (s *MemoryStore) ListGroups() []Group {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -921,6 +942,7 @@ func (s *MemoryStore) ListGroups() []Group {
 	return out
 }
 
+// GetGroup returns the group with the given ID.
 func (s *MemoryStore) GetGroup(id string) (Group, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -931,6 +953,7 @@ func (s *MemoryStore) GetGroup(id string) (Group, error) {
 	return copyGroup(g), nil
 }
 
+// UpdateGroup renames the group, keeping the references to it in sync.
 func (s *MemoryStore) UpdateGroup(id string, g Group) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -993,8 +1016,7 @@ func (s *MemoryStore) DeleteGroup(id string) error {
 	return nil
 }
 
-// --- Domains ---
-
+// CreateDomain registers a custom domain and its certificate.
 func (s *MemoryStore) CreateDomain(d Domain) (Domain, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1027,6 +1049,7 @@ func (s *MemoryStore) resolveCertificateLocked(d *Domain) error {
 	return nil
 }
 
+// ListDomains returns every custom domain, in creation order.
 func (s *MemoryStore) ListDomains() []Domain {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1038,6 +1061,7 @@ func (s *MemoryStore) ListDomains() []Domain {
 	return out
 }
 
+// UpdateDomain points the domain at another certificate.
 func (s *MemoryStore) UpdateDomain(id string, certificateID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1053,6 +1077,8 @@ func (s *MemoryStore) UpdateDomain(id string, certificateID string) error {
 	return nil
 }
 
+// DeleteDomain removes the custom domain. It refuses while a route still uses
+// it as a host.
 func (s *MemoryStore) DeleteDomain(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1069,8 +1095,7 @@ func (s *MemoryStore) DeleteDomain(id string) error {
 	return nil
 }
 
-// --- Certificates ---
-
+// CreateCertificate stores an uploaded certificate pair.
 func (s *MemoryStore) CreateCertificate(c Certificate) (Certificate, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1087,6 +1112,7 @@ func (s *MemoryStore) CreateCertificate(c Certificate) (Certificate, error) {
 	return c, nil
 }
 
+// ListCertificates returns every certificate, in creation order.
 func (s *MemoryStore) ListCertificates() []Certificate {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1098,6 +1124,7 @@ func (s *MemoryStore) ListCertificates() []Certificate {
 	return out
 }
 
+// UpdateCertificate applies the given values to an existing certificate.
 func (s *MemoryStore) UpdateCertificate(id string, c Certificate) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1127,6 +1154,8 @@ func (s *MemoryStore) UpdateCertificate(id string, c Certificate) error {
 	return nil
 }
 
+// DeleteCertificate removes the certificate. It refuses while a domain still
+// references it.
 func (s *MemoryStore) DeleteCertificate(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1142,8 +1171,7 @@ func (s *MemoryStore) DeleteCertificate(id string) error {
 	return nil
 }
 
-// --- Plans & subscriptions ---
-
+// ListPlans returns the plan catalog.
 func (s *MemoryStore) ListPlans() []Plan {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1152,6 +1180,7 @@ func (s *MemoryStore) ListPlans() []Plan {
 	return out
 }
 
+// CreateSubscription subscribes to a plan.
 func (s *MemoryStore) CreateSubscription(planID, name string) (Subscription, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1191,6 +1220,7 @@ func (s *MemoryStore) CreateSubscription(planID, name string) (Subscription, err
 	return sub, nil
 }
 
+// ListSubscriptions returns every subscription, in creation order.
 func (s *MemoryStore) ListSubscriptions() []Subscription {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1202,6 +1232,7 @@ func (s *MemoryStore) ListSubscriptions() []Subscription {
 	return out
 }
 
+// GetSubscription returns the subscription with the given ID and its plan.
 func (s *MemoryStore) GetSubscription(id string) (Subscription, Plan, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1219,6 +1250,7 @@ func (s *MemoryStore) GetSubscription(id string) (Subscription, Plan, error) {
 	return copySubscription(sub), plan, nil
 }
 
+// UpdateSubscription renames the subscription.
 func (s *MemoryStore) UpdateSubscription(id, name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1237,6 +1269,8 @@ func (s *MemoryStore) UpdateSubscription(id, name string) error {
 	return nil
 }
 
+// DeleteSubscription removes the subscription. It refuses while a service is
+// still bound to it.
 func (s *MemoryStore) DeleteSubscription(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1251,8 +1285,7 @@ func (s *MemoryStore) DeleteSubscription(id string) error {
 	return nil
 }
 
-// --- OIDC ---
-
+// CreateOidc stores an OIDC relying-party configuration.
 func (s *MemoryStore) CreateOidc(o OidcConfig) (OidcConfig, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1269,6 +1302,7 @@ func (s *MemoryStore) CreateOidc(o OidcConfig) (OidcConfig, error) {
 	return o, nil
 }
 
+// ListOidcs returns every OIDC configuration, in creation order.
 func (s *MemoryStore) ListOidcs() []OidcConfig {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1280,6 +1314,7 @@ func (s *MemoryStore) ListOidcs() []OidcConfig {
 	return out
 }
 
+// GetOidc returns the OIDC configuration and the services using it.
 func (s *MemoryStore) GetOidc(id string) (OidcConfig, []Service, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -1299,6 +1334,7 @@ func (s *MemoryStore) GetOidc(id string) (OidcConfig, []Service, error) {
 	return copyOidc(o), services, nil
 }
 
+// UpdateOidc applies the given values to an existing OIDC configuration.
 func (s *MemoryStore) UpdateOidc(id string, o OidcConfig) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1325,6 +1361,8 @@ func (s *MemoryStore) UpdateOidc(id string, o OidcConfig) error {
 	return nil
 }
 
+// DeleteOidc removes the OIDC configuration. It refuses while a service still
+// uses it.
 func (s *MemoryStore) DeleteOidc(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

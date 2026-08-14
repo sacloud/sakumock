@@ -30,8 +30,6 @@ func newTestClient(t *testing.T, serverURL string) *v1.Client {
 	return client
 }
 
-// createProcessConfiguration creates a process configuration through the SDK
-// and returns its ID.
 func createProcessConfiguration(t *testing.T, op sdk.ProcessConfigurationAPI) string {
 	t.Helper()
 	created, err := op.Create(t.Context(), v1.CreateCommonServiceItemRequest{

@@ -65,7 +65,7 @@ func (rv *ResponseValidator) Violations() []SpecViolation {
 	return out
 }
 
-// Reset clears the recorded violations.
+// Reset discards the recorded violations.
 func (rv *ResponseValidator) Reset() {
 	if rv == nil {
 		return
@@ -96,7 +96,7 @@ type specViolationList struct {
 	Violations []SpecViolation `json:"violations"`
 }
 
-// ListHandler serves the recorded violations as {"violations": [...]}.
+// ListHandler serves the recorded violations as JSON.
 func (rv *ResponseValidator) ListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		violations := rv.Violations()
@@ -107,7 +107,7 @@ func (rv *ResponseValidator) ListHandler() http.HandlerFunc {
 	}
 }
 
-// ClearHandler clears the recorded violations and responds 204.
+// ClearHandler discards the recorded violations and responds 204.
 func (rv *ResponseValidator) ClearHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		rv.Reset()
@@ -126,8 +126,6 @@ func SpecViolationRoutes(rv *ResponseValidator) []RegisteredRoute {
 	}
 }
 
-// responseCapture records the status and body a handler writes while passing
-// everything through to the underlying writer.
 type responseCapture struct {
 	http.ResponseWriter
 	status int

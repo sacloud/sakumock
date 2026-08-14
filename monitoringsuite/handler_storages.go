@@ -7,8 +7,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// ===== shared object types =====
-
 type ingesterEndpoint struct {
 	Address  string `json:"address"`
 	Insecure bool   `json:"insecure"`
@@ -21,8 +19,6 @@ type ingesterEndpoints struct {
 type addressEndpoints struct {
 	Address string `json:"address"`
 }
-
-// ===== Log storage =====
 
 type logStorageUsage struct {
 	LogRoutings     int `json:"log_routings"`
@@ -195,8 +191,6 @@ func (s *Server) handleSetLogStorageExpire(w http.ResponseWriter, r *http.Reques
 	core.WriteJSON(w, http.StatusOK, s.logStorageToJSON(st, false))
 }
 
-// ===== Metrics storage =====
-
 type metricsStorageUsage struct {
 	MetricsRoutings int `json:"metrics_routings"`
 	AlertRules      int `json:"alert_rules"`
@@ -336,8 +330,6 @@ func (s *Server) handleDeleteMetricsStorage(w http.ResponseWriter, r *http.Reque
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// ===== Trace storage =====
 
 type traceStorageJSON struct {
 	ID                  int64             `json:"id"`
@@ -484,8 +476,6 @@ func (s *Server) handleSetTraceStorageExpire(w http.ResponseWriter, r *http.Requ
 	core.WriteJSON(w, http.StatusOK, s.traceStorageToJSON(st, false))
 }
 
-// ===== Access keys (log / metrics / trace) =====
-
 type logMetricsKeyJSON struct {
 	ID          int64  `json:"id"`
 	UID         string `json:"uid"`
@@ -560,8 +550,6 @@ func getStorageKey(tbl *table[AccessKey], parent, key string) (*AccessKey, bool)
 	return k, true
 }
 
-// deleteStorageKey removes a key found by UUID or numeric id only when it belongs
-// to the storage addressed by parent, returning false otherwise.
 func deleteStorageKey(tbl *table[AccessKey], parent, key string) bool {
 	k, ok := getStorageKey(tbl, parent, key)
 	if !ok {
@@ -580,7 +568,6 @@ func storageKeyParent[T any](w http.ResponseWriter, tbl *table[T], key string, k
 	return true
 }
 
-// Log storage keys.
 func (s *Server) handleListLogStorageKeys(w http.ResponseWriter, r *http.Request) {
 	pid := r.PathValue("log_resource_id")
 	if !storageKeyParent(w, s.store.logStorages, pid, "LogStorage") {
@@ -644,7 +631,6 @@ func (s *Server) handleDeleteLogStorageKey(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Metrics storage keys.
 func (s *Server) handleListMetricsStorageKeys(w http.ResponseWriter, r *http.Request) {
 	pid := r.PathValue("metrics_resource_id")
 	if !storageKeyParent(w, s.store.metricsStorages, pid, "MetricsStorage") {
@@ -708,7 +694,6 @@ func (s *Server) handleDeleteMetricsStorageKey(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Trace storage keys.
 func (s *Server) handleListTraceStorageKeys(w http.ResponseWriter, r *http.Request) {
 	pid := r.PathValue("trace_resource_id")
 	if !storageKeyParent(w, s.store.traceStorages, pid, "TraceStorage") {

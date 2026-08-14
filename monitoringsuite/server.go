@@ -9,7 +9,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// Config holds configuration for the local monitoring-suite server.
+// Config holds the monitoring-suite mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18084" env:"MONITORINGSUITE_LOCALSERVER_ADDR"`
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"MONITORINGSUITE_LATENCY"`
@@ -56,7 +56,7 @@ func (Config) Name() string { return "monitoringsuite" }
 // ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
-// NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
@@ -64,7 +64,6 @@ func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	return NewHandler(c)
 }
 
-// Compile-time checks that the service satisfies the core interfaces.
 var (
 	_ core.Server        = (*Server)(nil)
 	_ core.ServiceConfig = Config{}
@@ -91,7 +90,7 @@ type Server struct {
 	dataPlane *dataPlane
 }
 
-// NewHandler creates a Server as an http.Handler without starting a listener.
+// NewHandler builds the mock server as an http.Handler, without a listener.
 func NewHandler(cfg Config) (*Server, error) {
 	fault, err := core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(writeError))
 	if err != nil {
@@ -132,7 +131,8 @@ func NewHandler(cfg Config) (*Server, error) {
 	return s, nil
 }
 
-// NewTestServer creates and starts a new local monitoring-suite test server.
+// NewTestServer builds the mock server and starts it on a local httptest
+// listener. It panics if the server cannot be built.
 func NewTestServer(cfg Config) *Server {
 	s, err := NewHandler(cfg)
 	if err != nil {
@@ -142,7 +142,8 @@ func NewTestServer(cfg Config) *Server {
 	return s
 }
 
-// TestURL returns the base URL of the test server.
+// TestURL is the base URL of a server started by NewTestServer, or "" when the
+// server was built with NewHandler.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
 }
@@ -159,7 +160,7 @@ func (s *Server) DataPlaneAddr() string {
 	return s.dataPlane.Addr()
 }
 
-// Close shuts down the test server (if running) and closes the store.
+// Close stops the test server and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()

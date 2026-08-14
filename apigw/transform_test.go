@@ -12,7 +12,6 @@ import (
 	v1 "github.com/sacloud/sacloud-sdk-go/api/apigw/apis/v1"
 )
 
-// transformEcho reports the upstream's view of a transformed request.
 type transformEcho struct {
 	Method  string              `json:"method"`
 	Query   map[string][]string `json:"query"`
@@ -106,7 +105,6 @@ func TestDataPlaneRequestTransformation(t *testing.T) {
 	}
 	e := decodeTransformEcho(t, resp)
 
-	// Headers.
 	if _, ok := e.Headers["X-Remove"]; ok {
 		t.Error("X-Remove should be removed")
 	}
@@ -126,7 +124,6 @@ func TestDataPlaneRequestTransformation(t *testing.T) {
 		t.Errorf("X-Multi = %v, want two values (append)", got)
 	}
 
-	// Query parameters.
 	if _, ok := e.Query["q_del"]; ok {
 		t.Error("q_del should be removed")
 	}
@@ -140,7 +137,6 @@ func TestDataPlaneRequestTransformation(t *testing.T) {
 		t.Errorf("q_keep = %v, want untouched [k]", got)
 	}
 
-	// JSON body.
 	var body map[string]any
 	if err := json.Unmarshal([]byte(e.Body), &body); err != nil {
 		t.Fatalf("upstream body = %q: %v", e.Body, err)
@@ -252,7 +248,6 @@ func TestDataPlaneResponseTransformation(t *testing.T) {
 		t.Error("secret should be kept (ifStatusCode 404 must not match 200)")
 	}
 
-	// Whole-body replacement.
 	putJSON(t, srv, trPath, `{
 		"replace": {"body": "gone"}
 	}`)
@@ -274,8 +269,6 @@ func TestDataPlaneResponseTransformation(t *testing.T) {
 	}
 }
 
-// newGatewayWithControlPlane is newGateway plus the control-plane base URL
-// for raw requests.
 func newGatewayWithControlPlane(t *testing.T) (string, *v1.Client, string) {
 	t.Helper()
 	srv := newGatewayServer(t)

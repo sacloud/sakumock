@@ -33,7 +33,6 @@ type pendingLogin struct {
 	expires     time.Time
 }
 
-// gwSession is an established login.
 type gwSession struct {
 	expires time.Time
 }
@@ -203,8 +202,6 @@ func sweepExpired[V any](m map[string]V, expiry func(V) time.Time) {
 	}
 }
 
-// removeCookie rewrites the request's Cookie header without the named
-// cookie.
 func removeCookie(r *http.Request, name string) {
 	cookies := r.Cookies()
 	r.Header.Del("Cookie")

@@ -82,7 +82,6 @@ func TestAllSharesOneIDGenerator(t *testing.T) {
 	}
 }
 
-// postResourceID POSTs body to h and returns the ID from the {wrapper:{ID}} response.
 func postResourceID(t *testing.T, h core.Server, path, body, wrapper string) string {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))

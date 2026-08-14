@@ -56,7 +56,7 @@ type Permission struct {
 	Keys           []PermissionKey
 }
 
-// BucketControl grants a permission read/write access to a bucket.
+// BucketControl grants a permission read and/or write access to one bucket.
 type BucketControl struct {
 	BucketName string
 	CanRead    bool
@@ -78,7 +78,6 @@ type PermissionKey struct {
 // per-site (keyed by site ID), as in the real API where each cluster owns its
 // own account and permission set.
 type Store interface {
-	// Buckets (federation-global).
 	CreateBucket(name, clusterID string, planType, serviceClassPath string) (Bucket, bool) // ok=false when the name already exists
 	GetBucket(name string) (Bucket, bool)
 	ListBuckets(siteID string) []Bucket
@@ -88,7 +87,6 @@ type Store interface {
 	SetBucketReplication(name, destBucket string) (Bucket, bool)
 	DeleteBucketReplication(name string) bool
 
-	// Accounts (per-site).
 	CreateAccount(siteID string) (Account, bool) // ok=false when an account already exists
 	GetAccount(siteID string) (Account, bool)
 	DeleteAccount(siteID string) bool
@@ -97,7 +95,6 @@ type Store interface {
 	GetAccountKey(siteID, keyID string) (AccountKey, bool)
 	DeleteAccountKey(siteID, keyID string) bool
 
-	// Permissions (per-site).
 	CreatePermission(siteID, displayName string, controls []BucketControl) Permission
 	ListPermissions(siteID string) []Permission
 	GetPermission(siteID string, id int64) (Permission, bool)

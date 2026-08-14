@@ -11,8 +11,6 @@ import (
 	"github.com/sacloud/sakumock/workflows/runbook"
 )
 
-// JSON request types
-
 type createWorkflowRequest struct {
 	Name               string    `json:"Name"`
 	Description        string    `json:"Description"`
@@ -53,8 +51,6 @@ type createExecutionRequest struct {
 type createSubscriptionRequest struct {
 	PlanId int `json:"PlanId"`
 }
-
-// JSON response types
 
 type tagJSON struct {
 	Name string `json:"Name"`
@@ -177,8 +173,6 @@ type suggestItemJSON struct {
 	Name string `json:"Name"`
 }
 
-// Helper functions
-
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, r := range s.routeTable() {
@@ -187,6 +181,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
@@ -332,8 +327,6 @@ func (s *Server) toExecutionJSON(e *ExecutionRecord) executionJSON {
 		CanceledAt:        optionalTime(e.CanceledAt),
 	}
 }
-
-// Handlers — Workflow
 
 func (s *Server) handleCreateWorkflow(w http.ResponseWriter, r *http.Request) {
 	var req createWorkflowRequest
@@ -489,8 +482,6 @@ func (s *Server) handleDeleteWorkflow(w http.ResponseWriter, r *http.Request) {
 	core.WriteJSON(w, http.StatusOK, map[string]any{"is_ok": true})
 }
 
-// Handlers — Revision
-
 func (s *Server) handleCreateRevision(w http.ResponseWriter, r *http.Request) {
 	workflowID := r.PathValue("id")
 	var req createRevisionRequest
@@ -607,8 +598,6 @@ func (s *Server) handleDeleteRevisionAlias(w http.ResponseWriter, r *http.Reques
 		"Revision": toRevisionJSON(rev),
 	})
 }
-
-// Handlers — Execution
 
 func (s *Server) handleCreateExecution(w http.ResponseWriter, r *http.Request) {
 	workflowID := r.PathValue("id")
@@ -774,8 +763,6 @@ func (s *Server) handleListExecutionHistory(w http.ResponseWriter, r *http.Reque
 		"Histories": paged,
 	})
 }
-
-// Handlers — Plans & Subscription
 
 func (s *Server) handleListPlans(w http.ResponseWriter, _ *http.Request) {
 	plans := make([]planJSON, len(staticPlans))

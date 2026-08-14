@@ -9,12 +9,17 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// Command is the CLI command for the API Gateway mock server. It embeds Config
+// so the same struct works both as a standalone binary (flat flags) and as a
+// subcommand of the unified sakumock binary.
 type Command struct {
 	Config
 	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"APIGW_TLS_"`
 	Routes bool          `help:"List supported HTTP routes and exit"`
 }
 
+// Run starts the mock server and serves until ctx is canceled, or prints the
+// route table and returns when --routes is set.
 func (c *Command) Run(ctx context.Context) error {
 	if c.Routes {
 		h, err := NewHandler(Config{})

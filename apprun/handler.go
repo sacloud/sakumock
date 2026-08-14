@@ -328,8 +328,6 @@ func isValidCPUMemory(cpu, memory string) bool {
 	return false
 }
 
-// Handlers
-
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	s.logger.Info("GET /user")
 	if !s.store.UserCreated() {
@@ -724,8 +722,6 @@ func (s *Server) handlePatchPacketFilter(w http.ResponseWriter, r *http.Request)
 	core.WriteJSON(w, http.StatusOK, packetFilterToJSON(pf))
 }
 
-// conversion helpers
-
 func listParamsFromQuery(r *http.Request) ListParams {
 	p := ListParams{
 		PageNum:   1,
@@ -924,7 +920,7 @@ func packetFilterToJSON(pf *PacketFilter) packetFilterJSON {
 	}
 }
 
-// ServeHTTP implements the http.Handler interface.
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)

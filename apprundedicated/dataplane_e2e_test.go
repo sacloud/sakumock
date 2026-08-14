@@ -61,7 +61,6 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 		t.Fatalf("CreateAutoScalingGroup: %v", err)
 	}
 
-	// Write application definition for apprun-dedicated-cli
 	appDef := map[string]any{
 		"cluster":     "test-cluster",
 		"name":        "e2e-nginx",
@@ -99,7 +98,6 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 		"HOME=" + os.Getenv("HOME"),
 	}
 
-	// Deploy with --wait
 	deploy := exec.Command("apprun-dedicated-cli", "deploy", "--wait", "--wait-timeout=60s")
 	deploy.Env = env
 	deploy.Stdout, deploy.Stderr = os.Stdout, os.Stderr
@@ -149,7 +147,6 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 	}
 	t.Logf("nginx responded with %d", resp.StatusCode)
 
-	// Delete
 	del := exec.Command("apprun-dedicated-cli", "delete", "--force", "--wait-timeout=60s")
 	del.Env = env
 	del.Stdout, del.Stderr = os.Stdout, os.Stderr

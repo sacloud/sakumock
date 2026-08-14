@@ -45,7 +45,6 @@ var controlPlaneBackends = []struct {
 	}},
 }
 
-// eachBackend runs fn as a subtest against every storage backend.
 func eachBackend(t *testing.T, fn func(t *testing.T, srv *simplemq.Server)) {
 	t.Helper()
 	for _, b := range controlPlaneBackends {
@@ -57,7 +56,6 @@ func eachBackend(t *testing.T, fn func(t *testing.T, srv *simplemq.Server)) {
 	}
 }
 
-// createQueue is a helper that creates a queue and returns its resource ID.
 func createQueue(t *testing.T, ctx context.Context, client *queue.Client, name string) string {
 	t.Helper()
 	res, err := client.CreateQueue(ctx, &queue.CreateQueueRequest{
@@ -110,7 +108,6 @@ func TestCreateAndGetQueue(t *testing.T) {
 
 		id := simplemqsdk.GetQueueID(&csi)
 
-		// GetQueue
 		getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
 		if err != nil {
 			t.Fatalf("GetQueue failed: %v", err)
@@ -264,7 +261,6 @@ func TestDeleteQueue(t *testing.T) {
 			t.Fatalf("expected DeleteQueueOK, got %T", delRes)
 		}
 
-		// Queue should no longer exist
 		getRes, err := client.GetQueue(ctx, queue.GetQueueParams{ID: id})
 		if err != nil {
 			t.Fatalf("GetQueue request failed: %v", err)
@@ -328,7 +324,6 @@ func TestGetMessageCount(t *testing.T) {
 
 		id := createQueue(t, ctx, cpClient, "count-queue")
 
-		// Count before sending (should be 0)
 		countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
 		if err != nil {
 			t.Fatalf("GetMessageCount failed: %v", err)
@@ -341,7 +336,6 @@ func TestGetMessageCount(t *testing.T) {
 			t.Errorf("expected count=0, got %d", countOK.SimpleMQ.GetCount())
 		}
 
-		// Send 3 messages via data plane
 		content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
 		for range 3 {
 			if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "count-queue"}); err != nil {
@@ -349,7 +343,6 @@ func TestGetMessageCount(t *testing.T) {
 			}
 		}
 
-		// Count after sending (should be 3)
 		countRes2, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
 		if err != nil {
 			t.Fatalf("GetMessageCount failed: %v", err)
@@ -395,7 +388,6 @@ func TestRotateAPIKey(t *testing.T) {
 			t.Error("expected non-empty apikey")
 		}
 
-		// Rotate again should return a different key
 		rotateRes2, err := client.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
 		if err != nil {
 			t.Fatalf("second RotateAPIKey failed: %v", err)
@@ -430,7 +422,6 @@ func TestClearMessages(t *testing.T) {
 
 		id := createQueue(t, ctx, cpClient, "clear-queue")
 
-		// Send 2 messages
 		content := message.MessageContent(base64.StdEncoding.EncodeToString([]byte("hello")))
 		for range 2 {
 			if _, err := dpClient.SendMessage(ctx, &message.SendRequest{Content: content}, message.SendMessageParams{QueueName: "clear-queue"}); err != nil {
@@ -438,7 +429,6 @@ func TestClearMessages(t *testing.T) {
 			}
 		}
 
-		// Clear messages
 		clearRes, err := cpClient.ClearQueue(ctx, queue.ClearQueueParams{ID: id})
 		if err != nil {
 			t.Fatalf("ClearQueue failed: %v", err)
@@ -447,7 +437,6 @@ func TestClearMessages(t *testing.T) {
 			t.Fatalf("expected ClearQueueOK, got %T", clearRes)
 		}
 
-		// Count should be 0
 		countRes, err := cpClient.GetMessageCount(ctx, queue.GetMessageCountParams{ID: id})
 		if err != nil {
 			t.Fatalf("GetMessageCount failed: %v", err)
@@ -477,7 +466,6 @@ func TestClearMessagesNotFound(t *testing.T) {
 func TestControlPlaneUnauthorized(t *testing.T) {
 	eachBackend(t, func(t *testing.T, srv *simplemq.Server) {
 		ctx := t.Context()
-		// Empty credentials should fail
 		noAuthClient, err := queue.NewClient(srv.TestURL(), &testQueueSecuritySource{username: "", password: ""})
 		if err != nil {
 			t.Fatalf("failed to create client: %v", err)
@@ -524,18 +512,15 @@ func TestStrictModeDataPlaneAuth(t *testing.T) {
 				t.Fatal("expected unauthorized before key issuance")
 			}
 
-			// Issue the key via rotate-apikey.
 			rotateRes, err := cpClient.RotateAPIKey(ctx, queue.RotateAPIKeyParams{ID: id})
 			if err != nil {
 				t.Fatalf("RotateAPIKey failed: %v", err)
 			}
 			key := rotateRes.(*queue.RotateAPIKeyOK).SimpleMQ.GetApikey()
 
-			// Correct key succeeds.
 			if _, ok := send(key, queueName).(*message.SendMessageOK); !ok {
 				t.Fatal("expected success with issued key")
 			}
-			// Wrong key is rejected.
 			if _, ok := send("wrong-key", queueName).(*message.SendMessageUnauthorized); !ok {
 				t.Fatal("expected unauthorized with wrong key")
 			}
@@ -569,7 +554,6 @@ func TestConfigQueueSettingsAffectDataPlane(t *testing.T) {
 
 		id := createQueue(t, ctx, cpClient, "settings-queue")
 
-		// Set very long visibility timeout (900s)
 		if _, err := cpClient.ConfigQueue(ctx, &queue.ConfigQueueRequest{
 			CommonServiceItem: queue.ConfigQueueRequestCommonServiceItem{
 				Settings: queue.Settings{VisibilityTimeoutSeconds: 900, ExpireSeconds: 345600},

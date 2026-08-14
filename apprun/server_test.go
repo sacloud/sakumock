@@ -46,7 +46,6 @@ func TestUserLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	userOp := apprunsdk.NewUserOp(client)
 
-	// Create user
 	created, err := userOp.Create(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -55,7 +54,6 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("expected positive application_count, got %d", created.Limit.ApplicationCount)
 	}
 
-	// Read user
 	user, err := userOp.Read(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +99,6 @@ func TestApplicationLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
 
-	// Create application
 	created := createTestApp(ctx, t, appOp)
 	if created.Name != "test-app" {
 		t.Fatalf("unexpected name: %s", created.Name)
@@ -116,7 +113,6 @@ func TestApplicationLifecycle(t *testing.T) {
 		t.Fatal("expected non-empty resource_id")
 	}
 
-	// Read application
 	read, err := appOp.Read(ctx, created.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +121,6 @@ func TestApplicationLifecycle(t *testing.T) {
 		t.Fatalf("unexpected name: %s", read.Name)
 	}
 
-	// List applications
 	list, err := appOp.List(ctx, &v1.ListApplicationsParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -134,7 +129,6 @@ func TestApplicationLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 app, got %d", len(list.Data))
 	}
 
-	// Update application
 	newTimeout := 120
 	updated, err := appOp.Update(ctx, created.ID, &v1.PatchApplicationBody{
 		TimeoutSeconds: v1.NewOptInt(newTimeout),
@@ -146,7 +140,6 @@ func TestApplicationLifecycle(t *testing.T) {
 		t.Fatalf("expected timeout %d, got %d", newTimeout, updated.TimeoutSeconds)
 	}
 
-	// Read status
 	status, err := appOp.ReadStatus(ctx, created.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -155,12 +148,10 @@ func TestApplicationLifecycle(t *testing.T) {
 		t.Fatalf("expected Healthy, got %s", status.Status)
 	}
 
-	// Delete application
 	if err := appOp.Delete(ctx, created.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	// List should be empty
 	list, err = appOp.List(ctx, &v1.ListApplicationsParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -190,7 +181,6 @@ func TestVersionLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// List versions
 	versions, err := versionOp.List(ctx, created.ID, &v1.ListApplicationVersionsParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -209,7 +199,6 @@ func TestVersionLifecycle(t *testing.T) {
 		t.Fatal("expected non-empty version name")
 	}
 
-	// Read version status
 	vStatus, err := versionOp.ReadStatus(ctx, created.ID, latest.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -224,7 +213,6 @@ func TestVersionLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Verify 1 version left
 	versions, err = versionOp.List(ctx, created.ID, &v1.ListApplicationVersionsParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -264,7 +252,6 @@ func TestTrafficManagement(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Update traffic distribution
 	trafficBody := v1.PutTrafficsBody{
 		v1.NewPutTrafficsBodyItem0PutTrafficsBodyItem(v1.PutTrafficsBodyItem0{
 			IsLatestVersion: true,
@@ -294,7 +281,6 @@ func TestPacketFilter(t *testing.T) {
 
 	created := createTestApp(ctx, t, appOp)
 
-	// Get default packet filter
 	pf, err := pfOp.Read(ctx, created.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -303,7 +289,6 @@ func TestPacketFilter(t *testing.T) {
 		t.Fatal("expected packet filter to be disabled by default")
 	}
 
-	// Update packet filter
 	updated, err := pfOp.Update(ctx, created.ID, &v1.PatchPacketFilter{
 		IsEnabled: v1.NewOptBool(true),
 		Settings: []v1.PatchPacketFilterSettingsItem{

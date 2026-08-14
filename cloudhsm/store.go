@@ -47,7 +47,8 @@ type LicenseRecord struct {
 	ModifiedAt  time.Time
 }
 
-// Store is the interface for CloudHSM storage backends.
+// Store is the storage backend for CloudHSM partitions, their clients and
+// peers, and software licenses.
 type Store interface {
 	ListCloudHSMs() []CloudHSMRecord
 	ReadCloudHSM(id string) (CloudHSMRecord, error)

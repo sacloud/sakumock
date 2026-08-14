@@ -15,7 +15,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// MemoryStore is an in-memory Store for KMS keys.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu   sync.RWMutex
 	keys map[string]*KeyRecord
@@ -25,8 +25,7 @@ type MemoryStore struct {
 	logger      *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -54,6 +53,7 @@ func (s *MemoryStore) generateKeyMaterial(id string, version int) {
 	s.keyMaterial[id][version] = key
 }
 
+// List returns every key, oldest first.
 func (s *MemoryStore) List() []KeyRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -68,6 +68,7 @@ func (s *MemoryStore) List() []KeyRecord {
 	return result
 }
 
+// Read returns the key with the given ID.
 func (s *MemoryStore) Read(id string) (KeyRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -79,6 +80,7 @@ func (s *MemoryStore) Read(id string) (KeyRecord, error) {
 	return *k, nil
 }
 
+// Create stores a new key and generates its first version of key material.
 func (s *MemoryStore) Create(name, description, keyOrigin string, tags []string) (KeyRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -105,6 +107,7 @@ func (s *MemoryStore) Create(name, description, keyOrigin string, tags []string)
 	return *k, nil
 }
 
+// Update applies the given values to an existing key.
 func (s *MemoryStore) Update(id, name, description string, tags []string) (KeyRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -124,6 +127,7 @@ func (s *MemoryStore) Update(id, name, description string, tags []string) (KeyRe
 	return *k, nil
 }
 
+// Delete removes the key and its key material.
 func (s *MemoryStore) Delete(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -137,6 +141,7 @@ func (s *MemoryStore) Delete(id string) error {
 	return nil
 }
 
+// Rotate adds a version of the key's material and makes it the latest.
 func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -155,6 +160,7 @@ func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {
 	return *k, nil
 }
 
+// ChangeStatus sets the key's status, which controls whether it can be used.
 func (s *MemoryStore) ChangeStatus(id, status string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -238,6 +244,7 @@ func (s *MemoryStore) Decrypt(id string, ciphertextB64 string) ([]byte, error) {
 	return nil, fmt.Errorf("failed to decrypt: no matching key version")
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

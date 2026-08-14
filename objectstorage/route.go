@@ -27,7 +27,6 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		}
 	}
 	table := []core.RegisteredRoute{
-		// Federation API (/fed/v1).
 		api("GET", "/fed/v1/clusters", "List object storage clusters (sites)", s.handleListClusters),
 		api("GET", "/fed/v1/clusters/{id}", "Get an object storage cluster (site)", s.handleGetCluster),
 		api("PUT", "/fed/v1/buckets/{name}", "Create a bucket", s.handleCreateBucket),
@@ -37,7 +36,6 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		api("DELETE", "/fed/v1/buckets/{name}/replication", "Disable a bucket's replication", s.handleDeleteReplication),
 		api("GET", "/fed/v1/buckets/{name}/replicable-targets", "List replication target candidates for a bucket", s.handleReplicableTargets),
 
-		// Site API (/{site}/v2).
 		api("GET", "/{site}/v2/buckets", "List buckets in a site", s.handleListBuckets),
 		api("GET", "/{site}/v2/account", "Get the site account", s.handleGetAccount),
 		api("POST", "/{site}/v2/account", "Create the site account", s.handleCreateAccount),
@@ -71,7 +69,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }
 
-// Routes returns metadata for every HTTP endpoint registered on the server.
+// Routes describes every HTTP endpoint the server registers.
 func (s *Server) Routes() []core.Route {
 	return core.RoutesOf(s.routeTable())
 }

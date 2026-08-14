@@ -38,7 +38,7 @@ type rateLimiterConfig struct {
 	errWrite RateLimitErrorWriter
 }
 
-// RateLimiterOption configures a RateLimiter at construction time.
+// RateLimiterOption configures a RateLimiter at construction.
 type RateLimiterOption func(*rateLimiterConfig)
 
 // WithRateLimitErrorWriter overrides the response body written when a request is
@@ -86,8 +86,8 @@ func NewRateLimiter(events float64, opts ...RateLimiterOption) *RateLimiter {
 	}
 }
 
-// Middleware wraps next with rate limiting. If rl is nil the original handler is
-// returned. If keyFn is nil or returns "" for a request, the limiter is bypassed.
+// Middleware wraps next with rate limiting. A nil limiter, a nil keyFn, or a
+// key of "" leaves the request unlimited.
 func (rl *RateLimiter) Middleware(keyFn RateLimitKeyFunc, next http.HandlerFunc) http.HandlerFunc {
 	if rl == nil {
 		return next
@@ -140,17 +140,17 @@ func (rl *RateLimiter) retryAfterSeconds(l *rate.Limiter) int {
 	return max(int(math.Ceil(wait.Seconds())), 1)
 }
 
-// PathValueKey returns a RateLimitKeyFunc that uses r.PathValue(name) as the bucket key.
-// Useful with Go 1.22+ ServeMux patterns like "/v1/queues/{queueName}/messages".
+// PathValueKey buckets requests by the named path parameter of the matched
+// route pattern.
 func PathValueKey(name string) RateLimitKeyFunc {
 	return func(r *http.Request) string {
 		return r.PathValue(name)
 	}
 }
 
-// GlobalKey returns a RateLimitKeyFunc that always returns the same bucket key,
-// so every request to the wrapped handler shares a single token bucket. Use this
-// for services whose production quotas are per-account rather than per-resource.
+// GlobalKey makes every request to the wrapped handler share a single token
+// bucket, for services whose production quotas are per-account rather than
+// per-resource.
 func GlobalKey() RateLimitKeyFunc {
 	return func(*http.Request) string {
 		return "_global"

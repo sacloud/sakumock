@@ -230,8 +230,6 @@ func (dp *dataPlane) authenticateJwt(w http.ResponseWriter, r *http.Request) (*U
 	return nil, false
 }
 
-// checkACL enforces the route's group allow-list against the authenticated
-// consumer's groups.
 func (dp *dataPlane) checkACL(w http.ResponseWriter, m *matchResult, user *User) bool {
 	cfg := m.route.Authorization
 	if cfg == nil || !cfg.IsACLEnabled {

@@ -19,8 +19,6 @@ import (
 	"github.com/sacloud/sakumock/apigw"
 )
 
-// echoUpstream records what the proxied request looked like from the
-// upstream's point of view.
 type echoUpstream struct {
 	Path          string `json:"path"`
 	Query         string `json:"query"`
@@ -50,7 +48,6 @@ func newEchoUpstream(t *testing.T) *httptest.Server {
 	return srv
 }
 
-// newGatewayServer starts a mock with the data plane enabled.
 func newGatewayServer(t *testing.T) *apigw.Server {
 	t.Helper()
 	srv := apigw.NewTestServer(apigw.Config{
@@ -64,16 +61,12 @@ func newGatewayServer(t *testing.T) *apigw.Server {
 	return srv
 }
 
-// newGateway starts a mock with the data plane enabled and returns the SDK
-// client plus the data plane address.
 func newGateway(t *testing.T) (*v1.Client, string) {
 	t.Helper()
 	srv := newGatewayServer(t)
 	return newClient(t, srv.TestURL()), srv.DataPlaneAddr()
 }
 
-// createUpstreamService creates a subscription and a service pointing at the
-// given upstream URL, returning the service (with its routeHost).
 func createUpstreamService(t *testing.T, client *v1.Client, name, upstreamURL string, mutate func(*v1.ServiceDetailRequest)) *v1.ServiceDetailResponse {
 	t.Helper()
 	ctx := t.Context()
@@ -114,7 +107,6 @@ func createGatewayRoute(t *testing.T, client *v1.Client, serviceID uuid.UUID, rt
 	return created
 }
 
-// gwDo sends a request to the data plane listener with the given Host header.
 func gwDo(t *testing.T, dpAddr, method, host, path string) *http.Response {
 	t.Helper()
 	req, err := http.NewRequestWithContext(t.Context(), method, "http://"+dpAddr+path, nil)

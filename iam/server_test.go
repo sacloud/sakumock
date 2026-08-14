@@ -77,7 +77,6 @@ func TestUserLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	userOp := user.NewUserOp(client)
 
-	// List: initially empty
 	list, err := userOp.List(ctx, user.ListParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -86,7 +85,6 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 users, got %d", len(list.Items))
 	}
 
-	// Create
 	email := "test@example.com"
 	created, err := userOp.Create(ctx, user.CreateParams{
 		Name:        "test-user",
@@ -103,7 +101,6 @@ func TestUserLifecycle(t *testing.T) {
 	}
 	userID := created.ID
 
-	// List: 1
 	list, err = userOp.List(ctx, user.ListParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -112,7 +109,6 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 user, got %d", len(list.Items))
 	}
 
-	// Read
 	read, err := userOp.Read(ctx, userID)
 	if err != nil {
 		t.Fatal(err)
@@ -121,7 +117,6 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := userOp.Update(ctx, userID, user.UpdateParams{
 		Name:        "updated-user",
 		Description: "updated desc",
@@ -133,7 +128,6 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Register email
 	if err := userOp.RegisterEmail(ctx, userID, "new@example.com"); err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +139,6 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("expected new email, got: %s", read.Email)
 	}
 
-	// Unregister email
 	if err := userOp.UnregisterEmail(ctx, userID); err != nil {
 		t.Fatal(err)
 	}
@@ -157,12 +150,10 @@ func TestUserLifecycle(t *testing.T) {
 		t.Fatalf("expected empty email, got: %s", read.Email)
 	}
 
-	// Delete
 	if err := userOp.Delete(ctx, userID); err != nil {
 		t.Fatal(err)
 	}
 
-	// List: empty
 	list, err = userOp.List(ctx, user.ListParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -180,7 +171,6 @@ func TestGroupLifecycle(t *testing.T) {
 	groupOp := group.NewGroupOp(client)
 	userOp := user.NewUserOp(client)
 
-	// Create group
 	created, err := groupOp.Create(ctx, "test-group", "test description")
 	if err != nil {
 		t.Fatal(err)
@@ -190,7 +180,6 @@ func TestGroupLifecycle(t *testing.T) {
 	}
 	groupID := created.ID
 
-	// Read
 	read, err := groupOp.Read(ctx, groupID)
 	if err != nil {
 		t.Fatal(err)
@@ -199,7 +188,6 @@ func TestGroupLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := groupOp.Update(ctx, groupID, "updated-group", "updated desc")
 	if err != nil {
 		t.Fatal(err)
@@ -208,7 +196,6 @@ func TestGroupLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Read memberships (empty)
 	members, err := groupOp.ReadMemberships(ctx, groupID)
 	if err != nil {
 		t.Fatal(err)
@@ -217,7 +204,6 @@ func TestGroupLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 members, got %d", len(members))
 	}
 
-	// Create user then add to group
 	u, err := userOp.Create(ctx, user.CreateParams{
 		Name: "member-user", Password: "Password12345!", Code: "mem",
 	})
@@ -232,7 +218,6 @@ func TestGroupLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 member, got %d", len(newMembers))
 	}
 
-	// Delete
 	if err := groupOp.Delete(ctx, groupID); err != nil {
 		t.Fatal(err)
 	}
@@ -245,7 +230,6 @@ func TestProjectLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	projectOp := project.NewProjectOp(client)
 
-	// Create
 	created, err := projectOp.Create(ctx, project.CreateParams{
 		Code:        "test-code",
 		Name:        "test-project",
@@ -259,7 +243,6 @@ func TestProjectLifecycle(t *testing.T) {
 	}
 	projectID := created.ID
 
-	// Read
 	read, err := projectOp.Read(ctx, projectID)
 	if err != nil {
 		t.Fatal(err)
@@ -268,7 +251,6 @@ func TestProjectLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := projectOp.Update(ctx, projectID, "updated-project", "updated desc")
 	if err != nil {
 		t.Fatal(err)
@@ -277,7 +259,6 @@ func TestProjectLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Delete
 	if err := projectOp.Delete(ctx, projectID); err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +271,6 @@ func TestFolderLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	folderOp := folder.NewFolderOp(client)
 
-	// Create
 	created, err := folderOp.Create(ctx, folder.CreateParams{
 		Name: "test-folder",
 	})
@@ -302,7 +282,6 @@ func TestFolderLifecycle(t *testing.T) {
 	}
 	folderID := created.ID
 
-	// Read
 	read, err := folderOp.Read(ctx, folderID)
 	if err != nil {
 		t.Fatal(err)
@@ -311,7 +290,6 @@ func TestFolderLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := folderOp.Update(ctx, folderID, "updated-folder", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -320,7 +298,6 @@ func TestFolderLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Delete
 	if err := folderOp.Delete(ctx, folderID); err != nil {
 		t.Fatal(err)
 	}
@@ -334,7 +311,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 	spOp := serviceprincipal.NewServicePrincipalOp(client)
 	projectOp := project.NewProjectOp(client)
 
-	// Create project first
 	proj, err := projectOp.Create(ctx, project.CreateParams{
 		Code: "sp-project", Name: "sp-project", Description: "for SP",
 	})
@@ -342,7 +318,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create service principal
 	created, err := spOp.Create(ctx, v1.ServicePrincipalsPostReq{
 		ProjectID:   proj.ID,
 		Name:        "test-sp",
@@ -356,7 +331,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 	}
 	spID := created.ID
 
-	// Read
 	read, err := spOp.Read(ctx, spID)
 	if err != nil {
 		t.Fatal(err)
@@ -365,7 +339,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := spOp.Update(ctx, spID, serviceprincipal.UpdateParams{
 		Name:        "updated-sp",
 		Description: v1.NewOptString("updated desc"),
@@ -377,7 +350,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Upload key
 	key, err := spOp.UploadKey(ctx, spID, "ssh-rsa AAAAB3NzaC1yc2EAAA...")
 	if err != nil {
 		t.Fatal(err)
@@ -386,7 +358,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatalf("expected enabled, got %s", key.Status)
 	}
 
-	// List keys
 	keys, err := spOp.ListKeys(ctx, spID, serviceprincipal.ListKeysParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -395,7 +366,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 key, got %d", len(keys.Items))
 	}
 
-	// Disable key
 	disabled, err := spOp.DisableKey(ctx, spID, key.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -404,7 +374,6 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatalf("expected disabled, got %s", disabled.Status)
 	}
 
-	// Enable key
 	enabled, err := spOp.EnableKey(ctx, spID, key.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -413,12 +382,10 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatalf("expected enabled, got %s", enabled.Status)
 	}
 
-	// Delete key
 	if err := spOp.DeleteKey(ctx, spID, key.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	// Delete service principal
 	if err := spOp.Delete(ctx, spID); err != nil {
 		t.Fatal(err)
 	}
@@ -432,7 +399,6 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 	apiKeyOp := projectapikey.NewProjectAPIKeyOp(client)
 	projectOp := project.NewProjectOp(client)
 
-	// Create project
 	proj, err := projectOp.Create(ctx, project.CreateParams{
 		Code: "apikey-project", Name: "apikey-project", Description: "for API key",
 	})
@@ -440,7 +406,6 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create API key
 	created, err := apiKeyOp.Create(ctx, projectapikey.CreateParams{
 		ProjectID:   proj.ID,
 		Name:        "test-key",
@@ -461,7 +426,6 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 	}
 	keyID := created.ID
 
-	// Read
 	read, err := apiKeyOp.Read(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
@@ -470,7 +434,6 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := apiKeyOp.Update(ctx, keyID, projectapikey.UpdateParams{
 		Name:        "updated-key",
 		Description: "updated desc",
@@ -483,7 +446,6 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Delete
 	if err := apiKeyOp.Delete(ctx, keyID); err != nil {
 		t.Fatal(err)
 	}
@@ -496,7 +458,6 @@ func TestIAMRoleListAndRead(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	roleOp := iamrole.NewIAMRoleOp(client)
 
-	// List (pre-seeded)
 	list, err := roleOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -505,7 +466,6 @@ func TestIAMRoleListAndRead(t *testing.T) {
 		t.Fatalf("expected at least 3 IAM roles, got %d", len(list.Items))
 	}
 
-	// Read by ID
 	read, err := roleOp.Read(ctx, "owner")
 	if err != nil {
 		t.Fatal(err)
@@ -522,7 +482,6 @@ func TestIDRoleListAndRead(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	roleOp := idrole.NewIdRoleOp(client)
 
-	// List (pre-seeded)
 	list, err := roleOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -531,7 +490,6 @@ func TestIDRoleListAndRead(t *testing.T) {
 		t.Fatalf("expected at least 2 ID roles, got %d", len(list.Items))
 	}
 
-	// Read by ID
 	read, err := roleOp.Read(ctx, "admin")
 	if err != nil {
 		t.Fatal(err)
@@ -549,7 +507,6 @@ func TestIAMPolicyProject(t *testing.T) {
 	policyOp := iampolicy.NewIAMPolicyOp(client)
 	projectOp := project.NewProjectOp(client)
 
-	// Create project
 	proj, err := projectOp.Create(ctx, project.CreateParams{
 		Code: "policy-project", Name: "policy-project", Description: "for policy",
 	})
@@ -557,7 +514,6 @@ func TestIAMPolicyProject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Read (empty)
 	bindings, err := policyOp.ReadProjectPolicy(ctx, proj.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -566,7 +522,6 @@ func TestIAMPolicyProject(t *testing.T) {
 		t.Fatalf("expected 0 bindings, got %d", len(bindings))
 	}
 
-	// Update
 	newBindings := []v1.IamPolicy{
 		{
 			Role: v1.NewOptIamPolicyRole(v1.IamPolicyRole{
@@ -589,7 +544,6 @@ func TestIAMPolicyProject(t *testing.T) {
 		t.Fatalf("expected 1 binding, got %d", len(updated))
 	}
 
-	// Read again
 	bindings, err = policyOp.ReadProjectPolicy(ctx, proj.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -606,7 +560,6 @@ func TestIDPolicyOrganization(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	policyOp := idpolicy.NewIDPolicyOp(client)
 
-	// Read (empty)
 	bindings, err := policyOp.ReadOrganizationIdPolicy(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -615,7 +568,6 @@ func TestIDPolicyOrganization(t *testing.T) {
 		t.Fatalf("expected 0 bindings, got %d", len(bindings))
 	}
 
-	// Update
 	newBindings := []v1.IdPolicy{
 		{
 			Role: v1.NewOptIdPolicyRole(v1.IdPolicyRole{
@@ -646,7 +598,6 @@ func TestOrganizationReadUpdate(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	orgOp := organization.NewOrganizationOp(client)
 
-	// Read (pre-seeded)
 	read, err := orgOp.Read(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -655,7 +606,6 @@ func TestOrganizationReadUpdate(t *testing.T) {
 		t.Fatalf("unexpected: %+v", read)
 	}
 
-	// Update
 	updated, err := orgOp.Update(ctx, "new-org-name")
 	if err != nil {
 		t.Fatal(err)
@@ -672,7 +622,6 @@ func TestPasswordPolicy(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	authOp := auth.NewAuthOp(client)
 
-	// Read
 	pp, err := authOp.ReadPasswordPolicy(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -681,7 +630,6 @@ func TestPasswordPolicy(t *testing.T) {
 		t.Fatalf("expected min_length 12, got %d", pp.MinLength)
 	}
 
-	// Update
 	updated, err := authOp.UpdatePasswordPolicy(ctx, v1.PasswordPolicy{
 		MinLength:        12,
 		RequireUppercase: true,
@@ -719,7 +667,6 @@ func TestSSOProfileLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	ssoOp := sso.NewSSOOp(client)
 
-	// Create
 	created, err := ssoOp.Create(ctx, v1.SSOProfilesPostReq{
 		Name:           "test-sso",
 		Description:    "test SSO profile",
@@ -736,7 +683,6 @@ func TestSSOProfileLifecycle(t *testing.T) {
 	}
 	ssoID := created.ID
 
-	// Read
 	read, err := ssoOp.Read(ctx, ssoID)
 	if err != nil {
 		t.Fatal(err)
@@ -745,7 +691,6 @@ func TestSSOProfileLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Link
 	linked, err := ssoOp.Link(ctx, ssoID)
 	if err != nil {
 		t.Fatal(err)
@@ -754,7 +699,6 @@ func TestSSOProfileLifecycle(t *testing.T) {
 		t.Fatal("expected assigned=true after link")
 	}
 
-	// Unlink
 	unlinked, err := ssoOp.Unlink(ctx, ssoID)
 	if err != nil {
 		t.Fatal(err)
@@ -763,7 +707,6 @@ func TestSSOProfileLifecycle(t *testing.T) {
 		t.Fatal("expected assigned=false after unlink")
 	}
 
-	// Delete
 	if err := ssoOp.Delete(ctx, ssoID); err != nil {
 		t.Fatal(err)
 	}
@@ -776,7 +719,6 @@ func TestScimLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	scimOp := scim.NewScimOp(client)
 
-	// Create
 	created, err := scimOp.Create(ctx, scim.CreateParams{Name: "test-scim"})
 	if err != nil {
 		t.Fatal(err)
@@ -786,7 +728,6 @@ func TestScimLifecycle(t *testing.T) {
 	}
 	scimID := created.ID.String()
 
-	// Read
 	read, err := scimOp.Read(ctx, scimID)
 	if err != nil {
 		t.Fatal(err)
@@ -795,7 +736,6 @@ func TestScimLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
-	// Update
 	updated, err := scimOp.Update(ctx, scimID, scim.UpdateParams{Name: "updated-scim"})
 	if err != nil {
 		t.Fatal(err)
@@ -804,7 +744,6 @@ func TestScimLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
-	// Regenerate token
 	tokenResp, err := scimOp.RegenerateToken(ctx, scimID)
 	if err != nil {
 		t.Fatal(err)
@@ -813,7 +752,6 @@ func TestScimLifecycle(t *testing.T) {
 		t.Fatal("expected non-empty secret token")
 	}
 
-	// Delete
 	if err := scimOp.Delete(ctx, scimID); err != nil {
 		t.Fatal(err)
 	}
@@ -826,7 +764,6 @@ func TestServicePolicyLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	op := servicepolicy.NewServicePolicyOp(client)
 
-	// Initially disabled
 	enabled, err := op.IsEnabled(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -835,7 +772,6 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatal("expected service policy to start disabled")
 	}
 
-	// Enable, then verify
 	if err := op.Enable(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -847,12 +783,10 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatal("expected service policy to be enabled")
 	}
 
-	// Enabling again conflicts
 	if err := op.Enable(ctx); err == nil {
 		t.Fatal("expected conflict on double enable")
 	}
 
-	// Disable, then verify
 	if err := op.Disable(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -864,12 +798,10 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatal("expected service policy to be disabled")
 	}
 
-	// Disabling again conflicts
 	if err := op.Disable(ctx); err == nil {
 		t.Fatal("expected conflict on double disable")
 	}
 
-	// Rule templates: an empty page
 	tpls, err := op.ListRuleTemplates(ctx, servicepolicy.ListRuleTemplatesParams{})
 	if err != nil {
 		t.Fatal(err)
@@ -878,7 +810,6 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected rule templates: %+v", tpls)
 	}
 
-	// Organization service policy rules round-trip
 	putRes, err := client.OrganizationServicePolicyPut(ctx, &v1.OrganizationServicePolicyPutReq{
 		Rules: []v1.Rule{{
 			Code:     v1.NewOptString("example.rule.bool"),

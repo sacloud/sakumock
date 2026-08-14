@@ -160,6 +160,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
@@ -168,8 +169,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(rw, r)
 	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }
-
-// --- CloudHSM ---
 
 func cloudhsmRecordToResponse(h CloudHSMRecord) cloudhsmResponse {
 	return cloudhsmResponse{
@@ -267,8 +266,6 @@ func (s *Server) handleDeleteCloudHSM(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- Clients ---
-
 func clientRecordToResponse(c ClientRecord) clientResponse {
 	return clientResponse{
 		ID:           c.ID,
@@ -352,8 +349,6 @@ func (s *Server) handleDeleteClient(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- Peers ---
-
 func peerRecordToResponse(p PeerRecord) peerResponse {
 	return peerResponse{
 		ID:     p.ID,
@@ -406,8 +401,6 @@ func (s *Server) handleDeletePeer(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// --- Licenses ---
 
 func licenseRecordToResponse(l LicenseRecord) licenseResponse {
 	return licenseResponse{

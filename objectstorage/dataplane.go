@@ -188,7 +188,6 @@ func (d *dataPlane) createBucket(name string) error {
 	return nil
 }
 
-// deleteBucket removes a bucket (and its objects) from the data plane backend.
 func (d *dataPlane) deleteBucket(name string) {
 	if d == nil {
 		return
@@ -198,8 +197,6 @@ func (d *dataPlane) deleteBucket(name string) {
 	}
 }
 
-// Close stops the versitygw process and removes the backend directory if it was
-// a temporary one created by sakumock.
 func (d *dataPlane) Close() {
 	if d == nil {
 		return
@@ -238,7 +235,6 @@ type logWriter struct {
 	last []string
 }
 
-// logWriterTailLines bounds the retained output.
 const logWriterTailLines = 20
 
 func (w *logWriter) Write(p []byte) (int, error) {
@@ -259,14 +255,12 @@ func (w *logWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// tail returns the most recent output lines as one string.
 func (w *logWriter) tail() string {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return strings.Join(w.last, "\n")
 }
 
-// waitListen blocks until addr accepts a TCP connection or the timeout elapses.
 func waitListen(addr string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {

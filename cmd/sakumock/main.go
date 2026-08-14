@@ -24,9 +24,6 @@ import (
 	"github.com/sacloud/sakumock/workflows"
 )
 
-// CLI is the top-level command structure. Each subcommand reuses the service's
-// own Command type, so flags and behavior are identical to the standalone
-// sakumock-<service> binaries.
 type CLI struct {
 	All                AllCmd                     `cmd:"" name:"all" help:"Run all mock services together in one process"`
 	Env                EnvCmd                     `cmd:"" name:"env" help:"Print client environment variables (endpoints + dummy credentials) as a dotenv file and exit"`

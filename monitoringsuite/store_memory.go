@@ -27,7 +27,6 @@ func (t *table[T]) get(key string) (*T, bool) {
 	return v, ok
 }
 
-// all returns every record in insertion order.
 func (t *table[T]) all() []*T {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
@@ -63,7 +62,7 @@ func (t *table[T]) delete(key string) bool {
 	return true
 }
 
-// MemoryStore is an in-memory backend for the monitoring-suite mock.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	ids *core.IDGenerator // resource IDs (12-digit), shared in the unified binary
 
@@ -168,7 +167,6 @@ func seedPublishers() []Publisher {
 	}
 }
 
-// publisher returns the seeded publisher with the given code.
 func (s *MemoryStore) publisher(code string) (Publisher, bool) {
 	for _, p := range s.publishers {
 		if p.Code == code {
@@ -218,5 +216,5 @@ func (s *MemoryStore) nextOrder(projectID int64) int {
 	return max + 1
 }
 
-// Close releases resources. The in-memory store has nothing to release.
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error { return nil }

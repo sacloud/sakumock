@@ -39,8 +39,6 @@ func freeLoopbackAddr(t *testing.T) string {
 	return addr
 }
 
-// newS3Client builds an aws-sdk-go-v2 S3 client pointed at the data plane
-// (path-style addressing, static credentials, custom endpoint).
 func newS3Client(addr, access, secret string) *s3.Client {
 	cfg := aws.Config{
 		Region:      dataPlaneRegion,

@@ -8,8 +8,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// maxErrorBodyLog bounds how much of an error response body ResponseRecorder
-// retains for logging.
 const maxErrorBodyLog = 2048
 
 // ResponseRecorder wraps http.ResponseWriter recording the status code and,
@@ -22,15 +20,19 @@ type ResponseRecorder struct {
 	errBody bytes.Buffer
 }
 
+// NewResponseRecorder wraps w so the request log can report the status and,
+// for errors, the reason.
 func NewResponseRecorder(w http.ResponseWriter) *ResponseRecorder {
 	return &ResponseRecorder{ResponseWriter: w, Status: http.StatusOK}
 }
 
+// WriteHeader records the status code and forwards it.
 func (r *ResponseRecorder) WriteHeader(code int) {
 	r.Status = code
 	r.ResponseWriter.WriteHeader(code)
 }
 
+// Write forwards the body, retaining a bounded prefix of error responses.
 func (r *ResponseRecorder) Write(b []byte) (int, error) {
 	if r.Status >= 400 && r.errBody.Len() < maxErrorBodyLog {
 		r.errBody.Write(b[:min(len(b), maxErrorBodyLog-r.errBody.Len())])
@@ -38,8 +40,7 @@ func (r *ResponseRecorder) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }
 
-// ErrorBody returns the captured error response body (whitespace-trimmed),
-// or "" for non-error responses.
+// ErrorBody returns the captured error response body, or "" for a success.
 func (r *ResponseRecorder) ErrorBody() string {
 	return strings.TrimSpace(r.errBody.String())
 }
@@ -66,10 +67,8 @@ func (r *ResponseRecorder) Flush() {
 	}
 }
 
-// RequestLogArgs builds the standard per-request log attributes: method,
-// path, status, trace/span IDs when the request carries a span (see
-// SetupTracing), the error reason when the response is an error, and any
-// service-specific extras.
+// RequestLogArgs builds the standard per-request log attributes. Pass any
+// service-specific attributes as extra.
 func RequestLogArgs(r *http.Request, rec *ResponseRecorder, extra ...any) []any {
 	args := []any{
 		"method", r.Method,

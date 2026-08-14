@@ -2,6 +2,8 @@ package apprun
 
 import "time"
 
+// Application is an AppRun application: the deployable unit, addressed by its
+// public URL.
 type Application struct {
 	ID                     string
 	Name                   string
@@ -23,6 +25,7 @@ type Application struct {
 	seq int
 }
 
+// Component is one container of an application.
 type Component struct {
 	Name         string
 	MaxCPU       string
@@ -32,36 +35,43 @@ type Component struct {
 	Probe        *Probe
 }
 
+// DeploySource is where a component's image comes from.
 type DeploySource struct {
 	ContainerRegistry *ContainerRegistry
 }
 
+// ContainerRegistry is the registry a component's image is pulled from.
 type ContainerRegistry struct {
 	Image    string
 	Server   string
 	Username string
 }
 
+// EnvVar is an environment variable passed to a component.
 type EnvVar struct {
 	Key   string
 	Value string
 }
 
+// Probe is a component's health check.
 type Probe struct {
 	HTTPGet *HTTPGetProbe
 }
 
+// HTTPGetProbe is a health check performed with an HTTP GET.
 type HTTPGetProbe struct {
 	Path    string
 	Port    int
 	Headers []Header
 }
 
+// Header is one HTTP header sent by an HTTPGetProbe.
 type Header struct {
 	Name  string
 	Value string
 }
 
+// Version is an immutable snapshot of an application, created on every update.
 type Version struct {
 	ID                     string
 	AppID                  string
@@ -79,22 +89,26 @@ type Version struct {
 	seq int
 }
 
+// TrafficItem assigns a share of an application's traffic to one version.
 type TrafficItem struct {
 	VersionName     string
 	IsLatestVersion bool
 	Percent         int
 }
 
+// PacketFilter restricts which clients may reach an application.
 type PacketFilter struct {
 	IsEnabled bool
 	Settings  []PacketFilterSetting
 }
 
+// PacketFilterSetting is one allow rule of a PacketFilter.
 type PacketFilterSetting struct {
 	FromIP             string
 	FromIPPrefixLength int
 }
 
+// ListParams carries the paging and sorting options of the list endpoints.
 type ListParams struct {
 	PageNum   int
 	PageSize  int
@@ -102,6 +116,7 @@ type ListParams struct {
 	SortOrder string
 }
 
+// Store is the storage backend for AppRun applications and their versions.
 type Store interface {
 	UserCreated() bool
 	CreateUser()

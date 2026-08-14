@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu sync.RWMutex
 
@@ -36,6 +37,7 @@ type MemoryStore struct {
 	certOrder    []string
 }
 
+// NewStore returns an empty store.
 func NewStore() *MemoryStore {
 	return &MemoryStore{
 		clusters:          make(map[string]*Cluster),
@@ -76,8 +78,7 @@ func cursorPage[T any](items []T, idFunc func(T) string, cursor string, maxItems
 	return items[start:end], &next
 }
 
-// Clusters
-
+// CreateCluster stores a new cluster.
 func (s *MemoryStore) CreateCluster(c *Cluster) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -89,6 +90,7 @@ func (s *MemoryStore) CreateCluster(c *Cluster) error {
 	return nil
 }
 
+// ListClusters returns a page of clusters and the cursor for the next page.
 func (s *MemoryStore) ListClusters(cursor string, maxItems int) ([]*Cluster, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -102,6 +104,7 @@ func (s *MemoryStore) ListClusters(cursor string, maxItems int) ([]*Cluster, *st
 	return cursorPage(items, func(c *Cluster) string { return c.ClusterID }, cursor, maxItems)
 }
 
+// ReadCluster returns the cluster with the given ID.
 func (s *MemoryStore) ReadCluster(id string) (*Cluster, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -109,6 +112,7 @@ func (s *MemoryStore) ReadCluster(id string) (*Cluster, bool) {
 	return c, ok
 }
 
+// UpdateCluster applies the given values to an existing cluster.
 func (s *MemoryStore) UpdateCluster(id string, servicePrincipalID string, letsEncryptEmail *string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -122,6 +126,7 @@ func (s *MemoryStore) UpdateCluster(id string, servicePrincipalID string, letsEn
 	return nil
 }
 
+// DeleteCluster removes the cluster.
 func (s *MemoryStore) DeleteCluster(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -134,14 +139,14 @@ func (s *MemoryStore) DeleteCluster(id string) error {
 	return nil
 }
 
-// Applications
-
+// CountApplications returns how many applications exist.
 func (s *MemoryStore) CountApplications() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return len(s.applications)
 }
 
+// CreateApplication stores a new application.
 func (s *MemoryStore) CreateApplication(app *Application) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -153,6 +158,8 @@ func (s *MemoryStore) CreateApplication(app *Application) error {
 	return nil
 }
 
+// ListApplications returns a page of applications, optionally limited to one
+// cluster.
 func (s *MemoryStore) ListApplications(clusterID *string, cursor string, maxItems int) ([]*Application, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -171,6 +178,7 @@ func (s *MemoryStore) ListApplications(clusterID *string, cursor string, maxItem
 	return cursorPage(items, func(a *Application) string { return a.ApplicationID }, cursor, maxItems)
 }
 
+// ReadApplication returns the application with the given ID.
 func (s *MemoryStore) ReadApplication(id string) (*Application, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -178,6 +186,8 @@ func (s *MemoryStore) ReadApplication(id string) (*Application, bool) {
 	return app, ok
 }
 
+// UpdateApplication switches the application's active version, or deactivates
+// it when activeVersion is nil.
 func (s *MemoryStore) UpdateApplication(id string, activeVersion *int32) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -205,6 +215,7 @@ func (s *MemoryStore) UpdateApplication(id string, activeVersion *int32) error {
 	return nil
 }
 
+// DeleteApplication removes the application and its versions.
 func (s *MemoryStore) DeleteApplication(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -219,8 +230,7 @@ func (s *MemoryStore) DeleteApplication(id string) error {
 	return nil
 }
 
-// Application Versions
-
+// CreateVersion adds a version to the application.
 func (s *MemoryStore) CreateVersion(appID string, v *ApplicationVersion) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -236,6 +246,7 @@ func (s *MemoryStore) CreateVersion(appID string, v *ApplicationVersion) error {
 	return nil
 }
 
+// ListVersions returns a page of the application's versions.
 func (s *MemoryStore) ListVersions(appID string, cursor string, maxItems int) ([]*ApplicationVersion, *int32) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -274,6 +285,7 @@ func (s *MemoryStore) ListVersions(appID string, cursor string, maxItems int) ([
 	return sorted[start:end], &next
 }
 
+// ReadVersion returns one version of the application.
 func (s *MemoryStore) ReadVersion(appID string, version int32) (*ApplicationVersion, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -286,6 +298,7 @@ func (s *MemoryStore) ReadVersion(appID string, version int32) (*ApplicationVers
 	return nil, false
 }
 
+// DeleteVersion removes a version of the application.
 func (s *MemoryStore) DeleteVersion(appID string, version int32) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -300,8 +313,7 @@ func (s *MemoryStore) DeleteVersion(appID string, version int32) error {
 	return fmt.Errorf("version not found")
 }
 
-// Auto Scaling Groups
-
+// CreateAutoScalingGroup stores a new group and its worker nodes.
 func (s *MemoryStore) CreateAutoScalingGroup(asg *AutoScalingGroup) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -342,6 +354,7 @@ func (s *MemoryStore) generateWorkerNICs(ifaces []ASGNodeInterface, nodeIdx int3
 	return nics
 }
 
+// ListAutoScalingGroups returns a page of the cluster's groups.
 func (s *MemoryStore) ListAutoScalingGroups(clusterID string, cursor string, maxItems int) ([]*AutoScalingGroup, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -357,6 +370,7 @@ func (s *MemoryStore) ListAutoScalingGroups(clusterID string, cursor string, max
 	return cursorPage(items, func(a *AutoScalingGroup) string { return a.AutoScalingGroupID }, cursor, maxItems)
 }
 
+// ReadAutoScalingGroup returns one group of the cluster.
 func (s *MemoryStore) ReadAutoScalingGroup(clusterID, asgID string) (*AutoScalingGroup, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -368,6 +382,8 @@ func (s *MemoryStore) ReadAutoScalingGroup(clusterID, asgID string) (*AutoScalin
 	return asg, true
 }
 
+// DeleteAutoScalingGroup removes the group together with its worker nodes and
+// load balancers.
 func (s *MemoryStore) DeleteAutoScalingGroup(clusterID, asgID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -407,8 +423,7 @@ func (s *MemoryStore) DeleteAutoScalingGroup(clusterID, asgID string) error {
 	return nil
 }
 
-// Load Balancers
-
+// CreateLoadBalancer stores a new load balancer and its nodes.
 func (s *MemoryStore) CreateLoadBalancer(lb *LoadBalancer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -448,6 +463,7 @@ func (s *MemoryStore) generateLBNodeInterfaces(ifaces []LBInterface) []LBNodeInt
 	return nifs
 }
 
+// ListLoadBalancers returns a page of the group's load balancers.
 func (s *MemoryStore) ListLoadBalancers(clusterID, asgID string, cursor string, maxItems int) ([]*LoadBalancer, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -463,6 +479,7 @@ func (s *MemoryStore) ListLoadBalancers(clusterID, asgID string, cursor string, 
 	return cursorPage(items, func(lb *LoadBalancer) string { return lb.LoadBalancerID }, cursor, maxItems)
 }
 
+// ReadLoadBalancer returns one load balancer of the group.
 func (s *MemoryStore) ReadLoadBalancer(clusterID, asgID, lbID string) (*LoadBalancer, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -474,6 +491,7 @@ func (s *MemoryStore) ReadLoadBalancer(clusterID, asgID, lbID string) (*LoadBala
 	return lb, true
 }
 
+// DeleteLoadBalancer removes the load balancer together with its nodes.
 func (s *MemoryStore) DeleteLoadBalancer(clusterID, asgID, lbID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -488,8 +506,7 @@ func (s *MemoryStore) DeleteLoadBalancer(clusterID, asgID, lbID string) error {
 	return nil
 }
 
-// Load Balancer Nodes
-
+// ListLoadBalancerNodes returns a page of the load balancer's nodes.
 func (s *MemoryStore) ListLoadBalancerNodes(clusterID, asgID, lbID string, cursor string, maxItems int) ([]*LoadBalancerNode, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -502,6 +519,7 @@ func (s *MemoryStore) ListLoadBalancerNodes(clusterID, asgID, lbID string, curso
 	return cursorPage(nodes, func(n *LoadBalancerNode) string { return n.LoadBalancerNodeID }, cursor, maxItems)
 }
 
+// ReadLoadBalancerNode returns one node of the load balancer.
 func (s *MemoryStore) ReadLoadBalancerNode(clusterID, asgID, lbID, nodeID string) (*LoadBalancerNode, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -518,8 +536,7 @@ func (s *MemoryStore) ReadLoadBalancerNode(clusterID, asgID, lbID, nodeID string
 	return nil, false
 }
 
-// Worker Nodes
-
+// ListWorkerNodes returns a page of the group's worker nodes.
 func (s *MemoryStore) ListWorkerNodes(clusterID, asgID string, cursor string, maxItems int) ([]*WorkerNode, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -538,6 +555,7 @@ func (s *MemoryStore) ListWorkerNodes(clusterID, asgID string, cursor string, ma
 	return cursorPage(items, func(wn *WorkerNode) string { return wn.WorkerNodeID }, cursor, maxItems)
 }
 
+// ReadWorkerNode returns one worker node of the group.
 func (s *MemoryStore) ReadWorkerNode(clusterID, asgID, nodeID string) (*WorkerNode, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -549,6 +567,8 @@ func (s *MemoryStore) ReadWorkerNode(clusterID, asgID, nodeID string) (*WorkerNo
 	return wn, true
 }
 
+// UpdateWorkerNodeDraining marks the worker node as draining, so it stops
+// taking new containers.
 func (s *MemoryStore) UpdateWorkerNodeDraining(clusterID, asgID, nodeID string, draining bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -561,8 +581,7 @@ func (s *MemoryStore) UpdateWorkerNodeDraining(clusterID, asgID, nodeID string, 
 	return nil
 }
 
-// Certificates
-
+// CreateCertificate stores a certificate on the cluster.
 func (s *MemoryStore) CreateCertificate(cert *Certificate) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -591,6 +610,7 @@ func (s *MemoryStore) CreateCertificate(cert *Certificate) error {
 	return nil
 }
 
+// ListCertificates returns a page of the cluster's certificates.
 func (s *MemoryStore) ListCertificates(clusterID string, cursor string, maxItems int) ([]*Certificate, *string) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -606,6 +626,7 @@ func (s *MemoryStore) ListCertificates(clusterID string, cursor string, maxItems
 	return cursorPage(items, func(c *Certificate) string { return c.CertificateID }, cursor, maxItems)
 }
 
+// ReadCertificate returns one certificate of the cluster.
 func (s *MemoryStore) ReadCertificate(clusterID, certID string) (*Certificate, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -617,6 +638,7 @@ func (s *MemoryStore) ReadCertificate(clusterID, certID string) (*Certificate, b
 	return cert, true
 }
 
+// UpdateCertificate applies the given values to an existing certificate.
 func (s *MemoryStore) UpdateCertificate(clusterID, certID string, updated *Certificate) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -633,6 +655,7 @@ func (s *MemoryStore) UpdateCertificate(clusterID, certID string, updated *Certi
 	return nil
 }
 
+// DeleteCertificate removes the certificate from the cluster.
 func (s *MemoryStore) DeleteCertificate(clusterID, certID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -646,6 +669,7 @@ func (s *MemoryStore) DeleteCertificate(clusterID, certID string) error {
 	return nil
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() {}
 
 func removeFromOrder(order []string, id string) []string {

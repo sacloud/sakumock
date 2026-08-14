@@ -35,7 +35,6 @@ func TestSetApplicationStatusReflectedInList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Verify initial status
 	apps, _ := store.ListApplications(ListParams{})
 	if len(apps) != 1 {
 		t.Fatalf("expected 1 app, got %d", len(apps))
@@ -47,7 +46,6 @@ func TestSetApplicationStatusReflectedInList(t *testing.T) {
 	// Set status to Unhealthy (simulates container start failure)
 	store.SetApplicationStatus(app.ID, "UnHealthy")
 
-	// Verify status via ReadApplication
 	read, ok := store.ReadApplication(app.ID)
 	if !ok {
 		t.Fatal("app not found")
@@ -56,7 +54,6 @@ func TestSetApplicationStatusReflectedInList(t *testing.T) {
 		t.Fatalf("ReadApplication: expected Unhealthy, got %s", read.Status)
 	}
 
-	// Verify status via ListApplications
 	apps, _ = store.ListApplications(ListParams{})
 	if len(apps) != 1 {
 		t.Fatalf("expected 1 app, got %d", len(apps))
@@ -102,7 +99,6 @@ func TestSetApplicationStatusAfterUpdate(t *testing.T) {
 	// Set status to Unhealthy on the latest version
 	store.SetApplicationStatus(app.ID, "UnHealthy")
 
-	// Verify status via ListApplications
 	apps, _ := store.ListApplications(ListParams{})
 	if len(apps) != 1 {
 		t.Fatalf("expected 1 app, got %d", len(apps))
@@ -154,7 +150,6 @@ func TestListEndpointReflectsStatusChange(t *testing.T) {
 	// Simulate container start failure
 	srv.store.SetApplicationStatus(created.ID, "UnHealthy")
 
-	// GET /applications (list)
 	resp, err = http.Get(ts.URL + "/applications")
 	if err != nil {
 		t.Fatal(err)
@@ -172,7 +167,6 @@ func TestListEndpointReflectsStatusChange(t *testing.T) {
 		t.Fatalf("list endpoint: expected Unhealthy, got %s", listResp.Data[0].Status)
 	}
 
-	// GET /applications/{id} (individual)
 	resp, err = http.Get(ts.URL + "/applications/" + created.ID)
 	if err != nil {
 		t.Fatal(err)

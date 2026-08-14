@@ -33,7 +33,6 @@ func TestKeyLifecycle(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	// List: initially empty
 	keys, err := keyOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -42,7 +41,6 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 keys, got %d", len(keys))
 	}
 
-	// Create key
 	created, err := keyOp.Create(ctx, v1.CreateKey{
 		Name:      "test-key",
 		KeyOrigin: v1.KeyOriginEnumGenerated,
@@ -59,7 +57,6 @@ func TestKeyLifecycle(t *testing.T) {
 	}
 	keyID := created.ID
 
-	// List: 1 key
 	keys, err = keyOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -74,7 +71,6 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected status: %s", keys[0].Status)
 	}
 
-	// Read key
 	read, err := keyOp.Read(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
@@ -83,7 +79,6 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read response: %+v", read)
 	}
 
-	// Update key
 	updated, err := keyOp.Update(ctx, keyID, v1.Key{
 		Name:        "updated-key",
 		Description: "updated description",
@@ -98,7 +93,6 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update response: %+v", updated)
 	}
 
-	// Read updated key
 	read, err = keyOp.Read(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
@@ -110,12 +104,10 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected tags: %v", read.Tags)
 	}
 
-	// Delete key
 	if err := keyOp.Delete(ctx, keyID); err != nil {
 		t.Fatal(err)
 	}
 
-	// List: empty again
 	keys, err = keyOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +186,6 @@ func TestRotateKey(t *testing.T) {
 	}
 	keyID := created.ID
 
-	// Rotate
 	rotated, err := keyOp.Rotate(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
@@ -219,7 +210,6 @@ func TestChangeStatus(t *testing.T) {
 	}
 	keyID := created.ID
 
-	// Change to restricted
 	if err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStatusStatusRestricted); err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +221,6 @@ func TestChangeStatus(t *testing.T) {
 		t.Fatalf("expected restricted, got %s", read.Status)
 	}
 
-	// Change back to active
 	if err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStatusStatusActive); err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +288,6 @@ func TestEncryptDecryptAfterRotate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Rotate key
 	if _, err := keyOp.Rotate(ctx, keyID); err != nil {
 		t.Fatal(err)
 	}

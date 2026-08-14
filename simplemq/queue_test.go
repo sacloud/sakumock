@@ -11,7 +11,6 @@ func TestVisibilityTimeoutRevisibility(t *testing.T) {
 
 	q.send("hello", now)
 
-	// First receive succeeds
 	msg, ok := q.receive(now)
 	if !ok {
 		t.Fatal("expected to receive a message")

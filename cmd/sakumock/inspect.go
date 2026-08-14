@@ -18,8 +18,6 @@ type InspectCmd struct {
 	Simplenotification InspectSimplenotificationCmd `cmd:"" name:"simplenotification" help:"Inspect Simple Notification mock state"`
 }
 
-// --- EventBus ---
-
 type InspectEventbusCmd struct {
 	Addr            string                    `help:"EventBus server address" default:"http://127.0.0.1:18085/" env:"SAKURA_ENDPOINTS_EVENTBUS"`
 	Deliveries      InspectDeliveriesCmd      `cmd:"" name:"deliveries" help:"List recorded firings"`
@@ -103,8 +101,6 @@ func (c *InspectEventbusCmd) BeforeApply() error {
 	return nil
 }
 
-// --- Simple Notification ---
-
 type InspectSimplenotificationCmd struct {
 	Addr          string                  `help:"Simple Notification server address" default:"http://127.0.0.1:18083" env:"SAKURA_ENDPOINTS_SIMPLE_NOTIFICATION"`
 	Messages      InspectMessagesCmd      `cmd:"" name:"messages" help:"List accepted messages"`
@@ -136,8 +132,6 @@ func (c *InspectSimplenotificationCmd) BeforeApply() error {
 	c.ClearMessages.Addr = c.Addr
 	return nil
 }
-
-// --- Helpers ---
 
 func writeJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)

@@ -19,8 +19,6 @@ func (s *Server) alertProject(w http.ResponseWriter, r *http.Request) (*Project,
 	return p, true
 }
 
-// ===== Alert rules =====
-
 type alertRuleJSON struct {
 	UID                       string  `json:"uid"`
 	ProjectID                 *int64  `json:"project_id"`
@@ -187,8 +185,6 @@ func (s *Server) handleDeleteAlertRule(w http.ResponseWriter, r *http.Request) {
 	s.store.alertRules.delete(rule.UID)
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// ===== Log-measure rules =====
 
 type logMeasureRuleJSON struct {
 	ID             int64              `json:"id"`
@@ -357,8 +353,6 @@ func (s *Server) handleDeleteLogMeasureRule(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ===== Notification targets =====
-
 type notificationTargetJSON struct {
 	UID         string `json:"uid"`
 	ProjectID   *int64 `json:"project_id"`
@@ -474,8 +468,6 @@ func (s *Server) handleDeleteNotificationTarget(w http.ResponseWriter, r *http.R
 	s.store.notificationTargets.delete(t.UID)
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// ===== Notification routings =====
 
 type notificationRoutingJSON struct {
 	UID                   string                 `json:"uid"`

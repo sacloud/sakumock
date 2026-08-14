@@ -60,10 +60,8 @@ func TestClusterLifecycle(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 
-	// Create
 	clusterID := createTestCluster(t, ctx, client)
 
-	// Read
 	getResp, err := client.GetCluster(ctx, v1.GetClusterParams{ClusterID: clusterID})
 	if err != nil {
 		t.Fatalf("GetCluster: %v", err)
@@ -75,7 +73,6 @@ func TestClusterLifecycle(t *testing.T) {
 		t.Fatalf("expected servicePrincipalID '123456789012', got %q", getResp.Cluster.GetServicePrincipalID())
 	}
 
-	// List
 	listResp, err := client.ListClusters(ctx, v1.ListClustersParams{MaxItems: 10})
 	if err != nil {
 		t.Fatalf("ListClusters: %v", err)
@@ -84,7 +81,6 @@ func TestClusterLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 cluster, got %d", len(listResp.Clusters))
 	}
 
-	// Update
 	err = client.UpdateCluster(ctx, &v1.UpdateCluster{
 		ServicePrincipalID: "999999999999",
 	}, v1.UpdateClusterParams{ClusterID: clusterID})
@@ -92,13 +88,11 @@ func TestClusterLifecycle(t *testing.T) {
 		t.Fatalf("UpdateCluster: %v", err)
 	}
 
-	// Delete
 	err = client.DeleteCluster(ctx, v1.DeleteClusterParams{ClusterID: clusterID})
 	if err != nil {
 		t.Fatalf("DeleteCluster: %v", err)
 	}
 
-	// Verify deleted
 	listResp, err = client.ListClusters(ctx, v1.ListClustersParams{MaxItems: 10})
 	if err != nil {
 		t.Fatalf("ListClusters after delete: %v", err)
@@ -116,7 +110,6 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 
 	clusterID := createTestCluster(t, ctx, client)
 
-	// Create application
 	appResp, err := client.CreateApplication(ctx, &v1.CreateApplication{
 		Name:      "test-app",
 		ClusterID: clusterID,
@@ -126,7 +119,6 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 	}
 	appID := appResp.Application.GetApplicationID()
 
-	// Read application
 	getAppResp, err := client.GetApplication(ctx, v1.GetApplicationParams{ApplicationID: appID})
 	if err != nil {
 		t.Fatalf("GetApplication: %v", err)
@@ -135,7 +127,6 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 		t.Fatalf("expected name 'test-app', got %q", getAppResp.Application.GetName())
 	}
 
-	// Create version
 	versionOp := sdk.NewVersionOp(client, appID)
 	fixedScale := int32(1)
 	verResp, err := versionOp.Create(ctx, version.CreateParams{
@@ -160,7 +151,6 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 		t.Fatalf("expected version >= 1, got %d", versionNum)
 	}
 
-	// List versions
 	versions, _, err := versionOp.List(ctx, 30, nil)
 	if err != nil {
 		t.Fatalf("ListVersions: %v", err)
@@ -169,7 +159,6 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 version, got %d", len(versions))
 	}
 
-	// Read version
 	verDetail, err := versionOp.Read(ctx, versionNum)
 	if err != nil {
 		t.Fatalf("GetVersion: %v", err)
@@ -189,7 +178,6 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 		t.Fatalf("UpdateApplication: %v", err)
 	}
 
-	// Deactivate
 	err = client.UpdateApplication(ctx, &v1.UpdateApplication{
 		ActiveVersion: v1.NilInt32{Null: true},
 	}, v1.UpdateApplicationParams{ApplicationID: appID})
@@ -197,13 +185,11 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 		t.Fatalf("UpdateApplication (deactivate): %v", err)
 	}
 
-	// Delete version
 	err = versionOp.Delete(ctx, versionNum)
 	if err != nil {
 		t.Fatalf("DeleteVersion: %v", err)
 	}
 
-	// Delete application
 	err = client.DeleteApplication(ctx, v1.DeleteApplicationParams{ApplicationID: appID})
 	if err != nil {
 		t.Fatalf("DeleteApplication: %v", err)
@@ -218,7 +204,6 @@ func TestCertificateLifecycle(t *testing.T) {
 
 	clusterID := createTestCluster(t, ctx, client)
 
-	// Create certificate
 	createCertResp, err := client.CreateCertificate(ctx, &v1.CreateCertificate{
 		Name:           "test-cert",
 		CertificatePem: "-----BEGIN CERTIFICATE-----\nMIItest\n-----END CERTIFICATE-----",
@@ -229,7 +214,6 @@ func TestCertificateLifecycle(t *testing.T) {
 	}
 	certID := createCertResp.Certificate.GetCertificateID()
 
-	// Read
 	getCertResp, err := client.GetCertificate(ctx, v1.GetCertificateParams{ClusterID: clusterID, CertificateID: certID})
 	if err != nil {
 		t.Fatalf("GetCertificate: %v", err)
@@ -238,7 +222,6 @@ func TestCertificateLifecycle(t *testing.T) {
 		t.Fatalf("expected name 'test-cert', got %q", getCertResp.Certificate.GetName())
 	}
 
-	// Update
 	err = client.UpdateCertificate(ctx, &v1.UpdateCertificate{
 		Name:           "updated-cert",
 		CertificatePem: "-----BEGIN CERTIFICATE-----\nMIIupdated\n-----END CERTIFICATE-----",
@@ -248,7 +231,6 @@ func TestCertificateLifecycle(t *testing.T) {
 		t.Fatalf("UpdateCertificate: %v", err)
 	}
 
-	// Delete
 	err = client.DeleteCertificate(ctx, v1.DeleteCertificateParams{ClusterID: clusterID, CertificateID: certID})
 	if err != nil {
 		t.Fatalf("DeleteCertificate: %v", err)

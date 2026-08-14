@@ -15,7 +15,7 @@ type KeyRecord struct {
 	ModifiedAt    time.Time
 }
 
-// Store is the interface for KMS key storage backends.
+// Store is the storage backend for KMS keys and their key material.
 type Store interface {
 	List() []KeyRecord
 	Read(id string) (KeyRecord, error)

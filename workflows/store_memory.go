@@ -11,6 +11,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu           sync.RWMutex
 	workflows    map[string]*WorkflowRecord
@@ -22,6 +23,7 @@ type MemoryStore struct {
 	logger       *slog.Logger
 }
 
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -53,6 +55,7 @@ func copyExecution(e *ExecutionRecord) *ExecutionRecord {
 	return &c
 }
 
+// CreateWorkflow stores a new workflow and its first revision.
 func (s *MemoryStore) CreateWorkflow(name, description, runbook string, publish, logging bool, tags []Tag, servicePrincipalID, concurrencyMode, revisionAlias string) *WorkflowRecord {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -93,6 +96,7 @@ func (s *MemoryStore) CreateWorkflow(name, description, runbook string, publish,
 	return copyWorkflow(w)
 }
 
+// GetWorkflow returns the workflow with the given ID.
 func (s *MemoryStore) GetWorkflow(id string) (*WorkflowRecord, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -104,6 +108,7 @@ func (s *MemoryStore) GetWorkflow(id string) (*WorkflowRecord, bool) {
 	return copyWorkflow(w), true
 }
 
+// ListWorkflows returns every workflow, oldest first.
 func (s *MemoryStore) ListWorkflows() []*WorkflowRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -118,6 +123,7 @@ func (s *MemoryStore) ListWorkflows() []*WorkflowRecord {
 	return result
 }
 
+// UpdateWorkflow applies the given updates to an existing workflow.
 func (s *MemoryStore) UpdateWorkflow(id string, updates WorkflowUpdates) (*WorkflowRecord, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -149,6 +155,7 @@ func (s *MemoryStore) UpdateWorkflow(id string, updates WorkflowUpdates) (*Workf
 	return copyWorkflow(w), true
 }
 
+// DeleteWorkflow removes the workflow with its revisions and executions.
 func (s *MemoryStore) DeleteWorkflow(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -173,6 +180,7 @@ func (s *MemoryStore) DeleteWorkflow(id string) error {
 	return nil
 }
 
+// CreateRevision adds a revision to the workflow.
 func (s *MemoryStore) CreateRevision(workflowID, runbook, alias string) (*RevisionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -210,6 +218,7 @@ func (s *MemoryStore) CreateRevision(workflowID, runbook, alias string) (*Revisi
 	return copyRevision(rev), nil
 }
 
+// GetRevision returns one revision of the workflow.
 func (s *MemoryStore) GetRevision(workflowID string, revisionID int) (*RevisionRecord, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -222,6 +231,7 @@ func (s *MemoryStore) GetRevision(workflowID string, revisionID int) (*RevisionR
 	return nil, false
 }
 
+// ListRevisions returns the workflow's revisions, oldest first.
 func (s *MemoryStore) ListRevisions(workflowID string) []*RevisionRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -234,6 +244,7 @@ func (s *MemoryStore) ListRevisions(workflowID string) []*RevisionRecord {
 	return result
 }
 
+// UpdateRevisionAlias moves the alias to the given revision.
 func (s *MemoryStore) UpdateRevisionAlias(workflowID string, revisionID int, alias string) (*RevisionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -261,6 +272,7 @@ func (s *MemoryStore) UpdateRevisionAlias(workflowID string, revisionID int, ali
 	return nil, fmt.Errorf("revision %d not found", revisionID)
 }
 
+// DeleteRevisionAlias clears the revision's alias.
 func (s *MemoryStore) DeleteRevisionAlias(workflowID string, revisionID int) (*RevisionRecord, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -276,6 +288,7 @@ func (s *MemoryStore) DeleteRevisionAlias(workflowID string, revisionID int) (*R
 	return nil, false
 }
 
+// CreateExecution starts a run of the workflow and returns its record.
 func (s *MemoryStore) CreateExecution(workflowID string, input ExecutionInput) (*ExecutionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -356,6 +369,7 @@ func (s *MemoryStore) CreateExecution(workflowID string, input ExecutionInput) (
 	return copyExecution(exec), nil
 }
 
+// GetExecution returns one execution of the workflow.
 func (s *MemoryStore) GetExecution(workflowID, executionID string) (*ExecutionRecord, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -368,6 +382,7 @@ func (s *MemoryStore) GetExecution(workflowID, executionID string) (*ExecutionRe
 	return nil, false
 }
 
+// ListExecutions returns the workflow's executions, oldest first.
 func (s *MemoryStore) ListExecutions(workflowID string) []*ExecutionRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -380,6 +395,7 @@ func (s *MemoryStore) ListExecutions(workflowID string) []*ExecutionRecord {
 	return result
 }
 
+// UpdateExecutionStatus records the execution's progress or outcome.
 func (s *MemoryStore) UpdateExecutionStatus(workflowID, executionID string, update ExecutionStatusUpdate) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -411,6 +427,7 @@ func (s *MemoryStore) UpdateExecutionStatus(workflowID, executionID string, upda
 	return fmt.Errorf("execution %q not found", executionID)
 }
 
+// CancelExecution stops a running execution.
 func (s *MemoryStore) CancelExecution(workflowID, executionID string) (*ExecutionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -432,6 +449,7 @@ func (s *MemoryStore) CancelExecution(workflowID, executionID string) (*Executio
 	return nil, fmt.Errorf("execution %q not found", executionID)
 }
 
+// DeleteExecution removes the execution and its history.
 func (s *MemoryStore) DeleteExecution(workflowID, executionID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -451,6 +469,7 @@ func (s *MemoryStore) DeleteExecution(workflowID, executionID string) error {
 	return fmt.Errorf("execution %q not found", executionID)
 }
 
+// AppendHistory adds a step-level entry to the execution's history.
 func (s *MemoryStore) AppendHistory(workflowID, executionID string, record HistoryRecord) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -458,6 +477,7 @@ func (s *MemoryStore) AppendHistory(workflowID, executionID string, record Histo
 	s.histories[executionID] = append(s.histories[executionID], record)
 }
 
+// ListExecutionHistory returns the execution's history, oldest first.
 func (s *MemoryStore) ListExecutionHistory(workflowID, executionID string) ([]HistoryRecord, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -478,6 +498,7 @@ func (s *MemoryStore) ListExecutionHistory(workflowID, executionID string) ([]Hi
 	return result, nil
 }
 
+// GetSubscription returns the current subscription, or nil when there is none.
 func (s *MemoryStore) GetSubscription() *SubscriptionRecord {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -485,6 +506,7 @@ func (s *MemoryStore) GetSubscription() *SubscriptionRecord {
 	return s.subscription
 }
 
+// CreateSubscription subscribes to the given plan.
 func (s *MemoryStore) CreateSubscription(planID int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -509,6 +531,7 @@ func (s *MemoryStore) CreateSubscription(planID int) error {
 	return nil
 }
 
+// DeleteSubscription cancels the current subscription.
 func (s *MemoryStore) DeleteSubscription() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -521,6 +544,7 @@ func (s *MemoryStore) DeleteSubscription() bool {
 	return true
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

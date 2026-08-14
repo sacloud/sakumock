@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// ValueType is the type of a Value.
 type ValueType int
 
 const (
@@ -19,6 +20,7 @@ const (
 	TypeObject
 )
 
+// String returns the type's name as used in error messages.
 func (t ValueType) String() string {
 	switch t {
 	case TypeNull:
@@ -38,6 +40,8 @@ func (t ValueType) String() string {
 	}
 }
 
+// Value is a dynamically typed expression value: null, boolean, number,
+// string, array, or object.
 type Value struct {
 	typ  ValueType
 	bval bool
@@ -47,12 +51,19 @@ type Value struct {
 	oval map[string]Value
 }
 
+// Null is the null Value.
 var Null = Value{typ: TypeNull}
 
-func Bool(b bool) Value      { return Value{typ: TypeBool, bval: b} }
-func Number(n float64) Value { return Value{typ: TypeNumber, nval: n} }
-func String(s string) Value  { return Value{typ: TypeString, sval: s} }
+// Bool returns a boolean Value.
+func Bool(b bool) Value { return Value{typ: TypeBool, bval: b} }
 
+// Number returns a number Value.
+func Number(n float64) Value { return Value{typ: TypeNumber, nval: n} }
+
+// String returns a string Value.
+func String(s string) Value { return Value{typ: TypeString, sval: s} }
+
+// Array returns an array Value holding items.
 func Array(items ...Value) Value {
 	if items == nil {
 		items = []Value{}
@@ -60,6 +71,7 @@ func Array(items ...Value) Value {
 	return Value{typ: TypeArray, aval: items}
 }
 
+// Object returns an object Value holding m.
 func Object(m map[string]Value) Value {
 	if m == nil {
 		m = map[string]Value{}
@@ -67,14 +79,28 @@ func Object(m map[string]Value) Value {
 	return Value{typ: TypeObject, oval: m}
 }
 
-func (v Value) Type() ValueType            { return v.typ }
-func (v Value) IsNull() bool               { return v.typ == TypeNull }
-func (v Value) AsBool() bool               { return v.bval }
-func (v Value) AsNumber() float64          { return v.nval }
-func (v Value) AsString() string           { return v.sval }
-func (v Value) AsArray() []Value           { return v.aval }
+// Type returns the value's type.
+func (v Value) Type() ValueType { return v.typ }
+
+// IsNull reports whether the value is null.
+func (v Value) IsNull() bool { return v.typ == TypeNull }
+
+// AsBool returns the boolean payload, or false for another type.
+func (v Value) AsBool() bool { return v.bval }
+
+// AsNumber returns the number payload, or 0 for another type.
+func (v Value) AsNumber() float64 { return v.nval }
+
+// AsString returns the string payload, or "" for another type.
+func (v Value) AsString() string { return v.sval }
+
+// AsArray returns the array payload, or nil for another type.
+func (v Value) AsArray() []Value { return v.aval }
+
+// AsObject returns the object payload, or nil for another type.
 func (v Value) AsObject() map[string]Value { return v.oval }
 
+// Truthy reports how the value evaluates in a boolean context.
 func (v Value) Truthy() bool {
 	switch v.typ {
 	case TypeNull:
@@ -92,6 +118,7 @@ func (v Value) Truthy() bool {
 	}
 }
 
+// ToNumber converts the value to a number, as an arithmetic operator would.
 func (v Value) ToNumber() float64 {
 	switch v.typ {
 	case TypeNull:
@@ -114,6 +141,8 @@ func (v Value) ToNumber() float64 {
 	}
 }
 
+// ToString converts the value to its string form, as string concatenation
+// would.
 func (v Value) ToString() string {
 	switch v.typ {
 	case TypeNull:
@@ -144,6 +173,7 @@ func (v Value) ToString() string {
 	}
 }
 
+// ToInterface converts the value to plain Go types, ready for JSON encoding.
 func (v Value) ToInterface() any {
 	switch v.typ {
 	case TypeNull:
@@ -174,6 +204,7 @@ func (v Value) ToInterface() any {
 	}
 }
 
+// FromInterface converts a plain Go value (typically decoded JSON) to a Value.
 func FromInterface(v any) Value {
 	if v == nil {
 		return Null
@@ -210,6 +241,8 @@ func FromInterface(v any) Value {
 	}
 }
 
+// Equal reports whether the values are equal, converting across types as the
+// == operator does.
 func (v Value) Equal(other Value) bool {
 	if v.typ != other.typ {
 		return looseEqual(v, other)
@@ -271,6 +304,8 @@ func looseEqual(a, b Value) bool {
 	return false
 }
 
+// StrictEqual reports whether the values have the same type and are equal, as
+// the === operator does.
 func (v Value) StrictEqual(other Value) bool {
 	if v.typ != other.typ {
 		return false
@@ -278,6 +313,7 @@ func (v Value) StrictEqual(other Value) bool {
 	return v.Equal(other)
 }
 
+// Less reports whether v orders before other.
 func (v Value) Less(other Value) bool {
 	if v.typ == TypeNumber && other.typ == TypeNumber {
 		return v.nval < other.nval
@@ -288,6 +324,8 @@ func (v Value) Less(other Value) bool {
 	return v.ToNumber() < other.ToNumber()
 }
 
+// GetMember returns the named member of an object, or an index or "length" of
+// an array.
 func (v Value) GetMember(key string) (Value, bool) {
 	switch v.typ {
 	case TypeObject:
@@ -312,6 +350,8 @@ func (v Value) GetMember(key string) (Value, bool) {
 	}
 }
 
+// GetIndex returns the element of an array, or the member of an object, that
+// idx addresses.
 func (v Value) GetIndex(idx Value) (Value, bool) {
 	switch v.typ {
 	case TypeArray:

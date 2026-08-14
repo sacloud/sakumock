@@ -80,9 +80,6 @@ func TestSetupTracingDisabled(t *testing.T) {
 	shutdown() // no-op
 }
 
-// TestSetupTracingExport drives the whole pipeline: traceparent extraction,
-// route-pattern span naming, the sakumock.service attribute, OTLP/HTTP
-// export, and the trace_id/span_id correlation in RequestLogArgs.
 func TestSetupTracingExport(t *testing.T) {
 	var (
 		mu   sync.Mutex
@@ -205,7 +202,6 @@ func TestSetupTracingExport(t *testing.T) {
 	}
 }
 
-// captureTraceService is an in-test OTLP/gRPC collector.
 type captureTraceService struct {
 	coltracepb.UnimplementedTraceServiceServer
 	mu    sync.Mutex

@@ -79,7 +79,6 @@ func TestRateLimiterPerKey(t *testing.T) {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	// Drain key A.
 	r1, err := http.Get(srv.URL + "/q/aaa")
 	if err != nil {
 		t.Fatalf("get: %v", err)
@@ -172,7 +171,6 @@ func TestRateLimiterWindow(t *testing.T) {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
-	// Drain the full burst of 100.
 	for i := range 100 {
 		r, err := http.Get(srv.URL + "/q/aaa")
 		if err != nil {
@@ -183,7 +181,6 @@ func TestRateLimiterWindow(t *testing.T) {
 			t.Fatalf("iter %d: expected 200, got %d", i, r.StatusCode)
 		}
 	}
-	// The next one should be limited.
 	r, err := http.Get(srv.URL + "/q/aaa")
 	if err != nil {
 		t.Fatalf("get: %v", err)

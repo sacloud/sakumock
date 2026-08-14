@@ -2,10 +2,12 @@ package workflows
 
 import "time"
 
+// Tag is a label attached to a workflow.
 type Tag struct {
 	Name string
 }
 
+// WorkflowRecord is a workflow and the revision currently published.
 type WorkflowRecord struct {
 	ID                 string
 	Name               string
@@ -19,6 +21,7 @@ type WorkflowRecord struct {
 	UpdatedAt          time.Time
 }
 
+// RevisionRecord is one stored revision of a workflow's runbook.
 type RevisionRecord struct {
 	RevisionID    int
 	WorkflowID    string
@@ -28,6 +31,7 @@ type RevisionRecord struct {
 	UpdatedAt     time.Time
 }
 
+// ExecutionRecord is one run of a workflow.
 type ExecutionRecord struct {
 	ExecutionID       string
 	Name              string
@@ -48,6 +52,7 @@ type ExecutionRecord struct {
 	CanceledAt        *time.Time
 }
 
+// SubscriptionRecord is the plan the organization is subscribed to.
 type SubscriptionRecord struct {
 	ID            string
 	AccountID     string
@@ -60,6 +65,7 @@ type SubscriptionRecord struct {
 	UpdatedAt     time.Time
 }
 
+// HistoryRecord is one step-level entry of an execution's history.
 type HistoryRecord struct {
 	WorkflowExecutionID string
 	JobID               string
@@ -71,6 +77,8 @@ type HistoryRecord struct {
 	Variables           string
 }
 
+// WorkflowUpdates carries the fields UpdateWorkflow may change; a nil field is
+// left untouched.
 type WorkflowUpdates struct {
 	Name            *string
 	Description     *string
@@ -80,6 +88,7 @@ type WorkflowUpdates struct {
 	ConcurrencyMode *string
 }
 
+// ExecutionStatusUpdate carries the fields UpdateExecutionStatus may change.
 type ExecutionStatusUpdate struct {
 	Status      string
 	Result      string
@@ -89,6 +98,7 @@ type ExecutionStatusUpdate struct {
 	FailedAt    *time.Time
 }
 
+// ExecutionInput is what an execution is started with.
 type ExecutionInput struct {
 	RevisionID    *int
 	RevisionAlias string
@@ -97,6 +107,8 @@ type ExecutionInput struct {
 	InitialStatus string
 }
 
+// Store is the storage backend for workflows, their revisions, and their
+// executions.
 type Store interface {
 	CreateWorkflow(name, description, runbook string, publish, logging bool, tags []Tag, servicePrincipalID, concurrencyMode, revisionAlias string) *WorkflowRecord
 	GetWorkflow(id string) (*WorkflowRecord, bool)

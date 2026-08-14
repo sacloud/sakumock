@@ -47,7 +47,7 @@ type faultConfig struct {
 	randFn   func() float64
 }
 
-// FaultOption configures a FaultInjector at construction time.
+// FaultOption configures a FaultInjector at construction.
 type FaultOption func(*faultConfig)
 
 // WithFaultErrorWriter overrides the response body written for an injected
@@ -129,8 +129,8 @@ func ParseFaultSpecs(specs []string, opts ...FaultOption) (*FaultInjector, error
 	return &FaultInjector{rules: rules, errWrite: cfg.errWrite, randFn: cfg.randFn}, nil
 }
 
-// Middleware wraps next with fault injection. If fi is nil the original
-// handler is returned.
+// Middleware wraps next with fault injection. A nil injector returns next
+// unchanged.
 func (fi *FaultInjector) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	if fi == nil {
 		return next
@@ -243,8 +243,7 @@ func abortConnection(w http.ResponseWriter, reason string) {
 	_ = raw.Close()
 }
 
-// FaultHint renders a human-readable description of a fault-injection setting
-// for startup logs.
+// FaultHint describes a fault-injection setting for startup logs.
 func FaultHint(specs []string) string {
 	if len(specs) == 0 {
 		return "(disabled)"

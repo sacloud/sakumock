@@ -68,7 +68,6 @@ func (f *forwarder) forward(ctx context.Context, d Delivery) error {
 	}
 }
 
-// simpleMQParams is the parsed Parameters for a simplemq destination.
 type simpleMQParams struct {
 	QueueName string `json:"queue_name"`
 	Content   string `json:"content"`
@@ -99,7 +98,6 @@ func (f *forwarder) forwardToSimpleMQ(ctx context.Context, d Delivery) error {
 	return nil
 }
 
-// simpleNotificationParams is the parsed Parameters for a simplenotification destination.
 type simpleNotificationParams struct {
 	GroupID string `json:"group_id"`
 	Message string `json:"message"`

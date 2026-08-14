@@ -129,7 +129,6 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 key, got %d", len(keys))
 	}
 
-	// Bucket create / list / delete.
 	bucketOp := sdk.NewBucketOp(fed, site)
 	const bucketName = "tf-test-bucket"
 	bucket, err := bucketOp.Create(ctx, &sdk.BucketCreateParams{Bucket: bucketName, SiteId: testSiteID})
@@ -170,7 +169,6 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 		t.Fatalf("expected no buckets after delete, got %d", len(buckets))
 	}
 
-	// Deleting access key and account.
 	if err := accountOp.DeleteAccessKey(ctx, string(created.ID.Value)); err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +216,6 @@ func TestPermissionCRUD(t *testing.T) {
 		t.Errorf("unexpected display name after update: %s", updated.DisplayName.Value)
 	}
 
-	// Permission keys.
 	key, err := op.CreateAccessKey(ctx, id)
 	if err != nil {
 		t.Fatal(err)
@@ -293,8 +290,6 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 	}
 }
 
-// TestSiteStatusQuotaPenaltyMetering exercises the read-only site/bucket info
-// endpoints through the SDK, confirming their typed responses decode.
 func TestSiteStatusQuotaPenaltyMetering(t *testing.T) {
 	srv := objectstorage.NewTestServer(objectstorage.Config{})
 	defer closeAndCheck(t, srv)

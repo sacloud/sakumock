@@ -29,8 +29,8 @@ func NewInspectionClient(baseURL string) *InspectionClient {
 	}
 }
 
-// InjectEvent posts an event and returns the resulting deliveries from
-// matching triggers.
+// InjectEvent posts an event to the mock and returns the deliveries produced
+// by the triggers it matched.
 func (c *InspectionClient) InjectEvent(ctx context.Context, ev Event) ([]Delivery, error) {
 	body, err := json.Marshal(ev)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c *InspectionClient) Tick(ctx context.Context, at time.Time) ([]Delivery, 
 	return c.doDeliveries(req)
 }
 
-// Deliveries returns all recorded firings.
+// Deliveries returns every firing the server has recorded, oldest first.
 func (c *InspectionClient) Deliveries(ctx context.Context) ([]Delivery, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+"/_sakumock/deliveries", nil)
 	if err != nil {
@@ -67,7 +67,7 @@ func (c *InspectionClient) Deliveries(ctx context.Context) ([]Delivery, error) {
 	return c.doDeliveries(req)
 }
 
-// ClearDeliveries discards all recorded firings.
+// ClearDeliveries discards the recorded firings.
 func (c *InspectionClient) ClearDeliveries(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, c.baseURL+"/_sakumock/deliveries", nil)
 	if err != nil {

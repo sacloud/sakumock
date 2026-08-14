@@ -16,7 +16,7 @@ type secret struct {
 	latest   int
 }
 
-// MemoryStore is an in-memory Store for vaults and their versioned secrets.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu           sync.RWMutex
 	vaults       map[string]map[string]*secret // vaultID -> secretName -> secret
@@ -25,8 +25,7 @@ type MemoryStore struct {
 	logger       *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -45,7 +44,7 @@ func cloneVault(v *Vault) *Vault {
 	return &c
 }
 
-// CreateVault creates a new vault and returns a copy of it.
+// CreateVault stores a new vault and returns it.
 func (s *MemoryStore) CreateVault(name, kmsKeyID, description string, tags []string) *Vault {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -64,7 +63,7 @@ func (s *MemoryStore) CreateVault(name, kmsKeyID, description string, tags []str
 	return cloneVault(v)
 }
 
-// GetVault returns a copy of the vault with the given ID.
+// GetVault returns the vault with the given ID.
 func (s *MemoryStore) GetVault(id string) (*Vault, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -75,7 +74,7 @@ func (s *MemoryStore) GetVault(id string) (*Vault, bool) {
 	return cloneVault(v), true
 }
 
-// ListVaults returns copies of all vaults, ordered by ID.
+// ListVaults returns every vault, ordered by ID.
 func (s *MemoryStore) ListVaults() []*Vault {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -125,6 +124,7 @@ func (s *MemoryStore) getOrCreateVault(vaultID string) map[string]*secret {
 	return v
 }
 
+// List returns the metadata of every secret in the vault.
 func (s *MemoryStore) List(vaultID string) []SecretMeta {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -146,6 +146,8 @@ func (s *MemoryStore) List(vaultID string) []SecretMeta {
 	return result
 }
 
+// Create stores a new version of the named secret and returns its version
+// number.
 func (s *MemoryStore) Create(vaultID, name, value string) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -164,6 +166,7 @@ func (s *MemoryStore) Create(vaultID, name, value string) (int, error) {
 	return sec.latest, nil
 }
 
+// Unveil returns the value of the named secret; version 0 selects the latest.
 func (s *MemoryStore) Unveil(vaultID, name string, version int) (string, int, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -186,6 +189,7 @@ func (s *MemoryStore) Unveil(vaultID, name string, version int) (string, int, er
 	return value, version, nil
 }
 
+// Delete removes the named secret and all of its versions.
 func (s *MemoryStore) Delete(vaultID, name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -201,6 +205,7 @@ func (s *MemoryStore) Delete(vaultID, name string) error {
 	return nil
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

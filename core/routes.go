@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 )
 
-// Route describes a single HTTP endpoint exposed by a sakumock server.
+// Route is the public description of one HTTP endpoint a server exposes.
 type Route struct {
 	Method      string
 	Path        string
@@ -25,7 +25,7 @@ type RegisteredRoute struct {
 	Handler http.HandlerFunc
 }
 
-// RoutesOf strips handlers from a route table, leaving only public metadata.
+// RoutesOf strips the handlers from a route table, leaving the public metadata.
 func RoutesOf(table []RegisteredRoute) []Route {
 	out := make([]Route, len(table))
 	for i, r := range table {
@@ -34,9 +34,7 @@ func RoutesOf(table []RegisteredRoute) []Route {
 	return out
 }
 
-// PrintRoutes writes a human-readable summary of routes to w, grouped by Kind
-// in the order ("api", "inspection") with any other kinds appended in the order
-// they first appear.
+// PrintRoutes writes a human-readable route summary to w, grouped by Kind.
 func PrintRoutes(w io.Writer, routes []Route) error {
 	groups := []string{"api", "inspection"}
 	seen := map[string]bool{"api": true, "inspection": true}

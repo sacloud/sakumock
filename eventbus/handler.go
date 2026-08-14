@@ -233,8 +233,6 @@ func (s *Server) validateSettings(class string, settings json.RawMessage) string
 	return ""
 }
 
-// checkProcessConfiguration verifies the referenced process configuration
-// exists and has the right provider class.
 func (s *Server) checkProcessConfiguration(id string) string {
 	it, ok := s.store.GetItem(id)
 	if !ok || it.ProviderClass != classProcessConfiguration {
@@ -273,6 +271,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)

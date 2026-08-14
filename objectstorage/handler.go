@@ -9,15 +9,12 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// ---- JSON request/response types (field names match the OpenAPI spec) ----
-
 // dataResponse is the { "data": ... } envelope the object storage API wraps most
 // of its responses in.
 type dataResponse struct {
 	Data any `json:"data"`
 }
 
-// errorResponse is the API's error shape: {"error":{"code","message"}}.
 type errorResponse struct {
 	Error errorBody `json:"error"`
 }
@@ -44,7 +41,6 @@ type bucketListItemJSON struct {
 	Plan       planJSON `json:"plan"`
 }
 
-// accountData is the per-site root account representation.
 type accountData struct {
 	ResourceID string `json:"resource_id"`
 	Code       string `json:"code"`
@@ -61,7 +57,6 @@ type accessKeyData struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// bucketControlData grants a permission read/write access to a bucket.
 type bucketControlData struct {
 	BucketName string `json:"bucket_name"`
 	CanRead    bool   `json:"can_read"`
@@ -76,14 +71,11 @@ type permissionData struct {
 	CreatedAt      string              `json:"created_at"`
 }
 
-// encryptionData is a bucket's server-side encryption configuration.
 type encryptionData struct {
 	KMSKeyID     string `json:"kms_key_id"`
 	ConfiguredAt string `json:"configured_at"`
 }
 
-// replicationData is a bucket's replication configuration; source and dest reuse
-// the bucket representation.
 type replicationData struct {
 	SourceBucket bucketJSON `json:"source_bucket"`
 	DestBucket   bucketJSON `json:"dest_bucket"`
@@ -178,8 +170,6 @@ func bucketToJSON(b Bucket) bucketJSON {
 	}
 }
 
-// ---- HTTP plumbing ----
-
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, r := range s.routeTable() {
@@ -188,6 +178,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
@@ -211,8 +202,6 @@ func parsePermissionID(s string) (int64, bool) {
 	}
 	return id, true
 }
-
-// ---- Federation handlers (/fed/v1) ----
 
 func (s *Server) handleListClusters(w http.ResponseWriter, _ *http.Request) {
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: clusters})
@@ -348,8 +337,6 @@ func (s *Server) handleReplicableTargets(w http.ResponseWriter, r *http.Request)
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
 
-// ---- Site bucket handlers (/{site}/v2) ----
-
 func (s *Server) handleListBuckets(w http.ResponseWriter, r *http.Request) {
 	buckets := s.store.ListBuckets(r.PathValue("site"))
 	data := make([]bucketListItemJSON, len(buckets))
@@ -362,8 +349,6 @@ func (s *Server) handleListBuckets(w http.ResponseWriter, r *http.Request) {
 	}
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
-
-// ---- Account handlers ----
 
 func toAccountData(a Account) accountData {
 	return accountData{
@@ -482,8 +467,6 @@ func (s *Server) handleDeleteAccountKey(w http.ResponseWriter, r *http.Request) 
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// ---- Permission handlers ----
 
 type permissionBody struct {
 	DisplayName    string `json:"display_name"`
@@ -686,8 +669,6 @@ func (s *Server) handleDeletePermissionKey(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ---- Site status / plans / quota / metering ----
-
 type statusData struct {
 	AcceptNew  bool           `json:"accept_new"`
 	Message    string         `json:"message"`
@@ -787,8 +768,6 @@ func (s *Server) handleBucketMetering(w http.ResponseWriter, _ *http.Request) {
 	// The mock keeps no usage history, so it reports no billing items.
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: []bucketBillingItem{}})
 }
-
-// ---- Bucket sub-resources (encryption / penalty / usage / quota / plan) ----
 
 func toEncryptionData(e *Encryption) encryptionData {
 	return encryptionData{KMSKeyID: e.KMSKeyID, ConfiguredAt: core.FormatRFC3339(e.ConfiguredAt)}

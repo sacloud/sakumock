@@ -219,17 +219,26 @@ func (s *MemoryStore) DeleteAccount(siteID string) bool {
 	return true
 }
 
-// CreateAccountKey issues an access key for the site's root account.
-func (s *MemoryStore) CreateAccountKey(siteID string) (AccountKey, bool) {
+// maxAccountKeys is the real API's per-project quota on root access keys
+// (num_root_keys in the quota response, see handleQuota).
+const maxAccountKeys = 1
+
+// CreateAccountKey issues an access key for the site's root account. It
+// rejects the request once the account already holds maxAccountKeys keys,
+// mirroring the real API's 409 "access keys have reached the limit".
+func (s *MemoryStore) CreateAccountKey(siteID string) (key AccountKey, ok, limited bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	a, ok := s.accounts[siteID]
 	if !ok {
-		return AccountKey{}, false
+		return AccountKey{}, false, false
+	}
+	if len(a.Keys) >= maxAccountKeys {
+		return AccountKey{}, true, true
 	}
 	k := AccountKey{ID: newKeyID(), Secret: newSecret(), CreatedAt: time.Now()}
 	a.Keys = append(a.Keys, k)
-	return k, true
+	return k, true, false
 }
 
 // ListAccountKeys returns the access keys of the site's root account.
@@ -365,17 +374,26 @@ func (s *MemoryStore) DeletePermission(siteID string, id int64) bool {
 	return true
 }
 
-// CreatePermissionKey issues an access key for the permission.
-func (s *MemoryStore) CreatePermissionKey(siteID string, id int64) (PermissionKey, bool) {
+// maxPermissionKeys is the real API's per-permission quota on access keys
+// (num_keys_per_permission in the quota response, see handleQuota).
+const maxPermissionKeys = 1
+
+// CreatePermissionKey issues an access key for the permission. It rejects
+// the request once the permission already holds maxPermissionKeys keys,
+// mirroring the real API's 409 once the per-permission key quota is hit.
+func (s *MemoryStore) CreatePermissionKey(siteID string, id int64) (key PermissionKey, ok, limited bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p, ok := s.permissions[siteID][id]
 	if !ok {
-		return PermissionKey{}, false
+		return PermissionKey{}, false, false
+	}
+	if len(p.Keys) >= maxPermissionKeys {
+		return PermissionKey{}, true, true
 	}
 	k := PermissionKey{ID: newKeyID(), Secret: newSecret(), CreatedAt: time.Now()}
 	p.Keys = append(p.Keys, k)
-	return k, true
+	return k, true, false
 }
 
 // ListPermissionKeys returns the permission's access keys.

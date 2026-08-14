@@ -90,7 +90,7 @@ type Store interface {
 	CreateAccount(siteID string) (Account, bool) // ok=false when an account already exists
 	GetAccount(siteID string) (Account, bool)
 	DeleteAccount(siteID string) bool
-	CreateAccountKey(siteID string) (AccountKey, bool) // ok=false when no account exists
+	CreateAccountKey(siteID string) (key AccountKey, ok, limited bool) // ok=false when no account exists; limited=true when the account already holds the maximum number of keys
 	ListAccountKeys(siteID string) ([]AccountKey, bool)
 	GetAccountKey(siteID, keyID string) (AccountKey, bool)
 	DeleteAccountKey(siteID, keyID string) bool
@@ -100,7 +100,7 @@ type Store interface {
 	GetPermission(siteID string, id int64) (Permission, bool)
 	UpdatePermission(siteID string, id int64, displayName string, controls []BucketControl) (Permission, bool)
 	DeletePermission(siteID string, id int64) bool
-	CreatePermissionKey(siteID string, id int64) (PermissionKey, bool) // ok=false when the permission does not exist
+	CreatePermissionKey(siteID string, id int64) (key PermissionKey, ok, limited bool) // ok=false when the permission does not exist; limited=true when the permission already holds the maximum number of keys
 	ListPermissionKeys(siteID string, id int64) ([]PermissionKey, bool)
 	GetPermissionKey(siteID string, id int64, keyID string) (PermissionKey, bool)
 	DeletePermissionKey(siteID string, id int64, keyID string) bool

@@ -108,6 +108,7 @@ Behavior notes:
 - Three static clusters are exposed: `isk01`, `tky01` (standard), and `arc02` (archive). Buckets are federation-global (keyed by name); the per-site `GET /{site}/v2/buckets` returns only the buckets whose `cluster_id` matches the site.
 - The per-site account is **not** created automatically (as on the real API, where the control panel creates it on first access). `GET /{site}/v2/account` returns `404` until `POST /{site}/v2/account` is called — the Terraform provider relies on this to create the account on demand.
 - Access key and permission key **secrets are only returned when the key is created**; subsequent reads omit the secret, matching the real API.
+- Root access keys are capped at one per account (`POST /{site}/v2/account/keys` returns `409` once a key already exists), matching the real API's `num_root_keys` quota. Permission access keys are likewise capped at one per permission (`num_keys_per_permission`).
 - Resource IDs (bucket `resource_id`, account `resource_id`, permission `id`) are minted from the shared [`core.IDGenerator`](../core/id.go), so under `sakumock all` they are globally unique across services as on the real platform.
 - Bucket deletion is idempotent: deleting a missing bucket still returns `204` (the spec defines no `404` for it), matching Terraform's expectation that deleting an already-gone resource is not an error.
 - Bucket usage/quota/penalty return representative placeholder values, and metering returns no billing items, since the mock keeps no usage history.

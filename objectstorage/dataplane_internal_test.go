@@ -108,8 +108,8 @@ func TestHandleDeleteAccountKey_DataPlaneFailure(t *testing.T) {
 	}
 	defer s.Close()
 	s.store.CreateAccount("isk01")
-	k, ok := s.store.CreateAccountKey("isk01")
-	if !ok {
+	k, ok, limited := s.store.CreateAccountKey("isk01")
+	if !ok || limited {
 		t.Fatal("CreateAccountKey failed")
 	}
 

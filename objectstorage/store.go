@@ -90,7 +90,7 @@ type Store interface {
 	CreateAccount(siteID string) (Account, bool) // ok=false when an account already exists
 	GetAccount(siteID string) (Account, bool)
 	DeleteAccount(siteID string) bool
-	CreateAccountKey(siteID string) (AccountKey, bool) // ok=false when no account exists
+	CreateAccountKey(siteID string) (key AccountKey, ok, limited bool) // ok=false when no account exists; limited=true when the account already holds the maximum number of keys
 	ListAccountKeys(siteID string) ([]AccountKey, bool)
 	GetAccountKey(siteID, keyID string) (AccountKey, bool)
 	DeleteAccountKey(siteID, keyID string) bool

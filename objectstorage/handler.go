@@ -426,9 +426,13 @@ func (s *Server) handleListAccountKeys(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCreateAccountKey(w http.ResponseWriter, r *http.Request) {
-	k, ok := s.store.CreateAccountKey(r.PathValue("site"))
+	k, ok, limited := s.store.CreateAccountKey(r.PathValue("site"))
 	if !ok {
 		writeError(w, http.StatusNotFound, "account does not exist")
+		return
+	}
+	if limited {
+		writeError(w, http.StatusConflict, "site account's access keys have reached the limit")
 		return
 	}
 	if err := s.dataPlane.createUser(k.ID, k.Secret); err != nil {
@@ -733,7 +737,7 @@ type siteQuotaData struct {
 
 func (s *Server) handleQuota(w http.ResponseWriter, _ *http.Request) {
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: siteQuotaData{
-		NumRootKeys:             1,
+		NumRootKeys:             maxAccountKeys,
 		NumBuckets:              1000,
 		NumPermissions:          1000,
 		NumKeysPerPermission:    1,

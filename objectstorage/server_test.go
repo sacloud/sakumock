@@ -129,6 +129,12 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 key, got %d", len(keys))
 	}
 
+	// The real API allows only one root access key per account (num_root_keys
+	// quota); a second create is a conflict.
+	if _, err := accountOp.CreateAccessKey(ctx); !saclient.IsConflictError(err) {
+		t.Fatalf("expected conflict creating a second account key, got %v", err)
+	}
+
 	bucketOp := sdk.NewBucketOp(fed, site)
 	const bucketName = "tf-test-bucket"
 	bucket, err := bucketOp.Create(ctx, &sdk.BucketCreateParams{Bucket: bucketName, SiteId: testSiteID})

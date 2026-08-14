@@ -621,9 +621,13 @@ func (s *Server) handleCreatePermissionKey(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusNotFound, "permission not found")
 		return
 	}
-	k, ok := s.store.CreatePermissionKey(r.PathValue("site"), id)
+	k, ok, limited := s.store.CreatePermissionKey(r.PathValue("site"), id)
 	if !ok {
 		writeError(w, http.StatusNotFound, "permission not found")
+		return
+	}
+	if limited {
+		writeError(w, http.StatusConflict, "permission's access keys have reached the limit")
 		return
 	}
 	if err := s.dataPlane.createUser(k.ID, k.Secret); err != nil {
@@ -740,7 +744,7 @@ func (s *Server) handleQuota(w http.ResponseWriter, _ *http.Request) {
 		NumRootKeys:             maxAccountKeys,
 		NumBuckets:              1000,
 		NumPermissions:          1000,
-		NumKeysPerPermission:    1,
+		NumKeysPerPermission:    maxPermissionKeys,
 		NumBucketsPerPermission: 1000,
 		NumObjectsPerBucket:     10000000,
 		AmountGiBPerBucket:      10240,

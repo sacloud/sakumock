@@ -1,6 +1,7 @@
 package objectstorage_test
 
 import (
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -235,6 +236,19 @@ func TestPermissionCRUD(t *testing.T) {
 	}
 	if readKey.Secret.Value != "" {
 		t.Errorf("expected empty secret on read, got %q", readKey.Secret.Value)
+	}
+
+	// The real API allows only one access key per permission
+	// (num_keys_per_permission quota); a second create is a conflict. Checked
+	// via a raw request: the SDK's Permissions.CreateAccessKey has no case
+	// for a 409 response, so it can't be observed through saclient.IsConflictError.
+	resp, err := http.Post(srv.TestURL()+"/isk01/v2/permissions/"+id+"/keys", "application/json", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusConflict {
+		t.Fatalf("expected 409 creating a second permission key, got %d", resp.StatusCode)
 	}
 
 	list, err := op.List(ctx)

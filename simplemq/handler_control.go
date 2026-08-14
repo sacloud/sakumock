@@ -13,8 +13,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// Control plane JSON response types.
-
 type cpSettings struct {
 	VisibilityTimeoutSeconds int `json:"VisibilityTimeoutSeconds"`
 	ExpireSeconds            int `json:"ExpireSeconds"`
@@ -79,8 +77,6 @@ func queueToCSI(q storedQueue) cpCommonServiceItem {
 	}
 }
 
-// Request decode types.
-
 type cpCreateQueueRequest struct {
 	CommonServiceItem struct {
 		Name        string `json:"Name"`
@@ -102,8 +98,6 @@ type cpConfigQueueRequest struct {
 		Tags []string `json:"Tags"`
 	} `json:"CommonServiceItem"`
 }
-
-// Handlers.
 
 func (s *Server) handleCreateQueue(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)

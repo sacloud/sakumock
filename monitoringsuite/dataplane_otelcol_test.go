@@ -128,8 +128,6 @@ func startCollector(t *testing.T, cfgFile string) string {
 	return logf.Name()
 }
 
-// sendTelemetry runs telemetrygen to send one item of the given signal to the
-// collector's OTLP/HTTP receiver.
 func sendTelemetry(t *testing.T, signal, otlpAddr string) {
 	t.Helper()
 	out, err := exec.Command("telemetrygen", signal,
@@ -147,8 +145,6 @@ func readFile(path string) string {
 	b, _ := os.ReadFile(path)
 	return string(b)
 }
-
-// ---- addr / wait helpers ----
 
 // freeLoopbackAddr reserves a loopback port by binding and immediately closing a
 // listener. It is inherently racy (the port can be taken before the caller

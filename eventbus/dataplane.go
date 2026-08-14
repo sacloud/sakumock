@@ -86,8 +86,6 @@ func newDataPlane(store Store, logger *slog.Logger, now func() time.Time) *dataP
 	}
 }
 
-// injectEvent matches an injected event against every trigger and fires the
-// matched ones, returning the deliveries produced.
 func (dp *dataPlane) injectEvent(ctx context.Context, ev Event) []Delivery {
 	raw, _ := json.Marshal(ev)
 	firedAt := dp.now()
@@ -107,8 +105,6 @@ func (dp *dataPlane) injectEvent(ctx context.Context, ev Event) []Delivery {
 	return fired
 }
 
-// triggerMatches reports whether the event satisfies the trigger: exact Source,
-// Type membership when Types is restricted, and every Condition.
 func triggerMatches(st triggerSettings, ev Event) bool {
 	if st.Source != ev.Source {
 		return false
@@ -265,8 +261,6 @@ func (dp *dataPlane) record(d Delivery) {
 	dp.mu.Unlock()
 }
 
-// recordedDeliveries returns a copy of every delivery recorded so far, oldest
-// first.
 func (dp *dataPlane) recordedDeliveries() []Delivery {
 	dp.mu.Lock()
 	defer dp.mu.Unlock()

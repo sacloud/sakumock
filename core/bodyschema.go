@@ -20,38 +20,34 @@ type BodySchema struct {
 	Type     string
 	Nullable bool
 
-	// Object constraints.
 	Required   []string
 	Properties map[string]*BodySchema
 
-	// Array constraints.
 	Items    *BodySchema
 	MinItems *int
 	MaxItems *int
 
-	// String constraints. Lengths are counted in runes.
+	// Lengths are counted in runes.
 	MinLength *int
 	MaxLength *int
 	Pattern   string // RE2; compiled lazily and cached
 
-	// Numeric constraints.
 	Minimum          *float64
 	Maximum          *float64
 	ExclusiveMinimum bool
 	ExclusiveMaximum bool
 
-	// Enum restricts the value to one of the listed values (any type).
 	Enum []any
 }
 
-// IntPtr returns a pointer to v; a helper for generated schema literals.
+// IntPtr returns a pointer to v, for building schema literals.
 func IntPtr(v int) *int { return &v }
 
-// Float64Ptr returns a pointer to v; a helper for generated schema literals.
+// Float64Ptr returns a pointer to v, for building schema literals.
 func Float64Ptr(v float64) *float64 { return &v }
 
-// patternCache caches compiled Pattern regexps keyed by the pattern source.
-// Schemas are shared package-level literals, so they must not be mutated.
+// patternCache keeps compiled patterns out of the schemas themselves, which
+// are shared package-level literals and must not be mutated.
 var patternCache sync.Map // string -> *regexp.Regexp
 
 // Validate checks a decoded JSON value (the result of json.Unmarshal into
@@ -62,8 +58,6 @@ func (s *BodySchema) Validate(v any) string {
 	return s.validate("", v)
 }
 
-// fieldLabel names the value being validated in messages; the top level is
-// "request body".
 func fieldLabel(path string) string {
 	if path == "" {
 		return "request body"
@@ -125,7 +119,6 @@ func (s *BodySchema) validate(path string, v any) string {
 		}
 		return ""
 	case "":
-		// No declared type: apply the constraints that match the dynamic type.
 		switch tv := v.(type) {
 		case map[string]any:
 			return s.validateObject(path, tv)

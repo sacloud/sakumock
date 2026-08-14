@@ -9,7 +9,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// Config holds configuration for the local SimpleMQ server.
+// Config holds the SimpleMQ mock server's options.
 type Config struct {
 	APIKey            string        `help:"API key for authentication (if empty, any key is accepted). Mutually exclusive with --strict." env:"SIMPLEMQ_API_KEY" xor:"auth"`
 	Addr              string        `help:"Listen address" default:"127.0.0.1:18080" env:"SIMPLEMQ_LOCALSERVER_ADDR"`
@@ -52,20 +52,20 @@ func (Config) Name() string { return "simplemq" }
 // ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
-// NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
 	return NewHandler(c)
 }
 
-// Compile-time checks that the service satisfies the core interfaces.
 var (
 	_ core.Server        = (*Server)(nil)
 	_ core.ServiceConfig = Config{}
 )
 
-// Server is a local SimpleMQ-compatible test server.
+// Server is the SimpleMQ mock server. It is an http.Handler, so it can be mounted
+// directly or started on a local listener with NewTestServer.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
@@ -95,8 +95,7 @@ type Server struct {
 	logger        *slog.Logger
 }
 
-// NewHandler creates a Server as an http.Handler without starting a listener.
-// If cfg.APIKey is non-empty, the server validates that incoming requests use this key.
+// NewHandler validates that incoming requests use cfg.APIKey when it is non-empty.
 func NewHandler(cfg Config) (*Server, error) {
 	base := cfg.logger
 	if base == nil {
@@ -147,8 +146,8 @@ func NewHandler(cfg Config) (*Server, error) {
 	return s, nil
 }
 
-// NewTestServer creates and starts a new local SimpleMQ test server using httptest.
-// If cfg.APIKey is non-empty, the server validates that incoming requests use this key.
+// NewTestServer builds the mock server and starts it on a local httptest
+// listener. It panics if the server cannot be built.
 func NewTestServer(cfg Config) *Server {
 	s, err := NewHandler(cfg)
 	if err != nil {
@@ -158,7 +157,8 @@ func NewTestServer(cfg Config) *Server {
 	return s
 }
 
-// TestURL returns the base URL of the test server.
+// TestURL is the base URL of a server started by NewTestServer, or "" when the
+// server was built with NewHandler.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
 }
@@ -169,7 +169,7 @@ func (s *Server) SpecViolations() []core.SpecViolation {
 	return s.respValidator.Violations()
 }
 
-// Close shuts down the test server (if running) and closes the store.
+// Close stops the test server and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()

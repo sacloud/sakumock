@@ -37,15 +37,13 @@ type storedQueue struct {
 	ModifiedAt               time.Time
 }
 
-// Store is the interface for message storage backends.
+// Store is the storage backend for queues and their messages.
 type Store interface {
-	// Data plane operations
 	Send(queueName, content string, now time.Time) (storedMessage, error)
 	Receive(queueName string, now time.Time) (storedMessage, bool, error)
 	ExtendTimeout(queueName, id string, now time.Time) (storedMessage, error)
 	Delete(queueName, id string) error
 
-	// Control plane operations
 	CreateQueue(name, description string, tags []string, visibilityTimeoutSeconds, expireSeconds int, now time.Time) (storedQueue, error)
 	ListQueues() ([]storedQueue, error)
 	GetQueueByID(id string) (storedQueue, error)

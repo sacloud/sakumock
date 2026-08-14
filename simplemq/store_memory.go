@@ -116,7 +116,7 @@ func (q *memoryQueue) count(now time.Time) int {
 	return n
 }
 
-// MemoryStore manages named queues in memory.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu                sync.Mutex
 	queues            map[string]*memoryQueue // name → message queue
@@ -130,8 +130,7 @@ type MemoryStore struct {
 	logger            *slog.Logger
 }
 
-// NewMemoryStore creates a new in-memory Store. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(visibilityTimeout, messageExpiration time.Duration, logger *slog.Logger) *MemoryStore {
 	if visibilityTimeout <= 0 {
 		visibilityTimeout = defaultVisibilityTimeout
@@ -196,27 +195,33 @@ func (s *MemoryStore) compactLoop() {
 	}
 }
 
+// Send appends a message to the named queue.
 func (s *MemoryStore) Send(queueName, content string, now time.Time) (storedMessage, error) {
 	q := s.getQueue(queueName)
 	return q.send(content, now), nil
 }
 
+// Receive takes the next visible message and hides it for the queue's
+// visibility timeout.
 func (s *MemoryStore) Receive(queueName string, now time.Time) (storedMessage, bool, error) {
 	q := s.getQueue(queueName)
 	msg, ok := q.receive(now)
 	return msg, ok, nil
 }
 
+// ExtendTimeout pushes back the visibility timeout of a received message.
 func (s *MemoryStore) ExtendTimeout(queueName, id string, now time.Time) (storedMessage, error) {
 	q := s.getQueue(queueName)
 	return q.extendTimeout(id, now)
 }
 
+// Delete removes a received message from the queue.
 func (s *MemoryStore) Delete(queueName, id string) error {
 	q := s.getQueue(queueName)
 	return q.delete(id)
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	s.closeOnce.Do(func() {
 		close(s.done)
@@ -224,8 +229,7 @@ func (s *MemoryStore) Close() error {
 	return nil
 }
 
-// Control plane operations
-
+// CreateQueue registers a queue on the control plane.
 func (s *MemoryStore) CreateQueue(name, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
 	if tags == nil {
 		tags = []string{}
@@ -275,6 +279,7 @@ func (s *MemoryStore) CreateQueue(name, description string, tags []string, vtSec
 	return *res, nil
 }
 
+// ListQueues returns every control-plane queue.
 func (s *MemoryStore) ListQueues() ([]storedQueue, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -286,6 +291,7 @@ func (s *MemoryStore) ListQueues() ([]storedQueue, error) {
 	return result, nil
 }
 
+// GetQueueByID returns the queue with the given resource ID.
 func (s *MemoryStore) GetQueueByID(id string) (storedQueue, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -297,6 +303,7 @@ func (s *MemoryStore) GetQueueByID(id string) (storedQueue, error) {
 	return *res, nil
 }
 
+// GetQueueByName returns the queue with the given name.
 func (s *MemoryStore) GetQueueByName(name string) (storedQueue, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -312,6 +319,7 @@ func (s *MemoryStore) GetQueueByName(name string) (storedQueue, error) {
 	return *res, nil
 }
 
+// UpdateQueue applies the given settings to an existing queue.
 func (s *MemoryStore) UpdateQueue(id, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
 	if tags == nil {
 		tags = []string{}
@@ -342,6 +350,7 @@ func (s *MemoryStore) UpdateQueue(id, description string, tags []string, vtSecs,
 	return *res, nil
 }
 
+// DeleteQueueByID removes the queue together with its messages.
 func (s *MemoryStore) DeleteQueueByID(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -358,6 +367,7 @@ func (s *MemoryStore) DeleteQueueByID(id string) error {
 	return nil
 }
 
+// CountMessages returns how many messages the queue currently holds.
 func (s *MemoryStore) CountMessages(id string, now time.Time) (int, error) {
 	s.mu.Lock()
 	res, ok := s.queueResources[id]
@@ -374,6 +384,7 @@ func (s *MemoryStore) CountMessages(id string, now time.Time) (int, error) {
 	return q.count(now), nil
 }
 
+// RotateAPIKey replaces the queue's API key, invalidating the previous one.
 func (s *MemoryStore) RotateAPIKey(id, newKey string, now time.Time) (storedQueue, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -387,6 +398,7 @@ func (s *MemoryStore) RotateAPIKey(id, newKey string, now time.Time) (storedQueu
 	return *res, nil
 }
 
+// ClearMessages discards every message in the queue.
 func (s *MemoryStore) ClearMessages(id string) error {
 	s.mu.Lock()
 	res, ok := s.queueResources[id]

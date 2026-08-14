@@ -18,6 +18,8 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// DockerManager runs one Docker container per application, backing the data
+// plane the reverse proxy forwards to.
 type DockerManager struct {
 	mu         sync.RWMutex
 	containers map[string]*containerInfo
@@ -32,6 +34,7 @@ type containerInfo struct {
 	hostPort    string
 }
 
+// NewDockerManager returns a manager for the applications in store.
 func NewDockerManager(logger *slog.Logger, store *MemoryStore) *DockerManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	dm := &DockerManager{
@@ -45,6 +48,8 @@ func NewDockerManager(logger *slog.Logger, store *MemoryStore) *DockerManager {
 	return dm
 }
 
+// StartContainer runs the application's image and publishes containerPort on a
+// free host port.
 func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []EnvVar) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
@@ -89,6 +94,7 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 	return nil
 }
 
+// StopContainer stops and removes the application's container.
 func (dm *DockerManager) StopContainer(appID string) {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
@@ -107,6 +113,8 @@ func (dm *DockerManager) StopContainer(appID string) {
 	delete(dm.containers, appID)
 }
 
+// GetContainerPort returns the host port the application's container is
+// published on.
 func (dm *DockerManager) GetContainerPort(appID string) (string, bool) {
 	dm.mu.RLock()
 	defer dm.mu.RUnlock()
@@ -117,6 +125,7 @@ func (dm *DockerManager) GetContainerPort(appID string) (string, bool) {
 	return info.hostPort, true
 }
 
+// Close stops every container the manager started.
 func (dm *DockerManager) Close() {
 	dm.cancel()
 	<-dm.done

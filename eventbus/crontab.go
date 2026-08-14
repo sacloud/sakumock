@@ -39,7 +39,6 @@ type Crontab struct {
 	domStar, dowStar bool
 }
 
-// crontabFields describes the five fields in order, with their allowed ranges.
 var crontabFields = []struct {
 	name     string
 	min, max int
@@ -193,13 +192,10 @@ func (c *Crontab) Next(t time.Time) time.Time {
 	for cur.Before(limit) {
 		switch {
 		case !hasBit(c.month, int(cur.Month())):
-			// First minute of the next month.
 			cur = time.Date(cur.Year(), cur.Month(), 1, 0, 0, 0, 0, crontabLocation).AddDate(0, 1, 0)
 		case !c.dayMatches(cur):
-			// First minute of the next day.
 			cur = time.Date(cur.Year(), cur.Month(), cur.Day(), 0, 0, 0, 0, crontabLocation).AddDate(0, 0, 1)
 		case !hasBit(c.hour, cur.Hour()):
-			// First minute of the next hour.
 			cur = time.Date(cur.Year(), cur.Month(), cur.Day(), cur.Hour(), 0, 0, 0, crontabLocation).Add(time.Hour)
 		case !hasBit(c.minute, cur.Minute()):
 			cur = cur.Add(time.Minute)

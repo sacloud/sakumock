@@ -46,7 +46,6 @@ func TestParseFaultSpecsEmpty(t *testing.T) {
 	if fi != nil {
 		t.Fatalf("expected nil injector for empty specs, got %v", fi)
 	}
-	// A nil injector's Middleware must return the handler unchanged.
 	called := false
 	h := fi.Middleware(func(w http.ResponseWriter, _ *http.Request) {
 		called = true
@@ -200,7 +199,6 @@ func waitDone(t *testing.T, done <-chan struct{}) {
 	}
 }
 
-// spanAttr returns the value of the named attribute on the span, or "" if absent.
 func spanAttr(s sdktrace.ReadOnlySpan, key attribute.Key) string {
 	for _, kv := range s.Attributes() {
 		if kv.Key == key {

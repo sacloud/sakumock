@@ -10,7 +10,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// Config holds configuration for the local EventBus server.
+// Config holds the EventBus mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18085" env:"EVENTBUS_LOCALSERVER_ADDR"`
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"EVENTBUS_LATENCY"`
@@ -52,7 +52,7 @@ func (Config) Name() string { return "eventbus" }
 // ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
-// NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
@@ -60,7 +60,6 @@ func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	return NewHandler(c)
 }
 
-// Compile-time checks that the service satisfies the core interfaces.
 var (
 	_ core.Server        = (*Server)(nil)
 	_ core.ServiceConfig = Config{}
@@ -70,9 +69,9 @@ var (
 //
 // The data plane (see dataplane.go) fires schedules on the wall clock and
 // triggers on events injected via /_sakumock/events, recording each firing as a
-// Delivery. Actually forwarding a fired job to its Destination service
-// (simplemq / simplenotification) over HTTP is a separate layer not yet wired;
-// today a firing is recorded and logged.
+// Delivery. Forwarding a fired job to its Destination service (simplemq /
+// simplenotification) over HTTP is a separate layer (see forwarder.go), active
+// only when service linking is enabled.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
@@ -91,7 +90,7 @@ type Server struct {
 	logger        *slog.Logger
 }
 
-// NewHandler creates a Server as an http.Handler without starting a listener.
+// NewHandler builds the mock server as an http.Handler, without a listener.
 func NewHandler(cfg Config) (*Server, error) {
 	base := cfg.logger
 	if base == nil {
@@ -131,7 +130,8 @@ func NewHandler(cfg Config) (*Server, error) {
 	return s, nil
 }
 
-// NewTestServer creates and starts a new EventBus test server using httptest.
+// NewTestServer builds the mock server and starts it on a local httptest
+// listener. It panics if the server cannot be built.
 func NewTestServer(cfg Config) *Server {
 	s, err := NewHandler(cfg)
 	if err != nil {
@@ -149,7 +149,8 @@ func NewTestServerWithServiceLink(cfg Config, env []core.EnvVar) *Server {
 	return NewTestServer(cfg)
 }
 
-// TestURL returns the base URL of the test server.
+// TestURL is the base URL of a server started by NewTestServer, or "" when the
+// server was built with NewHandler.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
 }
@@ -171,7 +172,7 @@ func (s *Server) Secret(id string) (json.RawMessage, bool) {
 	return it.Secret, true
 }
 
-// Close shuts down the test server (if running) and closes the store.
+// Close stops the test server and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()

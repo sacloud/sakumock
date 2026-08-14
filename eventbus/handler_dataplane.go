@@ -50,7 +50,6 @@ func (s *Server) handleTick(w http.ResponseWriter, r *http.Request) {
 	core.WriteJSON(w, http.StatusOK, deliveriesResponse(fired))
 }
 
-// parseTickTime accepts an RFC3339 timestamp or bare epoch seconds.
 func parseTickTime(v string) (time.Time, error) {
 	if t, err := time.Parse(time.RFC3339, v); err == nil {
 		return t, nil

@@ -34,14 +34,13 @@ type Service struct {
 	SubscriptionID string       `json:"-"`
 }
 
-// OidcSummary references an OIDC configuration from a service.
+// OidcSummary references the OIDC configuration a service authenticates with.
 type OidcSummary struct {
 	ID   string `json:"id"`
 	Name string `json:"name,omitempty"`
 }
 
-// CorsConfig holds the per-service CORS settings (enforced by the data plane
-// in a later phase; stored and echoed as-is until then).
+// CorsConfig is a service's CORS policy.
 type CorsConfig struct {
 	Credentials                 *bool    `json:"credentials,omitempty"`
 	AccessControlExposedHeaders string   `json:"accessControlExposedHeaders,omitempty"`
@@ -107,7 +106,7 @@ type RouteAuthorizationConfig struct {
 	Groups       []RouteAuthorization `json:"groups"`
 }
 
-// RouteAuthorization is one group entry in a route's allow-list.
+// RouteAuthorization is one group entry of a route's allow-list.
 type RouteAuthorization struct {
 	ID      string `json:"id"`
 	Name    string `json:"name,omitempty"`
@@ -139,7 +138,7 @@ type UserAuthentication struct {
 	HmacAuth  *HmacAuth  `json:"hmacAuth,omitempty"`
 }
 
-// BasicAuth is a Basic authentication credential.
+// BasicAuth is a Basic authentication credential of a consumer.
 type BasicAuth struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -168,7 +167,7 @@ type HmacAuth struct {
 	Secret    string    `json:"secret"`
 }
 
-// Group is a consumer group referenced by users and route authorizations.
+// Group is a consumer group, referenced by users and route allow-lists.
 type Group struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -224,7 +223,7 @@ type Plan struct {
 	Overage         *Overage `json:"overage,omitempty"`
 }
 
-// Overage is the extra-request pricing of a plan.
+// Overage is the price of requests beyond a plan's included volume.
 type Overage struct {
 	UnitRequests int    `json:"unitRequests"`
 	UnitPrice    string `json:"unitPrice"`
@@ -249,7 +248,7 @@ type Subscription struct {
 	BoundServiceID string `json:"-"`
 }
 
-// SubscriptionService is the service bound to a subscription.
+// SubscriptionService identifies the service bound to a subscription.
 type SubscriptionService struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -275,7 +274,7 @@ type OidcConfig struct {
 }
 
 // RequestTransformation transforms matched requests before proxying
-// (enforced by the data plane in a later phase; stored and echoed until then).
+// (applied by the data plane, see transform.go).
 type RequestTransformation struct {
 	HTTPMethod string                     `json:"httpMethod,omitempty"`
 	Allow      *RequestAllowDetail        `json:"allow,omitempty"`
@@ -286,39 +285,49 @@ type RequestTransformation struct {
 	Append     *RequestModificationDetail `json:"append,omitempty"`
 }
 
+// RequestAllowDetail keeps only the listed headers, query parameters, or body
+// fields.
 type RequestAllowDetail struct {
 	Body []string `json:"body,omitempty"`
 }
 
+// RequestRemoveDetail drops the listed headers, query parameters, or body
+// fields.
 type RequestRemoveDetail struct {
 	HeaderKeys  []string `json:"headerKeys,omitempty"`
 	QueryParams []string `json:"queryParams,omitempty"`
 	Body        []string `json:"body,omitempty"`
 }
 
+// RenamePair renames one key to another.
 type RenamePair struct {
 	From string `json:"from,omitempty"`
 	To   string `json:"to,omitempty"`
 }
 
+// RequestRenameDetail renames headers, query parameters, or body fields.
 type RequestRenameDetail struct {
 	Headers     []RenamePair `json:"headers,omitempty"`
 	QueryParams []RenamePair `json:"queryParams,omitempty"`
 	Body        []RenamePair `json:"body,omitempty"`
 }
 
+// KeyValuePair is one key and the value assigned to it.
 type KeyValuePair struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
 
+// RequestModificationDetail sets headers, query parameters, or body fields.
+// It backs the replace, add, and append phases.
 type RequestModificationDetail struct {
 	Headers     []KeyValuePair `json:"headers,omitempty"`
 	QueryParams []KeyValuePair `json:"queryParams,omitempty"`
 	Body        []KeyValuePair `json:"body,omitempty"`
 }
 
-// ResponseTransformation transforms upstream responses before returning them.
+// ResponseTransformation transforms upstream responses before they are
+// returned (applied by the data plane, see transform.go).
 type ResponseTransformation struct {
 	Allow   *ResponseAllowDetail        `json:"allow,omitempty"`
 	Remove  *ResponseRemoveDetail       `json:"remove,omitempty"`
@@ -328,22 +337,26 @@ type ResponseTransformation struct {
 	Append  *ResponseModificationDetail `json:"append,omitempty"`
 }
 
+// ResponseAllowDetail keeps only the listed headers or body fields.
 type ResponseAllowDetail struct {
 	JSONKeys []string `json:"jsonKeys,omitempty"`
 }
 
+// ResponseRemoveDetail drops the listed headers or body fields.
 type ResponseRemoveDetail struct {
 	IfStatusCode []int    `json:"ifStatusCode,omitempty"`
 	HeaderKeys   []string `json:"headerKeys,omitempty"`
 	JSONKeys     []string `json:"jsonKeys,omitempty"`
 }
 
+// ResponseRenameDetail renames headers or body fields.
 type ResponseRenameDetail struct {
 	IfStatusCode []int        `json:"ifStatusCode,omitempty"`
 	Headers      []RenamePair `json:"headers,omitempty"`
 	JSON         []RenamePair `json:"json,omitempty"`
 }
 
+// ResponseReplaceDetail replaces headers, body fields, or the whole body.
 type ResponseReplaceDetail struct {
 	IfStatusCode []int          `json:"ifStatusCode,omitempty"`
 	Headers      []KeyValuePair `json:"headers,omitempty"`
@@ -353,6 +366,8 @@ type ResponseReplaceDetail struct {
 	Body *string `json:"body,omitempty"`
 }
 
+// ResponseModificationDetail sets headers or body fields. It backs the add and
+// append phases.
 type ResponseModificationDetail struct {
 	IfStatusCode []int          `json:"ifStatusCode,omitempty"`
 	Headers      []KeyValuePair `json:"headers,omitempty"`
@@ -366,6 +381,7 @@ type StoreError struct {
 	Message string
 }
 
+// Error implements the error interface.
 func (e *StoreError) Error() string { return e.Message }
 
 func errNotFound(format string, args ...any) *StoreError {
@@ -380,9 +396,9 @@ func errBadRequest(format string, args ...any) *StoreError {
 	return &StoreError{Status: 400, Message: fmt.Sprintf(format, args...)}
 }
 
-// Store is the persistence interface of the apigw mock.
+// Store is the storage backend for the API Gateway control plane. Its methods
+// return a *StoreError carrying the HTTP status a handler should answer with.
 type Store interface {
-	// Services
 	CreateService(svc Service, subscriptionID string) (Service, error)
 	ListServices() []Service
 	GetService(id string) (Service, error)
@@ -390,7 +406,6 @@ type Store interface {
 	DeleteService(id string) error
 	SubscriptionNameOf(serviceID string) string
 
-	// Routes
 	CreateRoute(serviceID string, rt Route) (Route, error)
 	RoutesByHost(host string) []Route
 	UserByBasicUserName(name string) (User, bool)
@@ -404,7 +419,6 @@ type Store interface {
 	SetRequestTransformation(serviceID, routeID string, tr *RequestTransformation) error
 	SetResponseTransformation(serviceID, routeID string, tr *ResponseTransformation) error
 
-	// Users
 	CreateUser(u User) (User, error)
 	ListUsers() []User
 	GetUser(id string) (User, error)
@@ -415,26 +429,22 @@ type Store interface {
 	GetUserAuthentication(userID string) (*UserAuthentication, error)
 	UpsertUserAuthentication(userID string, auth UserAuthentication) error
 
-	// Groups
 	CreateGroup(g Group) (Group, error)
 	ListGroups() []Group
 	GetGroup(id string) (Group, error)
 	UpdateGroup(id string, g Group) error
 	DeleteGroup(id string) error
 
-	// Domains
 	CreateDomain(d Domain) (Domain, error)
 	ListDomains() []Domain
 	UpdateDomain(id string, certificateID string) error
 	DeleteDomain(id string) error
 
-	// Certificates
 	CreateCertificate(c Certificate) (Certificate, error)
 	ListCertificates() []Certificate
 	UpdateCertificate(id string, c Certificate) error
 	DeleteCertificate(id string) error
 
-	// Plans & subscriptions
 	ListPlans() []Plan
 	CreateSubscription(planID, name string) (Subscription, error)
 	ListSubscriptions() []Subscription
@@ -442,7 +452,6 @@ type Store interface {
 	UpdateSubscription(id, name string) error
 	DeleteSubscription(id string) error
 
-	// OIDC
 	CreateOidc(o OidcConfig) (OidcConfig, error)
 	ListOidcs() []OidcConfig
 	GetOidc(id string) (OidcConfig, []Service, error)

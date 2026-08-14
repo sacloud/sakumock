@@ -55,7 +55,6 @@ type serviceConfigs struct {
 	TLS core.TLSFiles `embed:"" prefix:"tls-" envprefix:"SAKUMOCK_TLS_"`
 }
 
-// configs lists every service in start order.
 func (c *serviceConfigs) configs() []core.ServiceConfig {
 	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows, c.Apigw, c.Cloudhsm}
 }
@@ -78,8 +77,6 @@ type serviceInstance struct {
 	server core.Server
 }
 
-// bindAddr returns the address a service should listen on: its configured
-// address, or — when --listen-host is set — that host with the configured port.
 func (c *AllCmd) bindAddr(listenAddr string) string {
 	if c.ListenHost == "" {
 		return listenAddr

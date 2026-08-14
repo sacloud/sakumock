@@ -9,6 +9,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// Config holds the IAM mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18087" env:"IAM_LOCALSERVER_ADDR"`
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"IAM_LATENCY"`
@@ -21,16 +22,21 @@ type Config struct {
 	logger *slog.Logger
 }
 
+// ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
+// Terraform provider) sets to reach this mock.
 func (c Config) ClientEnv() []core.EnvVar {
 	return []core.EnvVar{
 		{Key: "SAKURA_ENDPOINTS_IAM", Value: "http://" + c.Addr},
 	}
 }
 
+// Name returns the service's short name.
 func (Config) Name() string { return "iam" }
 
+// ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
@@ -42,6 +48,8 @@ var (
 	_ core.ServiceConfig = Config{}
 )
 
+// Server is the IAM mock server. It is an http.Handler, so it can be mounted
+// directly or started on a local listener with NewTestServer.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
@@ -59,6 +67,7 @@ type Server struct {
 	logger        *slog.Logger
 }
 
+// NewHandler builds the mock server as an http.Handler, without a listener.
 func NewHandler(cfg Config) (*Server, error) {
 	base := cfg.logger
 	if base == nil {
@@ -91,6 +100,8 @@ func NewHandler(cfg Config) (*Server, error) {
 	return s, nil
 }
 
+// NewTestServer builds the mock server and starts it on a local httptest
+// listener. It panics if the server cannot be built.
 func NewTestServer(cfg Config) *Server {
 	s, err := NewHandler(cfg)
 	if err != nil {
@@ -100,10 +111,13 @@ func NewTestServer(cfg Config) *Server {
 	return s
 }
 
+// TestURL is the base URL of a server started by NewTestServer, or "" when the
+// server was built with NewHandler.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
 }
 
+// Routes describes every HTTP endpoint the server registers.
 func (s *Server) Routes() []core.Route {
 	return core.RoutesOf(s.routeTable())
 }
@@ -114,6 +128,7 @@ func (s *Server) SpecViolations() []core.SpecViolation {
 	return s.respValidator.Violations()
 }
 
+// Close stops the test server and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()

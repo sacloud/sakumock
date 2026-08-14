@@ -7,7 +7,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// ptrOf returns a pointer to a copy of v, for building optional JSON fields.
 func ptrOf[T any](v T) *T { return &v }
 
 // routingJSON is the shared shape of a log or metrics routing. Exactly one of
@@ -32,8 +31,6 @@ type routingRequest struct {
 	LogStorageID     *int64  `json:"log_storage_id"`
 	MetricsStorageID *int64  `json:"metrics_storage_id"`
 }
-
-// ===== Log routings =====
 
 func (s *Server) logRoutingToJSON(rt *Routing, wrapped bool) (routingJSON, bool) {
 	pub, ok := s.store.publisher(rt.PublisherCode)
@@ -161,8 +158,6 @@ func (s *Server) handleDeleteLogRouting(w http.ResponseWriter, r *http.Request) 
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// ===== Metrics routings =====
 
 func (s *Server) metricsRoutingToJSON(rt *Routing, wrapped bool) (routingJSON, bool) {
 	pub, ok := s.store.publisher(rt.PublisherCode)

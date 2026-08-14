@@ -303,7 +303,6 @@ steps:
 		t.Fatalf("create execution: %v", err)
 	}
 
-	// Wait for async execution to complete
 	var gotExec *v1.GetExecutionOKExecution
 	for range 50 {
 		time.Sleep(10 * time.Millisecond)

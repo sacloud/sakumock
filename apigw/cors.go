@@ -68,7 +68,6 @@ func (dp *dataPlane) handleCORSPreflight(w http.ResponseWriter, r *http.Request,
 	return true
 }
 
-// applyCORSResponseHeaders decorates an actual (non-preflight) response.
 func applyCORSResponseHeaders(h http.Header, cfg *CorsConfig, requestOrigin string) {
 	if cfg == nil || requestOrigin == "" {
 		return

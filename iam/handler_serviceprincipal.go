@@ -139,7 +139,6 @@ func (s *Server) handleDeleteServicePrincipal(w http.ResponseWriter, r *http.Req
 		writeError(w, http.StatusNotFound, "service principal not found")
 		return
 	}
-	// Clean up associated keys
 	for _, key := range s.store.spKeys.all() {
 		if idKey(key.ServicePrincipalID) == id {
 			s.store.spKeys.delete(key.ID)

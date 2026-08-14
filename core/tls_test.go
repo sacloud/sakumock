@@ -70,7 +70,6 @@ func TestWithTLSScheme(t *testing.T) {
 		{Key: "ALREADY", Value: "https://example.com"},
 	}
 
-	// Disabled: returned unchanged.
 	if got := WithTLSScheme(in, false); &got[0] != &in[0] {
 		t.Error("WithTLSScheme(_, false) should return the slice unchanged")
 	}
@@ -185,8 +184,6 @@ func getInsecure(t *testing.T, url string) *http.Response {
 	}
 }
 
-// writeSelfSignedCert writes a self-signed cert/key (valid for 127.0.0.1) to
-// temp files and returns their paths.
 func writeSelfSignedCert(t *testing.T) (certFile, keyFile string) {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

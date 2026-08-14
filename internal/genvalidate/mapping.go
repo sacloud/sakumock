@@ -20,9 +20,8 @@ type Mapping struct {
 	PathRewrites map[string]string `json:"pathRewrites"`
 	// Routes overrides individual operations: "METHOD /spec/path" -> mock
 	// route key. It wins over Prefix/PathRewrites.
-	Routes map[string]string `json:"routes"`
-	// SkipPaths lists spec paths to omit entirely.
-	SkipPaths []string `json:"skipPaths"`
+	Routes    map[string]string `json:"routes"`
+	SkipPaths []string          `json:"skipPaths"`
 }
 
 func LoadMapping(path string) (*Mapping, error) {
@@ -37,8 +36,6 @@ func LoadMapping(path string) (*Mapping, error) {
 	return &m, nil
 }
 
-// routeKey maps one spec operation to the mock route key ("METHOD /path"),
-// or reports that it should be skipped.
 func routeKey(method, path string, m *Mapping) (string, bool) {
 	if m == nil {
 		return method + " " + path, false

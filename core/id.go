@@ -30,8 +30,8 @@ type IDGenerator struct {
 	next int64
 }
 
-// NewIDGenerator returns a generator whose first ID is base. A base <= 0 falls
-// back to DefaultIDBase().
+// NewIDGenerator returns a generator whose first ID is base. A base <= 0 uses
+// DefaultIDBase.
 func NewIDGenerator(base int64) *IDGenerator {
 	if base <= 0 {
 		base = DefaultIDBase()
@@ -39,7 +39,7 @@ func NewIDGenerator(base int64) *IDGenerator {
 	return &IDGenerator{next: base}
 }
 
-// Next returns the next ID as a decimal string with no leading zeros.
+// Next returns the next ID as a decimal string.
 func (g *IDGenerator) Next() string {
 	g.mu.Lock()
 	defer g.mu.Unlock()

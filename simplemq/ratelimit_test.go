@@ -12,7 +12,6 @@ import (
 	"github.com/sacloud/sakumock/simplemq"
 )
 
-// doRawRequest is like doRequest but exposes the response headers.
 func doRawRequest(t *testing.T, method, url, token, body string) (int, http.Header) {
 	t.Helper()
 	var bodyReader io.Reader
@@ -94,7 +93,6 @@ func TestRateLimitPerQueue(t *testing.T) {
 
 	body := `{"content":"aGVsbG8="}`
 
-	// Exhaust queue A's bucket.
 	urlA := sendURL(srv.TestURL(), "queue-aaaa")
 	if status, _ := doRawRequest(t, "POST", urlA, "test-api-key", body); status != http.StatusOK {
 		t.Fatalf("queue A first request: expected 200, got %d", status)
@@ -118,7 +116,6 @@ func TestRateLimitRecovery(t *testing.T) {
 	url := sendURL(srv.TestURL(), "rate-test-queue")
 	body := `{"content":"aGVsbG8="}`
 
-	// Drain the burst (10).
 	for i := range 10 {
 		if status, _ := doRawRequest(t, "POST", url, "test-api-key", body); status != http.StatusOK {
 			t.Fatalf("drain iter %d: expected 200, got %d", i, status)

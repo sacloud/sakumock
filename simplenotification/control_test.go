@@ -46,7 +46,6 @@ func TestDestinationAndGroupLifecycle(t *testing.T) {
 	destOp := sdk.NewDestinationOp(client)
 	groupOp := sdk.NewGroupOp(client)
 
-	// Create a destination.
 	dest, err := destOp.Create(ctx, v1.PostCommonServiceItemRequest{
 		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
 			Name:        "mail-dest",
@@ -69,7 +68,6 @@ func TestDestinationAndGroupLifecycle(t *testing.T) {
 		t.Fatal("expected a non-empty destination ID")
 	}
 
-	// Read it back.
 	gotDest, err := destOp.Read(ctx, destID)
 	if err != nil {
 		t.Fatalf("read destination: %v", err)
@@ -121,7 +119,6 @@ func TestDestinationAndGroupLifecycle(t *testing.T) {
 		t.Errorf("destination %s leaked into the group list", destID)
 	}
 
-	// Delete both.
 	if err := groupOp.Delete(ctx, groupID); err != nil {
 		t.Fatalf("delete group: %v", err)
 	}

@@ -46,8 +46,6 @@ func (s *Server) readJSON(w http.ResponseWriter, r *http.Request, v any) bool {
 	return true
 }
 
-// --- Services ---
-
 type subscriptionRef struct {
 	ID   string `json:"id"`
 	Name string `json:"name,omitempty"`
@@ -137,8 +135,6 @@ func (s *Server) handleDeleteService(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- Routes ---
-
 type routesBody struct {
 	Routes []Route `json:"routes"`
 }
@@ -200,8 +196,6 @@ func (s *Server) handleDeleteRoute(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// --- Route authorization & transformations ---
 
 type routeAuthorizationBody struct {
 	RouteAuthorization *RouteAuthorizationConfig `json:"routeAuthorization,omitempty"`
@@ -298,8 +292,6 @@ func (s *Server) handleGetResponseTransformation(w http.ResponseWriter, r *http.
 	writeEnvelope(w, http.StatusOK, responseTransformationBody{ResponseTransformation: rt.ResponseTransform})
 }
 
-// --- Users ---
-
 type usersBody struct {
 	Users []User `json:"users"`
 }
@@ -353,8 +345,6 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// --- User groups ---
 
 type userGroupDetail struct {
 	ID         string `json:"id"`
@@ -414,8 +404,6 @@ func (s *Server) handleUpdateUserGroups(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- User authentication ---
-
 type userAuthenticationBody struct {
 	UserAuthentication UserAuthentication `json:"userAuthentication"`
 }
@@ -440,8 +428,6 @@ func (s *Server) handleUpsertUserAuthentication(w http.ResponseWriter, r *http.R
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// --- Groups ---
 
 type groupsBody struct {
 	Groups []Group `json:"groups"`
@@ -497,8 +483,6 @@ func (s *Server) handleDeleteGroup(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- Domains ---
-
 type domainsBody struct {
 	Domains []Domain `json:"domains"`
 }
@@ -547,8 +531,6 @@ func (s *Server) handleDeleteDomain(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-// --- Certificates ---
 
 type certificatesBody struct {
 	Certificates []Certificate `json:"certificates"`
@@ -672,8 +654,6 @@ func (s *Server) handleDeleteCertificate(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- Plans & subscriptions ---
-
 type plansBody struct {
 	Plans []Plan `json:"plans"`
 }
@@ -775,8 +755,6 @@ func (s *Server) handleUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- OIDC ---
-
 type oidcsBody struct {
 	Oidcs []OidcConfig `json:"oidcs"`
 }
@@ -851,8 +829,6 @@ func (s *Server) handleDeleteOidc(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- HTTP plumbing ---
-
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, r := range s.routeTable() {
@@ -861,6 +837,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)

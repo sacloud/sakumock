@@ -9,8 +9,6 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-// parseAll parses "all" with the given extra args against a fresh CLI and
-// returns the populated AllCmd.
 func parseAll(t *testing.T, args ...string) *AllCmd {
 	t.Helper()
 	var cli CLI

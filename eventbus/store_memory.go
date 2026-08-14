@@ -10,7 +10,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// MemoryStore is an in-memory Store for control-plane service items.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu     sync.Mutex
 	items  map[string]*ServiceItem
@@ -18,8 +18,7 @@ type MemoryStore struct {
 	logger *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -44,7 +43,7 @@ func cloneItem(it *ServiceItem) ServiceItem {
 	return c
 }
 
-// CreateItem stores a new control-plane item, assigning it an ID and timestamps.
+// CreateItem stores a new item, assigning its ID and timestamps.
 func (s *MemoryStore) CreateItem(item ServiceItem) ServiceItem {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -58,7 +57,7 @@ func (s *MemoryStore) CreateItem(item ServiceItem) ServiceItem {
 	return cloneItem(&stored)
 }
 
-// GetItem returns a copy of the item with the given ID.
+// GetItem returns the item with the given ID.
 func (s *MemoryStore) GetItem(id string) (ServiceItem, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -69,8 +68,7 @@ func (s *MemoryStore) GetItem(id string) (ServiceItem, bool) {
 	return cloneItem(it), true
 }
 
-// ListItems returns copies of all items, optionally filtered by provider class,
-// ordered by ID.
+// ListItems returns every item, optionally filtered by provider class.
 func (s *MemoryStore) ListItems(providerClass string) []ServiceItem {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -85,7 +83,7 @@ func (s *MemoryStore) ListItems(providerClass string) []ServiceItem {
 	return out
 }
 
-// UpdateItem mutates the item's name, description, tags, settings, and icon.
+// UpdateItem applies the given values to an existing item.
 func (s *MemoryStore) UpdateItem(id, name, description string, tags []string, settings, icon json.RawMessage) (ServiceItem, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -104,7 +102,7 @@ func (s *MemoryStore) UpdateItem(id, name, description string, tags []string, se
 	return cloneItem(it), true
 }
 
-// DeleteItem removes the item and returns a copy of what was deleted.
+// DeleteItem removes the item and returns what was deleted.
 func (s *MemoryStore) DeleteItem(id string) (ServiceItem, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -146,7 +144,7 @@ func (s *MemoryStore) SetStatus(id string, status ItemStatus) (ServiceItem, bool
 	return cloneItem(it), true
 }
 
-// Close releases resources held by the store.
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

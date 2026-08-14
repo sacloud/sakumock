@@ -114,19 +114,15 @@ func TestTriggerMatches(t *testing.T) {
 	if !triggerMatches(st, base) {
 		t.Error("expected match")
 	}
-	// Wrong source.
 	if triggerMatches(st, Event{Source: "other", Type: "a", Attributes: base.Attributes}) {
 		t.Error("source mismatch should not match")
 	}
-	// Type not in Types.
 	if triggerMatches(st, Event{Source: "src", Type: "z", Attributes: base.Attributes}) {
 		t.Error("type mismatch should not match")
 	}
-	// Failing condition.
 	if triggerMatches(st, Event{Source: "src", Type: "a", Attributes: map[string]any{"status": "ok", "region": "is1b"}}) {
 		t.Error("eq condition mismatch should not match")
 	}
-	// Missing attribute.
 	if triggerMatches(st, Event{Source: "src", Type: "a", Attributes: map[string]any{"status": "critical"}}) {
 		t.Error("missing attribute should not match")
 	}

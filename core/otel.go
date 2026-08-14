@@ -21,7 +21,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// tracingShutdownTimeout bounds the final span flush at process exit.
 const tracingShutdownTimeout = 5 * time.Second
 
 // TracingEnabled reports whether OpenTelemetry tracing is turned on for this

@@ -10,15 +10,13 @@ import (
 // conformance with a compile-time `var _ core.Server = (*Server)(nil)` so a new
 // service that drifts from the contract fails to build.
 type Server interface {
-	// ServeHTTP handles requests; every server is an http.Handler.
 	http.Handler
-	// Routes returns metadata for every registered HTTP endpoint (printed by
-	// the CLI's --routes flag via PrintRoutes).
+	// Routes describes every HTTP endpoint the server registers.
 	Routes() []Route
 	// TestURL returns the base URL when the server was started via the
 	// service's NewTestServer.
 	TestURL() string
-	// Close shuts the server down and releases resources.
+	// Close shuts the server down and releases its resources.
 	Close()
 }
 
@@ -54,13 +52,13 @@ type ServerOptions struct {
 // hard-coding per-service names, addresses, or endpoint variables. Each service
 // asserts conformance with a compile-time `var _ core.ServiceConfig = Config{}`.
 type ServiceConfig interface {
-	// Name returns the service's short name (e.g. "simplemq").
+	// Name is the service's short name, matching its subcommand.
 	Name() string
-	// ListenAddr returns the configured listen address (host:port).
+	// ListenAddr is the address the service's control plane listens on.
 	ListenAddr() string
 	// ClientEnv returns the SAKURA_ENDPOINTS_* override(s) a client sets to
 	// reach this mock, derived from the listen address.
 	ClientEnv() []EnvVar
-	// NewServer builds the service's mock server with the given shared options.
+	// NewServer builds the service's mock server with the shared options.
 	NewServer(opts ServerOptions) (Server, error)
 }

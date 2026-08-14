@@ -12,12 +12,10 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// MemoryStore is an in-memory Store for object storage control-plane resources.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
-	mu sync.Mutex
-	// buckets are federation-global, keyed by bucket name.
-	buckets map[string]*Bucket
-	// accounts are per-site, keyed by site ID.
+	mu       sync.Mutex
+	buckets  map[string]*Bucket
 	accounts map[string]*Account
 	// permissions are per-site: site ID -> permission ID -> permission.
 	permissions map[string]map[int64]*Permission
@@ -25,8 +23,7 @@ type MemoryStore struct {
 	logger      *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -87,6 +84,7 @@ func (s *MemoryStore) CreateBucket(name, clusterID, planType, serviceClassPath s
 	return cloneBucket(b), true
 }
 
+// GetBucket returns the bucket with the given name.
 func (s *MemoryStore) GetBucket(name string) (Bucket, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -113,6 +111,7 @@ func (s *MemoryStore) ListBuckets(siteID string) []Bucket {
 	return out
 }
 
+// DeleteBucket removes the bucket.
 func (s *MemoryStore) DeleteBucket(name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -124,6 +123,8 @@ func (s *MemoryStore) DeleteBucket(name string) bool {
 	return true
 }
 
+// SetBucketEncryption enables server-side encryption on the bucket with the
+// given KMS key.
 func (s *MemoryStore) SetBucketEncryption(name, kmsKeyID string) (Bucket, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -135,6 +136,7 @@ func (s *MemoryStore) SetBucketEncryption(name, kmsKeyID string) (Bucket, bool) 
 	return cloneBucket(b), true
 }
 
+// DeleteBucketEncryption disables the bucket's server-side encryption.
 func (s *MemoryStore) DeleteBucketEncryption(name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -146,6 +148,7 @@ func (s *MemoryStore) DeleteBucketEncryption(name string) bool {
 	return true
 }
 
+// SetBucketReplication replicates the bucket to destBucket.
 func (s *MemoryStore) SetBucketReplication(name, destBucket string) (Bucket, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -157,6 +160,7 @@ func (s *MemoryStore) SetBucketReplication(name, destBucket string) (Bucket, boo
 	return cloneBucket(b), true
 }
 
+// DeleteBucketReplication stops replicating the bucket.
 func (s *MemoryStore) DeleteBucketReplication(name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -174,6 +178,8 @@ func cloneAccount(a *Account) Account {
 	return c
 }
 
+// CreateAccount creates the site's root account; ok is false when it already
+// exists.
 func (s *MemoryStore) CreateAccount(siteID string) (Account, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -191,6 +197,7 @@ func (s *MemoryStore) CreateAccount(siteID string) (Account, bool) {
 	return cloneAccount(a), true
 }
 
+// GetAccount returns the site's root account.
 func (s *MemoryStore) GetAccount(siteID string) (Account, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -201,6 +208,7 @@ func (s *MemoryStore) GetAccount(siteID string) (Account, bool) {
 	return cloneAccount(a), true
 }
 
+// DeleteAccount removes the site's root account together with its access keys.
 func (s *MemoryStore) DeleteAccount(siteID string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -211,6 +219,7 @@ func (s *MemoryStore) DeleteAccount(siteID string) bool {
 	return true
 }
 
+// CreateAccountKey issues an access key for the site's root account.
 func (s *MemoryStore) CreateAccountKey(siteID string) (AccountKey, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -223,6 +232,7 @@ func (s *MemoryStore) CreateAccountKey(siteID string) (AccountKey, bool) {
 	return k, true
 }
 
+// ListAccountKeys returns the access keys of the site's root account.
 func (s *MemoryStore) ListAccountKeys(siteID string) ([]AccountKey, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -233,6 +243,7 @@ func (s *MemoryStore) ListAccountKeys(siteID string) ([]AccountKey, bool) {
 	return append([]AccountKey(nil), a.Keys...), true
 }
 
+// GetAccountKey returns one access key of the site's root account.
 func (s *MemoryStore) GetAccountKey(siteID, keyID string) (AccountKey, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -248,6 +259,7 @@ func (s *MemoryStore) GetAccountKey(siteID, keyID string) (AccountKey, bool) {
 	return AccountKey{}, false
 }
 
+// DeleteAccountKey revokes an access key of the site's root account.
 func (s *MemoryStore) DeleteAccountKey(siteID, keyID string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -280,6 +292,7 @@ func (s *MemoryStore) sitePermissions(siteID string) map[int64]*Permission {
 	return m
 }
 
+// CreatePermission creates a permission with the given bucket controls.
 func (s *MemoryStore) CreatePermission(siteID, displayName string, controls []BucketControl) Permission {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -299,6 +312,7 @@ func (s *MemoryStore) CreatePermission(siteID, displayName string, controls []Bu
 	return clonePermission(p)
 }
 
+// ListPermissions returns the site's permissions, ordered by ID.
 func (s *MemoryStore) ListPermissions(siteID string) []Permission {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -311,6 +325,7 @@ func (s *MemoryStore) ListPermissions(siteID string) []Permission {
 	return out
 }
 
+// GetPermission returns the permission with the given ID.
 func (s *MemoryStore) GetPermission(siteID string, id int64) (Permission, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -321,6 +336,7 @@ func (s *MemoryStore) GetPermission(siteID string, id int64) (Permission, bool) 
 	return clonePermission(p), true
 }
 
+// UpdatePermission replaces the permission's display name and bucket controls.
 func (s *MemoryStore) UpdatePermission(siteID string, id int64, displayName string, controls []BucketControl) (Permission, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -337,6 +353,7 @@ func (s *MemoryStore) UpdatePermission(siteID string, id int64, displayName stri
 	return clonePermission(p), true
 }
 
+// DeletePermission removes the permission together with its access keys.
 func (s *MemoryStore) DeletePermission(siteID string, id int64) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -348,6 +365,7 @@ func (s *MemoryStore) DeletePermission(siteID string, id int64) bool {
 	return true
 }
 
+// CreatePermissionKey issues an access key for the permission.
 func (s *MemoryStore) CreatePermissionKey(siteID string, id int64) (PermissionKey, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -360,6 +378,7 @@ func (s *MemoryStore) CreatePermissionKey(siteID string, id int64) (PermissionKe
 	return k, true
 }
 
+// ListPermissionKeys returns the permission's access keys.
 func (s *MemoryStore) ListPermissionKeys(siteID string, id int64) ([]PermissionKey, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -370,6 +389,7 @@ func (s *MemoryStore) ListPermissionKeys(siteID string, id int64) ([]PermissionK
 	return append([]PermissionKey(nil), p.Keys...), true
 }
 
+// GetPermissionKey returns one access key of the permission.
 func (s *MemoryStore) GetPermissionKey(siteID string, id int64, keyID string) (PermissionKey, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -385,6 +405,7 @@ func (s *MemoryStore) GetPermissionKey(siteID string, id int64, keyID string) (P
 	return PermissionKey{}, false
 }
 
+// DeletePermissionKey revokes an access key of the permission.
 func (s *MemoryStore) DeletePermissionKey(siteID string, id int64, keyID string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -401,7 +422,7 @@ func (s *MemoryStore) DeletePermissionKey(siteID string, id int64, keyID string)
 	return false
 }
 
-// Close releases resources held by the store.
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

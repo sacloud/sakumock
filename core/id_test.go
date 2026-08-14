@@ -49,13 +49,11 @@ func TestIDGeneratorNoLeadingZeros(t *testing.T) {
 func TestIDGeneratorObserve(t *testing.T) {
 	g := NewIDGenerator(100)
 
-	// A larger observed value advances the sequence past it.
 	g.Observe("500")
 	if got := g.Next(); got != "501" {
 		t.Errorf("after Observe(500), Next() = %q, want 501", got)
 	}
 
-	// Smaller and non-numeric values are ignored.
 	g.Observe("10")
 	g.Observe("not-a-number")
 	if got := g.Next(); got != "502" {

@@ -341,8 +341,6 @@ func renameHeader(h http.Header, from, to string) {
 	}
 }
 
-// --- dotted-path helpers over JSON objects ---
-
 // walkPath descends to the parent object of the path's final segment,
 // returning it and that segment.
 func walkPath(obj map[string]any, path string, create bool) (map[string]any, string, bool) {

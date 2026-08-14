@@ -31,14 +31,14 @@ type ServiceItem struct {
 	ModifiedAt time.Time
 }
 
-// ItemStatus is the firing outcome reported in a CommonServiceItem's Status.
+// ItemStatus is the outcome of a schedule's or trigger's last firing.
 type ItemStatus struct {
 	Success   bool
 	Message   string
 	UpdatedAt time.Time
 }
 
-// Store is the interface for EventBus storage backends.
+// Store is the storage backend for EventBus control-plane items.
 type Store interface {
 	CreateItem(item ServiceItem) ServiceItem
 	GetItem(id string) (ServiceItem, bool)

@@ -13,6 +13,8 @@ const (
 	ParallelTimeout       = 600
 )
 
+// ValidateRunbookSize reports an error when the YAML definition exceeds the
+// size the service accepts.
 func ValidateRunbookSize(yamlData []byte) error {
 	if len(yamlData) > MaxRunbookSize {
 		return fmt.Errorf("runbook size %d bytes exceeds limit %d bytes", len(yamlData), MaxRunbookSize)
@@ -20,6 +22,7 @@ func ValidateRunbookSize(yamlData []byte) error {
 	return nil
 }
 
+// Validate reports an error when the runbook is not executable.
 func Validate(rb *Runbook) error {
 	v := &validator{}
 	v.walkSteps(rb.Steps, 0)

@@ -36,7 +36,6 @@ func TestSecretLifecycle(t *testing.T) {
 	ctx := t.Context()
 	secOp := newTestSecretOp(t, srv.TestURL(), testVaultID)
 
-	// List: initially empty
 	secrets, err := secOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +44,6 @@ func TestSecretLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 secrets, got %d", len(secrets))
 	}
 
-	// Create secret "foo"
 	created, err := secOp.Create(ctx, v1.CreateSecret{Name: "foo", Value: "bar"})
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +52,6 @@ func TestSecretLifecycle(t *testing.T) {
 		t.Fatalf("unexpected create response: %+v", created)
 	}
 
-	// List: 1 secret
 	secrets, err = secOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -66,7 +63,6 @@ func TestSecretLifecycle(t *testing.T) {
 		t.Fatalf("unexpected list item: %+v", secrets[0])
 	}
 
-	// Unveil secret "foo" (latest)
 	unveiled, err := secOp.Unveil(ctx, v1.Unveil{Name: "foo"})
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +80,6 @@ func TestSecretLifecycle(t *testing.T) {
 		t.Fatalf("expected version 2, got %d", updated.LatestVersion)
 	}
 
-	// Unveil version 1
 	unveiledV1, err := secOp.Unveil(ctx, v1.Unveil{
 		Name:    "foo",
 		Version: v1.NewOptNilInt(1),
@@ -105,12 +100,10 @@ func TestSecretLifecycle(t *testing.T) {
 		t.Fatalf("expected v2 value 'baz', got: %+v", unveiledLatest)
 	}
 
-	// Delete secret "foo"
 	if err := secOp.Delete(ctx, v1.DeleteSecret{Name: "foo"}); err != nil {
 		t.Fatal(err)
 	}
 
-	// List: empty again
 	secrets, err = secOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)

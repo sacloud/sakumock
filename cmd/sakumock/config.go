@@ -31,8 +31,6 @@ func (configFileFlag) BeforeResolve(_ *kong.Kong, ctx *kong.Context, trace *kong
 	return nil
 }
 
-// newConfigResolver reads path (YAML or JSON, by extension) into a nested map
-// and returns a resolver that maps each flag to it.
 func newConfigResolver(path string) (kong.Resolver, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

@@ -13,22 +13,21 @@ type Vault struct {
 	ModifiedAt  time.Time
 }
 
-// SecretMeta represents secret metadata returned by List.
+// SecretMeta is the metadata List reports for a secret; only Unveil returns
+// the value itself.
 type SecretMeta struct {
 	Name          string
 	LatestVersion int
 }
 
-// Store is the interface for SecretManager storage backends.
+// Store is the storage backend for vaults and their versioned secrets.
 type Store interface {
-	// Vault lifecycle (control plane).
 	CreateVault(name, kmsKeyID, description string, tags []string) *Vault
 	GetVault(id string) (*Vault, bool)
 	ListVaults() []*Vault
 	UpdateVault(id, name, description string, tags []string) (*Vault, bool)
 	DeleteVault(id string) bool
 
-	// Secret operations within a vault.
 	List(vaultID string) []SecretMeta
 	Create(vaultID, name, value string) (int, error)
 	Unveil(vaultID, name string, version int) (value string, actualVersion int, err error)

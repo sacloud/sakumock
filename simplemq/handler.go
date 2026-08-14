@@ -101,6 +101,7 @@ func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)

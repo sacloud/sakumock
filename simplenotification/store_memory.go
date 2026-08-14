@@ -11,8 +11,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// MemoryStore is an in-memory Store for accepted notification messages and
-// control-plane service items.
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu       sync.Mutex
 	messages []MessageRecord
@@ -22,8 +21,7 @@ type MemoryStore struct {
 	logger   *slog.Logger
 }
 
-// NewMemoryStore creates a new empty MemoryStore. logger is the service-tagged
-// logger used for operation logs; nil falls back to the default.
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -44,7 +42,7 @@ func cloneItem(it *ServiceItem) ServiceItem {
 	return c
 }
 
-// CreateItem stores a new control-plane item, assigning it an ID and timestamps.
+// CreateItem stores a new item, assigning its ID and timestamps.
 func (s *MemoryStore) CreateItem(item ServiceItem) ServiceItem {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -58,7 +56,7 @@ func (s *MemoryStore) CreateItem(item ServiceItem) ServiceItem {
 	return cloneItem(&stored)
 }
 
-// GetItem returns a copy of the item with the given ID.
+// GetItem returns the item with the given ID.
 func (s *MemoryStore) GetItem(id string) (ServiceItem, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -69,8 +67,7 @@ func (s *MemoryStore) GetItem(id string) (ServiceItem, bool) {
 	return cloneItem(it), true
 }
 
-// ListItems returns copies of all items, optionally filtered by provider class,
-// ordered by ID.
+// ListItems returns every item, optionally filtered by provider class.
 func (s *MemoryStore) ListItems(providerClass string) []ServiceItem {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -85,7 +82,7 @@ func (s *MemoryStore) ListItems(providerClass string) []ServiceItem {
 	return out
 }
 
-// UpdateItem mutates the item's name, description, tags, settings, and icon.
+// UpdateItem applies the given values to an existing item.
 func (s *MemoryStore) UpdateItem(id, name, description string, tags []string, settings, icon json.RawMessage) (ServiceItem, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -117,7 +114,7 @@ func (s *MemoryStore) UpdateItemSettings(id string, settings json.RawMessage) (S
 	return cloneItem(it), true
 }
 
-// DeleteItem removes the item and returns a copy of what was deleted.
+// DeleteItem removes the item and returns what was deleted.
 func (s *MemoryStore) DeleteItem(id string) (ServiceItem, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -130,7 +127,7 @@ func (s *MemoryStore) DeleteItem(id string) (ServiceItem, bool) {
 	return deleted, true
 }
 
-// Send records a notification message and returns the stored record.
+// Send records a notification sent to the group.
 func (s *MemoryStore) Send(groupID, message string, now time.Time) (MessageRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -147,7 +144,7 @@ func (s *MemoryStore) Send(groupID, message string, now time.Time) (MessageRecor
 	return rec, nil
 }
 
-// List returns a snapshot of all accepted messages in send order.
+// List returns every accepted notification, in send order.
 func (s *MemoryStore) List() []MessageRecord {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -157,7 +154,7 @@ func (s *MemoryStore) List() []MessageRecord {
 	return out
 }
 
-// Reset clears all accepted messages.
+// Reset discards the accepted notifications.
 func (s *MemoryStore) Reset() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -165,7 +162,7 @@ func (s *MemoryStore) Reset() {
 	s.messages = nil
 }
 
-// Close releases resources held by the store.
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error {
 	return nil
 }

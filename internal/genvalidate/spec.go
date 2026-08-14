@@ -52,8 +52,6 @@ func loadSpec(path string) (map[string]any, error) {
 	return doc, nil
 }
 
-// collectOperations walks one spec document and compiles the request-body
-// schema of every operation that declares an application/json body.
 func collectOperations(doc map[string]any, mapping *Mapping, warn io.Writer) ([]operation, error) {
 	paths, _ := doc["paths"].(map[string]any)
 	var ops []operation
@@ -212,7 +210,6 @@ func (c *compiler) note(format string, args ...any) {
 	c.notes = append(c.notes, fmt.Sprintf(format, args...))
 }
 
-// resolveRef follows a local $ref one level; non-ref maps are returned as-is.
 func (c *compiler) resolveRef(m map[string]any) (map[string]any, error) {
 	ref, ok := m["$ref"].(string)
 	if !ok {
@@ -543,7 +540,6 @@ func schemaTypes(m map[string]any) ([]string, bool) {
 	return nil, false
 }
 
-// emptySchema reports whether s carries no checkable constraint at all.
 func emptySchema(s *core.BodySchema) bool {
 	return s.Type == "" && !s.Nullable &&
 		len(s.Required) == 0 && len(s.Properties) == 0 &&

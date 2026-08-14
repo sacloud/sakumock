@@ -14,7 +14,6 @@ import (
 	"github.com/sacloud/sakumock/iam"
 )
 
-// seed posts to a /_sakumock/ endpoint and decodes the created resource.
 func seed(t *testing.T, baseURL, path string, body any, out any) {
 	t.Helper()
 	payload, err := json.Marshal(body)

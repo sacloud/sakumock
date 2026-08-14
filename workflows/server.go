@@ -10,6 +10,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// Config holds the Workflows mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18090" env:"WORKFLOWS_LOCALSERVER_ADDR"`
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"WORKFLOWS_LATENCY"`
@@ -26,15 +27,21 @@ type Config struct {
 	logger *slog.Logger
 }
 
+// ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
+// Terraform provider) sets to reach this mock.
 func (c Config) ClientEnv() []core.EnvVar {
 	return []core.EnvVar{
 		{Key: "SAKURA_ENDPOINTS_WORKFLOWS", Value: "http://" + c.Addr},
 	}
 }
 
-func (Config) Name() string         { return "workflows" }
+// Name returns the service's short name.
+func (Config) Name() string { return "workflows" }
+
+// ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
@@ -46,6 +53,8 @@ var (
 	_ core.ServiceConfig = Config{}
 )
 
+// Server is the Workflows mock server. It is an http.Handler, so it can be mounted
+// directly or started on a local listener with NewTestServer.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
@@ -66,6 +75,7 @@ type Server struct {
 	cancel        context.CancelFunc
 }
 
+// NewHandler builds the mock server as an http.Handler, without a listener.
 func NewHandler(cfg Config) (*Server, error) {
 	base := cfg.logger
 	if base == nil {
@@ -109,6 +119,8 @@ func NewHandler(cfg Config) (*Server, error) {
 	return s, nil
 }
 
+// NewTestServer builds the mock server and starts it on a local httptest
+// listener. It panics if the server cannot be built.
 func NewTestServer(cfg Config) *Server {
 	s, err := NewHandler(cfg)
 	if err != nil {
@@ -118,6 +130,8 @@ func NewTestServer(cfg Config) *Server {
 	return s
 }
 
+// TestURL is the base URL of a server started by NewTestServer, or "" when the
+// server was built with NewHandler.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
 }
@@ -128,6 +142,7 @@ func (s *Server) SpecViolations() []core.SpecViolation {
 	return s.respValidator.Violations()
 }
 
+// Close stops the test server and releases the store.
 func (s *Server) Close() {
 	s.cancel()
 	if s.executor != nil {

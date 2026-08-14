@@ -10,6 +10,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	mu          sync.RWMutex
 	userCreated bool
@@ -29,6 +30,8 @@ type appVersionEntry struct {
 	version *Version
 }
 
+// NewStore returns an empty store. publicURLFunc derives an application's
+// public URL from its ID.
 func NewStore(publicURLFunc func(string) string) *MemoryStore {
 	return &MemoryStore{
 		ids:           core.NewIDGenerator(core.DefaultIDBase()),
@@ -39,12 +42,14 @@ func NewStore(publicURLFunc func(string) string) *MemoryStore {
 	}
 }
 
+// UserCreated reports whether the AppRun user has been created.
 func (s *MemoryStore) UserCreated() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.userCreated
 }
 
+// CreateUser creates the AppRun user, which every other operation requires.
 func (s *MemoryStore) CreateUser() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -67,6 +72,7 @@ func lessByCreation(iAt time.Time, iSeq int, jAt time.Time, jSeq int, sortOrder 
 	return iAt.Before(jAt)
 }
 
+// ListApplications returns a page of applications and the total count.
 func (s *MemoryStore) ListApplications(params ListParams) ([]*Application, int) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -111,6 +117,7 @@ func (s *MemoryStore) ListApplications(params ListParams) ([]*Application, int) 
 	return apps[start:end], total
 }
 
+// CreateApplication stores a new application and its first version.
 func (s *MemoryStore) CreateApplication(app *Application) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -138,6 +145,7 @@ func (s *MemoryStore) CreateApplication(app *Application) error {
 	return nil
 }
 
+// ReadApplication returns the application with the given ID.
 func (s *MemoryStore) ReadApplication(id string) (*Application, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -145,6 +153,7 @@ func (s *MemoryStore) ReadApplication(id string) (*Application, bool) {
 	return app, app != nil
 }
 
+// UpdateApplication applies the patch and records a new version.
 func (s *MemoryStore) UpdateApplication(id string, patch *Application) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -185,6 +194,7 @@ func (s *MemoryStore) UpdateApplication(id string, patch *Application) error {
 	return nil
 }
 
+// DeleteApplication removes the application and its versions.
 func (s *MemoryStore) DeleteApplication(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -198,6 +208,7 @@ func (s *MemoryStore) DeleteApplication(id string) error {
 	return nil
 }
 
+// ListVersions returns a page of the application's versions and the total count.
 func (s *MemoryStore) ListVersions(appID string, params ListParams) ([]*Version, int) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -235,6 +246,7 @@ func (s *MemoryStore) ListVersions(appID string, params ListParams) ([]*Version,
 	return versions[start:end], total
 }
 
+// ReadVersion returns one version of the application.
 func (s *MemoryStore) ReadVersion(appID, versionID string) (*Version, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -251,6 +263,7 @@ func (s *MemoryStore) ReadVersion(appID, versionID string) (*Version, bool) {
 	return nil, false
 }
 
+// DeleteVersion removes a version other than the latest one.
 func (s *MemoryStore) DeleteVersion(appID, versionID string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -268,6 +281,7 @@ func (s *MemoryStore) DeleteVersion(appID, versionID string) error {
 	return fmt.Errorf("version not found")
 }
 
+// GetTraffic returns the application's traffic distribution.
 func (s *MemoryStore) GetTraffic(appID string) ([]TrafficItem, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -275,6 +289,7 @@ func (s *MemoryStore) GetTraffic(appID string) ([]TrafficItem, bool) {
 	return items, ok
 }
 
+// PutTraffic replaces the application's traffic distribution.
 func (s *MemoryStore) PutTraffic(appID string, items []TrafficItem) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -285,6 +300,7 @@ func (s *MemoryStore) PutTraffic(appID string, items []TrafficItem) error {
 	return nil
 }
 
+// GetPacketFilter returns the application's packet filter.
 func (s *MemoryStore) GetPacketFilter(appID string) (*PacketFilter, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -298,6 +314,7 @@ func (s *MemoryStore) GetPacketFilter(appID string) (*PacketFilter, bool) {
 	return pf, true
 }
 
+// PatchPacketFilter replaces the application's packet filter settings.
 func (s *MemoryStore) PatchPacketFilter(appID string, pf *PacketFilter) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -308,6 +325,8 @@ func (s *MemoryStore) PatchPacketFilter(appID string, pf *PacketFilter) error {
 	return nil
 }
 
+// SetApplicationStatus sets the status reported for the application and its
+// latest version.
 func (s *MemoryStore) SetApplicationStatus(id, status string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -316,6 +335,7 @@ func (s *MemoryStore) SetApplicationStatus(id, status string) {
 	}
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() {}
 
 func (s *MemoryStore) latestApp(id string) *Application {

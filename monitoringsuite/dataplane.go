@@ -45,8 +45,6 @@ type dataPlane struct {
 	seq     atomic.Uint64
 }
 
-// startDataPlane binds the data-plane address and serves the ingest endpoints in
-// a background goroutine until Close.
 func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	if cfg.DataPlaneDumpDir != "" {
 		if err := os.MkdirAll(cfg.DataPlaneDumpDir, 0o755); err != nil {
@@ -85,7 +83,6 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	return dp, nil
 }
 
-// Addr returns the data plane's listen address (useful when a :0 port was used).
 func (dp *dataPlane) Addr() string {
 	if dp == nil {
 		return ""
@@ -105,8 +102,6 @@ func (dp *dataPlane) Close() {
 // the validation decoding that always happens.
 func (dp *dataPlane) observing() bool { return dp.debug || dp.dumpDir != "" }
 
-// handleRemoteWrite accepts a Prometheus remote-write request (snappy-compressed
-// protobuf), validates it, and acknowledges it with 204 — or 400 if malformed.
 func (dp *dataPlane) handleRemoteWrite(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	_ = r.Body.Close()
@@ -157,7 +152,6 @@ func (dp *dataPlane) handleOTLP(signal string, newMsg func() proto.Message, coun
 	}
 }
 
-// decodeRemoteWrite snappy-decompresses and parses a Prometheus remote-write body.
 func decodeRemoteWrite(body []byte) (*rwRequest, error) {
 	raw, err := snappy.Decode(nil, body)
 	if err != nil {
@@ -166,8 +160,6 @@ func decodeRemoteWrite(body []byte) (*rwRequest, error) {
 	return parseRemoteWrite(raw)
 }
 
-// decodeOTLP gunzips (when needed) and unmarshals an OTLP/HTTP body into a fresh
-// message from newMsg, as protobuf or JSON per isJSON.
 func decodeOTLP(body []byte, newMsg func() proto.Message, isJSON, gzipped bool) (proto.Message, error) {
 	raw := body
 	if gzipped {

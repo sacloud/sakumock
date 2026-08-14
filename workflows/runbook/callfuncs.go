@@ -17,6 +17,9 @@ import (
 const maxResponseBodySize = 10 * 1024 * 1024 // 10 MiB
 const maxRedirects = 10
 
+// NewHTTPClient returns the client the call steps use. Unless allowLocalNet is
+// set, it refuses to connect to loopback, private, and link-local addresses,
+// as the real service does.
 func NewHTTPClient(allowLocalNet bool) *http.Client {
 	return &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

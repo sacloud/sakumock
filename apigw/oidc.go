@@ -50,7 +50,6 @@ func (dp *dataPlane) authenticateOidc(w http.ResponseWriter, r *http.Request, m 
 	return false
 }
 
-// authenticateBearer verifies an accessToken-method Bearer token.
 func (dp *dataPlane) authenticateBearer(w http.ResponseWriter, r *http.Request, m *matchResult, cfg OidcConfig, token string) bool {
 	provider, err := dp.oidcProvider(cfg.Issuer)
 	if err != nil {

@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS queues (
 );
 `
 
-// SQLiteStore is a Store backed by SQLite.
+// SQLiteStore is a Store that persists queues and messages in a SQLite database
+// file, so they survive a restart.
 type SQLiteStore struct {
 	db                *sql.DB
 	visibilityTimeout time.Duration
@@ -133,6 +134,7 @@ func (s *SQLiteStore) queueSettingsFor(queueName string) (vt, me time.Duration) 
 	return s.visibilityTimeout, s.messageExpiration
 }
 
+// Send appends a message to the named queue.
 func (s *SQLiteStore) Send(queueName, content string, now time.Time) (storedMessage, error) {
 	_, msgExpiration := s.queueSettingsFor(queueName)
 	msg := storedMessage{
@@ -155,6 +157,8 @@ func (s *SQLiteStore) Send(queueName, content string, now time.Time) (storedMess
 	return msg, nil
 }
 
+// Receive takes the next visible message and hides it for the queue's
+// visibility timeout.
 func (s *SQLiteStore) Receive(queueName string, now time.Time) (msg storedMessage, ok bool, retErr error) {
 	visibilityTimeout, _ := s.queueSettingsFor(queueName)
 	nowMilli := now.UnixMilli()
@@ -195,6 +199,7 @@ func (s *SQLiteStore) Receive(queueName string, now time.Time) (msg storedMessag
 	return msg, ok, nil
 }
 
+// ExtendTimeout pushes back the visibility timeout of a received message.
 func (s *SQLiteStore) ExtendTimeout(queueName, id string, now time.Time) (msg storedMessage, retErr error) {
 	visibilityTimeout, _ := s.queueSettingsFor(queueName)
 	nowMilli := now.UnixMilli()
@@ -230,6 +235,7 @@ func (s *SQLiteStore) ExtendTimeout(queueName, id string, now time.Time) (msg st
 	return msg, nil
 }
 
+// Delete removes a received message from the queue.
 func (s *SQLiteStore) Delete(queueName, id string) error {
 	query := `DELETE FROM messages WHERE queue_name = ? AND id = ?`
 	args := []any{queueName, id}
@@ -268,6 +274,7 @@ func (s *SQLiteStore) compactLoop() {
 	}
 }
 
+// Close releases the resources held by the store.
 func (s *SQLiteStore) Close() error {
 	var err error
 	s.closeOnce.Do(func() {
@@ -276,8 +283,6 @@ func (s *SQLiteStore) Close() error {
 	})
 	return err
 }
-
-// Control plane operations
 
 func scanQueueRow(rows *sql.Rows) (storedQueue, error) {
 	var q storedQueue
@@ -315,6 +320,7 @@ func scanQueueSingleRow(row *sql.Row) (storedQueue, error) {
 
 const selectQueueColumns = `id, name, description, tags, visibility_timeout_seconds, expire_seconds, api_key, created_at, modified_at`
 
+// CreateQueue registers a queue on the control plane.
 func (s *SQLiteStore) CreateQueue(name, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
 	if tags == nil {
 		tags = []string{}
@@ -370,6 +376,7 @@ func (s *SQLiteStore) CreateQueue(name, description string, tags []string, vtSec
 	}, nil
 }
 
+// ListQueues returns every control-plane queue.
 func (s *SQLiteStore) ListQueues() ([]storedQueue, error) {
 	rows, err := s.db.Query(`SELECT ` + selectQueueColumns + ` FROM queues ORDER BY id`)
 	if err != nil {
@@ -391,16 +398,19 @@ func (s *SQLiteStore) ListQueues() ([]storedQueue, error) {
 	return result, rows.Err()
 }
 
+// GetQueueByID returns the queue with the given resource ID.
 func (s *SQLiteStore) GetQueueByID(id string) (storedQueue, error) {
 	row := s.db.QueryRow(`SELECT `+selectQueueColumns+` FROM queues WHERE id = ?`, id)
 	return scanQueueSingleRow(row)
 }
 
+// GetQueueByName returns the queue with the given name.
 func (s *SQLiteStore) GetQueueByName(name string) (storedQueue, error) {
 	row := s.db.QueryRow(`SELECT `+selectQueueColumns+` FROM queues WHERE name = ?`, name)
 	return scanQueueSingleRow(row)
 }
 
+// UpdateQueue applies the given settings to an existing queue.
 func (s *SQLiteStore) UpdateQueue(id, description string, tags []string, vtSecs, expSecs int, now time.Time) (storedQueue, error) {
 	if tags == nil {
 		tags = []string{}
@@ -434,6 +444,7 @@ func (s *SQLiteStore) UpdateQueue(id, description string, tags []string, vtSecs,
 	return s.GetQueueByID(id)
 }
 
+// DeleteQueueByID removes the queue together with its messages.
 func (s *SQLiteStore) DeleteQueueByID(id string) error {
 	return s.withTx(context.Background(), func(tx *sql.Tx) error {
 		var name string
@@ -452,6 +463,7 @@ func (s *SQLiteStore) DeleteQueueByID(id string) error {
 	})
 }
 
+// CountMessages returns how many messages the queue currently holds.
 func (s *SQLiteStore) CountMessages(id string, now time.Time) (int, error) {
 	var name string
 	if err := s.db.QueryRow(`SELECT name FROM queues WHERE id = ?`, id).Scan(&name); err == sql.ErrNoRows {
@@ -467,6 +479,7 @@ func (s *SQLiteStore) CountMessages(id string, now time.Time) (int, error) {
 	return count, nil
 }
 
+// RotateAPIKey replaces the queue's API key, invalidating the previous one.
 func (s *SQLiteStore) RotateAPIKey(id, newKey string, now time.Time) (storedQueue, error) {
 	nowMilli := now.UnixMilli()
 	err := s.withTx(context.Background(), func(tx *sql.Tx) error {
@@ -489,6 +502,7 @@ func (s *SQLiteStore) RotateAPIKey(id, newKey string, now time.Time) (storedQueu
 	return s.GetQueueByID(id)
 }
 
+// ClearMessages discards every message in the queue.
 func (s *SQLiteStore) ClearMessages(id string) error {
 	return s.withTx(context.Background(), func(tx *sql.Tx) error {
 		var name string

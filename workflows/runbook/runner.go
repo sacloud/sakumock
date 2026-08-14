@@ -23,13 +23,16 @@ type nextSignal struct {
 
 func (n *nextSignal) Error() string { return "next: " + n.target }
 
+// CallFunc implements one callable a call step can invoke.
 type CallFunc func(ctx context.Context, env *expr.Env, call *CallStep, opts CallOpts) (expr.Value, error)
 
+// CallOpts carries the runner settings a CallFunc needs.
 type CallOpts struct {
 	AllowLocalNet bool
 	HTTPClient    *http.Client
 }
 
+// EventType identifies what a Runner reports through its EventHandler.
 type EventType string
 
 const (
@@ -44,6 +47,7 @@ const (
 	EventFunctionDidFail     EventType = "functionDidFailed"
 )
 
+// Event is one progress report from a running runbook.
 type Event struct {
 	Type      EventType
 	StepName  string
@@ -51,8 +55,10 @@ type Event struct {
 	Variables string
 }
 
+// EventHandler receives a Runner's progress events.
 type EventHandler func(Event)
 
+// Runner executes runbooks.
 type Runner struct {
 	CallFuncs  map[string]CallFunc
 	HTTPClient *http.Client
@@ -71,6 +77,7 @@ func (r *Runner) emit(e Event) {
 	}
 }
 
+// NewRunner returns a Runner with the built-in call functions registered.
 func NewRunner() *Runner {
 	return &Runner{
 		CallFuncs:     defaultCallFuncs(),
@@ -80,11 +87,15 @@ func NewRunner() *Runner {
 	}
 }
 
+// Result is the outcome of a runbook execution: the value of its last step, or
+// the error that stopped it.
 type Result struct {
 	Value expr.Value
 	Err   error
 }
 
+// Run executes the runbook, exposing args to it as the "args" variable. It
+// stops when ctx is canceled.
 func (r *Runner) Run(ctx context.Context, rb *Runbook, args map[string]expr.Value) Result {
 	env := expr.NewEnv()
 	if args != nil {

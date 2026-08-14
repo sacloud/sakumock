@@ -8,7 +8,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// buildMux registers every route from the single-source-of-truth route table.
 func (s *Server) buildMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, r := range s.routeTable() {
@@ -17,6 +16,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)
@@ -68,10 +68,7 @@ func writePage[T any](w http.ResponseWriter, items []T) {
 
 func boolPtr(b bool) *bool { return &b }
 
-// idKey renders a numeric ID as the string key used in the in-memory tables.
 func idKey(id int64) string { return strconv.FormatInt(id, 10) }
-
-// --- Project (alert / dashboard) JSON ---
 
 type projectJSON struct {
 	ID          int64    `json:"id"`
@@ -188,7 +185,6 @@ func derefString(p *string) string {
 	return *p
 }
 
-// Alert project handlers.
 func (s *Server) handleListAlertProjects(w http.ResponseWriter, r *http.Request) {
 	s.listProjects(w, s.store.alertProjects)
 }
@@ -205,7 +201,6 @@ func (s *Server) handleDeleteAlertProject(w http.ResponseWriter, r *http.Request
 	s.deleteProject(w, r, s.store.alertProjects)
 }
 
-// Dashboard project handlers.
 func (s *Server) handleListDashboardProjects(w http.ResponseWriter, r *http.Request) {
 	s.listProjects(w, s.store.dashboardProjects)
 }

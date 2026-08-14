@@ -38,7 +38,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }
 
-// Routes returns metadata for every HTTP endpoint registered on the server.
+// Routes describes every HTTP endpoint the server registers.
 func (s *Server) Routes() []core.Route {
 	return core.RoutesOf(s.routeTable())
 }

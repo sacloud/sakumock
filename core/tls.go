@@ -22,7 +22,7 @@ type TLSFiles struct {
 	KeyFile  string `name:"key" help:"TLS key file (see --tls-cert)." env:"KEY"`
 }
 
-// Enabled reports whether both the cert and key are set (i.e. serve HTTPS).
+// Enabled reports whether TLS is configured, i.e. both files are set.
 func (t TLSFiles) Enabled() bool { return t.CertFile != "" && t.KeyFile != "" }
 
 // Validate reports an error when exactly one of the cert/key is set. TLS needs
@@ -36,7 +36,7 @@ func (t TLSFiles) Validate() error {
 	return nil
 }
 
-// Scheme returns "https" when Enabled, otherwise "http".
+// Scheme returns the URL scheme the listeners serve, "https" or "http".
 func (t TLSFiles) Scheme() string {
 	if t.Enabled() {
 		return "https"

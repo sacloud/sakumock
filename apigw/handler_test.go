@@ -416,7 +416,6 @@ func TestUserGroupLifecycle(t *testing.T) {
 		t.Errorf("user groups = %+v", detail.Groups)
 	}
 
-	// Credentials.
 	if err := extraOp.UpdateAuth(ctx, v1.UserAuthentication{
 		BasicAuth: v1.NewOptBasicAuth(v1.BasicAuth{UserName: "alice", Password: "secret"}),
 		Jwt: v1.NewOptJwt(v1.Jwt{
@@ -464,7 +463,6 @@ func TestUserGroupLifecycle(t *testing.T) {
 	}
 }
 
-// testCertPEM returns a self-signed certificate and key PEM pair.
 func testCertPEM(t *testing.T) (string, string) {
 	t.Helper()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)

@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
+// MaxExpressionLen is the longest expression Eval accepts.
 const MaxExpressionLen = 512
 
+// Eval evaluates a single expression against env.
 func Eval(expression string, env *Env) (Value, error) {
 	if len(expression) > MaxExpressionLen {
 		return Null, fmt.Errorf("expression length %d exceeds limit %d", len(expression), MaxExpressionLen)
@@ -23,6 +25,9 @@ func Eval(expression string, env *Env) (Value, error) {
 	return eval(ast, env)
 }
 
+// EvalInterpolated evaluates a string containing ${...} expressions. A string
+// that is exactly one expression keeps that expression's type; otherwise the
+// results are substituted into the surrounding text.
 func EvalInterpolated(s string, env *Env) (Value, error) {
 	if !strings.Contains(s, "${") {
 		return String(s), nil

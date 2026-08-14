@@ -7,8 +7,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// decode unmarshals a JSON literal the same way BodyValidator does before
-// evaluation.
 func decode(t *testing.T, body string) any {
 	t.Helper()
 	var v any

@@ -9,7 +9,6 @@ import (
 	v1 "github.com/sacloud/sacloud-sdk-go/api/apigw/apis/v1"
 )
 
-// preflight sends OPTIONS with the CORS preflight headers.
 func preflight(origin, requestMethod string) func(*http.Request) {
 	return func(r *http.Request) {
 		r.Header.Set("Origin", origin)

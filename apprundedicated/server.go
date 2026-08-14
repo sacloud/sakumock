@@ -9,7 +9,7 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// Config holds configuration for the AppRun Dedicated mock server.
+// Config holds the AppRun Dedicated mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18089" env:"APPRUN_DEDICATED_LOCALSERVER_ADDR"`
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"APPRUN_DEDICATED_LATENCY"`
@@ -25,7 +25,8 @@ type Config struct {
 	tls    core.TLSFiles
 }
 
-// ClientEnv returns the environment variables a client sets to reach this mock.
+// ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
+// Terraform provider) sets to reach this mock.
 func (c Config) ClientEnv() []core.EnvVar {
 	return []core.EnvVar{
 		{Key: "SAKURA_ENDPOINTS_APPRUN_DEDICATED", Value: "http://" + c.Addr},
@@ -38,7 +39,7 @@ func (Config) Name() string { return "apprun-dedicated" }
 // ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
-// NewServer builds the mock server, adapting NewHandler to core.ServiceConfig.
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.logger = opts.Logger
 	c.tls = opts.TLS
@@ -50,7 +51,8 @@ var (
 	_ core.ServiceConfig = Config{}
 )
 
-// Server is a local AppRun Dedicated mock server.
+// Server is the AppRun Dedicated mock server. It is an http.Handler, so it can be mounted
+// directly or started on a local listener with NewTestServer.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
@@ -72,7 +74,7 @@ type Server struct {
 	tlsEnabled    bool
 }
 
-// NewHandler creates a Server as an http.Handler without starting a listener.
+// NewHandler builds the mock server as an http.Handler, without a listener.
 func NewHandler(cfg Config) (*Server, error) {
 	base := cfg.logger
 	if base == nil {
@@ -123,7 +125,8 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
-// NewTestServer creates and starts a new local AppRun Dedicated test server.
+// NewTestServer builds the mock server and starts it on a local httptest
+// listener. It panics if the server cannot be built.
 func NewTestServer(cfg Config) *Server {
 	s, err := NewHandler(cfg)
 	if err != nil {
@@ -133,7 +136,8 @@ func NewTestServer(cfg Config) *Server {
 	return s
 }
 
-// TestURL returns the base URL of the test server.
+// TestURL is the base URL of a server started by NewTestServer, or "" when the
+// server was built with NewHandler.
 func (s *Server) TestURL() string {
 	return s.httpServer.URL
 }
@@ -144,7 +148,7 @@ func (s *Server) SpecViolations() []core.SpecViolation {
 	return s.respValidator.Violations()
 }
 
-// DataPlaneAddr returns the data plane's listen address, or "" when disabled.
+// DataPlaneAddr is the data plane's listen address, or "" when it is disabled.
 func (s *Server) DataPlaneAddr() string {
 	if s.dp == nil {
 		return ""
@@ -152,7 +156,7 @@ func (s *Server) DataPlaneAddr() string {
 	return s.dp.Addr()
 }
 
-// Close shuts down the test server (if running) and releases resources.
+// Close stops the test server and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()

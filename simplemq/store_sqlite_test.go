@@ -17,7 +17,6 @@ func TestSQLiteStoreSendReceiveDelete(t *testing.T) {
 	now := time.Now().Truncate(time.Millisecond)
 	queueName := "test-queue"
 
-	// Send
 	msg, err := store.Send(queueName, "hello", now)
 	if err != nil {
 		t.Fatalf("send failed: %v", err)
@@ -29,7 +28,6 @@ func TestSQLiteStoreSendReceiveDelete(t *testing.T) {
 		t.Errorf("expected content=hello, got %s", msg.Content)
 	}
 
-	// Receive
 	msg2, ok, err := store.Receive(queueName, now)
 	if err != nil {
 		t.Fatalf("receive failed: %v", err)
@@ -56,12 +54,10 @@ func TestSQLiteStoreSendReceiveDelete(t *testing.T) {
 		t.Error("expected no message within visibility timeout")
 	}
 
-	// Delete
 	if err := store.Delete(queueName, msg.ID); err != nil {
 		t.Fatalf("delete failed: %v", err)
 	}
 
-	// Delete nonexistent
 	if err := store.Delete(queueName, "00000000-0000-0000-0000-000000000000"); err == nil {
 		t.Error("expected error for nonexistent message")
 	}
@@ -173,7 +169,6 @@ func TestSQLiteStoreExtendTimeout(t *testing.T) {
 		t.Errorf("expected message ID=%s, got %s", msg.ID, extended.ID)
 	}
 
-	// Nonexistent
 	_, err = store.ExtendTimeout(queueName, "00000000-0000-0000-0000-000000000000", now)
 	if err == nil {
 		t.Error("expected error for nonexistent message")
@@ -227,7 +222,6 @@ func TestSQLiteStorePersistence(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "test.db")
 	now := time.Now().Truncate(time.Millisecond)
 
-	// Write with first store instance
 	store1, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to create sqlite store: %v", err)
@@ -238,7 +232,6 @@ func TestSQLiteStorePersistence(t *testing.T) {
 	}
 	store1.Close()
 
-	// Read with second store instance
 	store2, err := NewSQLiteStore(dbPath, 30*time.Second, time.Hour, nil)
 	if err != nil {
 		t.Fatalf("failed to reopen sqlite store: %v", err)

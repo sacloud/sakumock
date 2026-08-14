@@ -18,7 +18,8 @@ type Command struct {
 	Routes bool          `help:"List supported HTTP routes and exit"`
 }
 
-// Run starts the EventBus mock server and serves until ctx is canceled.
+// Run starts the mock server and serves until ctx is canceled, or prints the
+// route table and returns when --routes is set.
 func (c *Command) Run(ctx context.Context) error {
 	if c.Routes {
 		h, err := NewHandler(Config{})

@@ -14,9 +14,6 @@ import (
 	"time"
 )
 
-// TestTerraformEndToEnd starts the real `sakumock all` binary and runs a full
-// terraform apply / plan(no-diff) / destroy against it through the
-// sacloud/sakura provider, covering one resource per mocked service.
 func TestTerraformEndToEnd(t *testing.T) {
 	tfBin, err := exec.LookPath("terraform")
 	if err != nil {

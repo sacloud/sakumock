@@ -57,10 +57,6 @@ func portOf(addr string) string {
 	return port
 }
 
-// --- JSON types matching SDK schemas ---
-
-// Cluster
-
 type createClusterReq struct {
 	Name               string            `json:"name"`
 	LetsEncryptEmail   *string           `json:"letsEncryptEmail,omitempty"`
@@ -116,8 +112,6 @@ func toClusterSummary(c *Cluster) clusterSummaryJSON {
 	}
 }
 
-// Application
-
 type createApplicationReq struct {
 	Name      string `json:"name"`
 	ClusterID string `json:"clusterID"`
@@ -152,8 +146,6 @@ func (s *Server) toApplicationDetail(app *Application) applicationDetailJSON {
 		ScalingCooldownSeconds: app.ScalingCooldownSeconds,
 	}
 }
-
-// Application Version
 
 type createVersionReq struct {
 	CPU                    int64             `json:"cpu"`
@@ -289,8 +281,6 @@ func toVersionDeployment(v *ApplicationVersion) versionDeploymentJSON {
 	}
 }
 
-// Auto Scaling Group
-
 type createASGReq struct {
 	Name                   string             `json:"name"`
 	Zone                   string             `json:"zone"`
@@ -359,8 +349,6 @@ func toASGDetail(asg *AutoScalingGroup) asgDetailJSON {
 		Interfaces:             ifaces,
 	}
 }
-
-// Load Balancer
 
 type createLBReq struct {
 	Name             string            `json:"name"`
@@ -443,8 +431,6 @@ func toLBSummary(lb *LoadBalancer) lbSummaryJSON {
 	}
 }
 
-// Load Balancer Node
-
 type lbNodeJSON struct {
 	LoadBalancerNodeID string            `json:"loadBalancerNodeID"`
 	ResourceID         *string           `json:"resourceID"`
@@ -484,8 +470,6 @@ func toLBNode(n *LoadBalancerNode) lbNodeJSON {
 		Created:            n.Created,
 	}
 }
-
-// Worker Node
 
 type workerNodeDetailJSON struct {
 	WorkerNodeID       string             `json:"workerNodeID"`
@@ -611,8 +595,6 @@ func toWorkerNodeSummary(wn *WorkerNode) workerNodeSummaryJSON {
 	}
 }
 
-// Certificate
-
 type createCertificateReq struct {
 	Name                       string  `json:"name"`
 	CertificatePem             string  `json:"certificatePem"`
@@ -643,8 +625,6 @@ func toCertificateJSON(cert *Certificate) certificateJSON {
 		Updated:                 cert.Updated,
 	}
 }
-
-// Service Classes
 
 type lbServiceClassJSON struct {
 	Path      string `json:"path"`
@@ -699,8 +679,6 @@ type listCertificatesResp struct {
 	NextCursor   *string           `json:"nextCursor,omitempty"`
 }
 
-// Container Placement
-
 type containerPlacementJSON struct {
 	NodeID          string                 `json:"nodeID"`
 	ContainersStats *containersStatsJSON   `json:"containersStats"`
@@ -733,8 +711,6 @@ type desiredContainerJSON struct {
 	MemoryMB           int64  `json:"memoryMB"`
 	Image              string `json:"image"`
 }
-
-// --- Handlers ---
 
 func (s *Server) handleCreateCluster(w http.ResponseWriter, r *http.Request) {
 	var req createClusterReq
@@ -814,8 +790,6 @@ func (s *Server) handleDeleteCluster(w http.ResponseWriter, r *http.Request) {
 	s.logger.Info("cluster deleted", "id", id)
 	writeNoContent(w)
 }
-
-// Application handlers
 
 func (s *Server) handleCreateApplication(w http.ResponseWriter, r *http.Request) {
 	var req createApplicationReq
@@ -998,8 +972,6 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 	})
 }
 
-// Version handlers
-
 func (s *Server) handleCreateVersion(w http.ResponseWriter, r *http.Request) {
 	appID := r.PathValue("applicationID")
 	if _, ok := s.store.ReadApplication(appID); !ok {
@@ -1113,8 +1085,6 @@ func (s *Server) handleDeleteVersion(w http.ResponseWriter, r *http.Request) {
 	writeNoContent(w)
 }
 
-// ASG handlers
-
 func (s *Server) handleCreateASG(w http.ResponseWriter, r *http.Request) {
 	clusterID := r.PathValue("clusterID")
 	if _, ok := s.store.ReadCluster(clusterID); !ok {
@@ -1204,8 +1174,6 @@ func (s *Server) handleDeleteASG(w http.ResponseWriter, r *http.Request) {
 	s.logger.Info("asg deleted", "id", asgID)
 	writeNoContent(w)
 }
-
-// Load Balancer handlers
 
 func (s *Server) handleCreateLB(w http.ResponseWriter, r *http.Request) {
 	clusterID := r.PathValue("clusterID")
@@ -1300,8 +1268,6 @@ func (s *Server) handleDeleteLB(w http.ResponseWriter, r *http.Request) {
 	writeNoContent(w)
 }
 
-// LB Node handlers
-
 func (s *Server) handleListLBNodes(w http.ResponseWriter, r *http.Request) {
 	clusterID := r.PathValue("clusterID")
 	asgID := r.PathValue("autoScalingGroupID")
@@ -1330,8 +1296,6 @@ func (s *Server) handleGetLBNode(w http.ResponseWriter, r *http.Request) {
 		"loadBalancerNode": toLBNode(node),
 	})
 }
-
-// Worker Node handlers
 
 func (s *Server) handleListWorkerNodes(w http.ResponseWriter, r *http.Request) {
 	clusterID := r.PathValue("clusterID")
@@ -1379,8 +1343,6 @@ func (s *Server) handleUpdateWorkerNodeDraining(w http.ResponseWriter, r *http.R
 	s.logger.Debug("worker node draining updated", "id", nodeID, "draining", req.Draining)
 	writeNoContent(w)
 }
-
-// Certificate handlers
 
 func (s *Server) handleCreateCertificate(w http.ResponseWriter, r *http.Request) {
 	clusterID := r.PathValue("clusterID")
@@ -1472,8 +1434,6 @@ func (s *Server) handleDeleteCertificate(w http.ResponseWriter, r *http.Request)
 	writeNoContent(w)
 }
 
-// Service Class handlers
-
 func (s *Server) handleListLBServiceClasses(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"lbServiceClasses": []lbServiceClassJSON{
@@ -1496,6 +1456,7 @@ func (s *Server) handleListWorkerServiceClasses(w http.ResponseWriter, r *http.R
 	})
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)

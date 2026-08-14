@@ -6,8 +6,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// ===== Publishers (read-only) =====
-
 type publisherVariantJSON struct {
 	Name          string  `json:"name"`
 	Label         string  `json:"label"`
@@ -57,8 +55,6 @@ func (s *Server) handleReadPublisher(w http.ResponseWriter, r *http.Request) {
 	}
 	core.WriteJSON(w, http.StatusOK, publisherToJSON(p, true))
 }
-
-// ===== Management =====
 
 type resourceItemLimits struct {
 	MaxUserCount          int `json:"max_user_count"`

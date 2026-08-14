@@ -62,6 +62,7 @@ func (t *table[T]) delete(key string) bool {
 	return true
 }
 
+// MemoryStore is the in-memory Store implementation.
 type MemoryStore struct {
 	ids    *core.IDGenerator
 	logger *slog.Logger
@@ -105,6 +106,7 @@ type passwordPolicyState struct {
 	RequireSymbols   bool `json:"require_symbols"`
 }
 
+// NewMemoryStore returns an empty MemoryStore.
 func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 	if logger == nil {
 		logger = slog.Default()
@@ -163,13 +165,13 @@ func (s *MemoryStore) getPasswordPolicy() passwordPolicyState {
 	return s.passwordPolicy
 }
 
+// Close releases the resources held by the store.
 func (s *MemoryStore) Close() error { return nil }
 
 func newUUID() string { return uuid.NewString() }
 
 func idKey(id int) string { return strconv.Itoa(id) }
 
-// userTrustedDevices returns the user's trusted devices in creation order.
 func (s *MemoryStore) userTrustedDevices(userID int) []*UserTrustedDeviceRecord {
 	var out []*UserTrustedDeviceRecord
 	for _, d := range s.trustedDevices.all() {
@@ -180,7 +182,6 @@ func (s *MemoryStore) userTrustedDevices(userID int) []*UserTrustedDeviceRecord 
 	return out
 }
 
-// userSecurityKeys returns the user's security keys in registration order.
 func (s *MemoryStore) userSecurityKeys(userID int) []*UserSecurityKeyRecord {
 	var out []*UserSecurityKeyRecord
 	for _, k := range s.securityKeys.all() {

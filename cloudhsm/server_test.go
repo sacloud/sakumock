@@ -42,7 +42,6 @@ func TestCloudHSMLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	hsmOp := cloudhsmsdk.NewCloudHSMOp(client)
 
-	// List: initially empty
 	hsms, err := hsmOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +50,6 @@ func TestCloudHSMLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 cloudhsms, got %d", len(hsms))
 	}
 
-	// Create
 	created, err := hsmOp.Create(ctx, cloudhsmsdk.CloudHSMCreateParams{
 		Name:               "test-hsm",
 		Ipv4NetworkAddress: "192.168.100.0",
@@ -68,7 +66,6 @@ func TestCloudHSMLifecycle(t *testing.T) {
 	}
 	id := created.ID
 
-	// List: 1 item
 	hsms, err = hsmOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +74,6 @@ func TestCloudHSMLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 cloudhsm, got %d", len(hsms))
 	}
 
-	// Read
 	read, err := hsmOp.Read(ctx, id)
 	if err != nil {
 		t.Fatal(err)
@@ -89,7 +85,6 @@ func TestCloudHSMLifecycle(t *testing.T) {
 		t.Fatal("expected non-empty Ipv4Address")
 	}
 
-	// Update
 	updated, err := hsmOp.Update(ctx, id, cloudhsmsdk.CloudHSMUpdateParams{
 		Name:               "updated-hsm",
 		Ipv4NetworkAddress: "192.168.100.0",
@@ -102,7 +97,6 @@ func TestCloudHSMLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update response: %+v", updated)
 	}
 
-	// Delete
 	if err := hsmOp.Delete(ctx, id); err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +145,6 @@ func TestClientLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// List: initially empty
 	clients, err := clientOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -160,7 +153,6 @@ func TestClientLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 clients, got %d", len(clients))
 	}
 
-	// Create
 	createdClient, err := clientOp.Create(ctx, cloudhsmsdk.CloudHSMClientCreateParams{
 		Name:        "client1",
 		Certificate: "-----BEGIN CERTIFICATE-----\nMIIC...\n-----END CERTIFICATE-----",
@@ -173,7 +165,6 @@ func TestClientLifecycle(t *testing.T) {
 	}
 	clientID := createdClient.ID
 
-	// Read
 	readClient, err := clientOp.Read(ctx, clientID)
 	if err != nil {
 		t.Fatal(err)
@@ -182,7 +173,6 @@ func TestClientLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read response: %+v", readClient)
 	}
 
-	// Update
 	updatedClient, err := clientOp.Update(ctx, clientID, cloudhsmsdk.CloudHSMClientUpdateParams{Name: "client1-renamed"})
 	if err != nil {
 		t.Fatal(err)
@@ -191,7 +181,6 @@ func TestClientLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update response: %+v", updatedClient)
 	}
 
-	// Delete
 	if err := clientOp.Delete(ctx, clientID); err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +218,6 @@ func TestPeerLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// List: initially empty
 	peers, err := peerOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -238,7 +226,6 @@ func TestPeerLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 peers, got %d", len(peers))
 	}
 
-	// Create
 	peerID := "110000000099"
 	if err := peerOp.Create(ctx, cloudhsmsdk.CloudHSMPeerCreateParams{RouterID: peerID, SecretKey: "pairing-secret"}); err != nil {
 		t.Fatal(err)
@@ -255,7 +242,6 @@ func TestPeerLifecycle(t *testing.T) {
 		t.Fatalf("unexpected peer id: %s", peers[0].ID)
 	}
 
-	// Delete
 	if err := peerOp.Delete(ctx, peerID); err != nil {
 		t.Fatal(err)
 	}
@@ -275,7 +261,6 @@ func TestLicenseLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	licenseOp := cloudhsmsdk.NewLicenseOp(client)
 
-	// List: initially empty
 	licenses, err := licenseOp.List(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -284,7 +269,6 @@ func TestLicenseLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 licenses, got %d", len(licenses))
 	}
 
-	// Create
 	created, err := licenseOp.Create(ctx, cloudhsmsdk.CloudHSMSoftwareLicenseCreateParams{Name: "license1"})
 	if err != nil {
 		t.Fatal(err)
@@ -294,7 +278,6 @@ func TestLicenseLifecycle(t *testing.T) {
 	}
 	id := created.ID
 
-	// Read
 	read, err := licenseOp.Read(ctx, id)
 	if err != nil {
 		t.Fatal(err)
@@ -303,7 +286,6 @@ func TestLicenseLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read response: %+v", read)
 	}
 
-	// Update
 	updated, err := licenseOp.Update(ctx, id, cloudhsmsdk.CloudHSMSoftwareLicenseUpdateParams{Name: "license1-renamed"})
 	if err != nil {
 		t.Fatal(err)
@@ -312,7 +294,6 @@ func TestLicenseLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update response: %+v", updated)
 	}
 
-	// Delete
 	if err := licenseOp.Delete(ctx, id); err != nil {
 		t.Fatal(err)
 	}

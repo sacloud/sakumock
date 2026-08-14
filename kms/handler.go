@@ -115,6 +115,7 @@ func (s *Server) buildMux() *http.ServeMux {
 	return mux
 }
 
+// ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.latency > 0 {
 		time.Sleep(s.latency)

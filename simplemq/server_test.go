@@ -57,7 +57,6 @@ func TestSendReceiveDelete(t *testing.T) {
 	queueName := "test-queue"
 	content := b64("hello")
 
-	// Send a message
 	sendRes, err := client.SendMessage(ctx, &message.SendRequest{Content: message.MessageContent(content)}, message.SendMessageParams{QueueName: message.QueueName(queueName)})
 	if err != nil {
 		t.Fatalf("send failed: %v", err)
@@ -77,7 +76,6 @@ func TestSendReceiveDelete(t *testing.T) {
 	}
 	msgID := sendOK.Message.ID
 
-	// Receive the message
 	recvRes, err := client.ReceiveMessage(ctx, message.ReceiveMessageParams{QueueName: message.QueueName(queueName)})
 	if err != nil {
 		t.Fatalf("receive failed: %v", err)
@@ -106,7 +104,6 @@ func TestSendReceiveDelete(t *testing.T) {
 		t.Error("expected non-zero visibility_timeout_at")
 	}
 
-	// Delete the message
 	delRes, err := client.DeleteMessage(ctx, message.DeleteMessageParams{
 		QueueName: message.QueueName(queueName),
 		MessageId: msgID,
@@ -248,7 +245,6 @@ func TestExtendTimeout(t *testing.T) {
 	ctx := t.Context()
 	queueName := "test-queue"
 
-	// Send and receive a message
 	sendRes, err := client.SendMessage(ctx, &message.SendRequest{Content: message.MessageContent(b64("timeout test"))}, message.SendMessageParams{QueueName: message.QueueName(queueName)})
 	if err != nil {
 		t.Fatalf("send failed: %v", err)
@@ -261,7 +257,6 @@ func TestExtendTimeout(t *testing.T) {
 		t.Fatalf("receive failed: %v", err)
 	}
 
-	// Extend timeout
 	extRes, err := client.ExtendMessageTimeout(ctx, message.ExtendMessageTimeoutParams{
 		QueueName: message.QueueName(queueName),
 		MessageId: msgID,
@@ -280,7 +275,6 @@ func TestExtendTimeout(t *testing.T) {
 		t.Errorf("expected message ID=%s, got %s", msgID, extOK.Message.ID)
 	}
 
-	// Extend timeout for nonexistent message
 	extRes2, err := client.ExtendMessageTimeout(ctx, message.ExtendMessageTimeoutParams{
 		QueueName: message.QueueName(queueName),
 		MessageId: nonexistentUUID,
@@ -301,7 +295,6 @@ func TestVisibilityTimeout(t *testing.T) {
 	ctx := t.Context()
 	queueName := "test-queue"
 
-	// Send a message
 	_, err := client.SendMessage(ctx, &message.SendRequest{Content: message.MessageContent(b64("visibility test"))}, message.SendMessageParams{QueueName: message.QueueName(queueName)})
 	if err != nil {
 		t.Fatalf("send failed: %v", err)
@@ -375,14 +368,12 @@ func TestValidationQueueName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Test send
 			url := fmt.Sprintf("%s/v1/queues/%s/messages", srv.TestURL(), tt.queueName)
 			status, _ := doRequest(t, "POST", url, "test-api-key", `{"content":"aGVsbG8="}`)
 			if status != http.StatusBadRequest {
 				t.Errorf("send: expected 400, got %d", status)
 			}
 
-			// Test receive
 			status, _ = doRequest(t, "GET", url, "test-api-key", "")
 			if status != http.StatusBadRequest {
 				t.Errorf("receive: expected 400, got %d", status)
@@ -428,14 +419,12 @@ func TestValidationMessageID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Test delete
 			url := fmt.Sprintf("%s/v1/queues/%s/messages/%s", srv.TestURL(), "valid-queue", tt.messageID)
 			status, _ := doRequest(t, "DELETE", url, "test-api-key", "")
 			if status != http.StatusBadRequest {
 				t.Errorf("delete: expected 400, got %d", status)
 			}
 
-			// Test extend timeout
 			status, _ = doRequest(t, "PUT", url, "test-api-key", "")
 			if status != http.StatusBadRequest {
 				t.Errorf("extend timeout: expected 400, got %d", status)

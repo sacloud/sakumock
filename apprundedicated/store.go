@@ -1,5 +1,6 @@
 package apprundedicated
 
+// Cluster is the isolated environment applications and their nodes belong to.
 type Cluster struct {
 	ClusterID          string
 	Name               string
@@ -9,11 +10,13 @@ type Cluster struct {
 	Created            int64
 }
 
+// ClusterPort is a port the cluster exposes.
 type ClusterPort struct {
 	Port     uint16
 	Protocol string
 }
 
+// Application is a deployable unit running on a cluster.
 type Application struct {
 	ApplicationID          string
 	Name                   string
@@ -23,6 +26,7 @@ type Application struct {
 	ScalingCooldownSeconds int32
 }
 
+// ApplicationVersion is an immutable, deployable revision of an application.
 type ApplicationVersion struct {
 	Version           int32
 	ApplicationID     string
@@ -44,6 +48,7 @@ type ApplicationVersion struct {
 	Created           int64
 }
 
+// ExposedPort is a port an application version listens on.
 type ExposedPort struct {
 	TargetPort       uint16
 	LoadBalancerPort *uint16
@@ -52,18 +57,21 @@ type ExposedPort struct {
 	HealthCheck      *HealthCheck
 }
 
+// HealthCheck is how the platform decides an application version is healthy.
 type HealthCheck struct {
 	Path            string
 	IntervalSeconds int32
 	TimeoutSeconds  int32
 }
 
+// EnvironmentVariable is one variable passed to an application version.
 type EnvironmentVariable struct {
 	Key    string
 	Value  *string
 	Secret bool
 }
 
+// AutoScalingGroup is the pool of worker nodes an application runs on.
 type AutoScalingGroup struct {
 	AutoScalingGroupID     string
 	ClusterID              string
@@ -78,6 +86,7 @@ type AutoScalingGroup struct {
 	Interfaces             []ASGNodeInterface
 }
 
+// ASGNodeInterface is a network interface attached to the group's nodes.
 type ASGNodeInterface struct {
 	InterfaceIndex int16
 	Upstream       string
@@ -88,11 +97,13 @@ type ASGNodeInterface struct {
 	ConnectsToLB   bool
 }
 
+// IpRange is the address range assigned to an interface.
 type IpRange struct {
 	Start string
 	End   string
 }
 
+// LoadBalancer fronts an auto scaling group.
 type LoadBalancer struct {
 	LoadBalancerID     string
 	ClusterID          string
@@ -105,6 +116,7 @@ type LoadBalancer struct {
 	Deleting           bool
 }
 
+// LBInterface is a network interface of a load balancer.
 type LBInterface struct {
 	InterfaceIndex  int16
 	Upstream        string
@@ -116,6 +128,7 @@ type LBInterface struct {
 	PacketFilterID  *string
 }
 
+// LoadBalancerNode is one node making up a load balancer.
 type LoadBalancerNode struct {
 	LoadBalancerNodeID string
 	LoadBalancerID     string
@@ -127,16 +140,19 @@ type LoadBalancerNode struct {
 	Created            int64
 }
 
+// LBNodeInterface is a network interface of a load balancer node.
 type LBNodeInterface struct {
 	InterfaceIndex int16
 	Addresses      []LBNodeAddress
 }
 
+// LBNodeAddress is an address assigned to a load balancer node interface.
 type LBNodeAddress struct {
 	Address string
 	Vip     bool
 }
 
+// WorkerNode is one node of an auto scaling group, where containers run.
 type WorkerNode struct {
 	WorkerNodeID       string
 	ClusterID          string
@@ -152,11 +168,13 @@ type WorkerNode struct {
 	Created            int64
 }
 
+// WorkerNodeNIC is a network interface of a worker node.
 type WorkerNodeNIC struct {
 	InterfaceIndex int16
 	Addresses      []string
 }
 
+// Certificate is a TLS certificate a cluster's load balancers can serve.
 type Certificate struct {
 	CertificateID              string
 	ClusterID                  string
@@ -172,6 +190,7 @@ type Certificate struct {
 	IntermediateCertificatePem *string
 }
 
+// Store is the storage backend for the AppRun Dedicated control plane.
 type Store interface {
 	CreateCluster(c *Cluster) error
 	ListClusters(cursor string, maxItems int) ([]*Cluster, *string)

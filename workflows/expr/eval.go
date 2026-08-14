@@ -11,6 +11,7 @@ const (
 	DefaultMaxArrayLen = 1_000_000
 )
 
+// Env is the variable and function scope an expression is evaluated in.
 type Env struct {
 	vars        map[string]Value
 	funcs       map[string]Func
@@ -20,8 +21,11 @@ type Env struct {
 	testCounter int
 }
 
+// Func is a function callable from an expression.
 type Func func(env *Env, args []Value) (Value, error)
 
+// NewEnv returns an environment with the built-in functions registered and no
+// variables set.
 func NewEnv() *Env {
 	return &Env{
 		vars:        make(map[string]Value),
@@ -31,6 +35,7 @@ func NewEnv() *Env {
 	}
 }
 
+// SetMaxSteps caps how many evaluation steps a single expression may take.
 func (e *Env) SetMaxSteps(n int) { e.maxSteps = n }
 
 func (e *Env) step() error {
@@ -43,19 +48,24 @@ func (e *Env) step() error {
 
 func (e *Env) resetSteps() { e.steps = 0 }
 
+// Set binds a variable in the environment.
 func (e *Env) Set(name string, val Value) {
 	e.vars[name] = val
 }
 
+// Get returns the value bound to name.
 func (e *Env) Get(name string) (Value, bool) {
 	v, ok := e.vars[name]
 	return v, ok
 }
 
+// SetFunc registers a function callable from expressions.
 func (e *Env) SetFunc(name string, f Func) {
 	e.funcs[name] = f
 }
 
+// Clone returns a copy of the environment, so a nested scope can shadow
+// bindings without affecting the original.
 func (e *Env) Clone() *Env {
 	vars := make(map[string]Value, len(e.vars))
 	maps.Copy(vars, e.vars)

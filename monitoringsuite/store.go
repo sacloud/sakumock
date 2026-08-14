@@ -113,7 +113,7 @@ type LogMeasureRule struct {
 	UpdatedAt        time.Time
 }
 
-// NotificationTarget is a notification target under an alert project.
+// NotificationTarget is where an alert project delivers its notifications.
 type NotificationTarget struct {
 	UID         string
 	ProjectID   int64
@@ -128,7 +128,7 @@ type MatchLabel struct {
 	Value string `json:"value"`
 }
 
-// NotificationRouting routes alerts to a notification target under a project.
+// NotificationRouting routes an alert project's alerts to a target.
 type NotificationRouting struct {
 	UID                   string
 	ProjectID             int64
@@ -150,7 +150,7 @@ type Routing struct {
 	UpdatedAt     time.Time
 }
 
-// PublisherVariant is one variant a publisher exposes.
+// PublisherVariant is one telemetry variant a publisher exposes.
 type PublisherVariant struct {
 	Name          string  `json:"name"`
 	Label         string  `json:"label"`

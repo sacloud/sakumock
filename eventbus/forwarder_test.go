@@ -19,7 +19,6 @@ import (
 	"github.com/sacloud/sakumock/simplenotification"
 )
 
-// serviceLink pairs a service config with its test server URL for serviceLinkEnv.
 type serviceLink struct {
 	cfg     core.ServiceConfig
 	testURL string

@@ -2,6 +2,7 @@ package iam
 
 import "time"
 
+// UserRecord is a user of the organization.
 type UserRecord struct {
 	ID          int
 	Name        string
@@ -37,6 +38,7 @@ type UserSecurityKeyRecord struct {
 	LastUsedAt   *time.Time
 }
 
+// GroupRecord is a group users can belong to.
 type GroupRecord struct {
 	ID          int
 	Name        string
@@ -46,6 +48,7 @@ type GroupRecord struct {
 	UpdatedAt   time.Time
 }
 
+// ProjectRecord is a project that resources are scoped to.
 type ProjectRecord struct {
 	ID             int
 	Code           string
@@ -57,6 +60,7 @@ type ProjectRecord struct {
 	UpdatedAt      time.Time
 }
 
+// FolderRecord is a folder that groups projects.
 type FolderRecord struct {
 	ID          int
 	Name        string
@@ -66,6 +70,7 @@ type FolderRecord struct {
 	UpdatedAt   time.Time
 }
 
+// ServicePrincipalRecord is a non-human identity belonging to a project.
 type ServicePrincipalRecord struct {
 	ID          int
 	ProjectID   int
@@ -75,6 +80,7 @@ type ServicePrincipalRecord struct {
 	UpdatedAt   time.Time
 }
 
+// ServicePrincipalKeyRecord is a public key uploaded for a service principal.
 type ServicePrincipalKeyRecord struct {
 	ID                 string
 	ServicePrincipalID int
@@ -86,6 +92,7 @@ type ServicePrincipalKeyRecord struct {
 	KeyExpiresAt       string
 }
 
+// ProjectAPIKeyRecord is an API key issued for a project.
 type ProjectAPIKeyRecord struct {
 	ID                int
 	ProjectID         int
@@ -100,6 +107,7 @@ type ProjectAPIKeyRecord struct {
 	UpdatedAt         time.Time
 }
 
+// IAMRoleRecord is a built-in IAM role that a policy binding can grant.
 type IAMRoleRecord struct {
 	ID                      string
 	Name                    string
@@ -108,27 +116,32 @@ type IAMRoleRecord struct {
 	LowestGrantableResource string
 }
 
+// IDRoleRecord is a built-in ID role that a policy binding can grant.
 type IDRoleRecord struct {
 	ID          string
 	Name        string
 	Description string
 }
 
+// PolicyBinding grants one role to a set of principals.
 type PolicyBinding struct {
 	Role       PolicyRole        `json:"role"`
 	Principals []PolicyPrincipal `json:"principals"`
 }
 
+// PolicyRole identifies the role granted by a PolicyBinding.
 type PolicyRole struct {
 	Type string `json:"type"`
 	ID   string `json:"id"`
 }
 
+// PolicyPrincipal identifies one holder of a PolicyBinding.
 type PolicyPrincipal struct {
 	Type string `json:"type"`
 	ID   int    `json:"id"`
 }
 
+// SSOProfileRecord is a single sign-on profile of the organization.
 type SSOProfileRecord struct {
 	ID             int
 	Name           string
@@ -144,6 +157,7 @@ type SSOProfileRecord struct {
 	UpdatedAt      time.Time
 }
 
+// ScimConfigurationRecord is a SCIM provisioning configuration and its token.
 type ScimConfigurationRecord struct {
 	ID          string
 	Name        string

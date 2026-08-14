@@ -10,8 +10,7 @@ import (
 	"time"
 )
 
-// SetupLogger installs a default slog logger that writes to stderr.
-// When debug is true the level is Debug, otherwise Info.
+// SetupLogger installs the default logger, at Debug level when debug is set.
 func SetupLogger(debug bool) {
 	level := slog.LevelInfo
 	if debug {
@@ -27,9 +26,8 @@ func NotifyContext(parent context.Context) (context.Context, context.CancelFunc)
 	return signal.NotifyContext(parent, shutdownSignals()...)
 }
 
-// Serve runs h on addr until ctx is canceled, then gracefully shuts the server
-// down. It serves HTTPS when tls.Enabled() (using its cert/key), otherwise plain
-// HTTP. It returns nil on a clean shutdown.
+// Serve runs h on addr until ctx is canceled, then shuts the server down
+// gracefully. It returns nil on a clean shutdown.
 func Serve(ctx context.Context, addr string, h http.Handler, tls TLSFiles) error {
 	srv := &http.Server{
 		Addr:    addr,
@@ -51,8 +49,8 @@ func Serve(ctx context.Context, addr string, h http.Handler, tls TLSFiles) error
 	return nil
 }
 
-// RateLimitHint renders a human-readable description of a rate-limit setting for
-// startup logs. suffix is appended after the window (e.g. " per queue").
+// RateLimitHint describes a rate-limit setting for startup logs. suffix is
+// appended after the window (e.g. " per queue").
 func RateLimitHint(events float64, window time.Duration, suffix string) string {
 	if events <= 0 {
 		return "(disabled)"

@@ -1,0 +1,28 @@
+OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
+OPENAPI_SUBDIR := api/service-endpoint-gateway/openapi
+OPENAPI_FILES := openapi.json
+
+.PHONY: clean test openapi generate
+
+sakumock-seg: ../go.* *.go cmd/sakumock-seg/*.go
+	go build -o $@ ./cmd/sakumock-seg
+
+clean:
+	rm -rf sakumock-seg dist/
+
+test:
+	go test -v ./...
+
+install:
+	go install github.com/sacloud/sakumock/seg/cmd/sakumock-seg
+
+openapi:
+	$(eval MOD_VERSION := $(shell go list -m -f '{{.Version}}' $(OPENAPI_MODULE)))
+	$(eval MOD_DIR := $(shell go env GOMODCACHE)/$(OPENAPI_MODULE)@$(MOD_VERSION))
+	mkdir -p openapi
+	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
+	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"
+	$(MAKE) generate
+
+generate:
+	go generate .

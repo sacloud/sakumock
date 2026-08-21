@@ -41,7 +41,7 @@ type EnabledServiceConfig struct {
 // EnabledServiceRecord is one managed service the gateway is configured to
 // reach.
 type EnabledServiceRecord struct {
-	Type   string // "ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AppRunDedicatedControlPlane"
+	Type   string // "ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"
 	Config EnabledServiceConfig
 }
 

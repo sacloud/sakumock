@@ -42,7 +42,7 @@ export SAKURA_ACCESS_TOKEN=dummy
 export SAKURA_ACCESS_TOKEN_SECRET=dummy
 ```
 
-Keep the trailing slash on the endpoint URL. The SDK matches the list-API path with `url.JoinPath`, which drops the leading slash when the endpoint URL has an empty path; without the slash the SDK never sends the `Provider.Class` filter and `List` returns process configurations, schedules, and triggers mixed together. (`sakumock env` and the startup log emit the URL with the slash already in place.)
+Keep the trailing slash on the endpoint URL if your client uses `eventbus-api-go` (the Terraform provider does): it matches the list-API path with `url.JoinPath`, which drops the leading slash when the endpoint URL has an empty path; without the slash the client never sends the `Provider.Class` filter and `List` returns process configurations, schedules, and triggers mixed together. `sacloud-sdk-go` v0.1.0 and later work with or without the slash. (`sakumock env` and the startup log emit the URL with the slash already in place.)
 
 ## Library usage
 

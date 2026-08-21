@@ -36,10 +36,13 @@ type Config struct {
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
 // Terraform provider) sets to reach this mock.
 //
-// The URL keeps a trailing slash: the eventbus SDK matches the list-API path
-// with url.JoinPath, which drops the leading slash when the endpoint URL has
-// an empty path, so without the slash the SDK never injects the Provider.Class
-// filter query and List would return items of every class.
+// The URL keeps a trailing slash for clients still on eventbus-api-go (the
+// Terraform provider as of v3.12): it matches the list-API path with
+// url.JoinPath, which drops the leading slash when the endpoint URL has an
+// empty path, so without the slash it never injects the Provider.Class filter
+// query and List returns items of every class. sacloud-sdk-go v0.1.0 fixed
+// this and works either way; drop the slash once eventbus-api-go clients are
+// gone.
 func (c Config) ClientEnv() []core.EnvVar {
 	return []core.EnvVar{
 		{Key: "SAKURA_ENDPOINTS_EVENTBUS", Value: "http://" + c.Addr + "/"},

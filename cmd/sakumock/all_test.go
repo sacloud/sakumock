@@ -47,6 +47,13 @@ func TestAllBuild(t *testing.T) {
 	if services[0].cfg.Name() != "simplemq" || len(services[0].cfg.ClientEnv()) != 2 {
 		t.Errorf("simplemq should expose both control- and data-plane keys, got %+v", services[0])
 	}
+	// A server built without a listener (NewHandler via NewServer) has no test
+	// URL; the contract is "" rather than a nil dereference.
+	for _, s := range services {
+		if got := s.server.TestURL(); got != "" {
+			t.Errorf("%s: TestURL() = %q for a listener-less server, want \"\"", s.cfg.Name(), got)
+		}
+	}
 }
 
 func TestAllSharesOneIDGenerator(t *testing.T) {

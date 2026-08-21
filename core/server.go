@@ -14,7 +14,8 @@ type Server interface {
 	// Routes describes every HTTP endpoint the server registers.
 	Routes() []Route
 	// TestURL returns the base URL when the server was started via the
-	// service's NewTestServer.
+	// service's NewTestServer, or "" when it was built without a listener
+	// (NewHandler / NewServer).
 	TestURL() string
 	// Close shuts the server down and releases its resources.
 	Close()

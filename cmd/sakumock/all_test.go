@@ -25,6 +25,7 @@ func newTestAllCmd() *AllCmd {
 	c.Workflows.Addr = "127.0.0.1:18090"
 	c.Apigw.Addr = "127.0.0.1:18091"
 	c.Cloudhsm.Addr = "127.0.0.1:18092"
+	c.Addon.Addr = "127.0.0.1:18093"
 	return c
 }
 
@@ -39,7 +40,7 @@ func TestAllBuild(t *testing.T) {
 		}
 	}()
 
-	if got, want := len(services), 13; got != want {
+	if got, want := len(services), 14; got != want {
 		t.Fatalf("got %d services, want %d", got, want)
 	}
 	if services[0].cfg.Name() != "simplemq" || len(services[0].cfg.ClientEnv()) != 2 {

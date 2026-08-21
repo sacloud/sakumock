@@ -23,6 +23,7 @@ Every service is available as a subcommand of the single `sakumock` binary (e.g.
 | [workflows](workflows/) | 18090 | `github.com/sacloud/sakumock/workflows` | Workflows control-plane API (optional Runbook execution engine) |
 | [apigw](apigw/) | 18091 | `github.com/sacloud/sakumock/apigw` | API Gateway control-plane API (optional gateway data plane) |
 | [cloudhsm](cloudhsm/) | 18092 | `github.com/sacloud/sakumock/cloudhsm` | CloudHSM control-plane API |
+| [addon](addon/) | 18093 | `github.com/sacloud/sakumock/addon` | Add-on API (AI / CDN / security / data analytics resources) |
 
 ## Quick Start
 
@@ -146,6 +147,7 @@ sakumock apprun &
 sakumock apprun-dedicated &
 sakumock workflows &
 sakumock cloudhsm &
+sakumock addon &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.

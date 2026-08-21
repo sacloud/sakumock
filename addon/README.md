@@ -22,7 +22,7 @@ sakumock-addon
 
 | Flag | Env | Default | Description |
 |------|-----|---------|-------------|
-| `--addr` | `ADDON_LOCALSERVER_ADDR` | `127.0.0.1:18093` | Listen address |
+| `--addr` | `ADDON_LOCALSERVER_ADDR` | `127.0.0.1:18094` | Listen address |
 | `--provisioning-delay` | `ADDON_PROVISIONING_DELAY` | `0` | How long a created resource stays in the `Running` deployment state before list/get can see it (e.g. `5s`); `0` completes immediately |
 | `--latency` | `ADDON_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `ADDON_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
@@ -37,7 +37,7 @@ sakumock-addon
 The [sacloud-sdk-go](https://github.com/sacloud/sacloud-sdk-go) `api/addon` client reads the `SAKURA_ENDPOINTS_ADDON` override, which replaces the entire API root URL:
 
 ```bash
-export SAKURA_ENDPOINTS_ADDON=http://localhost:18093
+export SAKURA_ENDPOINTS_ADDON=http://localhost:18094
 export SAKURA_ACCESS_TOKEN=dummy
 export SAKURA_ACCESS_TOKEN_SECRET=dummy
 ```
@@ -109,7 +109,7 @@ Run `sakumock addon --routes` for the fully expanded table.
 Every family also reports `name` (the resource group name) and `properties.provisioningState`.
 
 ```console
-$ curl localhost:18093/ai/ai-c00e8994
+$ curl localhost:18094/ai/ai-c00e8994
 {
   "data": {
     "name": "ai-c00e8994",
@@ -120,7 +120,7 @@ $ curl localhost:18093/ai/ai-c00e8994
   "url": "https://secure.sakura.ad.jp/cloud/addon/ai/ai-c00e8994"
 }
 
-$ curl localhost:18093/cdn/cdn-cb726c22
+$ curl localhost:18094/cdn/cdn-cb726c22
 {
   "data": {
     "name": "cdn-cb726c22",

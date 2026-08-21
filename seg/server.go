@@ -1,4 +1,4 @@
-package addon
+package seg
 
 import (
 	"log/slog"
@@ -9,15 +9,18 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-// Config holds the Add-on mock server's options.
+// Config holds the Service Endpoint Gateway mock server's options.
 type Config struct {
-	Addr              string        `help:"Listen address" default:"127.0.0.1:18094" env:"ADDON_LOCALSERVER_ADDR"`
-	ProvisioningDelay time.Duration `help:"How long a created resource stays in the \"Running\" deployment state before list/get can see it (0 completes immediately)" env:"ADDON_PROVISIONING_DELAY"`
-	Latency           time.Duration `help:"Artificial latency added to every response" env:"ADDON_LATENCY"`
-	RateLimit         float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"ADDON_RATE_LIMIT"`
-	RateLimitWindow   time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"ADDON_RATE_LIMIT_WINDOW"`
-	Fault             []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"ADDON_FAULT"`
-	Debug             bool          `help:"Enable debug mode" env:"ADDON_DEBUG" default:"false"`
+	Addr            string        `help:"Listen address" default:"127.0.0.1:18093" env:"SEG_LOCALSERVER_ADDR"`
+	Latency         time.Duration `help:"Artificial latency added to every response" env:"SEG_LATENCY"`
+	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"SEG_RATE_LIMIT"`
+	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"SEG_RATE_LIMIT_WINDOW"`
+	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"SEG_FAULT"`
+	Debug           bool          `help:"Enable debug mode" env:"SEG_DEBUG" default:"false"`
+
+	// idGen, when non-nil, is the resource ID generator injected by the unified
+	// binary via NewServer; nil means the store creates its own.
+	idGen *core.IDGenerator
 
 	// logger, when non-nil, is the base logger injected by the unified binary
 	// via NewServer; nil means the server falls back to slog.Default().
@@ -25,23 +28,23 @@ type Config struct {
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
-// Terraform provider) sets to reach this mock.
+// Terraform provider) sets to reach this mock. This override only takes
+// effect while SAKURA_ZONE is unset — see README.md.
 func (c Config) ClientEnv() []core.EnvVar {
 	return []core.EnvVar{
-		{Key: "SAKURA_ENDPOINTS_ADDON", Value: "http://" + c.Addr},
+		{Key: "SAKURA_ENDPOINTS_SERVICE_ENDPOINT_GATEWAY", Value: "http://" + c.Addr},
 	}
 }
 
 // Name returns the service's short name.
-func (Config) Name() string { return "addon" }
+func (Config) Name() string { return "seg" }
 
 // ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }
 
-// NewServer builds the mock server with the shared options. Add-on resources
-// are identified by generated names rather than SAKURA Cloud resource IDs, so
-// opts.IDGen is not used.
+// NewServer builds the mock server with the shared options.
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
+	c.idGen = opts.IDGen
 	c.logger = opts.Logger
 	return NewHandler(c)
 }
@@ -51,8 +54,9 @@ var (
 	_ core.ServiceConfig = Config{}
 )
 
-// Server is the Add-on mock server. It is an http.Handler, so it can be mounted
-// directly or started on a local listener with NewTestServer.
+// Server is the Service Endpoint Gateway mock server. It is an http.Handler,
+// so it can be mounted directly or started on a local listener with
+// NewTestServer.
 type Server struct {
 	httpServer  *httptest.Server
 	mux         *http.ServeMux
@@ -83,7 +87,7 @@ func NewHandler(cfg Config) (*Server, error) {
 	}
 	s := &Server{
 		fault:   fault,
-		store:   NewStore(logger, cfg.ProvisioningDelay),
+		store:   NewStore(logger),
 		latency: cfg.Latency,
 		logger:  logger,
 		rateLimiter: core.NewRateLimiter(
@@ -93,8 +97,11 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator:     core.NewBodyValidator(bodySchemas, writeError),
+		validator:     core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
 		respValidator: core.NewResponseValidator(responseSchemas, logger),
+	}
+	if cfg.idGen != nil {
+		s.store.ids = cfg.idGen
 	}
 	s.mux = s.buildMux()
 	return s, nil

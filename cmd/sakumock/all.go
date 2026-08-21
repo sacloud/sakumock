@@ -22,6 +22,7 @@ import (
 	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/objectstorage"
 	"github.com/sacloud/sakumock/secretmanager"
+	"github.com/sacloud/sakumock/seg"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
 	"github.com/sacloud/sakumock/workflows"
@@ -48,6 +49,7 @@ type serviceConfigs struct {
 	Workflows          workflows.Config          `embed:"" prefix:"workflows-"`
 	Apigw              apigw.Config              `embed:"" prefix:"apigw-"`
 	Cloudhsm           cloudhsm.Config           `embed:"" prefix:"cloudhsm-"`
+	Seg                seg.Config                `embed:"" prefix:"seg-"`
 	Addon              addon.Config              `embed:"" prefix:"addon-"`
 
 	// TLS is one common certificate/key pair applied to every service's listeners
@@ -58,7 +60,7 @@ type serviceConfigs struct {
 }
 
 func (c *serviceConfigs) configs() []core.ServiceConfig {
-	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows, c.Apigw, c.Cloudhsm, c.Addon}
+	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows, c.Apigw, c.Cloudhsm, c.Seg, c.Addon}
 }
 
 // AllCmd runs every mock service together in a single process, each on its own
@@ -143,7 +145,7 @@ func (c *AllCmd) build() ([]serviceInstance, error) {
 }
 
 func (c *AllCmd) debug() bool {
-	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug || c.Apprun.Debug || c.ApprunDedicated.Debug || c.Workflows.Debug || c.Apigw.Debug || c.Cloudhsm.Debug || c.Addon.Debug
+	return c.Debug || c.Simplemq.Debug || c.Kms.Debug || c.Secretmanager.Debug || c.Simplenotification.Debug || c.Monitoringsuite.Debug || c.Eventbus.Debug || c.Objectstorage.Debug || c.Iam.Debug || c.Apprun.Debug || c.ApprunDedicated.Debug || c.Workflows.Debug || c.Apigw.Debug || c.Cloudhsm.Debug || c.Seg.Debug || c.Addon.Debug
 }
 
 // Run starts every mock service and serves until ctx is canceled. If one

@@ -20,6 +20,7 @@ import (
 	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/objectstorage"
 	"github.com/sacloud/sakumock/secretmanager"
+	"github.com/sacloud/sakumock/seg"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
 	"github.com/sacloud/sakumock/workflows"
@@ -42,6 +43,7 @@ type CLI struct {
 	Workflows          workflows.Command          `cmd:"" name:"workflows" help:"Workflows mock server"`
 	Apigw              apigw.Command              `cmd:"" name:"apigw" help:"API Gateway mock server"`
 	Cloudhsm           cloudhsm.Command           `cmd:"" name:"cloudhsm" help:"CloudHSM mock server"`
+	Seg                seg.Command                `cmd:"" name:"seg" help:"Service Endpoint Gateway mock server"`
 	Addon              addon.Command              `cmd:"" name:"addon" help:"Add-on mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`

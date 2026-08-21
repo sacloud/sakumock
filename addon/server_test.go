@@ -75,7 +75,7 @@ func at(t *testing.T, raw []byte, path string) any {
 	if err := json.Unmarshal(raw, &cur); err != nil {
 		t.Fatal(err)
 	}
-	for _, seg := range strings.Split(path, ".") {
+	for seg := range strings.SplitSeq(path, ".") {
 		switch node := cur.(type) {
 		case map[string]any:
 			v, ok := node[seg]

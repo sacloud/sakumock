@@ -133,6 +133,9 @@ func NewTestServer(cfg Config) *Server {
 // TestURL is the base URL of a server started by NewTestServer, or "" when the
 // server was built with NewHandler.
 func (s *Server) TestURL() string {
+	if s.httpServer == nil {
+		return ""
+	}
 	return s.httpServer.URL
 }
 

@@ -14,7 +14,7 @@ All services are also aggregated into a single `sakumock` binary (entrypoint `cm
 - `Command` struct — embeds `Config`, adds a `Routes bool` flag and a `Run(ctx context.Context) error` method; reused by both the standalone `sakumock-<service>` binary and the unified `sakumock` binary
 - `NewHandler(cfg Config) (*Server, error)` — creates `http.Handler` without listener (return a `nil` error when construction cannot fail, to keep the signature uniform across services)
 - `NewTestServer(cfg Config) *Server` — creates and starts `httptest.Server` (panics on `NewHandler` error)
-- `Server.TestURL() string` — returns base URL
+- `Server.TestURL() string` — returns the `httptest` base URL, or `""` for a server built by `NewHandler` (never panics on the missing listener)
 - `Server.Routes() []core.Route` — returns metadata for every HTTP endpoint registered on the server (the CLI's `--routes` flag prints these via `core.PrintRoutes`)
 - `Server.Close()` — shuts down server and releases resources
 - `*Server` must satisfy `core.Server` (`http.Handler` + `Routes()` + `TestURL()` + `Close()`), the interface the unified binary uses to treat every service uniformly. Each service asserts it with a compile-time `var _ core.Server = (*Server)(nil)` in `server.go`, so a new service that drifts from the contract fails to build (the convention is type-enforced, not just documented).

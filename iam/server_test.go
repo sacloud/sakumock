@@ -18,6 +18,7 @@ package iam_test
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	iamsdk "github.com/sacloud/sacloud-sdk-go/api/iam"
@@ -812,9 +813,9 @@ func TestServicePolicyLifecycle(t *testing.T) {
 
 	putRes, err := client.OrganizationServicePolicyPut(ctx, &v1.OrganizationServicePolicyPutReq{
 		Rules: []v1.Rule{{
-			Code:     v1.NewOptString("example.rule.bool"),
-			IsActive: v1.NewOptBool(true),
-			IsDryRun: v1.NewOptBool(false),
+			Code:     "example.rule.bool",
+			IsActive: true,
+			IsDryRun: false,
 		}},
 	})
 	if err != nil {
@@ -835,22 +836,31 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected rules: %+v", rules.Rules)
 	}
 
-	// A body-validation failure decodes as a structured 400
-	// (Http400BadRequest requires the errors map), not a decode error.
-	badRes, err := client.OrganizationServicePolicyPut(ctx, &v1.OrganizationServicePolicyPutReq{
-		Rules: []v1.Rule{{Code: v1.NewOptString("example.rule.bool")}},
-	})
+	// A body-validation failure is a structured 400 that decodes into the
+	// SDK's Http400BadRequest (which requires the errors map). The SDK always
+	// sends the required rule fields, so omit them with a raw request.
+	badReq, err := http.NewRequestWithContext(ctx, http.MethodPut, srv.TestURL()+"/organization-service-policy",
+		strings.NewReader(`{"rules":[{"code":"example.rule.bool"}]}`))
 	if err != nil {
 		t.Fatal(err)
 	}
-	badReq, ok := badRes.(*v1.Http400BadRequest)
-	if !ok {
-		t.Fatalf("expected Http400BadRequest, got %#v", badRes)
+	badReq.Header.Set("Content-Type", "application/json")
+	badReq.SetBasicAuth("dummy", "dummy")
+	badResp, err := http.DefaultClient.Do(badReq)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if len(badReq.Errors.AdditionalProps) == 0 && len(badReq.Errors.NonFieldErrors) == 0 {
-		t.Fatalf("expected non-empty errors: %+v", badReq.Errors)
+	defer badResp.Body.Close()
+	if badResp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", badResp.StatusCode)
 	}
-
+	var bad v1.Http400BadRequest
+	if err := json.NewDecoder(badResp.Body).Decode(&bad); err != nil {
+		t.Fatalf("400 body does not decode as Http400BadRequest: %v", err)
+	}
+	if len(bad.Errors.AdditionalProps) == 0 && len(bad.Errors.NonFieldErrors) == 0 {
+		t.Fatalf("expected non-empty errors: %+v", bad.Errors)
+	}
 }
 
 func TestSpecViolationsEndpoint(t *testing.T) {

@@ -1,0 +1,2901 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.1.0",
+    "title": "Add-on APIドキュメント",
+    "description": "---\n\n「Add-on」が提供するAPIの利用方法とサンプルを公開しております。\n\n# 基本的な使い方\n\n## APIキーの発行\n\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。  \nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n\n<div class=\"warning\">\n  <b>操作マニュアル</b><br />\n  <ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## APIエンドポイント\nhttps://secure.sakura.ad.jp/cloud/api/addon/1.0/\n\n---\n",
+    "contact": {
+      "name": "SAKURA internet Inc."
+    },
+    "license": {
+      "name": "Copyright(C) SAKURA internet Inc. all rights reserved."
+    }
+  },
+  "servers": [
+    {
+      "url": "https://secure.sakura.ad.jp/cloud/api/addon/1.0/"
+    }
+  ],
+  "paths": {
+    "/ai": {
+      "get": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "AI機能リソースの一覧を取得します。",
+        "description": "アドオンのAI機能リソースの一覧を取得します。",
+        "operationId": "list_AZ0501",
+        "responses": {
+          "200": {
+            "description": "AI機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AI機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "AI機能リソースを作成します。",
+        "description": "アドオンのAI機能リソースを作成します。",
+        "operationId": "create_AZ0501",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "AI機能リソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "指定されたAI機能リソースを取得します。",
+        "description": "アドオンの指定されたAI機能リソースを取得します。",
+        "operationId": "get_AZ0501",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AI機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "指定されたAI機能リソースを削除します。",
+        "description": "アドオンの指定されたAI機能リソースを削除します。",
+        "operationId": "delete_AZ0501",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "AI機能リソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AI機能リソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/ai/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "指定されたAI機能リソースのステータスを取得します。",
+        "description": "アドオンの指定されたAI機能リソースのステータスを取得します。",
+        "operationId": "status_AZ0501",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cdn": {
+      "get": {
+        "tags": [
+          "CDN"
+        ],
+        "summary": "CDNサービスリソースの一覧を取得します。",
+        "description": "アドオンのCDNサービスリソースの一覧を取得します。",
+        "operationId": "list_AZ0301",
+        "responses": {
+          "200": {
+            "description": "CDNサービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CDNサービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CDN"
+        ],
+        "summary": "CDNサービスリソースを作成します。",
+        "description": "アドオンのCDNサービスリソースを作成します。",
+        "operationId": "create_AZ0301",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "CDNサービスリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cdn/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "CDN"
+        ],
+        "summary": "指定されたCDNサービスリソースを取得します。",
+        "description": "アドオンの指定されたCDNサービスリソースを取得します。",
+        "operationId": "get_AZ0301",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CDNサービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CDNサービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CDN"
+        ],
+        "summary": "指定されたCDNサービスリソースを削除します。",
+        "description": "アドオンの指定されたCDNサービスリソースを削除します。",
+        "operationId": "delete_AZ0301",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "CDNサービスリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CDNサービスリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/cdn/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "CDN"
+        ],
+        "summary": "指定されたCDNサービスリソースのステータスを取得します。",
+        "description": "アドオンの指定されたCDNサービスリソースのステータスを取得します。",
+        "operationId": "status_AZ0301",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "description": "デプロイメント名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CDNサービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/ddos": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "DDoS対策サービスリソースの一覧を取得します。",
+        "description": "アドオンのDDoS対策サービスリソースの一覧を取得します。",
+        "operationId": "list_AZ0401",
+        "responses": {
+          "200": {
+            "description": "DDoS対策サービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DDoS対策サービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "DDoS対策サービスリソースを作成します。",
+        "description": "アドオンのDDoS対策サービスリソースを作成します。",
+        "operationId": "create_AZ0401",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DdosRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "DDoS対策サービスリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/ddos/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定されたDDoS対策サービスリソースを取得します。",
+        "description": "アドオンの指定されたDDoS対策サービスリソースを取得します。",
+        "operationId": "get_AZ0401",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DDoS対策サービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DDoS対策サービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定されたDDoS対策サービスリソースを削除します。",
+        "description": "アドオンの指定されたDDoS対策サービスリソースを削除します。",
+        "operationId": "delete_AZ0401",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "DDoS対策サービスリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "DDoS対策サービスリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/security/ddos/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定されたDDoS対策サービスリソースのステータスを取得します。",
+        "description": "アドオンの指定されたDDoS対策サービスリソースのステータスを取得します。",
+        "operationId": "status_AZ0401",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "description": "デプロイメント名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DDoS対策サービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/waf": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "WAFサービスリソースの一覧を取得します。",
+        "description": "アドオンのWAFサービスリソースの一覧を取得します。",
+        "operationId": "list_AZ0402",
+        "responses": {
+          "200": {
+            "description": "WAFサービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "WAFサービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "WAFサービスリソースを作成します。",
+        "description": "アドオンのWAFサービスリソースを作成します。",
+        "operationId": "create_AZ0402",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WafRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "WAFサービスリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/waf/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定されたWAFサービスリソースを取得します。",
+        "description": "アドオンの指定されたWAFサービスリソースを取得します。",
+        "operationId": "get_AZ0402",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "WAFサービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "WAFサービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定されたWAFサービスリソースを削除します。",
+        "description": "アドオンの指定されたWAFサービスリソースを削除します。",
+        "operationId": "delete_AZ0402",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "WAFサービスリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "WAFサービスリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/security/waf/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定されたWAFサービスリソースのステータスを取得します。",
+        "description": "アドオンの指定されたWAFサービスリソースのステータスを取得します。",
+        "operationId": "status_AZ0402",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "description": "デプロイメント名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "WAFサービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/vulnerability": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "脆弱性検出サービスリソースの一覧を取得します。",
+        "description": "アドオンの脆弱性検出サービスリソースの一覧を取得します。",
+        "operationId": "list_AZ0403",
+        "responses": {
+          "200": {
+            "description": "脆弱性検出サービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "脆弱性検出サービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "脆弱性検出サービスリソースを作成します。",
+        "description": "アドオンの脆弱性検出サービスリソースを作成します。",
+        "operationId": "create_AZ0403",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VulnerabilityRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "脆弱性検出サービスリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VulnerabilityResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/security/vulnerability/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定された脆弱性検出サービスリソースを取得します。",
+        "description": "アドオンの指定された脆弱性検出サービスリソースを取得します。",
+        "operationId": "get_AZ0403",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "脆弱性検出サービスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "脆弱性検出サービスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "セキュリティ"
+        ],
+        "summary": "指定された脆弱性検出サービスリソースを削除します。",
+        "description": "アドオンの指定された脆弱性検出サービスリソースを削除します。",
+        "operationId": "delete_AZ0403",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "脆弱性検出サービスリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "脆弱性検出サービスリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/datalake": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "データレイクリソースの一覧を取得します。",
+        "description": "アドオンのデータレイクリソースの一覧を取得します。",
+        "operationId": "list_AZ0101",
+        "responses": {
+          "200": {
+            "description": "データレイクリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データレイクリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "データレイクリソースを作成します。",
+        "description": "アドオンのデータレイクリソースを作成します。",
+        "operationId": "create_AZ0101",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatalakePostRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "データレイクリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/datalake/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータレイクリソースを取得します。",
+        "description": "アドオンの指定されたデータレイクリソースを取得します。",
+        "operationId": "get_AZ0101",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データレイクリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データレイクリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータレイクリソースを削除します。",
+        "description": "アドオンの指定されたデータレイクリソースを削除します。",
+        "operationId": "delete_AZ0101",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "データレイクリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データレイクリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/datalake/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータレイクリソースのステータスを取得します。",
+        "description": "アドオンの指定されたデータレイクリソースのステータスを取得します。",
+        "operationId": "status_AZ0101",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データレイクリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dwh": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "データウェアハウスリソースの一覧を取得します。",
+        "description": "アドオンのデータウェアハウスリソースの一覧を取得します。",
+        "operationId": "list_AZ0102",
+        "responses": {
+          "200": {
+            "description": "データウェアハウスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データウェアハウスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "データウェアハウスリソースを作成します。",
+        "description": "アドオンのデータウェアハウスリソースを作成します。",
+        "operationId": "create_AZ0102",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatawarehousePostRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "データウェアハウスリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/dwh/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータウェアハウスリソースを取得します。",
+        "description": "アドオンの指定されたデータウェアハウスリソースを取得します。",
+        "operationId": "get_AZ0102",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データウェアハウスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データウェアハウスリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータウェアハウスリソースを削除します。",
+        "description": "アドオンの指定されたデータウェアハウスリソースを削除します。",
+        "operationId": "delete_AZ0102",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "データウェアハウスリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データウェアハウスリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/dwh/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータウェアハウスリソースのステータスを取得します。",
+        "description": "アドオンの指定されたデータウェアハウスリソースのステータスを取得します。",
+        "operationId": "status_AZ0102",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データウェアハウスリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/etl": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "データETLリソースの一覧を取得します。",
+        "description": "アドオンのデータETLリソースの一覧を取得します。",
+        "operationId": "list_AZ0103",
+        "responses": {
+          "200": {
+            "description": "データETLリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データETLリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "データETLリソースを作成します。",
+        "description": "アドオンのデータETLリソースを作成します。",
+        "operationId": "create_AZ0103",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EtlPostRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "データETLリソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/etl/{resourceGroupName}": {
+      "delete": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータETLリソースを削除します。",
+        "description": "アドオンの指定されたデータETLリソースを削除します。",
+        "operationId": "delete_AZ0103",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "データETLリソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データETLリソースが見つかりませんでした。"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータETLリソースを取得します。",
+        "description": "アドオンの指定されたデータETLリソースを取得します。",
+        "operationId": "get_AZ0103",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データETLリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "データETLリソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/etl/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたデータETLリソースのステータスを取得します。",
+        "description": "アドオンの指定されたデータETLリソースのステータスを取得します。",
+        "operationId": "status_AZ0103",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データETLリソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/query": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "クエリ機能リソースの一覧を取得します。",
+        "description": "アドオンのクエリ機能リソースの一覧を取得します。",
+        "operationId": "list_AZ0104",
+        "responses": {
+          "200": {
+            "description": "クエリ機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "クエリ機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "クエリ機能リソースを作成します。",
+        "description": "アドオンのクエリ機能リソースを作成します。",
+        "operationId": "create_AZ0104",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryPostRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "クエリ機能リソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/query/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたクエリ機能リソースを取得します。",
+        "description": "アドオンの指定されたクエリ機能リソースを取得します。",
+        "operationId": "get_AZ0104",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "クエリ機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "クエリ機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたクエリ機能リソースを削除します。",
+        "description": "アドオンの指定されたクエリ機能リソースを削除します。",
+        "operationId": "delete_AZ0104",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "クエリ機能リソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "クエリ機能リソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/query/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたクエリ機能リソースのステータスを取得します。",
+        "description": "アドオンの指定されたクエリ機能リソースのステータスを取得します。",
+        "operationId": "status_AZ0104",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "クエリ機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/search": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "検索機能リソースの一覧を取得します。",
+        "description": "アドオンの検索機能リソースの一覧を取得します。",
+        "operationId": "list_AZ0105",
+        "responses": {
+          "200": {
+            "description": "検索機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "検索機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "検索機能リソースを作成します。",
+        "description": "アドオンの検索機能リソースを作成します。",
+        "operationId": "create_AZ0105",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchPostRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "検索機能リソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/search/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定された検索機能リソースを取得します。",
+        "description": "アドオンの指定された検索機能リソースを取得します。",
+        "operationId": "get_AZ0105",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "検索機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "検索機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定された検索機能リソースを削除します。",
+        "description": "アドオンの指定された検索機能リソースを削除します。",
+        "operationId": "delete_AZ0105",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "検索機能リソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "検索機能リソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/search/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定された検索機能リソースのステータスを取得します。",
+        "description": "アドオンの指定された検索機能リソースのステータスを取得します。",
+        "operationId": "status_AZ0105",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "検索機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/streaming": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "ストリーミング処理機能リソースの一覧を取得します。",
+        "description": "アドオンのストリーミング処理機能リソースの一覧を取得します。",
+        "operationId": "list_AZ0107",
+        "responses": {
+          "200": {
+            "description": "ストリーミング処理機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ストリーミング処理機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "ストリーミング処理機能リソースを作成します。",
+        "description": "アドオンのストリーミング処理機能リソースを作成します。",
+        "operationId": "create_AZ0107",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamingRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "ストリーミング処理機能リソースの作成を開始しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDeploymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/streaming/{resourceGroupName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたストリーミング処理機能リソースを取得します。",
+        "description": "アドオンの指定されたストリーミング処理機能リソースを取得します。",
+        "operationId": "get_AZ0107",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ストリーミング処理機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetResourceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ストリーミング処理機能リソースが見つかりませんでした。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたストリーミング処理機能リソースを削除します。",
+        "description": "アドオンの指定されたストリーミング処理機能リソースを削除します。",
+        "operationId": "delete_AZ0107",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "description": "リソースグループ名",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "ストリーミング処理機能リソースの削除を開始しました。"
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ストリーミング処理機能リソースが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "/analytics/streaming/status/{resourceGroupName}/{deploymentName}": {
+      "get": {
+        "tags": [
+          "データ分析"
+        ],
+        "summary": "指定されたストリーミング処理機能リソースのステータスを取得します。",
+        "description": "アドオンの指定されたストリーミング処理機能リソースのステータスを取得します。",
+        "operationId": "status_AZ0107",
+        "parameters": [
+          {
+            "name": "resourceGroupName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deploymentName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ストリーミング処理機能リソースの取得に成功しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "リクエストが不正です。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AiRequestBody": {
+        "required": [
+          "location",
+          "sku"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sku": {
+            "$ref": "#/components/schemas/AiServiceSku"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AiServiceSku": {
+        "enum": [
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "AzureLocation": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatedByType": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DataLakePerformance": {
+        "enum": [
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "DataLakeRedundancy": {
+        "enum": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "DatalakePostRequestBody": {
+        "required": [
+          "location",
+          "performance",
+          "redundancy"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "performance": {
+            "$ref": "#/components/schemas/DataLakePerformance"
+          },
+          "redundancy": {
+            "$ref": "#/components/schemas/DataLakeRedundancy"
+          },
+          "accountType": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DatawarehousePostRequestBody": {
+        "required": [
+          "location"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DdosRequestBody": {
+        "required": [
+          "endpoint",
+          "location",
+          "profile"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/FrontDoorProfile"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/FrontDoorEndpoint"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeploymentStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "properties": {
+            "$ref": "#/components/schemas/DeploymentStatusProperties"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeploymentStatusProperties": {
+        "type": "object",
+        "properties": {
+          "provisioningState": {
+            "type": "string",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ErrorInfo": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorInfo"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EtlPostRequestBody": {
+        "required": [
+          "location"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FrontDoorEndpoint": {
+        "required": [
+          "route"
+        ],
+        "type": "object",
+        "properties": {
+          "route": {
+            "$ref": "#/components/schemas/FrontDoorRoute"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FrontDoorOrigin": {
+        "required": [
+          "hostHeader",
+          "hostName"
+        ],
+        "type": "object",
+        "properties": {
+          "hostName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "hostHeader": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FrontDoorOriginGroup": {
+        "required": [
+          "origin"
+        ],
+        "type": "object",
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/FrontDoorOrigin"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FrontDoorProfile": {
+        "required": [
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "level": {
+            "$ref": "#/components/schemas/PricingLevel"
+          },
+          "levelNameOfBicepParameter": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FrontDoorRoute": {
+        "required": [
+          "originGroup",
+          "patterns"
+        ],
+        "type": "object",
+        "properties": {
+          "patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "originGroup": {
+            "$ref": "#/components/schemas/FrontDoorOriginGroup"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetResourceResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ListResourcesResponse": {
+        "type": "object",
+        "properties": {
+          "resources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResourceGroupResource"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NetworkRequestBody": {
+        "required": [
+          "endpoint",
+          "location",
+          "profile"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/FrontDoorProfile"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/FrontDoorEndpoint"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PostDeploymentResponse": {
+        "type": "object",
+        "properties": {
+          "resourceGroupName": {
+            "type": "string",
+            "nullable": true
+          },
+          "deploymentName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PricingLevel": {
+        "enum": [
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "QueryPostRequestBody": {
+        "required": [
+          "location"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceGroupData": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ResourceIdentifier"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "resourceType": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "systemData": {
+            "$ref": "#/components/schemas/SystemData"
+          },
+          "tags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "nullable": true
+            },
+            "nullable": true,
+            "readOnly": true
+          },
+          "location": {
+            "$ref": "#/components/schemas/AzureLocation"
+          },
+          "resourceGroupProvisioningState": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "managedBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceGroupResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ResourceIdentifier"
+          },
+          "hasData": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ResourceGroupData"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceIdentifier": {
+        "type": "object",
+        "properties": {
+          "resourceType": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "parent": {
+            "$ref": "#/components/schemas/ResourceIdentifier"
+          },
+          "subscriptionId": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "provider": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "location": {
+            "$ref": "#/components/schemas/AzureLocation"
+          },
+          "resourceGroupName": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResourceType": {
+        "type": "object",
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchPostRequestBody": {
+        "required": [
+          "location",
+          "partitionCount",
+          "replicaCount",
+          "sku"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sku": {
+            "$ref": "#/components/schemas/SearchSku"
+          },
+          "skuString": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "replicaCount": {
+            "maximum": 12,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "partitionCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SearchSku": {
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ServerOsType": {
+        "enum": [
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "StreamingRequestBody": {
+        "required": [
+          "location",
+          "unitCount"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unitCount": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SystemData": {
+        "type": "object",
+        "properties": {
+          "createdBy": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "createdByType": {
+            "$ref": "#/components/schemas/CreatedByType"
+          },
+          "createdOn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "lastModifiedByType": {
+            "$ref": "#/components/schemas/CreatedByType"
+          },
+          "lastModifiedOn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "VulnerabilityRequestBody": {
+        "required": [
+          "location",
+          "os"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "os": {
+            "$ref": "#/components/schemas/ServerOsType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VulnerabilityResponseBody": {
+        "type": "object",
+        "properties": {
+          "resourceGroupName": {
+            "type": "string",
+            "nullable": true
+          },
+          "installScript": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WafRequestBody": {
+        "required": [
+          "endpoint",
+          "location",
+          "profile"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/FrontDoorProfile"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/FrontDoorEndpoint"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

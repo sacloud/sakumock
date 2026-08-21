@@ -8,6 +8,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock"
+	"github.com/sacloud/sakumock/addon"
 	"github.com/sacloud/sakumock/apigw"
 	"github.com/sacloud/sakumock/apprun"
 	"github.com/sacloud/sakumock/apprundedicated"
@@ -43,6 +44,7 @@ type CLI struct {
 	Apigw              apigw.Command              `cmd:"" name:"apigw" help:"API Gateway mock server"`
 	Cloudhsm           cloudhsm.Command           `cmd:"" name:"cloudhsm" help:"CloudHSM mock server"`
 	Seg                seg.Command                `cmd:"" name:"seg" help:"Service Endpoint Gateway mock server"`
+	Addon              addon.Command              `cmd:"" name:"addon" help:"Add-on mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

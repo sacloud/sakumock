@@ -39,7 +39,8 @@ func NewBodyValidator(schemas map[string]*BodySchema, errWrite BodyValidationErr
 
 // WithNonEmpty overlays a MinLength-1 constraint onto the given string
 // fields, addressed as dotted object-property paths per route key (e.g.
-// {"POST /kms/keys": {"Key.Name"}}). It exists for the recurring spec gap
+// {"POST /kms/keys": {"Key.Name"}}); a "[]" suffix on a segment steps into
+// that array's items (e.g. "Remark.Servers[].IPAddress"). It exists for the recurring spec gap
 // where a field is declared required but has no minLength, while the real
 // API rejects an empty string — the overlay closes the gap without touching
 // the generated bodySchemas (the schemas passed in are never mutated; nodes
@@ -66,21 +67,31 @@ func WithNonEmpty(fields map[string][]string) BodyValidatorOption {
 }
 
 // withMinLength returns a copy of schema with MinLength 1 set on the string
-// field at the dotted object-property path, copying only the nodes along the
-// path so shared schema literals stay untouched.
+// field at the dotted object-property path (a "[]" suffix steps into array
+// items), copying only the nodes along the path so shared schema literals
+// stay untouched.
 func withMinLength(schema *BodySchema, key, path string) *BodySchema {
 	root := *schema
 	cur := &root
 	segs := strings.Split(path, ".")
 	for i, seg := range segs {
-		prop := cur.Properties[seg]
+		name, isArray := strings.CutSuffix(seg, "[]")
+		prop := cur.Properties[name]
 		if prop == nil {
 			panic(fmt.Sprintf("core.WithNonEmpty: route %q has no property %q", key, strings.Join(segs[:i+1], ".")))
 		}
 		cur.Properties = maps.Clone(cur.Properties)
 		child := *prop
-		cur.Properties[seg] = &child
+		cur.Properties[name] = &child
 		cur = &child
+		if isArray {
+			if cur.Items == nil {
+				panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is not an array", key, strings.Join(segs[:i+1], ".")))
+			}
+			items := *cur.Items
+			cur.Items = &items
+			cur = &items
+		}
 	}
 	if cur.Type != "string" {
 		panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is %q, not a string", key, path, cur.Type))

@@ -131,6 +131,10 @@ func TestWithNonEmpty(t *testing.T) {
 						Properties: map[string]*core.BodySchema{
 							"Name":  {Type: "string", MaxLength: core.IntPtr(255)},
 							"Count": {Type: "integer"},
+							"Tags": {Type: "array", Items: &core.BodySchema{
+								Type:       "object",
+								Properties: map[string]*core.BodySchema{"Label": {Type: "string"}},
+							}},
 						},
 					},
 				},
@@ -157,6 +161,31 @@ func TestWithNonEmpty(t *testing.T) {
 		if got := do(t, bv, `{"Key": {"Name": "k"}}`); got != http.StatusOK {
 			t.Fatalf("valid Name: status = %d, want 200", got)
 		}
+	})
+
+	t.Run("steps into array items with a [] segment", func(t *testing.T) {
+		schemas := newSchemas()
+		bv := core.NewBodyValidator(schemas, testErrWriter,
+			core.WithNonEmpty(map[string][]string{"POST /keys": {"Key.Tags[].Label"}}))
+		if got := do(t, bv, `{"Key": {"Name": "k", "Tags": [{"Label": "a"}, {"Label": ""}]}}`); got != http.StatusBadRequest {
+			t.Fatalf("empty Label: status = %d, want 400", got)
+		}
+		if got := do(t, bv, `{"Key": {"Name": "k", "Tags": [{"Label": "a"}]}}`); got != http.StatusOK {
+			t.Fatalf("valid Label: status = %d, want 200", got)
+		}
+		if schemas["POST /keys"].Properties["Key"].Properties["Tags"].Items.Properties["Label"].MinLength != nil {
+			t.Fatal("original array item schema gained a MinLength")
+		}
+	})
+
+	t.Run("panics when [] targets a non-array", func(t *testing.T) {
+		defer func() {
+			if recover() == nil {
+				t.Fatal("expected panic")
+			}
+		}()
+		core.NewBodyValidator(newSchemas(), testErrWriter,
+			core.WithNonEmpty(map[string][]string{"POST /keys": {"Key.Name[].X"}}))
 	})
 
 	t.Run("does not mutate the passed schemas", func(t *testing.T) {

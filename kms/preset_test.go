@@ -25,7 +25,7 @@ func TestParsePresetKeys(t *testing.T) {
 		t.Errorf("non-hex secret not hashed: %+v", keys[1])
 	}
 
-	for _, bad := range []map[string]string{{"": "secret"}, {"123": ""}, {"abc": "secret"}} {
+	for _, bad := range []map[string]string{{"": "secret"}, {"123": ""}, {"abc": "secret"}, {"1234567890123": "secret"}} {
 		if _, err := parsePresetKeys(bad); err == nil {
 			t.Errorf("parsePresetKeys(%v) succeeded, want error", bad)
 		}

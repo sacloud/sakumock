@@ -16,7 +16,7 @@ type presetKey struct {
 
 // parsePresetKeys validates the --key ID=SECRET map and derives each key's
 // material, in ID order. ID is the numeric resource ID the key is served
-// under. SECRET is either 64 hex characters, used verbatim as the 32-byte
+// under, at most 12 digits like a real SAKURA Cloud ID. SECRET is either 64 hex characters, used verbatim as the 32-byte
 // AES-256 key, or any other non-empty string, whose SHA-256 digest becomes
 // the key material.
 func parsePresetKeys(specs map[string]string) ([]presetKey, error) {
@@ -24,6 +24,9 @@ func parsePresetKeys(specs map[string]string) ([]presetKey, error) {
 	for id, secret := range specs {
 		if id == "" || secret == "" {
 			return nil, fmt.Errorf("invalid --key %q=%q: expected ID=SECRET", id, secret)
+		}
+		if len(id) > 12 {
+			return nil, fmt.Errorf("invalid --key %q: ID must be at most 12 digits", id)
 		}
 		for _, c := range id {
 			if c < '0' || c > '9' {

@@ -346,6 +346,7 @@ func TestPresetKey(t *testing.T) {
 	plaintext := []byte("data encryption key")
 
 	srv := kms.NewTestServer(cfg)
+	defer srv.Close() // also covers an early t.Fatal; Close is safe to call twice
 	keyOp := newTestKeyOp(t, srv.TestURL())
 	ctx := t.Context()
 
@@ -372,7 +373,7 @@ func TestPresetKey(t *testing.T) {
 	if v := srv.SpecViolations(); len(v) != 0 {
 		t.Errorf("spec violations: %+v", v)
 	}
-	srv.Close()
+	srv.Close() // stop the first run before decrypting on a fresh one
 
 	// A fresh server with the same --key decrypts the ciphertext from the first run.
 	srv2 := kms.NewTestServer(cfg)

@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.9.0](https://github.com/sacloud/sakumock/compare/v0.8.0...v0.9.0) - 2026-08-22
+### 🚀 New Features
+- Add seg (Service Endpoint Gateway) mock service by @tokuhirom in https://github.com/sacloud/sakumock/pull/166
+- addon: add the Add-on API mock service by @tokuhirom in https://github.com/sacloud/sakumock/pull/167
+- kms: add --key to pre-create keys with fixed ID and key material by @fujiwara in https://github.com/sacloud/sakumock/pull/171
+### 📦 Dependency Updates
+- Bump sacloud-sdk-go to v0.1.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/170
+### Other Changes
+- Review comments: drop the redundant ones, document the public API by @fujiwara in https://github.com/sacloud/sakumock/pull/163
+- objectstorage: enforce access key quotas (root and permission) by @fujiwara in https://github.com/sacloud/sakumock/pull/165
+- CLAUDE.md: how to check what the Terraform provider exposes by @tokuhirom in https://github.com/sacloud/sakumock/pull/168
+- Return "" from TestURL on a listener-less server instead of panicking by @fujiwara in https://github.com/sacloud/sakumock/pull/169
+- Categorize auto-generated release notes by label by @fujiwara in https://github.com/sacloud/sakumock/pull/172
+
 ## [v0.8.0](https://github.com/sacloud/sakumock/compare/v0.7.2...v0.8.0) - 2026-08-13
 - objectstorage: authenticate control-plane access keys on the S3 data plane by @fujiwara in https://github.com/sacloud/sakumock/pull/153
 - iam: validate responses against the OpenAPI spec and fix service policy endpoints by @fujiwara in https://github.com/sacloud/sakumock/pull/155

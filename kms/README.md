@@ -24,10 +24,26 @@ sakumock-kms
 | `--latency` | `KMS_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `KMS_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `KMS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--key` | `KMS_KEY` | (none) | Pre-create a key with a fixed ID and key material: `ID=SECRET`, repeatable (see [Fixed keys](#fixed-keys)) |
 | `--fault` | `KMS_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `KMS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `KMS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `KMS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
+
+### Fixed keys
+
+Keys created through the API get a fresh random ID and random AES-256 key material, so a ciphertext cannot be decrypted after the mock restarts. For local development where an encrypted value (e.g. a wrapped data encryption key) is kept in a config file, `--key ID=SECRET` pre-creates a key at startup with a fixed ID and key material derived from `SECRET`, so the same ciphertext decrypts across restarts:
+
+```bash
+sakumock kms --key 123456789012=my-dev-secret
+# or, under the unified binary:
+sakumock all --kms-key 123456789012=my-dev-secret
+```
+
+- `ID` is the numeric resource ID the key is served under (`/keys/123456789012/...`). Generated IDs never collide with it.
+- `SECRET` is either 64 hex characters, used verbatim as the 32-byte AES-256 key, or any other string, whose SHA-256 digest becomes the key material. Changing `SECRET` changes the material, so existing ciphertexts stop decrypting.
+- The flag is repeatable (`--key A=... --key B=...`) and also reads the `KMS_KEY` environment variable. In a `sakumock all --config` file it is `kms: {key: ["123456789012=my-dev-secret"]}`.
+- Preset keys behave like any other key (listed, rotatable, deletable); a rotation's new version is random, so only version 1 is stable across restarts.
 
 ## Use with sacloud-sdk-go
 

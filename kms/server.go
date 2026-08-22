@@ -15,6 +15,7 @@ type Config struct {
 	Latency         time.Duration `help:"Artificial latency added to every response" env:"KMS_LATENCY"`
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"KMS_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"KMS_RATE_LIMIT_WINDOW"`
+	Keys            []string      `name:"key" help:"Pre-create a key with a fixed ID and key material, repeatable: ID=SECRET, where SECRET is 64 hex chars (raw AES-256 key) or any string (hashed with SHA-256), so ciphertexts survive a restart" placeholder:"ID=SECRET" env:"KMS_KEY"`
 	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"KMS_FAULT"`
 	Debug           bool          `help:"Enable debug mode" env:"KMS_DEBUG" default:"false"`
 
@@ -100,6 +101,13 @@ func NewHandler(cfg Config) (*Server, error) {
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
+	}
+	presets, err := parsePresetKeys(cfg.Keys)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range presets {
+		s.store.Preset(p.id, p.material)
 	}
 	s.mux = s.buildMux()
 	return s, nil

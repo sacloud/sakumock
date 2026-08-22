@@ -338,3 +338,63 @@ func TestScheduleDestruction(t *testing.T) {
 		t.Fatalf("expected pending_destruction, got %s", read.Status)
 	}
 }
+
+func TestPresetKey(t *testing.T) {
+	const keyID = "123456789012"
+	cfg := kms.Config{Keys: []string{keyID + "=my-dev-secret"}}
+	plaintext := []byte("data encryption key")
+
+	srv := kms.NewTestServer(cfg)
+	keyOp := newTestKeyOp(t, srv.TestURL())
+	ctx := t.Context()
+
+	// The preset key is listed and readable under its fixed ID.
+	got, err := keyOp.Read(ctx, keyID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ID != keyID {
+		t.Errorf("ID = %q, want %q", got.ID, keyID)
+	}
+	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A key created afterwards must not reuse the preset ID.
+	created, err := keyOp.Create(ctx, v1.CreateKey{Name: "after-preset", KeyOrigin: v1.KeyOriginEnumGenerated})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.ID == keyID {
+		t.Errorf("generated ID collided with preset ID %q", keyID)
+	}
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations: %+v", v)
+	}
+	srv.Close()
+
+	// A fresh server with the same --key decrypts the ciphertext from the first run.
+	srv2 := kms.NewTestServer(cfg)
+	defer srv2.Close()
+	keyOp2 := newTestKeyOp(t, srv2.TestURL())
+	decrypted, err := keyOp2.Decrypt(ctx, keyID, cipher)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(decrypted) != string(plaintext) {
+		t.Errorf("decrypted = %q, want %q", decrypted, plaintext)
+	}
+
+	// A different secret yields different material and cannot decrypt it.
+	srv3 := kms.NewTestServer(kms.Config{Keys: []string{keyID + "=other-secret"}})
+	defer srv3.Close()
+	if _, err := newTestKeyOp(t, srv3.TestURL()).Decrypt(ctx, keyID, cipher); err == nil {
+		t.Error("decrypt with a different secret succeeded, want error")
+	}
+}
+
+func TestPresetKeyInvalid(t *testing.T) {
+	if _, err := kms.NewHandler(kms.Config{Keys: []string{"bad"}}); err == nil {
+		t.Error("NewHandler with invalid --key succeeded, want error")
+	}
+}

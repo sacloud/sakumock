@@ -7,6 +7,7 @@ import (
 	v1 "github.com/sacloud/sacloud-sdk-go/api/kms/apis/v1"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/kms"
 )
 
@@ -396,5 +397,22 @@ func TestPresetKey(t *testing.T) {
 func TestPresetKeyInvalid(t *testing.T) {
 	if _, err := kms.NewHandler(kms.Config{Keys: map[string]string{"bad": "secret"}}); err == nil {
 		t.Error("NewHandler with invalid --key succeeded, want error")
+	}
+}
+
+func TestPresetKeySharedIDGeneratorConflict(t *testing.T) {
+	const keyID = "123456789012"
+	gen := core.NewIDGenerator(0)
+	// Another service under `sakumock all` already claimed the ID.
+	if err := gen.Reserve(keyID, "other"); err != nil {
+		t.Fatal(err)
+	}
+	cfg := kms.Config{Keys: map[string]string{keyID: "secret"}}
+	if _, err := cfg.NewServer(core.ServerOptions{IDGen: gen}); err == nil {
+		t.Error("NewServer with an ID reserved by another service succeeded, want error")
+	}
+	// With a fresh shared generator the same config starts fine.
+	if _, err := cfg.NewServer(core.ServerOptions{IDGen: core.NewIDGenerator(0)}); err != nil {
+		t.Errorf("NewServer with a free ID failed: %v", err)
 	}
 }

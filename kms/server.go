@@ -1,6 +1,7 @@
 package kms
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -107,7 +108,9 @@ func NewHandler(cfg Config) (*Server, error) {
 		return nil, err
 	}
 	for _, p := range presets {
-		s.store.Preset(p.id, p.material)
+		if err := s.store.Preset(p.id, p.material); err != nil {
+			return nil, fmt.Errorf("--key: %w", err)
+		}
 	}
 	s.mux = s.buildMux()
 	return s, nil

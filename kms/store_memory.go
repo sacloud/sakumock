@@ -54,12 +54,16 @@ func (s *MemoryStore) generateKeyMaterial(id string, version int) {
 }
 
 // Preset registers a key with a fixed ID and key material, as configured by
-// --key, so encrypt/decrypt results survive a restart. The ID generator is
-// advanced past id so later generated IDs never collide with it.
-func (s *MemoryStore) Preset(id string, material []byte) {
+// --key, so encrypt/decrypt results survive a restart. The ID is reserved on
+// the ID generator, so generated IDs never collide with it and, under the
+// unified binary, another service presetting the same ID fails at startup.
+func (s *MemoryStore) Preset(id string, material []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if err := s.ids.Reserve(id, "kms"); err != nil {
+		return err
+	}
 	now := time.Now()
 	s.keys[id] = &KeyRecord{
 		ID:            id,
@@ -73,8 +77,8 @@ func (s *MemoryStore) Preset(id string, material []byte) {
 		ModifiedAt:    now,
 	}
 	s.keyMaterial[id] = map[int][]byte{1: material}
-	s.ids.Observe(id)
 	s.logger.Debug("key preset", "id", id)
+	return nil
 }
 
 // List returns every key, oldest first.

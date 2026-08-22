@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -28,6 +29,8 @@ func DefaultIDBase() int64 {
 type IDGenerator struct {
 	mu   sync.Mutex
 	next int64
+	// reserved maps a user-specified ID to the service that claimed it.
+	reserved map[string]string
 }
 
 // NewIDGenerator returns a generator whose first ID is base. A base <= 0 uses
@@ -46,6 +49,32 @@ func (g *IDGenerator) Next() string {
 	id := g.next
 	g.next++
 	return strconv.FormatInt(id, 10)
+}
+
+// Reserve claims a user-specified ID (e.g. a preset KMS key) for owner, so it
+// is never handed out by Next and cannot be claimed again by a different
+// owner. Under the unified binary the generator is shared by every service,
+// so two services configured with the same fixed ID fail at startup instead
+// of serving two resources under one ID. Reserving an ID already held by the
+// same owner is a no-op.
+func (g *IDGenerator) Reserve(id, owner string) error {
+	n, err := strconv.ParseInt(id, 10, 64)
+	if err != nil || n <= 0 {
+		return fmt.Errorf("invalid resource ID %q: must be a positive integer", id)
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if prev, ok := g.reserved[id]; ok && prev != owner {
+		return fmt.Errorf("resource ID %s is already reserved by %s", id, prev)
+	}
+	if g.reserved == nil {
+		g.reserved = make(map[string]string)
+	}
+	g.reserved[id] = owner
+	if n >= g.next {
+		g.next = n + 1
+	}
+	return nil
 }
 
 // Observe advances the generator so future IDs exceed an existing one, letting a

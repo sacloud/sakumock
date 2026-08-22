@@ -84,3 +84,31 @@ func TestIDGeneratorConcurrent(t *testing.T) {
 		t.Errorf("expected %d unique IDs, got %d", n, len(seen))
 	}
 }
+
+func TestIDGeneratorReserve(t *testing.T) {
+	g := NewIDGenerator(1000)
+	if err := g.Reserve("1005", "kms"); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.Next(); got != "1006" {
+		t.Errorf("Next after Reserve(1005) = %s, want 1006", got)
+	}
+	if err := g.Reserve("1005", "kms"); err != nil {
+		t.Errorf("re-reserving by the same owner failed: %v", err)
+	}
+	if err := g.Reserve("1005", "simplemq"); err == nil {
+		t.Error("reserving an ID held by another owner succeeded, want error")
+	}
+	// An ID below the current counter is reserved without moving it.
+	if err := g.Reserve("10", "kms"); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.Next(); got != "1007" {
+		t.Errorf("Next after Reserve(10) = %s, want 1007", got)
+	}
+	for _, bad := range []string{"", "abc", "0", "-1"} {
+		if err := g.Reserve(bad, "kms"); err == nil {
+			t.Errorf("Reserve(%q) succeeded, want error", bad)
+		}
+	}
+}

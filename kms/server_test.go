@@ -7,6 +7,7 @@ import (
 	v1 "github.com/sacloud/sacloud-sdk-go/api/kms/apis/v1"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
+	"github.com/sacloud/sakumock/core"
 	"github.com/sacloud/sakumock/kms"
 )
 
@@ -336,5 +337,83 @@ func TestScheduleDestruction(t *testing.T) {
 	}
 	if read.Status != v1.KeyStatusEnumPendingDestruction {
 		t.Fatalf("expected pending_destruction, got %s", read.Status)
+	}
+}
+
+func TestPresetKey(t *testing.T) {
+	const keyID = "123456789012"
+	cfg := kms.Config{Keys: map[string]string{keyID: "my-dev-secret"}}
+	plaintext := []byte("data encryption key")
+
+	srv := kms.NewTestServer(cfg)
+	defer srv.Close() // also covers an early t.Fatal; Close is safe to call twice
+	keyOp := newTestKeyOp(t, srv.TestURL())
+	ctx := t.Context()
+
+	// The preset key is listed and readable under its fixed ID.
+	got, err := keyOp.Read(ctx, keyID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ID != keyID {
+		t.Errorf("ID = %q, want %q", got.ID, keyID)
+	}
+	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A key created afterwards must not reuse the preset ID.
+	created, err := keyOp.Create(ctx, v1.CreateKey{Name: "after-preset", KeyOrigin: v1.KeyOriginEnumGenerated})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.ID == keyID {
+		t.Errorf("generated ID collided with preset ID %q", keyID)
+	}
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations: %+v", v)
+	}
+	srv.Close() // stop the first run before decrypting on a fresh one
+
+	// A fresh server with the same --key decrypts the ciphertext from the first run.
+	srv2 := kms.NewTestServer(cfg)
+	defer srv2.Close()
+	keyOp2 := newTestKeyOp(t, srv2.TestURL())
+	decrypted, err := keyOp2.Decrypt(ctx, keyID, cipher)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(decrypted) != string(plaintext) {
+		t.Errorf("decrypted = %q, want %q", decrypted, plaintext)
+	}
+
+	// A different secret yields different material and cannot decrypt it.
+	srv3 := kms.NewTestServer(kms.Config{Keys: map[string]string{keyID: "other-secret"}})
+	defer srv3.Close()
+	if _, err := newTestKeyOp(t, srv3.TestURL()).Decrypt(ctx, keyID, cipher); err == nil {
+		t.Error("decrypt with a different secret succeeded, want error")
+	}
+}
+
+func TestPresetKeyInvalid(t *testing.T) {
+	if _, err := kms.NewHandler(kms.Config{Keys: map[string]string{"bad": "secret"}}); err == nil {
+		t.Error("NewHandler with invalid --key succeeded, want error")
+	}
+}
+
+func TestPresetKeySharedIDGeneratorConflict(t *testing.T) {
+	const keyID = "123456789012"
+	gen := core.NewIDGenerator(0)
+	// Another service under `sakumock all` already claimed the ID.
+	if err := gen.Reserve(keyID, "other"); err != nil {
+		t.Fatal(err)
+	}
+	cfg := kms.Config{Keys: map[string]string{keyID: "secret"}}
+	if _, err := cfg.NewServer(core.ServerOptions{IDGen: gen}); err == nil {
+		t.Error("NewServer with an ID reserved by another service succeeded, want error")
+	}
+	// With a fresh shared generator the same config starts fine.
+	if _, err := cfg.NewServer(core.ServerOptions{IDGen: core.NewIDGenerator(0)}); err != nil {
+		t.Errorf("NewServer with a free ID failed: %v", err)
 	}
 }

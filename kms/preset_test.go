@@ -10,7 +10,7 @@ import (
 
 func TestParsePresetKeys(t *testing.T) {
 	rawHex := strings.Repeat("ab", 32)
-	keys, err := parsePresetKeys([]string{"123456789012=" + rawHex, "123456789013=my-dev-secret"})
+	keys, err := parsePresetKeys(map[string]string{"123456789013": "my-dev-secret", "123456789012": rawHex})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,13 +25,9 @@ func TestParsePresetKeys(t *testing.T) {
 		t.Errorf("non-hex secret not hashed: %+v", keys[1])
 	}
 
-	for _, bad := range []string{"nosep", "=secret", "123=", "abc=secret", "1=a"} {
-		specs := []string{bad}
-		if bad == "1=a" {
-			specs = []string{"1=a", "1=b"} // duplicate ID
-		}
-		if _, err := parsePresetKeys(specs); err == nil {
-			t.Errorf("parsePresetKeys(%v) succeeded, want error", specs)
+	for _, bad := range []map[string]string{{"": "secret"}, {"123": ""}, {"abc": "secret"}} {
+		if _, err := parsePresetKeys(bad); err == nil {
+			t.Errorf("parsePresetKeys(%v) succeeded, want error", bad)
 		}
 	}
 }

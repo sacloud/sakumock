@@ -11,13 +11,13 @@ import (
 
 // Config holds the KMS mock server's options.
 type Config struct {
-	Addr            string        `help:"Listen address" default:"127.0.0.1:18081" env:"KMS_LOCALSERVER_ADDR"`
-	Latency         time.Duration `help:"Artificial latency added to every response" env:"KMS_LATENCY"`
-	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"KMS_RATE_LIMIT"`
-	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"KMS_RATE_LIMIT_WINDOW"`
-	Keys            []string      `name:"key" help:"Pre-create a key with a fixed ID and key material, repeatable: ID=SECRET, where SECRET is 64 hex chars (raw AES-256 key) or any string (hashed with SHA-256), so ciphertexts survive a restart" placeholder:"ID=SECRET" env:"KMS_KEY"`
-	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"KMS_FAULT"`
-	Debug           bool          `help:"Enable debug mode" env:"KMS_DEBUG" default:"false"`
+	Addr            string            `help:"Listen address" default:"127.0.0.1:18081" env:"KMS_LOCALSERVER_ADDR"`
+	Latency         time.Duration     `help:"Artificial latency added to every response" env:"KMS_LATENCY"`
+	RateLimit       float64           `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"KMS_RATE_LIMIT"`
+	RateLimitWindow time.Duration     `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"KMS_RATE_LIMIT_WINDOW"`
+	Keys            map[string]string `name:"key" help:"Pre-create a key with a fixed ID and key material, repeatable: ID=SECRET, where SECRET is 64 hex chars (raw AES-256 key) or any string (hashed with SHA-256), so ciphertexts survive a restart" placeholder:"ID=SECRET" env:"KMS_KEY"`
+	Fault           []string          `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"KMS_FAULT"`
+	Debug           bool              `help:"Enable debug mode" env:"KMS_DEBUG" default:"false"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
 	// binary via NewServer; nil means the store creates its own.

@@ -341,7 +341,7 @@ func TestScheduleDestruction(t *testing.T) {
 
 func TestPresetKey(t *testing.T) {
 	const keyID = "123456789012"
-	cfg := kms.Config{Keys: []string{keyID + "=my-dev-secret"}}
+	cfg := kms.Config{Keys: map[string]string{keyID: "my-dev-secret"}}
 	plaintext := []byte("data encryption key")
 
 	srv := kms.NewTestServer(cfg)
@@ -386,7 +386,7 @@ func TestPresetKey(t *testing.T) {
 	}
 
 	// A different secret yields different material and cannot decrypt it.
-	srv3 := kms.NewTestServer(kms.Config{Keys: []string{keyID + "=other-secret"}})
+	srv3 := kms.NewTestServer(kms.Config{Keys: map[string]string{keyID: "other-secret"}})
 	defer srv3.Close()
 	if _, err := newTestKeyOp(t, srv3.TestURL()).Decrypt(ctx, keyID, cipher); err == nil {
 		t.Error("decrypt with a different secret succeeded, want error")
@@ -394,7 +394,7 @@ func TestPresetKey(t *testing.T) {
 }
 
 func TestPresetKeyInvalid(t *testing.T) {
-	if _, err := kms.NewHandler(kms.Config{Keys: []string{"bad"}}); err == nil {
+	if _, err := kms.NewHandler(kms.Config{Keys: map[string]string{"bad": "secret"}}); err == nil {
 		t.Error("NewHandler with invalid --key succeeded, want error")
 	}
 }

@@ -42,7 +42,7 @@ sakumock all --kms-key 123456789012=my-dev-secret
 
 - `ID` is the numeric resource ID the key is served under (`/keys/123456789012/...`). Generated IDs never collide with it.
 - `SECRET` is either 64 hex characters, used verbatim as the 32-byte AES-256 key, or any other string, whose SHA-256 digest becomes the key material. Changing `SECRET` changes the material, so existing ciphertexts stop decrypting.
-- The flag is repeatable (`--key A=... --key B=...`) and also reads the `KMS_KEY` environment variable. In a `sakumock all --config` file it is `kms: {key: ["123456789012=my-dev-secret"]}`.
+- The flag is a map: repeat it (`--key A=... --key B=...`) or separate entries with `;` (`--key A=...;B=...`). The `KMS_KEY` environment variable takes the same `ID=SECRET[;ID=SECRET]` form. In a `sakumock all --config` file it is a mapping: `kms: {key: {"123456789012": "my-dev-secret"}}`.
 - Preset keys behave like any other key (listed, rotatable, deletable); a rotation's new version is random, so only version 1 is stable across restarts.
 
 ## Use with sacloud-sdk-go

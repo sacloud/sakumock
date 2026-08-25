@@ -395,6 +395,68 @@ func TestPresetKey(t *testing.T) {
 	}
 }
 
+func TestPresetKeyRotated(t *testing.T) {
+	const keyID = "123456789012"
+	plaintext := []byte("data encryption key")
+	ctx := t.Context()
+
+	// Rotate a preset key twice and encrypt under version 3.
+	srv := kms.NewTestServer(kms.Config{Keys: map[string]string{keyID: "my-dev-secret"}})
+	defer srv.Close()
+	keyOp := newTestKeyOp(t, srv.TestURL())
+	for range 2 {
+		if _, err := keyOp.Rotate(ctx, keyID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations: %+v", v)
+	}
+	srv.Close()
+
+	// A fresh server declaring the key at version 3 reports that version and
+	// decrypts the ciphertext, because rotation is a deterministic chain.
+	srv2 := kms.NewTestServer(kms.Config{Keys: map[string]string{keyID: "my-dev-secret@3"}})
+	defer srv2.Close()
+	keyOp2 := newTestKeyOp(t, srv2.TestURL())
+	got, err := keyOp2.Read(ctx, keyID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.LatestVersion.Or(0) != 3 {
+		t.Errorf("LatestVersion = %v, want 3", got.LatestVersion)
+	}
+	decrypted, err := keyOp2.Decrypt(ctx, keyID, cipher)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(decrypted) != string(plaintext) {
+		t.Errorf("decrypted = %q, want %q", decrypted, plaintext)
+	}
+	// Ciphertexts made before the restart at version 1 still decrypt too.
+	cipher1, err := keyOp2.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := keyOp2.Decrypt(ctx, keyID, cipher1); err != nil {
+		t.Fatal(err)
+	}
+	if v := srv2.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations: %+v", v)
+	}
+
+	// A server still at version 1 does not know version 3 and cannot decrypt.
+	srv3 := kms.NewTestServer(kms.Config{Keys: map[string]string{keyID: "my-dev-secret"}})
+	defer srv3.Close()
+	if _, err := newTestKeyOp(t, srv3.TestURL()).Decrypt(ctx, keyID, cipher); err == nil {
+		t.Error("decrypt at version 1 of a version-3 ciphertext succeeded, want error")
+	}
+}
+
 func TestPresetKeyInvalid(t *testing.T) {
 	if _, err := kms.NewHandler(kms.Config{Keys: map[string]string{"bad": "secret"}}); err == nil {
 		t.Error("NewHandler with invalid --key succeeded, want error")

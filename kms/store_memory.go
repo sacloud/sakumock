@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"log/slog"
@@ -42,22 +43,29 @@ func (s *MemoryStore) generateID() string {
 	return s.ids.Next()
 }
 
-func (s *MemoryStore) generateKeyMaterial(id string, version int) {
-	if _, ok := s.keyMaterial[id]; !ok {
-		s.keyMaterial[id] = make(map[int][]byte)
-	}
+// generateKeyMaterial creates random version-1 material for a new key.
+func (s *MemoryStore) generateKeyMaterial(id string) {
 	key := make([]byte, 32) // AES-256
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
 		panic(fmt.Sprintf("failed to generate key material: %v", err))
 	}
-	s.keyMaterial[id][version] = key
+	s.keyMaterial[id] = map[int][]byte{1: key}
 }
 
-// Preset registers a key with a fixed ID and key material, as configured by
-// --key, so encrypt/decrypt results survive a restart. The ID is reserved on
-// the ID generator, so generated IDs never collide with it and, under the
-// unified binary, another service presetting the same ID fails at startup.
-func (s *MemoryStore) Preset(id string, material []byte) error {
+// rotateKeyMaterial derives the material for version "version" from the
+// previous version (see nextKeyMaterial). Every key, preset or generated,
+// rotates by the same chain, so rotation never draws fresh randomness.
+func (s *MemoryStore) rotateKeyMaterial(id string, version int) {
+	s.keyMaterial[id][version] = nextKeyMaterial(s.keyMaterial[id][version-1])
+}
+
+// Preset registers a key with a fixed ID and version-1 key material, already
+// rotated to the given version (>= 1), as configured by --key, so
+// encrypt/decrypt results survive a restart. Versions 2..version are derived
+// by the rotation chain. The ID is reserved on the ID generator, so generated
+// IDs never collide with it and, under the unified binary, another service
+// presetting the same ID fails at startup.
+func (s *MemoryStore) Preset(id string, material []byte, version int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -71,13 +79,16 @@ func (s *MemoryStore) Preset(id string, material []byte) error {
 		Description:   "preset by --key",
 		KeyOrigin:     "imported",
 		Status:        "active",
-		LatestVersion: 1,
+		LatestVersion: version,
 		Tags:          []string{},
 		CreatedAt:     now,
 		ModifiedAt:    now,
 	}
 	s.keyMaterial[id] = map[int][]byte{1: material}
-	s.logger.Debug("key preset", "id", id)
+	for v := 2; v <= version; v++ {
+		s.rotateKeyMaterial(id, v)
+	}
+	s.logger.Debug("key preset", "id", id, "version", version)
 	return nil
 }
 
@@ -130,7 +141,7 @@ func (s *MemoryStore) Create(name, description, keyOrigin string, tags []string)
 		ModifiedAt:    now,
 	}
 	s.keys[id] = k
-	s.generateKeyMaterial(id, 1)
+	s.generateKeyMaterial(id)
 	s.logger.Debug("key created", "id", id, "name", name)
 	return *k, nil
 }
@@ -183,7 +194,7 @@ func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {
 	}
 	k.LatestVersion++
 	k.ModifiedAt = time.Now()
-	s.generateKeyMaterial(id, k.LatestVersion)
+	s.rotateKeyMaterial(id, k.LatestVersion)
 	s.logger.Debug("key rotated", "id", id, "version", k.LatestVersion)
 	return *k, nil
 }
@@ -203,7 +214,13 @@ func (s *MemoryStore) ChangeStatus(id, status string) error {
 	return nil
 }
 
+// ciphertextVersionSize is the length of the key version prefix that starts
+// every ciphertext, a big-endian uint32.
+const ciphertextVersionSize = 4
+
 // Encrypt encrypts plaintext using the latest version of the key material.
+// The ciphertext is version (big-endian uint32) || GCM nonce || sealed data,
+// base64-encoded, so Decrypt can select the key version directly.
 func (s *MemoryStore) Encrypt(id string, plaintext []byte) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -215,24 +232,21 @@ func (s *MemoryStore) Encrypt(id string, plaintext []byte) (string, error) {
 	if k.Status != "active" {
 		return "", fmt.Errorf("key %q is not active", id)
 	}
-	material := s.keyMaterial[id][k.LatestVersion]
-	block, err := aes.NewCipher(material)
+	gcm, err := newGCM(s.keyMaterial[id][k.LatestVersion])
 	if err != nil {
-		return "", fmt.Errorf("failed to create cipher: %w", err)
+		return "", err
 	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", fmt.Errorf("failed to create GCM: %w", err)
-	}
-	nonce := make([]byte, gcm.NonceSize())
+	out := make([]byte, ciphertextVersionSize+gcm.NonceSize())
+	binary.BigEndian.PutUint32(out, uint32(k.LatestVersion))
+	nonce := out[ciphertextVersionSize:]
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return "", fmt.Errorf("failed to generate nonce: %w", err)
 	}
-	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
+	out = gcm.Seal(out, nonce, plaintext, nil)
+	return base64.StdEncoding.EncodeToString(out), nil
 }
 
-// Decrypt decrypts ciphertext using the key material (tries all versions).
+// Decrypt decrypts ciphertext using the key version recorded in its prefix.
 func (s *MemoryStore) Decrypt(id string, ciphertextB64 string) ([]byte, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -248,28 +262,41 @@ func (s *MemoryStore) Decrypt(id string, ciphertextB64 string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode ciphertext: %w", err)
 	}
-
-	versions := s.keyMaterial[id]
-	for _, material := range versions {
-		block, err := aes.NewCipher(material)
-		if err != nil {
-			continue
-		}
-		gcm, err := cipher.NewGCM(block)
-		if err != nil {
-			continue
-		}
-		if len(ciphertext) < gcm.NonceSize() {
-			continue
-		}
-		nonce, ct := ciphertext[:gcm.NonceSize()], ciphertext[gcm.NonceSize():]
-		plaintext, err := gcm.Open(nil, nonce, ct, nil)
-		if err != nil {
-			continue
-		}
-		return plaintext, nil
+	if len(ciphertext) < ciphertextVersionSize {
+		return nil, fmt.Errorf("invalid ciphertext: too short")
 	}
-	return nil, fmt.Errorf("failed to decrypt: no matching key version")
+	version := int(binary.BigEndian.Uint32(ciphertext))
+	material, ok := s.keyMaterial[id][version]
+	if !ok {
+		return nil, fmt.Errorf("invalid ciphertext: key %q has no version %d (latest is %d)", id, version, k.LatestVersion)
+	}
+	gcm, err := newGCM(material)
+	if err != nil {
+		return nil, err
+	}
+	rest := ciphertext[ciphertextVersionSize:]
+	if len(rest) < gcm.NonceSize() {
+		return nil, fmt.Errorf("invalid ciphertext: too short")
+	}
+	nonce, ct := rest[:gcm.NonceSize()], rest[gcm.NonceSize():]
+	plaintext, err := gcm.Open(nil, nonce, ct, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt: %w", err)
+	}
+	return plaintext, nil
+}
+
+// newGCM builds the AES-256-GCM AEAD for one version's key material.
+func newGCM(material []byte) (cipher.AEAD, error) {
+	block, err := aes.NewCipher(material)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cipher: %w", err)
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GCM: %w", err)
+	}
+	return gcm, nil
 }
 
 // Close releases the resources held by the store.

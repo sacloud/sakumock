@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.9.1](https://github.com/sacloud/sakumock/compare/v0.9.0...v0.9.1) - 2026-08-25
+### Other Changes
+- kms: deterministic key rotation and --key ID=SECRET@N by @fujiwara in https://github.com/sacloud/sakumock/pull/173
+
 ## [v0.9.0](https://github.com/sacloud/sakumock/compare/v0.8.0...v0.9.0) - 2026-08-22
 ### 🚀 New Features
 - Add seg (Service Endpoint Gateway) mock service by @tokuhirom in https://github.com/sacloud/sakumock/pull/166

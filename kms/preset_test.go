@@ -24,10 +24,37 @@ func TestParsePresetKeys(t *testing.T) {
 	if keys[1].id != "123456789013" || !bytes.Equal(keys[1].material, sum[:]) {
 		t.Errorf("non-hex secret not hashed: %+v", keys[1])
 	}
+	if keys[0].version != 1 || keys[1].version != 1 {
+		t.Errorf("default version != 1: %+v", keys)
+	}
 
-	for _, bad := range []map[string]string{{"": "secret"}, {"123": ""}, {"abc": "secret"}, {"1234567890123": "secret"}} {
+	keys, err = parsePresetKeys(map[string]string{"1": "s@3", "2": rawHex + "@1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if keys[0].version != 3 || keys[1].version != 1 {
+		t.Errorf("@N not parsed: %+v", keys)
+	}
+	if !bytes.Equal(keys[0].material, presetMaterial("s")) || hex.EncodeToString(keys[1].material) != rawHex {
+		t.Errorf("material with @N suffix: %+v", keys)
+	}
+
+	for _, bad := range []map[string]string{{"": "secret"}, {"123": ""}, {"abc": "secret"}, {"1234567890123": "secret"},
+		{"1": "s@"}, {"1": "s@0"}, {"1": "s@-1"}, {"1": "s@x"}, {"1": "s@1001"}, {"1": "@2"}} {
 		if _, err := parsePresetKeys(bad); err == nil {
 			t.Errorf("parsePresetKeys(%v) succeeded, want error", bad)
 		}
+	}
+}
+
+func TestNextKeyMaterial(t *testing.T) {
+	v1 := presetMaterial("secret")
+	v2 := nextKeyMaterial(v1)
+	want := sha256.Sum256(v1)
+	if !bytes.Equal(v2, want[:]) {
+		t.Errorf("nextKeyMaterial = %x, want sha256 of previous version", v2)
+	}
+	if bytes.Equal(v2, v1) {
+		t.Error("rotated material equals previous version")
 	}
 }

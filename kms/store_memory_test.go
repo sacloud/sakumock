@@ -64,6 +64,17 @@ func TestMemoryStoreDecryptSelectsVersion(t *testing.T) {
 		t.Errorf("decrypt at preset version 2 = %q, %v", got, err)
 	}
 
+	// A tampered version prefix fails authentication even when that version
+	// exists: the prefix is covered by the GCM tag.
+	raw, _ := base64.StdEncoding.DecodeString(c1)
+	binary.BigEndian.PutUint32(raw, 2)
+	if _, err := s.Decrypt(id, base64.StdEncoding.EncodeToString(raw)); err == nil {
+		t.Error("decrypt with a tampered version prefix succeeded, want error")
+	}
+	if err := s.Preset("123456789013", presetMaterial("x"), 0); err == nil {
+		t.Error("Preset with version 0 succeeded, want error")
+	}
+
 	for _, bad := range []string{"", base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 1}), base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 1, 1, 2, 3})} {
 		if _, err := s.Decrypt(id, bad); err == nil {
 			t.Errorf("Decrypt(%q) succeeded, want error", bad)

@@ -66,6 +66,9 @@ func (s *MemoryStore) rotateKeyMaterial(id string, version int) {
 // IDs never collide with it and, under the unified binary, another service
 // presetting the same ID fails at startup.
 func (s *MemoryStore) Preset(id string, material []byte, version int) error {
+	if version < 1 {
+		return fmt.Errorf("key %q: version must be >= 1, got %d", id, version)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -220,7 +223,9 @@ const ciphertextVersionSize = 4
 
 // Encrypt encrypts plaintext using the latest version of the key material.
 // The ciphertext is version (big-endian uint32) || GCM nonce || sealed data,
-// base64-encoded, so Decrypt can select the key version directly.
+// base64-encoded, so Decrypt can select the key version directly. The version
+// prefix is authenticated as GCM additional data, so tampering with it fails
+// decryption like any other corruption.
 func (s *MemoryStore) Encrypt(id string, plaintext []byte) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -242,7 +247,7 @@ func (s *MemoryStore) Encrypt(id string, plaintext []byte) (string, error) {
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return "", fmt.Errorf("failed to generate nonce: %w", err)
 	}
-	out = gcm.Seal(out, nonce, plaintext, nil)
+	out = gcm.Seal(out, nonce, plaintext, out[:ciphertextVersionSize])
 	return base64.StdEncoding.EncodeToString(out), nil
 }
 
@@ -279,7 +284,7 @@ func (s *MemoryStore) Decrypt(id string, ciphertextB64 string) ([]byte, error) {
 		return nil, fmt.Errorf("invalid ciphertext: too short")
 	}
 	nonce, ct := rest[:gcm.NonceSize()], rest[gcm.NonceSize():]
-	plaintext, err := gcm.Open(nil, nonce, ct, nil)
+	plaintext, err := gcm.Open(nil, nonce, ct, ciphertext[:ciphertextVersionSize])
 	if err != nil {
 		return nil, fmt.Errorf("failed to decrypt: %w", err)
 	}

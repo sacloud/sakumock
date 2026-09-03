@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/alecthomas/kong"
-	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/addon"
 	"github.com/sacloud/sakumock/apigw"
 	"github.com/sacloud/sakumock/apprun"
@@ -60,7 +59,7 @@ func main() {
 		kong.Description("Local mock server suite for SAKURA Cloud APIs. Run 'sakumock docs' for the embedded documentation index."),
 		kong.UsageOnError(),
 		kong.BindTo(ctx, (*context.Context)(nil)),
-		kong.Vars{"version": sakumock.Version},
+		cliVars(),
 	)
 	kctx.FatalIfErrorf(kctx.Run())
 }

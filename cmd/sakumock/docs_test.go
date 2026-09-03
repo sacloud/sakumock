@@ -136,7 +136,7 @@ func TestDocsTerraform(t *testing.T) {
 func runDocs(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	var cli CLI
-	parser, err := kong.New(&cli, kong.Name("sakumock"))
+	parser, err := kong.New(&cli, kong.Name("sakumock"), cliVars())
 	if err != nil {
 		t.Fatalf("kong.New: %v", err)
 	}
@@ -148,6 +148,26 @@ func runDocs(t *testing.T, args ...string) (string, error) {
 	cli.Docs.out = &buf
 	err = kctx.Run()
 	return buf.String(), err
+}
+
+// TestDocsHelpListsTopics checks the help text names every topic, so the
+// list cannot drift from what the command accepts.
+func TestDocsHelpListsTopics(t *testing.T) {
+	var cli CLI
+	var buf bytes.Buffer
+	parser, err := kong.New(&cli, kong.Name("sakumock"), cliVars(), kong.Writers(&buf, &buf), kong.Exit(func(int) {}))
+	if err != nil {
+		t.Fatalf("kong.New: %v", err)
+	}
+	if _, err := parser.Parse([]string{"docs", "--help"}); err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	help := buf.String()
+	for _, name := range topicNames() {
+		if !strings.Contains(help, name) {
+			t.Errorf("docs --help does not mention topic %q:\n%s", name, help)
+		}
+	}
 }
 
 func TestDocsIndex(t *testing.T) {

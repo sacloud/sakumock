@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/alecthomas/kong"
 	"github.com/sacloud/sakumock"
 	"github.com/sacloud/sakumock/core"
 )
@@ -183,6 +184,16 @@ func allTopics() []docTopic {
 	return append(topics, changelogTopic)
 }
 
+// cliVars supplies the kong.Vars interpolated into help text: the version and
+// the topic list, so `sakumock docs --help` names every topic without a
+// hand-maintained list.
+func cliVars() kong.Vars {
+	return kong.Vars{
+		"version": sakumock.Version,
+		"topics":  strings.Join(topicNames(), ", "),
+	}
+}
+
 func topicNames() []string {
 	var names []string
 	for _, t := range allTopics() {
@@ -216,7 +227,7 @@ func firstSentence(s string) string {
 // an LLM agent can read it from the CLI without the source checkout. With no
 // topic it prints an index in the llms.txt convention.
 type DocsCmd struct {
-	Topic   string `arg:"" optional:"" help:"Topic to print (a service name, readme, changelog, compose); omit for the index"`
+	Topic   string `arg:"" optional:"" help:"Topic to print (${topics}); omit for the index"`
 	TOC     bool   `name:"toc" help:"Print only the headings of the topic"`
 	Section string `placeholder:"NAME" help:"Print only the section under this heading; matched case-insensitively by text or slug (e.g. 'Fixed keys' or fixed-keys)"`
 	All     bool   `help:"Print every topic concatenated (an llms-full.txt style dump)"`

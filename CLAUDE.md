@@ -155,8 +155,9 @@ Service link is an opt-in feature (`sakumock all --enable-service-link` / `SAKUM
 
 ### Go version policy
 
-- Support one version behind the latest stable Go release (e.g., if Go 1.26 is the latest, use Go 1.25)
+- Support one version behind the latest stable Go release (e.g., if Go 1.27 is the latest, CI tests 1.26 and 1.27 and the other jobs run on 1.26)
 - Do not depend on features available only in the latest Go version
+- The `go` directive in `go.mod` is **not** bumped along with CI. sakumock is also embedded as a library, so raising it forces every consumer onto a newer toolchain for no functional gain; raise it only when a dependency or a needed feature requires it. Consequently `go fix ./...` (run before every commit) must not introduce syntax the directive does not allow — it respects the directive, so modernizations such as `new(expr)` only appear once the directive reaches 1.26
 
 ### OpenAPI specs
 

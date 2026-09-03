@@ -62,4 +62,7 @@ type ServiceConfig interface {
 	ClientEnv() []EnvVar
 	// NewServer builds the service's mock server with the shared options.
 	NewServer(opts ServerOptions) (Server, error)
+	// Doc is the service's documentation (its embedded README), printed by
+	// `--docs` and the unified binary's `sakumock docs <name>`.
+	Doc() string
 }

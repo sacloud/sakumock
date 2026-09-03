@@ -2,6 +2,7 @@ package objectstorage
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"os"
 
@@ -16,11 +17,17 @@ type Command struct {
 	Config
 	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"OBJECT_STORAGE_TLS_"`
 	Routes bool          `help:"List supported HTTP routes and exit"`
+	Docs   bool          `help:"Print this service's documentation (README) and exit"`
 }
 
 // Run starts the mock server and serves until ctx is canceled, or prints the
-// route table and returns when --routes is set.
+// route table (--routes) or the documentation (--docs) and returns.
 func (c *Command) Run(ctx context.Context) error {
+	if c.Docs {
+		_, err := io.WriteString(os.Stdout, Doc)
+		return err
+	}
+
 	if c.Routes {
 		h, err := NewHandler(Config{})
 		if err != nil {

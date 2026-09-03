@@ -12,7 +12,7 @@ import (
 func parseAll(t *testing.T, args ...string) *AllCmd {
 	t.Helper()
 	var cli CLI
-	parser, err := kong.New(&cli, kong.Name("sakumock"))
+	parser, err := kong.New(&cli, kong.Name("sakumock"), cliVars())
 	if err != nil {
 		t.Fatalf("kong.New: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestConfigFileUnsupportedExtension(t *testing.T) {
 	path := writeFile(t, "sakumock.toml", "kms.latency = \"5s\"\n")
 
 	var cli CLI
-	parser, err := kong.New(&cli, kong.Name("sakumock"))
+	parser, err := kong.New(&cli, kong.Name("sakumock"), cliVars())
 	if err != nil {
 		t.Fatalf("kong.New: %v", err)
 	}

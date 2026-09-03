@@ -154,6 +154,24 @@ sakumock addon &
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
 
+## Embedded Documentation
+
+The binary carries this README, the CHANGELOG, the compose example, the Terraform configuration of the end-to-end test, and every service README, so the documentation can be read without a source checkout — including by an LLM agent driving the CLI. `sakumock docs` prints an index in the [llms.txt](https://llmstxt.org/) convention; topics are named after the service subcommands.
+
+```bash
+sakumock docs                              # index of topics
+sakumock docs kms                          # a service README (same as `sakumock kms --docs`)
+sakumock docs kms --toc                    # headings only
+sakumock docs kms --section "Fixed keys"   # one section, by heading text or slug (fixed-keys)
+sakumock docs readme --section fault-injection
+sakumock docs terraform --section apigw       # known-good sacloud/sakura provider resources for one service
+sakumock docs --search fault               # grep every topic: topic:line:section: text
+sakumock docs eventbus --search simplemq   # grep one topic; the section slug feeds --section
+sakumock docs --all > sakumock-docs.md     # everything concatenated (llms-full.txt style)
+```
+
+Each service also accepts `--docs` (`sakumock kms --docs`, `sakumock-kms --docs`) to print its own README, next to `--routes` for its endpoint table.
+
 ## Fault Injection
 
 To test how a client (SDK, Terraform provider, your application) handles server errors and network failures, every service can probabilistically inject faults into its control-plane API with `--fault CODE:RATE[:PHASE]` (repeatable):

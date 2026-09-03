@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.10.0](https://github.com/sacloud/sakumock/compare/v0.9.1...v0.10.0) - 2026-09-03
+### 🚀 New Features
+- Embed documentation in the binary and add a docs subcommand by @fujiwara in https://github.com/sacloud/sakumock/pull/175
+### 📦 Dependency Updates
+- build(deps): Bump google.golang.org/grpc from 1.82.1 to 1.83.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/176
+### Other Changes
+- ci: test on Go 1.26 and 1.27 by @fujiwara in https://github.com/sacloud/sakumock/pull/178
+- Slim down CLAUDE.md by @fujiwara in https://github.com/sacloud/sakumock/pull/179
+
 ## [v0.9.1](https://github.com/sacloud/sakumock/compare/v0.9.0...v0.9.1) - 2026-08-25
 ### Other Changes
 - kms: deterministic key rotation and --key ID=SECRET@N by @fujiwara in https://github.com/sacloud/sakumock/pull/173

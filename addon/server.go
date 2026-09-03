@@ -34,6 +34,7 @@ func (c Config) ClientEnv() []core.EnvVar {
 
 // Name returns the service's short name.
 func (Config) Name() string { return "addon" }
+func (Config) Doc() string  { return Doc }
 
 // ListenAddr returns the configured listen address.
 func (c Config) ListenAddr() string { return c.Addr }

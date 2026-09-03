@@ -46,7 +46,12 @@ func SetupTracing(ctx context.Context) (shutdown func(), err error) {
 	}
 
 	// http/protobuf unless OTEL_EXPORTER_OTLP_(TRACES_)PROTOCOL selects grpc
-	// (the same default the Go contrib autoexport uses).
+	// (the same default the Go contrib autoexport uses). google.golang.org/grpc
+	// and grpc-gateway are linked either way — otlptracehttp pulls them in
+	// transitively — so offering the gRPC exporter costs only ~0.3MB, an
+	// accepted trade-off for correct standard-env-var semantics. This does not
+	// contradict monitoringsuite/dataplane.go keeping the mock's own ingest
+	// decoding off the collector service packages (that ingest is OTLP/HTTP only).
 	proto := os.Getenv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
 	if proto == "" {
 		proto = os.Getenv("OTEL_EXPORTER_OTLP_PROTOCOL")

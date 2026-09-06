@@ -36,7 +36,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"ID": {
 								Type: "number",
-								Enum: []any{float64(1)},
+								Enum: []any{float64(1.0)},
 							},
 						},
 					},
@@ -447,7 +447,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ID": {
 									Type: "number",
-									Enum: []any{float64(1)},
+									Enum: []any{float64(1.0)},
 								},
 							},
 						},
@@ -853,7 +853,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"ID": {
 										Type: "number",
-										Enum: []any{float64(1)},
+										Enum: []any{float64(1.0)},
 									},
 								},
 							},
@@ -1255,7 +1255,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ID": {
 									Type: "number",
-									Enum: []any{float64(1)},
+									Enum: []any{float64(1.0)},
 								},
 							},
 						},
@@ -1703,7 +1703,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ID": {
 									Type: "number",
-									Enum: []any{float64(1)},
+									Enum: []any{float64(1.0)},
 								},
 							},
 						},
@@ -2095,7 +2095,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ID": {
 									Type: "number",
-									Enum: []any{float64(1)},
+									Enum: []any{float64(1.0)},
 								},
 							},
 						},

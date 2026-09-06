@@ -80,7 +80,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"Message": {
 				Type:      "string",
-				MaxLength: core.IntPtr(2048),
+				MaxLength: new(2048),
 			},
 		},
 	},
@@ -96,8 +96,8 @@ var bodySchemas = map[string]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"PriorityRank": {
 							Type:    "integer",
-							Minimum: core.Float64Ptr(1),
-							Maximum: core.Float64Ptr(100),
+							Minimum: new(1.0),
+							Maximum: new(100.0),
 						},
 						"RoutingID": {
 							Type:    "string",
@@ -392,7 +392,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"status": {
 											Type: "integer",
-											Enum: []any{float64(0), float64(1), float64(2), float64(3), float64(9)},
+											Enum: []any{float64(0.0), float64(1.0), float64(2.0), float64(3.0), float64(9.0)},
 										},
 										"updated_at": {
 											Type: "string",
@@ -476,7 +476,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"status": {
 										Type: "integer",
-										Enum: []any{float64(0), float64(1), float64(2), float64(3), float64(9)},
+										Enum: []any{float64(0.0), float64(1.0), float64(2.0), float64(3.0), float64(9.0)},
 									},
 									"updated_at": {
 										Type: "string",

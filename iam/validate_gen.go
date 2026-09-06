@@ -2262,7 +2262,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(1),
+								Minimum: new(1.0),
 							},
 							"last_used_at": {
 								Type:     "string",
@@ -2373,7 +2373,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
+					Minimum: new(1.0),
 				},
 				"last_used_at": {
 					Type:     "string",
@@ -2485,8 +2485,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(32),
+								MinLength: new(1),
+								MaxLength: new(32),
 							},
 						},
 					},
@@ -4143,7 +4143,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"code": {
 								Type:      "string",
-								MaxLength: core.IntPtr(64),
+								MaxLength: new(64),
 							},
 							"created_at": {
 								Type: "string",
@@ -4243,7 +4243,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"code": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"created_at": {
 					Type: "string",
@@ -6728,7 +6728,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"code": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"created_at": {
 					Type: "string",
@@ -8459,7 +8459,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
+					Minimum: new(1.0),
 				},
 				"last_used_at": {
 					Type:     "string",
@@ -9986,7 +9986,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"code": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"created_at": {
 					Type: "string",

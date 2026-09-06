@@ -15,12 +15,12 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(1),
+				MaxLength: new(64),
 			},
 			"note": {
 				Type:      "string",
-				MaxLength: core.IntPtr(10),
+				MaxLength: new(10),
 			},
 		},
 	},
@@ -55,21 +55,21 @@ var bodySchemas = map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
 				Nullable:  true,
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"extra": {
 				Type: "object",
 			},
 			"level": {
 				Type: "integer",
-				Enum: []any{float64(1), float64(2), float64(3)},
+				Enum: []any{float64(1.0), float64(2.0), float64(3.0)},
 			},
 			"merged_array": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(5),
+					MinLength: new(1),
+					MaxLength: new(5),
 				},
 			},
 			"merged_object": {
@@ -77,8 +77,8 @@ var bodySchemas = map[string]*core.BodySchema{
 				Properties: map[string]*core.BodySchema{
 					"mode": {
 						Type:      "string",
-						MinLength: core.IntPtr(2),
-						MaxLength: core.IntPtr(8),
+						MinLength: new(2),
+						MaxLength: new(8),
 					},
 				},
 			},
@@ -88,12 +88,12 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(1),
+				MaxLength: new(64),
 			},
 			"ratio": {
 				Type:             "number",
-				Minimum:          core.Float64Ptr(0),
+				Minimum:          new(0.0),
 				ExclusiveMinimum: true,
 			},
 			"serial": {
@@ -101,21 +101,21 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"size": {
 				Type:             "integer",
-				Minimum:          core.Float64Ptr(1),
-				Maximum:          core.Float64Ptr(100),
+				Minimum:          new(1.0),
+				Maximum:          new(100.0),
 				ExclusiveMaximum: true,
 			},
 			"tags": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
+					MinLength: new(1),
 				},
-				MinItems: core.IntPtr(1),
-				MaxItems: core.IntPtr(5),
+				MinItems: new(1),
+				MaxItems: new(5),
 			},
 			"untyped": {
-				MaxLength: core.IntPtr(3),
+				MaxLength: new(3),
 			},
 		},
 	},

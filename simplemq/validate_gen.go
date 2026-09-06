@@ -23,8 +23,8 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MinLength: core.IntPtr(5),
-						MaxLength: core.IntPtr(64),
+						MinLength: new(5),
+						MaxLength: new(64),
 						Pattern:   "^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$",
 					},
 					"Provider": {
@@ -53,7 +53,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"content": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256000),
+				MaxLength: new(256000),
 				Pattern:   "^[0-9a-zA-Z+/=]*$",
 			},
 		},
@@ -76,13 +76,13 @@ var bodySchemas = map[string]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"ExpireSeconds": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(60),
-								Maximum: core.Float64Ptr(1209600),
+								Minimum: new(60.0),
+								Maximum: new(1209600.0),
 							},
 							"VisibilityTimeoutSeconds": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(5),
-								Maximum: core.Float64Ptr(900),
+								Minimum: new(5.0),
+								Maximum: new(900.0),
 							},
 						},
 					},
@@ -155,13 +155,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ExpireSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(60),
-									Maximum: core.Float64Ptr(1209600),
+									Minimum: new(60.0),
+									Maximum: new(1209600.0),
 								},
 								"VisibilityTimeoutSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(5),
-									Maximum: core.Float64Ptr(900),
+									Minimum: new(5.0),
+									Maximum: new(900.0),
 								},
 							},
 						},
@@ -492,13 +492,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"ExpireSeconds": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(60),
-										Maximum: core.Float64Ptr(1209600),
+										Minimum: new(60.0),
+										Maximum: new(1209600.0),
 									},
 									"VisibilityTimeoutSeconds": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(5),
-										Maximum: core.Float64Ptr(900),
+										Minimum: new(5.0),
+										Maximum: new(900.0),
 									},
 								},
 							},
@@ -650,13 +650,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ExpireSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(60),
-									Maximum: core.Float64Ptr(1209600),
+									Minimum: new(60.0),
+									Maximum: new(1209600.0),
 								},
 								"VisibilityTimeoutSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(5),
-									Maximum: core.Float64Ptr(900),
+									Minimum: new(5.0),
+									Maximum: new(900.0),
 								},
 							},
 						},
@@ -885,7 +885,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"content": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256000),
+								MaxLength: new(256000),
 								Pattern:   "^[0-9a-zA-Z+/=]*$",
 							},
 							"created_at": {
@@ -896,8 +896,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"id": {
 								Type:      "string",
-								MinLength: core.IntPtr(36),
-								MaxLength: core.IntPtr(36),
+								MinLength: new(36),
+								MaxLength: new(36),
 								Pattern:   "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
 							},
 							"updated_at": {
@@ -1011,13 +1011,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ExpireSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(60),
-									Maximum: core.Float64Ptr(1209600),
+									Minimum: new(60.0),
+									Maximum: new(1209600.0),
 								},
 								"VisibilityTimeoutSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(5),
-									Maximum: core.Float64Ptr(900),
+									Minimum: new(5.0),
+									Maximum: new(900.0),
 								},
 							},
 						},
@@ -1141,7 +1141,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"content": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256000),
+							MaxLength: new(256000),
 							Pattern:   "^[0-9a-zA-Z+/=]*$",
 						},
 						"created_at": {
@@ -1152,8 +1152,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"id": {
 							Type:      "string",
-							MinLength: core.IntPtr(36),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(36),
+							MaxLength: new(36),
 							Pattern:   "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
 						},
 						"updated_at": {
@@ -1263,13 +1263,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"ExpireSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(60),
-									Maximum: core.Float64Ptr(1209600),
+									Minimum: new(60.0),
+									Maximum: new(1209600.0),
 								},
 								"VisibilityTimeoutSeconds": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(5),
-									Maximum: core.Float64Ptr(900),
+									Minimum: new(5.0),
+									Maximum: new(900.0),
 								},
 							},
 						},
@@ -1499,7 +1499,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"content": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256000),
+							MaxLength: new(256000),
 							Pattern:   "^[0-9a-zA-Z+/=]*$",
 						},
 						"created_at": {
@@ -1510,8 +1510,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"id": {
 							Type:      "string",
-							MinLength: core.IntPtr(36),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(36),
+							MaxLength: new(36),
 							Pattern:   "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
 						},
 						"updated_at": {

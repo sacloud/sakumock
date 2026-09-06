@@ -165,25 +165,25 @@ func writeSchema(b *strings.Builder, s *core.BodySchema, depth int) {
 		b.WriteString(",\n")
 	}
 	if s.MinItems != nil {
-		field("MinItems", fmt.Sprintf("core.IntPtr(%d)", *s.MinItems))
+		field("MinItems", fmt.Sprintf("new(%d)", *s.MinItems))
 	}
 	if s.MaxItems != nil {
-		field("MaxItems", fmt.Sprintf("core.IntPtr(%d)", *s.MaxItems))
+		field("MaxItems", fmt.Sprintf("new(%d)", *s.MaxItems))
 	}
 	if s.MinLength != nil {
-		field("MinLength", fmt.Sprintf("core.IntPtr(%d)", *s.MinLength))
+		field("MinLength", fmt.Sprintf("new(%d)", *s.MinLength))
 	}
 	if s.MaxLength != nil {
-		field("MaxLength", fmt.Sprintf("core.IntPtr(%d)", *s.MaxLength))
+		field("MaxLength", fmt.Sprintf("new(%d)", *s.MaxLength))
 	}
 	if s.Pattern != "" {
 		field("Pattern", strconv.Quote(s.Pattern))
 	}
 	if s.Minimum != nil {
-		field("Minimum", fmt.Sprintf("core.Float64Ptr(%s)", formatFloat(*s.Minimum)))
+		field("Minimum", fmt.Sprintf("new(%s)", formatFloat(*s.Minimum)))
 	}
 	if s.Maximum != nil {
-		field("Maximum", fmt.Sprintf("core.Float64Ptr(%s)", formatFloat(*s.Maximum)))
+		field("Maximum", fmt.Sprintf("new(%s)", formatFloat(*s.Maximum)))
 	}
 	if s.ExclusiveMinimum {
 		field("ExclusiveMinimum", "true")
@@ -215,6 +215,13 @@ func enumLiteral(e any) string {
 	return fmt.Sprintf("%#v", e)
 }
 
+// formatFloat renders f as a float literal. The decimal point is mandatory:
+// the literal is emitted as new(<lit>), whose type follows the constant's
+// default type, and new(60) would be an *int.
 func formatFloat(f float64) string {
-	return strconv.FormatFloat(f, 'f', -1, 64)
+	lit := strconv.FormatFloat(f, 'f', -1, 64)
+	if !strings.Contains(lit, ".") {
+		lit += ".0"
+	}
+	return lit
 }

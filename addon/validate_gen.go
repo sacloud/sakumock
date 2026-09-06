@@ -15,11 +15,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"sku": {
 				Type: "integer",
-				Enum: []any{float64(1)},
+				Enum: []any{float64(1.0)},
 			},
 		},
 	},
@@ -33,15 +33,15 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"performance": {
 				Type: "integer",
-				Enum: []any{float64(1), float64(2)},
+				Enum: []any{float64(1.0), float64(2.0)},
 			},
 			"redundancy": {
 				Type: "integer",
-				Enum: []any{float64(1), float64(2), float64(3), float64(4)},
+				Enum: []any{float64(1.0), float64(2.0), float64(3.0), float64(4.0)},
 			},
 		},
 	},
@@ -51,7 +51,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -61,7 +61,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -71,7 +71,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -81,19 +81,19 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"partitionCount": {
 				Type: "integer",
 			},
 			"replicaCount": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(12),
+				Minimum: new(1.0),
+				Maximum: new(12.0),
 			},
 			"sku": {
 				Type: "integer",
-				Enum: []any{float64(1), float64(2), float64(3), float64(4), float64(5), float64(6), float64(7), float64(8)},
+				Enum: []any{float64(1.0), float64(2.0), float64(3.0), float64(4.0), float64(5.0), float64(6.0), float64(7.0), float64(8.0)},
 			},
 			"skuString": {
 				Type:     "string",
@@ -107,11 +107,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"unitCount": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -137,13 +137,13 @@ var bodySchemas = map[string]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"hostHeader": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(100),
+												MinLength: new(1),
+												MaxLength: new(100),
 											},
 											"hostName": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(100),
+												MinLength: new(1),
+												MaxLength: new(100),
 											},
 										},
 									},
@@ -161,7 +161,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"profile": {
 				Type:     "object",
@@ -169,7 +169,7 @@ var bodySchemas = map[string]*core.BodySchema{
 				Properties: map[string]*core.BodySchema{
 					"level": {
 						Type: "integer",
-						Enum: []any{float64(1), float64(2)},
+						Enum: []any{float64(1.0), float64(2.0)},
 					},
 					"levelNameOfBicepParameter": {
 						Type:     "string",
@@ -201,13 +201,13 @@ var bodySchemas = map[string]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"hostHeader": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(100),
+												MinLength: new(1),
+												MaxLength: new(100),
 											},
 											"hostName": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(100),
+												MinLength: new(1),
+												MaxLength: new(100),
 											},
 										},
 									},
@@ -225,7 +225,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"profile": {
 				Type:     "object",
@@ -233,7 +233,7 @@ var bodySchemas = map[string]*core.BodySchema{
 				Properties: map[string]*core.BodySchema{
 					"level": {
 						Type: "integer",
-						Enum: []any{float64(1), float64(2)},
+						Enum: []any{float64(1.0), float64(2.0)},
 					},
 					"levelNameOfBicepParameter": {
 						Type:     "string",
@@ -249,11 +249,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"os": {
 				Type: "integer",
-				Enum: []any{float64(1), float64(2)},
+				Enum: []any{float64(1.0), float64(2.0)},
 			},
 		},
 	},
@@ -279,13 +279,13 @@ var bodySchemas = map[string]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"hostHeader": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(100),
+												MinLength: new(1),
+												MaxLength: new(100),
 											},
 											"hostName": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(100),
+												MinLength: new(1),
+												MaxLength: new(100),
 											},
 										},
 									},
@@ -303,7 +303,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"location": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"profile": {
 				Type:     "object",
@@ -311,7 +311,7 @@ var bodySchemas = map[string]*core.BodySchema{
 				Properties: map[string]*core.BodySchema{
 					"level": {
 						Type: "integer",
-						Enum: []any{float64(1), float64(2)},
+						Enum: []any{float64(1.0), float64(2.0)},
 					},
 					"levelNameOfBicepParameter": {
 						Type:     "string",

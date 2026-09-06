@@ -15,7 +15,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"log_storage_id": {
 				Type:     "integer",
@@ -27,7 +27,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 				Pattern:   "^[a-z\\d_-]*$",
 			},
 			"rule": {
@@ -62,13 +62,13 @@ var bodySchemas = map[string]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(256),
+							MinLength: new(1),
+							MaxLength: new(256),
 						},
 						"value": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(256),
+							MinLength: new(1),
+							MaxLength: new(256),
 						},
 					},
 				},
@@ -78,8 +78,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"resend_interval_minutes": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(720),
+				Minimum: new(0.0),
+				Maximum: new(720.0),
 			},
 		},
 	},
@@ -88,7 +88,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(100),
+				MaxLength: new(100),
 			},
 			"service_type": {
 				Type: "string",
@@ -96,7 +96,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"url": {
 				Type:      "string",
-				MaxLength: core.IntPtr(1024),
+				MaxLength: new(1024),
 			},
 		},
 	},
@@ -111,7 +111,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"format": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"metrics_storage_id": {
 				Type:     "integer",
@@ -119,22 +119,22 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"query": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(4096),
+				MinLength: new(1),
+				MaxLength: new(4096),
 			},
 			"template": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"threshold_critical": {
 				Type:      "string",
 				Nullable:  true,
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(256),
+				MinLength: new(1),
+				MaxLength: new(256),
 			},
 			"threshold_duration_critical": {
 				Type: "integer",
@@ -145,8 +145,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			"threshold_warning": {
 				Type:      "string",
 				Nullable:  true,
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(256),
+				MinLength: new(1),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -155,11 +155,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -168,11 +168,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -185,7 +185,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"publisher_code": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"resource_id": {
 				Type:     "integer",
@@ -193,7 +193,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"variant": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -202,7 +202,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -211,11 +211,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 			"service_principal_id": {
 				Type:     "integer",
@@ -232,7 +232,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"publisher_code": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"resource_id": {
 				Type:     "integer",
@@ -240,7 +240,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"variant": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -249,7 +249,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -258,11 +258,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -271,11 +271,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 			"service_principal_id": {
 				Type:     "integer",
@@ -288,7 +288,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -298,11 +298,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -313,7 +313,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"log_storage_id": {
 				Type:     "integer",
@@ -325,7 +325,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 				Pattern:   "^[a-z\\d_-]*$",
 			},
 			"rule": {
@@ -361,13 +361,13 @@ var bodySchemas = map[string]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(256),
+							MinLength: new(1),
+							MaxLength: new(256),
 						},
 						"value": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(256),
+							MinLength: new(1),
+							MaxLength: new(256),
 						},
 					},
 				},
@@ -377,8 +377,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"resend_interval_minutes": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(720),
+				Minimum: new(0.0),
+				Maximum: new(720.0),
 			},
 		},
 	},
@@ -388,7 +388,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(100),
+				MaxLength: new(100),
 			},
 			"service_type": {
 				Type: "string",
@@ -396,7 +396,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"url": {
 				Type:      "string",
-				MaxLength: core.IntPtr(1024),
+				MaxLength: new(1024),
 			},
 		},
 	},
@@ -412,7 +412,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"format": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"metrics_storage_id": {
 				Type:     "integer",
@@ -420,22 +420,22 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"query": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(4096),
+				MinLength: new(1),
+				MaxLength: new(4096),
 			},
 			"template": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"threshold_critical": {
 				Type:      "string",
 				Nullable:  true,
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(256),
+				MinLength: new(1),
+				MaxLength: new(256),
 			},
 			"threshold_duration_critical": {
 				Type: "integer",
@@ -446,8 +446,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			"threshold_warning": {
 				Type:      "string",
 				Nullable:  true,
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(256),
+				MinLength: new(1),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -457,11 +457,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -475,7 +475,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"publisher_code": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"resource_id": {
 				Type:     "integer",
@@ -483,7 +483,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"variant": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -497,7 +497,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"is_system": {
 				Type: "boolean",
@@ -505,18 +505,18 @@ var bodySchemas = map[string]*core.BodySchema{
 			"kms_key_id": {
 				Type:     "integer",
 				Nullable: true,
-				Minimum:  core.Float64Ptr(0),
-				Maximum:  core.Float64Ptr(999999999999),
+				Minimum:  new(0.0),
+				Maximum:  new(999999999999.0),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 			"service_principal_id": {
 				Type:     "integer",
 				Nullable: true,
-				Minimum:  core.Float64Ptr(0),
-				Maximum:  core.Float64Ptr(999999999999),
+				Minimum:  new(0.0),
+				Maximum:  new(999999999999.0),
 			},
 		},
 	},
@@ -525,7 +525,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -535,8 +535,8 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"days": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(730),
+				Minimum: new(1.0),
+				Maximum: new(730.0),
 			},
 		},
 	},
@@ -579,7 +579,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"publisher_code": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"resource_id": {
 				Type:     "integer",
@@ -587,7 +587,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"variant": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -597,14 +597,14 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"is_system": {
 				Type: "boolean",
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -613,7 +613,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -627,23 +627,23 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"kms_key_id": {
 				Type:     "integer",
 				Nullable: true,
-				Minimum:  core.Float64Ptr(0),
-				Maximum:  core.Float64Ptr(999999999999),
+				Minimum:  new(0.0),
+				Maximum:  new(999999999999.0),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 			"service_principal_id": {
 				Type:     "integer",
 				Nullable: true,
-				Minimum:  core.Float64Ptr(0),
-				Maximum:  core.Float64Ptr(999999999999),
+				Minimum:  new(0.0),
+				Maximum:  new(999999999999.0),
 			},
 		},
 	},
@@ -653,8 +653,8 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"days": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(730),
+				Minimum: new(1.0),
+				Maximum: new(730.0),
 			},
 		},
 	},
@@ -663,7 +663,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -674,7 +674,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"log_storage_id": {
 				Type:     "integer",
@@ -686,7 +686,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 				Pattern:   "^[a-z\\d_-]*$",
 			},
 			"rule": {
@@ -721,7 +721,7 @@ var bodySchemas = map[string]*core.BodySchema{
 				},
 				"order": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
+					Minimum: new(1.0),
 				},
 			},
 		},
@@ -738,13 +738,13 @@ var bodySchemas = map[string]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(256),
+							MinLength: new(1),
+							MaxLength: new(256),
 						},
 						"value": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(256),
+							MinLength: new(1),
+							MaxLength: new(256),
 						},
 					},
 				},
@@ -754,8 +754,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"resend_interval_minutes": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(720),
+				Minimum: new(0.0),
+				Maximum: new(720.0),
 			},
 		},
 	},
@@ -765,7 +765,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(100),
+				MaxLength: new(100),
 			},
 			"service_type": {
 				Type: "string",
@@ -773,7 +773,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"url": {
 				Type:      "string",
-				MaxLength: core.IntPtr(1024),
+				MaxLength: new(1024),
 			},
 		},
 	},
@@ -789,7 +789,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"format": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"metrics_storage_id": {
 				Type:     "integer",
@@ -797,22 +797,22 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"query": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(4096),
+				MinLength: new(1),
+				MaxLength: new(4096),
 			},
 			"template": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 			"threshold_critical": {
 				Type:      "string",
 				Nullable:  true,
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(256),
+				MinLength: new(1),
+				MaxLength: new(256),
 			},
 			"threshold_duration_critical": {
 				Type: "integer",
@@ -823,8 +823,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			"threshold_warning": {
 				Type:      "string",
 				Nullable:  true,
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(256),
+				MinLength: new(1),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -833,11 +833,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -846,11 +846,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -864,7 +864,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"publisher_code": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"resource_id": {
 				Type:     "integer",
@@ -872,7 +872,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"variant": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -881,7 +881,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -890,11 +890,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 			"service_principal_id": {
 				Type:     "integer",
@@ -912,7 +912,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"publisher_code": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 			"resource_id": {
 				Type:     "integer",
@@ -920,7 +920,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"variant": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -929,7 +929,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -938,11 +938,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 		},
 	},
@@ -951,11 +951,11 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(512),
+				MaxLength: new(512),
 			},
 			"name": {
 				Type:      "string",
-				MaxLength: core.IntPtr(64),
+				MaxLength: new(64),
 			},
 			"service_principal_id": {
 				Type:     "integer",
@@ -968,7 +968,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"description": {
 				Type:      "string",
-				MaxLength: core.IntPtr(256),
+				MaxLength: new(256),
 			},
 		},
 	},
@@ -1049,7 +1049,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(512),
+								MaxLength: new(512),
 							},
 							"icon": {
 								Type:     "object",
@@ -1065,13 +1065,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(64),
+								MaxLength: new(64),
 							},
 							"resource_id": {
 								Type:     "integer",
 								Nullable: true,
-								Minimum:  core.Float64Ptr(0),
-								Maximum:  core.Float64Ptr(999999999999),
+								Minimum:  new(0.0),
+								Maximum:  new(999999999999.0),
 							},
 							"tags": {
 								Type: "array",
@@ -1114,7 +1114,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"labels": {
 								Type:      "string",
-								MaxLength: core.IntPtr(4096),
+								MaxLength: new(4096),
 							},
 							"open": {
 								Type: "boolean",
@@ -1124,7 +1124,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"query": {
 								Type:      "string",
-								MaxLength: core.IntPtr(4096),
+								MaxLength: new(4096),
 							},
 							"rule_uid": {
 								Type: "string",
@@ -1138,7 +1138,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"threshold": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"uid": {
 								Type: "string",
@@ -1166,7 +1166,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"labels": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"open": {
 					Type: "boolean",
@@ -1176,7 +1176,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"query": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"rule_uid": {
 					Type: "string",
@@ -1190,7 +1190,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"threshold": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"uid": {
 					Type: "string",
@@ -1227,12 +1227,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(999999999999),
+								Minimum: new(0.0),
+								Maximum: new(999999999999.0),
 							},
 							"log_storage": {
 								Type:     "object",
@@ -1250,7 +1250,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(512),
+										MaxLength: new(512),
 									},
 									"endpoints": {
 										Type:     "object",
@@ -1291,18 +1291,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									"kms_key_id": {
 										Type:     "integer",
 										Nullable: true,
-										Minimum:  core.Float64Ptr(0),
-										Maximum:  core.Float64Ptr(999999999999),
+										Minimum:  new(0.0),
+										Maximum:  new(999999999999.0),
 									},
 									"name": {
 										Type:      "string",
-										MaxLength: core.IntPtr(64),
+										MaxLength: new(64),
 									},
 									"resource_id": {
 										Type:     "integer",
 										Nullable: true,
-										Minimum:  core.Float64Ptr(0),
-										Maximum:  core.Float64Ptr(999999999999),
+										Minimum:  new(0.0),
+										Maximum:  new(999999999999.0),
 									},
 									"service_principal_id": {
 										Type:     "integer",
@@ -1340,7 +1340,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(512),
+										MaxLength: new(512),
 									},
 									"endpoints": {
 										Type:     "object",
@@ -1368,13 +1368,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MaxLength: core.IntPtr(64),
+										MaxLength: new(64),
 									},
 									"resource_id": {
 										Type:     "integer",
 										Nullable: true,
-										Minimum:  core.Float64Ptr(0),
-										Maximum:  core.Float64Ptr(999999999999),
+										Minimum:  new(0.0),
+										Maximum:  new(999999999999.0),
 									},
 									"tags": {
 										Type: "array",
@@ -1404,7 +1404,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 								Pattern:   "^[a-z\\d_-]*$",
 							},
 							"project_id": {
@@ -1456,12 +1456,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"log_storage": {
 					Type:     "object",
@@ -1479,7 +1479,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -1520,18 +1520,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -1569,7 +1569,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -1597,13 +1597,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -1633,7 +1633,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 					Pattern:   "^[a-z\\d_-]*$",
 				},
 				"project_id": {
@@ -1696,11 +1696,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Properties: map[string]*core.BodySchema{
 										"name": {
 											Type:      "string",
-											MaxLength: core.IntPtr(256),
+											MaxLength: new(256),
 										},
 										"value": {
 											Type:      "string",
-											MaxLength: core.IntPtr(256),
+											MaxLength: new(256),
 										},
 									},
 								},
@@ -1714,7 +1714,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(100),
+										MaxLength: new(100),
 									},
 									"project_id": {
 										Type:     "integer",
@@ -1729,7 +1729,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"url": {
 										Type:      "string",
-										MaxLength: core.IntPtr(1024),
+										MaxLength: new(1024),
 									},
 								},
 							},
@@ -1742,8 +1742,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"resend_interval_minutes": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(720),
+								Minimum: new(0.0),
+								Maximum: new(720.0),
 							},
 							"uid": {
 								Type: "string",
@@ -1770,11 +1770,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"value": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 						},
 					},
@@ -1788,7 +1788,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(100),
+							MaxLength: new(100),
 						},
 						"project_id": {
 							Type:     "integer",
@@ -1803,7 +1803,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"url": {
 							Type:      "string",
-							MaxLength: core.IntPtr(1024),
+							MaxLength: new(1024),
 						},
 					},
 				},
@@ -1816,8 +1816,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"resend_interval_minutes": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(720),
+					Minimum: new(0.0),
+					Maximum: new(720.0),
 				},
 				"uid": {
 					Type: "string",
@@ -1850,7 +1850,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(100),
+								MaxLength: new(100),
 							},
 							"project_id": {
 								Type:     "integer",
@@ -1865,7 +1865,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"url": {
 								Type:      "string",
-								MaxLength: core.IntPtr(1024),
+								MaxLength: new(1024),
 							},
 						},
 					},
@@ -1886,7 +1886,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(100),
+					MaxLength: new(100),
 				},
 				"project_id": {
 					Type:     "integer",
@@ -1901,7 +1901,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"url": {
 					Type:      "string",
-					MaxLength: core.IntPtr(1024),
+					MaxLength: new(1024),
 				},
 			},
 		},
@@ -1934,7 +1934,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"format": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"metrics_storage_id": {
 								Type:     "integer",
@@ -1942,7 +1942,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"open": {
 								Type: "boolean",
@@ -1953,16 +1953,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"query": {
 								Type:      "string",
-								MaxLength: core.IntPtr(4096),
+								MaxLength: new(4096),
 							},
 							"template": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"threshold_critical": {
 								Type:      "string",
 								Nullable:  true,
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"threshold_duration_critical": {
 								Type: "integer",
@@ -1973,7 +1973,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"threshold_warning": {
 								Type:      "string",
 								Nullable:  true,
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"uid": {
 								Type: "string",
@@ -2013,7 +2013,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"labels": {
 								Type:      "string",
-								MaxLength: core.IntPtr(4096),
+								MaxLength: new(4096),
 							},
 							"open": {
 								Type: "boolean",
@@ -2023,7 +2023,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"query": {
 								Type:      "string",
-								MaxLength: core.IntPtr(4096),
+								MaxLength: new(4096),
 							},
 							"rule_uid": {
 								Type: "string",
@@ -2037,7 +2037,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"threshold": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"uid": {
 								Type: "string",
@@ -2065,7 +2065,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"labels": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"open": {
 					Type: "boolean",
@@ -2075,7 +2075,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"query": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"rule_uid": {
 					Type: "string",
@@ -2089,7 +2089,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"threshold": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"uid": {
 					Type: "string",
@@ -2113,7 +2113,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"format": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"metrics_storage_id": {
 					Type:     "integer",
@@ -2121,7 +2121,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"open": {
 					Type: "boolean",
@@ -2132,16 +2132,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"query": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"template": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_critical": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_duration_critical": {
 					Type: "integer",
@@ -2152,7 +2152,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"threshold_warning": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"uid": {
 					Type: "string",
@@ -2173,7 +2173,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -2192,13 +2192,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -2237,7 +2237,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(512),
+								MaxLength: new(512),
 							},
 							"icon": {
 								Type:     "object",
@@ -2253,13 +2253,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(64),
+								MaxLength: new(64),
 							},
 							"resource_id": {
 								Type:     "integer",
 								Nullable: true,
-								Minimum:  core.Float64Ptr(0),
-								Maximum:  core.Float64Ptr(999999999999),
+								Minimum:  new(0.0),
+								Maximum:  new(999999999999.0),
 							},
 							"tags": {
 								Type: "array",
@@ -2289,7 +2289,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -2308,13 +2308,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -2350,8 +2350,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(999999999999),
+								Minimum: new(0.0),
+								Maximum: new(999999999999.0),
 							},
 							"log_storage": {
 								Type:     "object",
@@ -2369,7 +2369,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(512),
+										MaxLength: new(512),
 									},
 									"endpoints": {
 										Type:     "object",
@@ -2410,18 +2410,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									"kms_key_id": {
 										Type:     "integer",
 										Nullable: true,
-										Minimum:  core.Float64Ptr(0),
-										Maximum:  core.Float64Ptr(999999999999),
+										Minimum:  new(0.0),
+										Maximum:  new(999999999999.0),
 									},
 									"name": {
 										Type:      "string",
-										MaxLength: core.IntPtr(64),
+										MaxLength: new(64),
 									},
 									"resource_id": {
 										Type:     "integer",
 										Nullable: true,
-										Minimum:  core.Float64Ptr(0),
-										Maximum:  core.Float64Ptr(999999999999),
+										Minimum:  new(0.0),
+										Maximum:  new(999999999999.0),
 									},
 									"service_principal_id": {
 										Type:     "integer",
@@ -2453,11 +2453,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"code": {
 										Type:      "string",
-										MaxLength: core.IntPtr(256),
+										MaxLength: new(256),
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(256),
+										MaxLength: new(256),
 									},
 									"variants": {
 										Type: "array",
@@ -2520,8 +2520,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -2542,7 +2542,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -2583,18 +2583,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -2626,11 +2626,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -2709,7 +2709,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(512),
+								MaxLength: new(512),
 							},
 							"endpoints": {
 								Type:     "object",
@@ -2750,18 +2750,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"kms_key_id": {
 								Type:     "integer",
 								Nullable: true,
-								Minimum:  core.Float64Ptr(0),
-								Maximum:  core.Float64Ptr(999999999999),
+								Minimum:  new(0.0),
+								Maximum:  new(999999999999.0),
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(64),
+								MaxLength: new(64),
 							},
 							"resource_id": {
 								Type:     "integer",
 								Nullable: true,
-								Minimum:  core.Float64Ptr(0),
-								Maximum:  core.Float64Ptr(999999999999),
+								Minimum:  new(0.0),
+								Maximum:  new(999999999999.0),
 							},
 							"service_principal_id": {
 								Type:     "integer",
@@ -2816,12 +2816,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(999999999999),
+								Minimum: new(0.0),
+								Maximum: new(999999999999.0),
 							},
 							"secret": {
 								Type: "string",
@@ -2848,12 +2848,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -2887,7 +2887,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -2931,18 +2931,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"kms_key_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"service_principal_id": {
 					Type:     "integer",
@@ -3162,8 +3162,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(999999999999),
+								Minimum: new(0.0),
+								Maximum: new(999999999999.0),
 							},
 							"metrics_storage": {
 								Type:     "object",
@@ -3177,7 +3177,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(512),
+										MaxLength: new(512),
 									},
 									"endpoints": {
 										Type:     "object",
@@ -3205,13 +3205,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MaxLength: core.IntPtr(64),
+										MaxLength: new(64),
 									},
 									"resource_id": {
 										Type:     "integer",
 										Nullable: true,
-										Minimum:  core.Float64Ptr(0),
-										Maximum:  core.Float64Ptr(999999999999),
+										Minimum:  new(0.0),
+										Maximum:  new(999999999999.0),
 									},
 									"tags": {
 										Type: "array",
@@ -3245,11 +3245,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"code": {
 										Type:      "string",
-										MaxLength: core.IntPtr(256),
+										MaxLength: new(256),
 									},
 									"description": {
 										Type:      "string",
-										MaxLength: core.IntPtr(256),
+										MaxLength: new(256),
 									},
 									"variants": {
 										Type: "array",
@@ -3312,8 +3312,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -3330,7 +3330,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -3358,13 +3358,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -3398,11 +3398,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -3477,7 +3477,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(512),
+								MaxLength: new(512),
 							},
 							"endpoints": {
 								Type:     "object",
@@ -3505,13 +3505,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(64),
+								MaxLength: new(64),
 							},
 							"resource_id": {
 								Type:     "integer",
 								Nullable: true,
-								Minimum:  core.Float64Ptr(0),
-								Maximum:  core.Float64Ptr(999999999999),
+								Minimum:  new(0.0),
+								Maximum:  new(999999999999.0),
 							},
 							"tags": {
 								Type: "array",
@@ -3568,12 +3568,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(999999999999),
+								Minimum: new(0.0),
+								Maximum: new(999999999999.0),
 							},
 							"secret": {
 								Type: "string",
@@ -3600,12 +3600,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -3635,7 +3635,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -3666,13 +3666,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -3778,11 +3778,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"code": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"variants": {
 								Type: "array",
@@ -3827,11 +3827,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"code": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -3898,7 +3898,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(512),
+								MaxLength: new(512),
 							},
 							"endpoints": {
 								Type:     "object",
@@ -3936,12 +3936,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(64),
+								MaxLength: new(64),
 							},
 							"resource_id": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(999999999999),
+								Minimum: new(0.0),
+								Maximum: new(999999999999.0),
 							},
 							"retention_period_days": {
 								Type: "integer",
@@ -3982,7 +3982,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -4023,12 +4023,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"retention_period_days": {
 					Type: "integer",
@@ -4136,7 +4136,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"description": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"secret": {
 								Type: "string",
@@ -4163,7 +4163,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -4191,12 +4191,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"log_storage": {
 					Type:     "object",
@@ -4214,7 +4214,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -4255,18 +4255,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -4304,7 +4304,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -4332,13 +4332,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -4368,7 +4368,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 					Pattern:   "^[a-z\\d_-]*$",
 				},
 				"project_id": {
@@ -4416,11 +4416,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"value": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 						},
 					},
@@ -4434,7 +4434,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(100),
+							MaxLength: new(100),
 						},
 						"project_id": {
 							Type:     "integer",
@@ -4449,7 +4449,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"url": {
 							Type:      "string",
-							MaxLength: core.IntPtr(1024),
+							MaxLength: new(1024),
 						},
 					},
 				},
@@ -4462,8 +4462,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"resend_interval_minutes": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(720),
+					Minimum: new(0.0),
+					Maximum: new(720.0),
 				},
 				"uid": {
 					Type: "string",
@@ -4481,7 +4481,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(100),
+					MaxLength: new(100),
 				},
 				"project_id": {
 					Type:     "integer",
@@ -4496,7 +4496,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"url": {
 					Type:      "string",
-					MaxLength: core.IntPtr(1024),
+					MaxLength: new(1024),
 				},
 			},
 		},
@@ -4514,7 +4514,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"format": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"metrics_storage_id": {
 					Type:     "integer",
@@ -4522,7 +4522,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"open": {
 					Type: "boolean",
@@ -4533,16 +4533,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"query": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"template": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_critical": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_duration_critical": {
 					Type: "integer",
@@ -4553,7 +4553,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"threshold_warning": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"uid": {
 					Type: "string",
@@ -4574,7 +4574,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -4593,13 +4593,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -4623,7 +4623,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -4642,13 +4642,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -4669,8 +4669,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -4691,7 +4691,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -4732,18 +4732,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -4775,11 +4775,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -4833,12 +4833,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -4872,7 +4872,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -4916,18 +4916,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"kms_key_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"service_principal_id": {
 					Type:     "integer",
@@ -4964,8 +4964,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -4982,7 +4982,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -5010,13 +5010,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -5050,11 +5050,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -5108,12 +5108,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -5143,7 +5143,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -5174,13 +5174,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -5226,7 +5226,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -5267,12 +5267,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"retention_period_days": {
 					Type: "integer",
@@ -5297,7 +5297,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -5327,7 +5327,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -5343,13 +5343,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -5371,12 +5371,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"log_storage": {
 					Type:     "object",
@@ -5394,7 +5394,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -5435,18 +5435,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -5484,7 +5484,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -5512,13 +5512,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -5548,7 +5548,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 					Pattern:   "^[a-z\\d_-]*$",
 				},
 				"project_id": {
@@ -5596,11 +5596,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"value": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 						},
 					},
@@ -5614,7 +5614,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(100),
+							MaxLength: new(100),
 						},
 						"project_id": {
 							Type:     "integer",
@@ -5629,7 +5629,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"url": {
 							Type:      "string",
-							MaxLength: core.IntPtr(1024),
+							MaxLength: new(1024),
 						},
 					},
 				},
@@ -5642,8 +5642,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"resend_interval_minutes": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(720),
+					Minimum: new(0.0),
+					Maximum: new(720.0),
 				},
 				"uid": {
 					Type: "string",
@@ -5661,7 +5661,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(100),
+					MaxLength: new(100),
 				},
 				"project_id": {
 					Type:     "integer",
@@ -5676,7 +5676,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"url": {
 					Type:      "string",
-					MaxLength: core.IntPtr(1024),
+					MaxLength: new(1024),
 				},
 			},
 		},
@@ -5694,7 +5694,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"format": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"metrics_storage_id": {
 					Type:     "integer",
@@ -5702,7 +5702,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"open": {
 					Type: "boolean",
@@ -5713,16 +5713,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"query": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"template": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_critical": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_duration_critical": {
 					Type: "integer",
@@ -5733,7 +5733,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"threshold_warning": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"uid": {
 					Type: "string",
@@ -5754,7 +5754,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -5770,13 +5770,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -5797,8 +5797,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -5819,7 +5819,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -5860,18 +5860,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -5903,11 +5903,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -5971,7 +5971,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -6012,18 +6012,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"kms_key_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"service_principal_id": {
 					Type:     "integer",
@@ -6057,12 +6057,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -6096,7 +6096,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -6137,18 +6137,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"kms_key_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"service_principal_id": {
 					Type:     "integer",
@@ -6247,8 +6247,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -6265,7 +6265,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -6293,13 +6293,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -6333,11 +6333,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -6397,7 +6397,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -6425,13 +6425,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -6467,12 +6467,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -6506,7 +6506,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -6544,12 +6544,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"retention_period_days": {
 					Type: "integer",
@@ -6584,7 +6584,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -6622,12 +6622,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"retention_period_days": {
 					Type: "integer",
@@ -6652,7 +6652,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -6680,12 +6680,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"log_storage": {
 					Type:     "object",
@@ -6703,7 +6703,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -6744,18 +6744,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -6793,7 +6793,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -6821,13 +6821,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -6857,7 +6857,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 					Pattern:   "^[a-z\\d_-]*$",
 				},
 				"project_id": {
@@ -6908,11 +6908,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 							"value": {
 								Type:      "string",
-								MaxLength: core.IntPtr(256),
+								MaxLength: new(256),
 							},
 						},
 					},
@@ -6926,7 +6926,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(100),
+							MaxLength: new(100),
 						},
 						"project_id": {
 							Type:     "integer",
@@ -6941,7 +6941,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"url": {
 							Type:      "string",
-							MaxLength: core.IntPtr(1024),
+							MaxLength: new(1024),
 						},
 					},
 				},
@@ -6954,8 +6954,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"resend_interval_minutes": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(720),
+					Minimum: new(0.0),
+					Maximum: new(720.0),
 				},
 				"uid": {
 					Type: "string",
@@ -6973,7 +6973,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(100),
+					MaxLength: new(100),
 				},
 				"project_id": {
 					Type:     "integer",
@@ -6988,7 +6988,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"url": {
 					Type:      "string",
-					MaxLength: core.IntPtr(1024),
+					MaxLength: new(1024),
 				},
 			},
 		},
@@ -7006,7 +7006,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"format": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"metrics_storage_id": {
 					Type:     "integer",
@@ -7014,7 +7014,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"open": {
 					Type: "boolean",
@@ -7025,16 +7025,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"query": {
 					Type:      "string",
-					MaxLength: core.IntPtr(4096),
+					MaxLength: new(4096),
 				},
 				"template": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_critical": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"threshold_duration_critical": {
 					Type: "integer",
@@ -7045,7 +7045,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"threshold_warning": {
 					Type:      "string",
 					Nullable:  true,
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"uid": {
 					Type: "string",
@@ -7066,7 +7066,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -7085,13 +7085,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -7115,7 +7115,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"icon": {
 					Type:     "object",
@@ -7134,13 +7134,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -7161,8 +7161,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -7183,7 +7183,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -7224,18 +7224,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"kms_key_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"service_principal_id": {
 							Type:     "integer",
@@ -7267,11 +7267,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -7325,12 +7325,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -7364,7 +7364,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -7408,18 +7408,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"kms_key_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"service_principal_id": {
 					Type:     "integer",
@@ -7456,8 +7456,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -7474,7 +7474,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(512),
+							MaxLength: new(512),
 						},
 						"endpoints": {
 							Type:     "object",
@@ -7502,13 +7502,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(64),
+							MaxLength: new(64),
 						},
 						"resource_id": {
 							Type:     "integer",
 							Nullable: true,
-							Minimum:  core.Float64Ptr(0),
-							Maximum:  core.Float64Ptr(999999999999),
+							Minimum:  new(0.0),
+							Maximum:  new(999999999999.0),
 						},
 						"tags": {
 							Type: "array",
@@ -7542,11 +7542,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"description": {
 							Type:      "string",
-							MaxLength: core.IntPtr(256),
+							MaxLength: new(256),
 						},
 						"variants": {
 							Type: "array",
@@ -7600,12 +7600,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -7635,7 +7635,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -7666,13 +7666,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:     "integer",
 					Nullable: true,
-					Minimum:  core.Float64Ptr(0),
-					Maximum:  core.Float64Ptr(999999999999),
+					Minimum:  new(0.0),
+					Maximum:  new(999999999999.0),
 				},
 				"tags": {
 					Type: "array",
@@ -7718,7 +7718,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(512),
+					MaxLength: new(512),
 				},
 				"endpoints": {
 					Type:     "object",
@@ -7759,12 +7759,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"name": {
 					Type:      "string",
-					MaxLength: core.IntPtr(64),
+					MaxLength: new(64),
 				},
 				"resource_id": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(999999999999),
+					Minimum: new(0.0),
+					Maximum: new(999999999999.0),
 				},
 				"retention_period_days": {
 					Type: "integer",
@@ -7789,7 +7789,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"description": {
 					Type:      "string",
-					MaxLength: core.IntPtr(256),
+					MaxLength: new(256),
 				},
 				"is_ok": {
 					Type: "boolean",

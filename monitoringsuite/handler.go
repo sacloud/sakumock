@@ -66,9 +66,6 @@ func writePage[T any](w http.ResponseWriter, items []T) {
 	})
 }
 
-//go:fix inline
-func boolPtr(b bool) *bool { return new(b) }
-
 func idKey(id int64) string { return strconv.FormatInt(id, 10) }
 
 type projectJSON struct {

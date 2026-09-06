@@ -259,6 +259,3 @@ func TestServiceClasses(t *testing.T) {
 		t.Fatal("expected at least one worker service class")
 	}
 }
-
-//go:fix inline
-func strPtr(s string) *string { return new(s) }

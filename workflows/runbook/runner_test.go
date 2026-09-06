@@ -12,9 +12,6 @@ import (
 	"github.com/sacloud/sakumock/workflows/runbook"
 )
 
-//go:fix inline
-func ptr(s string) *string { return new(s) }
-
 func TestAssignAndReturn(t *testing.T) {
 	rb := &runbook.Runbook{
 		Steps: []runbook.NamedStep{

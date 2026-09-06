@@ -12,9 +12,6 @@ import (
 	"github.com/sacloud/sakumock/monitoringsuite"
 )
 
-//go:fix inline
-func ref[T any](v T) *T { return new(v) }
-
 func optStr(o v1.OptString) string { v, _ := o.Get(); return v }
 
 func newClient(t *testing.T, serverURL string) *v1.Client {
@@ -187,7 +184,7 @@ func TestLogStorageLifecycle(t *testing.T) {
 	created, err := op.Create(ctx, mssdk.LogStorageCreateParams{
 		Name:           "logs",
 		IsSystem:       false,
-		Classification: ref(v1.LogStorageCreateRequestClassificationShared),
+		Classification: new(v1.LogStorageCreateRequestClassificationShared),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -227,7 +224,7 @@ func TestTraceStorageLifecycle(t *testing.T) {
 
 	created, err := op.Create(ctx, mssdk.TracesStorageCreateParams{
 		Name:           "traces",
-		Classification: ref(v1.TraceStorageCreateRequestClassificationShared),
+		Classification: new(v1.TraceStorageCreateRequestClassificationShared),
 	})
 	if err != nil {
 		t.Fatal(err)

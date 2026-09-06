@@ -244,9 +244,6 @@ type applianceApplyResponse struct {
 	IsOk            bool                     `json:"is_ok"`
 }
 
-//go:fix inline
-func strPtr(s string) *string { return new(s) }
-
 func settingsToJSON(settings *SettingsRecord) *applianceSettingsJSON {
 	if settings == nil {
 		return nil
@@ -337,9 +334,6 @@ func interfaceToJSON(iface InterfaceRecord) interfaceJSON {
 	}
 	return out
 }
-
-//go:fix inline
-func intPtr(n int) *int { return new(n) }
 
 func simpleInterfaceToJSON(iface InterfaceRecord) simpleInterfaceJSON {
 	out := simpleInterfaceJSON{Switch: simpleInterfaceSwitchJSON{Scope: iface.Scope}}

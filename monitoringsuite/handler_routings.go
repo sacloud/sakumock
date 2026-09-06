@@ -7,9 +7,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-//go:fix inline
-func ptrOf[T any](v T) *T { return new(v) }
-
 // routingJSON is the shared shape of a log or metrics routing. Exactly one of
 // LogStorage / MetricsStorage is populated, matching the respective schema.
 type routingJSON struct {

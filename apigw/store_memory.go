@@ -104,9 +104,6 @@ func createdBefore(t1 time.Time, id1 string, t2 time.Time, id2 string) bool {
 	return id1 < id2
 }
 
-//go:fix inline
-func ptr[T any](v T) *T { return new(v) }
-
 // --- copy helpers (stores hand out copies so callers never share memory) ---
 
 func copyService(v *Service) Service {

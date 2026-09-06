@@ -75,6 +75,7 @@ type componentJSON struct {
 	MaxMemory    string           `json:"max_memory"`
 	DeploySource deploySourceJSON `json:"deploy_source"`
 	Env          []envVarJSON     `json:"env,omitempty"`
+	Secret       []secretJSON     `json:"secret,omitempty"`
 	Probe        *probeJSON       `json:"probe,omitempty"`
 }
 
@@ -91,6 +92,14 @@ type containerRegistryJSON struct {
 type envVarJSON struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+// secretJSON is a secret environment variable. Requests carry the value
+// (optional on PATCH, where a missing value is inherited from the latest
+// version); responses carry only the key.
+type secretJSON struct {
+	Key   string  `json:"key"`
+	Value *string `json:"value,omitempty"`
 }
 
 type probeJSON struct {
@@ -239,7 +248,7 @@ const (
 	maxApplications      = 5
 	maxVersionsPerApp    = 5
 	maxComponents        = 1
-	maxEnvVars           = 50
+	maxEnvVars           = 50 // env and secret combined
 	maxEnvKeyBytes       = 128
 	maxEnvValueBytes     = 512
 	maxPacketFilterRules = 10
@@ -301,22 +310,81 @@ func validateComponents(comps []componentJSON) string {
 		if !isValidCPUMemory(c.MaxCPU, c.MaxMemory) {
 			return fmt.Sprintf("invalid cpu/memory combination: %s / %s (valid: 0.5/1Gi, 1/1Gi, 1/2Gi, 2/2Gi, 2/4Gi)", c.MaxCPU, c.MaxMemory)
 		}
-		if len(c.Env) > maxEnvVars {
-			return fmt.Sprintf("maximum %d environment variables allowed per component", maxEnvVars)
+		if len(c.Env)+len(c.Secret) > maxEnvVars {
+			return fmt.Sprintf("maximum %d environment variables and secrets allowed per component", maxEnvVars)
 		}
+		// env and secret share one namespace in the container, so a key may
+		// appear only once across both (the real API rejects the overlap
+		// even though the spec does not express it).
+		seen := make(map[string]bool, len(c.Env)+len(c.Secret))
 		for _, e := range c.Env {
-			if len(e.Key) < 1 || len(e.Key) > maxEnvKeyBytes {
-				return "environment variable key must be 1-128 bytes"
+			if msg := validateEnvVar(e.Key, &e.Value); msg != "" {
+				return msg
 			}
-			if len(e.Value) < 1 || len(e.Value) > maxEnvValueBytes {
-				return "environment variable value must be 1-512 bytes"
+			if seen[e.Key] {
+				return fmt.Sprintf("environment variable %s is duplicated", e.Key)
 			}
-			if reservedEnvKeys[e.Key] {
-				return fmt.Sprintf("environment variable %s is reserved and cannot be used", e.Key)
+			seen[e.Key] = true
+		}
+		for _, e := range c.Secret {
+			if msg := validateEnvVar(e.Key, e.Value); msg != "" {
+				return msg
 			}
+			if seen[e.Key] {
+				return fmt.Sprintf("secret %s conflicts with an environment variable of the same name", e.Key)
+			}
+			seen[e.Key] = true
 		}
 	}
 	return ""
+}
+
+// validateEnvVar checks one env or secret entry; a nil value (a secret
+// inheriting its value on PATCH) skips the value check.
+func validateEnvVar(key string, value *string) string {
+	if len(key) < 1 || len(key) > maxEnvKeyBytes {
+		return "environment variable key must be 1-128 bytes"
+	}
+	if value != nil && (len(*value) < 1 || len(*value) > maxEnvValueBytes) {
+		return "environment variable value must be 1-512 bytes"
+	}
+	if reservedEnvKeys[key] {
+		return fmt.Sprintf("environment variable %s is reserved and cannot be used", key)
+	}
+	return ""
+}
+
+// resolveSecrets fills in the value of every secret that omits one from the
+// component of the same name in current, as the real API inherits it from the
+// latest version. A secret unknown to current cannot be inherited.
+func resolveSecrets(comps []componentJSON, current *Application) string {
+	for i := range comps {
+		for j, sec := range comps[i].Secret {
+			if sec.Value != nil {
+				continue
+			}
+			v, ok := storedSecret(current, comps[i].Name, sec.Key)
+			if !ok {
+				return fmt.Sprintf("secret %s has no value in the latest version; value is required", sec.Key)
+			}
+			comps[i].Secret[j].Value = &v
+		}
+	}
+	return ""
+}
+
+func storedSecret(app *Application, component, key string) (string, bool) {
+	for _, c := range app.Components {
+		if c.Name != component {
+			continue
+		}
+		for _, sec := range c.Secret {
+			if sec.Key == key {
+				return sec.Value, true
+			}
+		}
+	}
+	return "", false
 }
 
 func isValidCPUMemory(cpu, memory string) bool {
@@ -416,7 +484,7 @@ func (s *Server) handlePostApplication(w http.ResponseWriter, r *http.Request) {
 	if s.docker != nil && len(app.Components) > 0 {
 		c := app.Components[0]
 		if c.DeploySource.ContainerRegistry != nil {
-			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.Env); err != nil {
+			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.containerEnv()); err != nil {
 				s.logger.Error("container start failed", "app_id", app.ID, "error", err)
 			}
 		}
@@ -454,6 +522,10 @@ func (s *Server) handlePatchApplication(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if msg := validatePatch(&req, current); msg != "" {
+		writeAppError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if msg := resolveSecrets(req.Components, current); msg != "" {
 		writeAppError(w, http.StatusBadRequest, msg)
 		return
 	}
@@ -500,7 +572,7 @@ func (s *Server) handlePatchApplication(w http.ResponseWriter, r *http.Request) 
 		c := app.Components[0]
 		if c.DeploySource.ContainerRegistry != nil {
 			s.docker.StopContainer(app.ID)
-			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.Env); err != nil {
+			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.containerEnv()); err != nil {
 				s.logger.Error("container start failed", "app_id", app.ID, "error", err)
 			}
 		}
@@ -758,8 +830,9 @@ func componentsFromJSON(comps []componentJSON) []Component {
 			DeploySource: DeploySource{
 				ContainerRegistry: containerRegistryFromJSON(c.DeploySource.ContainerRegistry),
 			},
-			Env:   envVarsFromJSON(c.Env),
-			Probe: probeFromJSON(c.Probe),
+			Env:    envVarsFromJSON(c.Env),
+			Secret: secretsFromJSON(c.Secret),
+			Probe:  probeFromJSON(c.Probe),
 		}
 	}
 	return out
@@ -780,6 +853,18 @@ func envVarsFromJSON(vars []envVarJSON) []EnvVar {
 	out := make([]EnvVar, len(vars))
 	for i, v := range vars {
 		out[i] = EnvVar{Key: v.Key, Value: v.Value}
+	}
+	return out
+}
+
+// secretsFromJSON expects every value to be resolved (see resolveSecrets).
+func secretsFromJSON(secrets []secretJSON) []EnvVar {
+	out := make([]EnvVar, len(secrets))
+	for i, v := range secrets {
+		out[i] = EnvVar{Key: v.Key}
+		if v.Value != nil {
+			out[i].Value = *v.Value
+		}
 	}
 	return out
 }
@@ -811,8 +896,9 @@ func componentsToJSON(comps []Component) []componentJSON {
 			DeploySource: deploySourceJSON{
 				ContainerRegistry: containerRegistryToJSON(c.DeploySource.ContainerRegistry),
 			},
-			Env:   envVarsToJSON(c.Env),
-			Probe: probeToJSON(c.Probe),
+			Env:    envVarsToJSON(c.Env),
+			Secret: secretsToJSON(c.Secret),
+			Probe:  probeToJSON(c.Probe),
 		}
 	}
 	return out
@@ -836,6 +922,19 @@ func envVarsToJSON(vars []EnvVar) []envVarJSON {
 	out := make([]envVarJSON, len(vars))
 	for i, v := range vars {
 		out[i] = envVarJSON{Key: v.Key, Value: v.Value}
+	}
+	return out
+}
+
+// secretsToJSON reports only the keys, as the real API never returns a
+// secret's value.
+func secretsToJSON(secrets []EnvVar) []secretJSON {
+	if len(secrets) == 0 {
+		return nil
+	}
+	out := make([]secretJSON, len(secrets))
+	for i, v := range secrets {
+		out[i] = secretJSON{Key: v.Key}
 	}
 	return out
 }

@@ -64,7 +64,8 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:     "array",
 							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "object",
+								Type:     "object",
+								Required: []string{"key", "value"},
 								Properties: map[string]*core.BodySchema{
 									"key": {
 										Type: "string",
@@ -119,6 +120,22 @@ var bodySchemas = map[string]*core.BodySchema{
 											Minimum: core.Float64Ptr(1),
 											Maximum: core.Float64Ptr(65535),
 										},
+									},
+								},
+							},
+						},
+						"secret": {
+							Type:     "array",
+							Nullable: true,
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"key"},
+								Properties: map[string]*core.BodySchema{
+									"key": {
+										Type: "string",
+									},
+									"value": {
+										Type: "string",
 									},
 								},
 							},
@@ -225,7 +242,8 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:     "array",
 							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "object",
+								Type:     "object",
+								Required: []string{"key", "value"},
 								Properties: map[string]*core.BodySchema{
 									"key": {
 										Type: "string",
@@ -280,6 +298,22 @@ var bodySchemas = map[string]*core.BodySchema{
 											Minimum: core.Float64Ptr(1),
 											Maximum: core.Float64Ptr(65535),
 										},
+									},
+								},
+							},
+						},
+						"secret": {
+							Type:     "array",
+							Nullable: true,
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"key", "value"},
+								Properties: map[string]*core.BodySchema{
+									"key": {
+										Type: "string",
+									},
+									"value": {
+										Type: "string",
 									},
 								},
 							},
@@ -458,7 +492,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -509,6 +544,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Minimum: core.Float64Ptr(1),
 												Maximum: core.Float64Ptr(65535),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -773,7 +820,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -824,6 +872,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Minimum: core.Float64Ptr(1),
 												Maximum: core.Float64Ptr(65535),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -967,7 +1027,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -1018,6 +1079,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Minimum: core.Float64Ptr(1),
 												Maximum: core.Float64Ptr(65535),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -1154,7 +1227,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -1205,6 +1279,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Minimum: core.Float64Ptr(1),
 												Maximum: core.Float64Ptr(65535),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},

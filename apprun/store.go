@@ -32,7 +32,19 @@ type Component struct {
 	MaxMemory    string
 	DeploySource DeploySource
 	Env          []EnvVar
-	Probe        *Probe
+	// Secret holds the environment variables marked as secret. They reach the
+	// container like Env, but the API reports only their keys.
+	Secret []EnvVar
+	Probe  *Probe
+}
+
+// containerEnv returns the environment the container is started with: plain
+// env vars followed by secrets.
+func (c Component) containerEnv() []EnvVar {
+	if len(c.Secret) == 0 {
+		return c.Env
+	}
+	return append(append([]EnvVar{}, c.Env...), c.Secret...)
 }
 
 // DeploySource is where a component's image comes from.
@@ -47,7 +59,7 @@ type ContainerRegistry struct {
 	Username string
 }
 
-// EnvVar is an environment variable passed to a component.
+// EnvVar is an environment variable (plain or secret) passed to a component.
 type EnvVar struct {
 	Key   string
 	Value string

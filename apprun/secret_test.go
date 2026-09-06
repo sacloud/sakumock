@@ -142,6 +142,19 @@ func TestSecrets(t *testing.T) {
 		}
 	})
 
+	t.Run("duplicated secret key is rejected", func(t *testing.T) {
+		_, err := appOp.Update(ctx, created.ID, patchComponent([]v1.PatchApplicationBodyComponentsItemSecretItem{
+			{Key: "DUP", Value: v1.NewOptString("a")},
+			{Key: "DUP", Value: v1.NewOptString("b")},
+		}))
+		if err == nil {
+			t.Fatal("expected error for a duplicated secret key")
+		}
+		if !strings.Contains(err.Error(), "secret DUP is duplicated") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
 	t.Run("reserved key is rejected", func(t *testing.T) {
 		_, err := appOp.Update(ctx, created.ID, patchComponent([]v1.PatchApplicationBodyComponentsItemSecretItem{
 			{Key: "K_SERVICE", Value: v1.NewOptString("x")},

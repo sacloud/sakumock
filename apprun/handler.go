@@ -316,24 +316,28 @@ func validateComponents(comps []componentJSON) string {
 		// env and secret share one namespace in the container, so a key may
 		// appear only once across both (the real API rejects the overlap
 		// even though the spec does not express it).
-		seen := make(map[string]bool, len(c.Env)+len(c.Secret))
+		envKeys := make(map[string]bool, len(c.Env))
 		for _, e := range c.Env {
 			if msg := validateEnvVar(e.Key, &e.Value); msg != "" {
 				return msg
 			}
-			if seen[e.Key] {
+			if envKeys[e.Key] {
 				return fmt.Sprintf("environment variable %s is duplicated", e.Key)
 			}
-			seen[e.Key] = true
+			envKeys[e.Key] = true
 		}
+		secretKeys := make(map[string]bool, len(c.Secret))
 		for _, e := range c.Secret {
 			if msg := validateEnvVar(e.Key, e.Value); msg != "" {
 				return msg
 			}
-			if seen[e.Key] {
+			if secretKeys[e.Key] {
+				return fmt.Sprintf("secret %s is duplicated", e.Key)
+			}
+			if envKeys[e.Key] {
 				return fmt.Sprintf("secret %s conflicts with an environment variable of the same name", e.Key)
 			}
-			seen[e.Key] = true
+			secretKeys[e.Key] = true
 		}
 	}
 	return ""

@@ -563,11 +563,11 @@ func normalizeEnumValue(e any) any {
 func intVal(v any) *int {
 	switch n := v.(type) {
 	case int:
-		return core.IntPtr(n)
+		return new(n)
 	case int64:
-		return core.IntPtr(int(n))
+		return new(int(n))
 	case float64:
-		return core.IntPtr(int(n))
+		return new(int(n))
 	}
 	return nil
 }
@@ -575,11 +575,11 @@ func intVal(v any) *int {
 func floatVal(v any) *float64 {
 	switch n := v.(type) {
 	case int:
-		return core.Float64Ptr(float64(n))
+		return new(float64(n))
 	case int64:
-		return core.Float64Ptr(float64(n))
+		return new(float64(n))
 	case float64:
-		return core.Float64Ptr(n)
+		return new(n)
 	}
 	return nil
 }

@@ -12,7 +12,8 @@ import (
 	"github.com/sacloud/sakumock/monitoringsuite"
 )
 
-func ref[T any](v T) *T { return &v }
+//go:fix inline
+func ref[T any](v T) *T { return new(v) }
 
 func optStr(o v1.OptString) string { v, _ := o.Get(); return v }
 
@@ -72,7 +73,7 @@ func TestAlertProjectLifecycle(t *testing.T) {
 
 	created, err := op.Create(ctx, mssdk.AlertProjectCreateParams{
 		Name:        "test-project",
-		Description: ref("desc"),
+		Description: new("desc"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -90,7 +91,7 @@ func TestAlertProjectLifecycle(t *testing.T) {
 		t.Fatalf("unexpected name on read: %s", optStr(read.GetName()))
 	}
 
-	updated, err := op.Update(ctx, id, mssdk.AlertProjectUpdateParams{Name: ref("renamed")})
+	updated, err := op.Update(ctx, id, mssdk.AlertProjectUpdateParams{Name: new("renamed")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +151,7 @@ func TestMetricsStorageLifecycleAndKeys(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	key, err := op.CreateKey(ctx, id, ref("my key"))
+	key, err := op.CreateKey(ctx, id, new("my key"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -477,7 +478,7 @@ func TestAlertRuleLifecycle(t *testing.T) {
 	created, err := op.Create(ctx, pid, mssdk.AlertRuleCreateParams{
 		MetricsStorageID: sid,
 		Query:            "up == 0",
-		Name:             ref("rule"),
+		Name:             new("rule"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -526,7 +527,7 @@ func TestLogMeasureRuleLifecycle(t *testing.T) {
 	created, err := op.Create(ctx, pid, mssdk.LogMeasureRuleCreateParams{
 		LogStorageID:     ridOf(t, logStorage.GetResourceID()),
 		MetricsStorageID: ridOf(t, metricsStorage.GetResourceID()),
-		Name:             ref("measure"),
+		Name:             new("measure"),
 		Rule: v1.LogMeasureRuleModel{
 			Version: v1.LogMeasureRuleVersionEnumV1,
 			Query:   v1.LogMeasureRuleV1{Matchers: []v1.FieldMatcher{}},

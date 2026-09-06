@@ -12,7 +12,8 @@ import (
 	"github.com/sacloud/sakumock/workflows/runbook"
 )
 
-func ptr(s string) *string { return &s }
+//go:fix inline
+func ptr(s string) *string { return new(s) }
 
 func TestAssignAndReturn(t *testing.T) {
 	rb := &runbook.Runbook{
@@ -24,7 +25,7 @@ func TestAssignAndReturn(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${x + y}"),
+				Return: new("${x + y}"),
 			}},
 		},
 	}
@@ -43,7 +44,7 @@ func TestArgs(t *testing.T) {
 	rb := &runbook.Runbook{
 		Steps: []runbook.NamedStep{
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${args.a + args.b}"),
+				Return: new("${args.a + args.b}"),
 			}},
 		},
 	}
@@ -66,9 +67,9 @@ func TestSwitch(t *testing.T) {
 		Steps: []runbook.NamedStep{
 			{Name: "check", Step: runbook.Step{
 				Switch: []runbook.SwitchCase{
-					{Condition: "${args.x > 0}", Return: ptr(`${"positive"}`)},
-					{Condition: "${args.x == 0}", Return: ptr(`${"zero"}`)},
-					{Condition: "${true}", Return: ptr(`${"negative"}`)},
+					{Condition: "${args.x > 0}", Return: new(`${"positive"}`)},
+					{Condition: "${args.x == 0}", Return: new(`${"zero"}`)},
+					{Condition: "${true}", Return: new(`${"negative"}`)},
 				},
 			}},
 		},
@@ -119,7 +120,7 @@ func TestForLoop(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${sum}"),
+				Return: new("${sum}"),
 			}},
 		},
 	}
@@ -149,7 +150,7 @@ func TestNext(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${x}"),
+				Return: new("${x}"),
 			}},
 		},
 	}
@@ -192,7 +193,7 @@ func TestSwitchWithNext(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${sum}"),
+				Return: new("${sum}"),
 			}},
 		},
 	}
@@ -220,7 +221,7 @@ func TestTryExcept(t *testing.T) {
 						}},
 					},
 					ExceptAs:     "err",
-					ExceptReturn: ptr("${err.message}"),
+					ExceptReturn: new("${err.message}"),
 				},
 			}},
 		},
@@ -259,7 +260,7 @@ func TestTryExceptWithSteps(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${recovered}"),
+				Return: new("${recovered}"),
 			}},
 		},
 	}
@@ -281,16 +282,16 @@ func TestParallelBranches(t *testing.T) {
 				Parallel: &runbook.ParallelStep{
 					Branches: []runbook.Branch{
 						{Name: "a", Steps: []runbook.NamedStep{
-							{Name: "ret", Step: runbook.Step{Return: ptr("${10}")}},
+							{Name: "ret", Step: runbook.Step{Return: new("${10}")}},
 						}},
 						{Name: "b", Steps: []runbook.NamedStep{
-							{Name: "ret", Step: runbook.Step{Return: ptr("${20}")}},
+							{Name: "ret", Step: runbook.Step{Return: new("${20}")}},
 						}},
 					},
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${results[0] + results[1]}"),
+				Return: new("${results[0] + results[1]}"),
 			}},
 		},
 	}
@@ -314,13 +315,13 @@ func TestParallelIteration(t *testing.T) {
 					As: "item",
 					Steps: []runbook.NamedStep{
 						{Name: "calc", Step: runbook.Step{
-							Return: ptr("${item * 10}"),
+							Return: new("${item * 10}"),
 						}},
 					},
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${results[0] + results[1] + results[2]}"),
+				Return: new("${results[0] + results[1] + results[2]}"),
 			}},
 		},
 	}
@@ -352,7 +353,7 @@ func TestCallHTTP(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${resp.status}"),
+				Return: new("${resp.status}"),
 			}},
 		},
 	}
@@ -429,7 +430,7 @@ func TestSysSleep(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr(`${"ok"}`),
+				Return: new(`${"ok"}`),
 			}},
 		},
 	}
@@ -454,7 +455,7 @@ func TestSysSleepActualWait(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr(`${"ok"}`),
+				Return: new(`${"ok"}`),
 			}},
 		},
 	}
@@ -483,7 +484,7 @@ func TestSysSleepUntilActualWait(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr(`${"ok"}`),
+				Return: new(`${"ok"}`),
 			}},
 		},
 	}
@@ -533,7 +534,7 @@ func TestSysSleepUntilPast(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr(`${"ok"}`),
+				Return: new(`${"ok"}`),
 			}},
 		},
 	}
@@ -585,7 +586,7 @@ func TestNestedForInSwitch(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${evens + odds}"),
+				Return: new("${evens + odds}"),
 			}},
 		},
 	}
@@ -632,7 +633,7 @@ func TestNestedForInFor(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${total}"),
+				Return: new("${total}"),
 			}},
 		},
 	}
@@ -686,7 +687,7 @@ func TestNestedTryInFor(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${results}"),
+				Return: new("${results}"),
 			}},
 		},
 	}
@@ -798,7 +799,7 @@ func TestSieveRunbook(t *testing.T) {
 				},
 			}},
 			{Name: "done", Step: runbook.Step{
-				Return: ptr("${primes}"),
+				Return: new("${primes}"),
 			}},
 		},
 	}

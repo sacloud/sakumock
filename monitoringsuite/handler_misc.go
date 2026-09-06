@@ -34,7 +34,7 @@ func publisherToJSON(p Publisher, wrapped bool) publisherJSON {
 	}
 	j := publisherJSON{Code: p.Code, Description: p.Description, Variants: variants}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }

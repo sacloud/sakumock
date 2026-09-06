@@ -22,7 +22,7 @@ func TestBodyValidatorMiddleware(t *testing.T) {
 			Type:     "object",
 			Required: []string{"name"},
 			Properties: map[string]*core.BodySchema{
-				"name": {Type: "string", MinLength: core.IntPtr(1)},
+				"name": {Type: "string", MinLength: new(1)},
 			},
 		},
 	}
@@ -129,7 +129,7 @@ func TestWithNonEmpty(t *testing.T) {
 						Type:     "object",
 						Required: []string{"Name"},
 						Properties: map[string]*core.BodySchema{
-							"Name":  {Type: "string", MaxLength: core.IntPtr(255)},
+							"Name":  {Type: "string", MaxLength: new(255)},
 							"Count": {Type: "integer"},
 							"Tags": {Type: "array", Items: &core.BodySchema{
 								Type:       "object",
@@ -199,7 +199,7 @@ func TestWithNonEmpty(t *testing.T) {
 
 	t.Run("keeps an existing spec minLength", func(t *testing.T) {
 		schemas := newSchemas()
-		schemas["POST /keys"].Properties["Key"].Properties["Name"].MinLength = core.IntPtr(5)
+		schemas["POST /keys"].Properties["Key"].Properties["Name"].MinLength = new(5)
 		bv := core.NewBodyValidator(schemas, testErrWriter,
 			core.WithNonEmpty(map[string][]string{"POST /keys": {"Key.Name"}}))
 		if got := do(t, bv, `{"Key": {"Name": "abc"}}`); got != http.StatusBadRequest {

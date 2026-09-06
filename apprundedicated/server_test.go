@@ -140,7 +140,7 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 			{TargetPort: 80},
 		},
 		EnvVars: []version.EnvironmentVariable{
-			{Key: "FOO", Value: strPtr("bar")},
+			{Key: "FOO", Value: new("bar")},
 		},
 	})
 	if err != nil {
@@ -260,4 +260,5 @@ func TestServiceClasses(t *testing.T) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }

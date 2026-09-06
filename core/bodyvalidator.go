@@ -97,7 +97,7 @@ func withMinLength(schema *BodySchema, key, path string) *BodySchema {
 		panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is %q, not a string", key, path, cur.Type))
 	}
 	if cur.MinLength == nil {
-		cur.MinLength = IntPtr(1)
+		cur.MinLength = new(1)
 	}
 	return &root
 }

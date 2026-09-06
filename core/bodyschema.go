@@ -41,10 +41,14 @@ type BodySchema struct {
 }
 
 // IntPtr returns a pointer to v, for building schema literals.
-func IntPtr(v int) *int { return &v }
+//
+//go:fix inline
+func IntPtr(v int) *int { return new(v) }
 
 // Float64Ptr returns a pointer to v, for building schema literals.
-func Float64Ptr(v float64) *float64 { return &v }
+//
+//go:fix inline
+func Float64Ptr(v float64) *float64 { return new(v) }
 
 // patternCache keeps compiled patterns out of the schemas themselves, which
 // are shared package-level literals and must not be mutated.

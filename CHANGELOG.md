@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.11.0](https://github.com/sacloud/sakumock/compare/v0.10.0...v0.11.0) - 2026-09-07
+### 🚀 New Features
+- apprun: follow OpenAPI v1.5.0 (component secrets) on sacloud-sdk-go v0.2.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/180
+
 ## [v0.10.0](https://github.com/sacloud/sakumock/compare/v0.9.1...v0.10.0) - 2026-09-03
 ### 🚀 New Features
 - Embed documentation in the binary and add a docs subcommand by @fujiwara in https://github.com/sacloud/sakumock/pull/175

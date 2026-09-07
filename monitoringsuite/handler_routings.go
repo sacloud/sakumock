@@ -7,8 +7,6 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
-func ptrOf[T any](v T) *T { return &v }
-
 // routingJSON is the shared shape of a log or metrics routing. Exactly one of
 // LogStorage / MetricsStorage is populated, matching the respective schema.
 type routingJSON struct {
@@ -47,12 +45,12 @@ func (s *Server) logRoutingToJSON(rt *Routing, wrapped bool) (routingJSON, bool)
 		ResourceID: rt.ResourceID,
 		Publisher:  publisherToJSON(pub, false),
 		Variant:    rt.Variant,
-		LogStorage: ptrOf(s.logStorageToJSON(st, false)),
+		LogStorage: new(s.logStorageToJSON(st, false)),
 		CreatedAt:  core.FormatRFC3339Nano(rt.CreatedAt),
 		UpdatedAt:  core.FormatRFC3339Nano(rt.UpdatedAt),
 	}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j, true
 }
@@ -174,12 +172,12 @@ func (s *Server) metricsRoutingToJSON(rt *Routing, wrapped bool) (routingJSON, b
 		ResourceID:     rt.ResourceID,
 		Publisher:      publisherToJSON(pub, false),
 		Variant:        rt.Variant,
-		MetricsStorage: ptrOf(s.metricsStorageToJSON(st, false)),
+		MetricsStorage: new(s.metricsStorageToJSON(st, false)),
 		CreatedAt:      core.FormatRFC3339Nano(rt.CreatedAt),
 		UpdatedAt:      core.FormatRFC3339Nano(rt.UpdatedAt),
 	}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j, true
 }

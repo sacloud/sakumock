@@ -104,15 +104,13 @@ func createdBefore(t1 time.Time, id1 string, t2 time.Time, id2 string) bool {
 	return id1 < id2
 }
 
-func ptr[T any](v T) *T { return &v }
-
 // --- copy helpers (stores hand out copies so callers never share memory) ---
 
 func copyService(v *Service) Service {
 	c := *v
 	c.Tags = append([]string(nil), v.Tags...)
 	if v.Oidc != nil {
-		c.Oidc = ptr(*v.Oidc)
+		c.Oidc = new(*v.Oidc)
 	}
 	if v.CorsConfig != nil {
 		cc := *v.CorsConfig
@@ -120,10 +118,10 @@ func copyService(v *Service) Service {
 		c.CorsConfig = &cc
 	}
 	if v.ObjectStorage != nil {
-		c.ObjectStorage = ptr(*v.ObjectStorage)
+		c.ObjectStorage = new(*v.ObjectStorage)
 	}
 	if v.Retries != nil {
-		c.Retries = ptr(*v.Retries)
+		c.Retries = new(*v.Retries)
 	}
 	return c
 }
@@ -134,13 +132,13 @@ func copyRoute(v *Route) Route {
 	c.Hosts = append([]string(nil), v.Hosts...)
 	c.Methods = append([]string(nil), v.Methods...)
 	if v.StripPath != nil {
-		c.StripPath = ptr(*v.StripPath)
+		c.StripPath = new(*v.StripPath)
 	}
 	if v.RequestBuffering != nil {
-		c.RequestBuffering = ptr(*v.RequestBuffering)
+		c.RequestBuffering = new(*v.RequestBuffering)
 	}
 	if v.ResponseBuffering != nil {
-		c.ResponseBuffering = ptr(*v.ResponseBuffering)
+		c.ResponseBuffering = new(*v.ResponseBuffering)
 	}
 	if v.IPRestriction != nil {
 		ip := *v.IPRestriction
@@ -156,10 +154,10 @@ func copyRoute(v *Route) Route {
 	// the pointer target keeps callers from mutating the stored value's top
 	// level, which is all the handlers do.
 	if v.RequestTransform != nil {
-		c.RequestTransform = ptr(*v.RequestTransform)
+		c.RequestTransform = new(*v.RequestTransform)
 	}
 	if v.ResponseTransform != nil {
-		c.ResponseTransform = ptr(*v.ResponseTransform)
+		c.ResponseTransform = new(*v.ResponseTransform)
 	}
 	return c
 }
@@ -177,13 +175,13 @@ func copyUser(v *User) User {
 	if v.Auth != nil {
 		a := UserAuthentication{}
 		if v.Auth.BasicAuth != nil {
-			a.BasicAuth = ptr(*v.Auth.BasicAuth)
+			a.BasicAuth = new(*v.Auth.BasicAuth)
 		}
 		if v.Auth.Jwt != nil {
-			a.Jwt = ptr(*v.Auth.Jwt)
+			a.Jwt = new(*v.Auth.Jwt)
 		}
 		if v.Auth.HmacAuth != nil {
-			a.HmacAuth = ptr(*v.Auth.HmacAuth)
+			a.HmacAuth = new(*v.Auth.HmacAuth)
 		}
 		c.Auth = &a
 	}
@@ -199,10 +197,10 @@ func copyGroup(v *Group) Group {
 func copyCertificate(v *Certificate) Certificate {
 	c := *v
 	if v.RSA != nil {
-		c.RSA = ptr(*v.RSA)
+		c.RSA = new(*v.RSA)
 	}
 	if v.ECDSA != nil {
-		c.ECDSA = ptr(*v.ECDSA)
+		c.ECDSA = new(*v.ECDSA)
 	}
 	return c
 }
@@ -210,7 +208,7 @@ func copyCertificate(v *Certificate) Certificate {
 func copySubscription(v *Subscription) Subscription {
 	c := *v
 	if v.Service != nil {
-		c.Service = ptr(*v.Service)
+		c.Service = new(*v.Service)
 	}
 	return c
 }
@@ -290,7 +288,7 @@ func applyServiceDefaults(svc *Service) {
 		}
 	}
 	if svc.Retries == nil {
-		svc.Retries = ptr(5)
+		svc.Retries = new(5)
 	}
 	if svc.ConnectTimeout == 0 {
 		svc.ConnectTimeout = 60000
@@ -305,7 +303,7 @@ func applyServiceDefaults(svc *Service) {
 		svc.Authentication = "none"
 	}
 	if svc.ObjectStorage != nil && svc.ObjectStorage.UseDocumentIndex == nil {
-		svc.ObjectStorage.UseDocumentIndex = ptr(true)
+		svc.ObjectStorage.UseDocumentIndex = new(true)
 	}
 }
 
@@ -480,13 +478,13 @@ func applyRouteDefaults(rt *Route) {
 		rt.HTTPSRedirectStatusCode = 426
 	}
 	if rt.StripPath == nil {
-		rt.StripPath = ptr(true)
+		rt.StripPath = new(true)
 	}
 	if rt.RequestBuffering == nil {
-		rt.RequestBuffering = ptr(true)
+		rt.RequestBuffering = new(true)
 	}
 	if rt.ResponseBuffering == nil {
-		rt.ResponseBuffering = ptr(true)
+		rt.ResponseBuffering = new(true)
 	}
 	// The spec allows all methods when none are specified.
 	if len(rt.Methods) == 0 {
@@ -1139,10 +1137,10 @@ func (s *MemoryStore) UpdateCertificate(id string, c Certificate) error {
 	}
 	cur.Name = c.Name
 	if c.RSA != nil {
-		cur.RSA = ptr(*c.RSA)
+		cur.RSA = new(*c.RSA)
 	}
 	if c.ECDSA != nil {
-		cur.ECDSA = ptr(*c.ECDSA)
+		cur.ECDSA = new(*c.ECDSA)
 	}
 	cur.UpdatedAt = now()
 	// Domains denormalize the certificate name; keep them in sync on rename.

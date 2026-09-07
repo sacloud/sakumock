@@ -75,6 +75,21 @@ every control-plane path of the AppRun shared OpenAPI spec:
 | Traffic | `GET /applications/{id}/traffics`, `PUT /applications/{id}/traffics` |
 | Packet filter | `GET /applications/{id}/packet_filter`, `PATCH /applications/{id}/packet_filter` |
 
+### Secrets
+
+A component's `secret` list (OpenAPI 1.5.0) behaves as in the real API:
+
+- `POST /applications` requires a `value` for every secret.
+- `PATCH /applications/{id}` may omit a secret's `value`; the value stored in
+  the latest version is inherited. A key with no stored value is rejected
+  with `400`.
+- Responses (application, version) report only the `key` of each secret,
+  never its value.
+- Secrets share the per-component limit of 50 entries with `env`, and the
+  same key/value length and reserved-name rules (`K_SERVICE`,
+  `K_CONFIGURATION`, `K_REVISION`, `PORT`). A key used by both `env` and
+  `secret` is rejected with `400`, as the real API does.
+
 ## Data plane (Docker reverse proxy)
 
 With `--enable-data-plane`, a second listener (default `127.0.0.1:28088`, the control-plane port + 10000) reverse-proxies requests to Docker containers that are automatically managed based on the application's first component image.
@@ -109,7 +124,7 @@ The mock data plane runs plain Docker containers, whereas the real AppRun runs o
 | `K_SERVICE`, `K_CONFIGURATION`, `K_REVISION` | Set by Knative | Not present |
 | `KUBERNETES_*` | Present (empty) | Not present |
 
-User-defined env vars (set via the `env` field in components) and `PORT` are identical in both.
+User-defined env vars (set via the `env` and `secret` fields in components) and `PORT` are identical in both.
 
 **Request headers forwarded to the container:**
 

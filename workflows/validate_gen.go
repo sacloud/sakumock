@@ -18,16 +18,16 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"Description": {
 				Type:      "string",
-				MinLength: core.IntPtr(0),
-				MaxLength: core.IntPtr(1024),
+				MinLength: new(0),
+				MaxLength: new(1024),
 			},
 			"Logging": {
 				Type: "boolean",
 			},
 			"Name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(1),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 			},
 			"Publish": {
@@ -41,8 +41,8 @@ var bodySchemas = map[string]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 						},
 					},
 				},
@@ -55,7 +55,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"PlanId": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
+				Minimum: new(1.0),
 			},
 		},
 	},
@@ -70,16 +70,16 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"Description": {
 				Type:      "string",
-				MinLength: core.IntPtr(0),
-				MaxLength: core.IntPtr(1024),
+				MinLength: new(0),
+				MaxLength: new(1024),
 			},
 			"Logging": {
 				Type: "boolean",
 			},
 			"Name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(1),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 			},
 			"Publish": {
@@ -87,8 +87,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"RevisionAlias": {
 				Type:      "string",
-				MinLength: core.IntPtr(0),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(0),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 			},
 			"Runbook": {
@@ -102,8 +102,8 @@ var bodySchemas = map[string]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 						},
 					},
 				},
@@ -115,19 +115,19 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"Args": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(65536),
+				MinLength: new(1),
+				MaxLength: new(65536),
 			},
 			"Name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(1),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 			},
 			"RevisionAlias": {
 				Type:      "string",
-				MinLength: core.IntPtr(0),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(0),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 			},
 			"RevisionId": {
@@ -141,8 +141,8 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"RevisionAlias": {
 				Type:      "string",
-				MinLength: core.IntPtr(0),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(0),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 			},
 			"Runbook": {
@@ -156,8 +156,8 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"RevisionAlias": {
 				Type:      "string",
-				MinLength: core.IntPtr(0),
-				MaxLength: core.IntPtr(64),
+				MinLength: new(0),
+				MaxLength: new(64),
 				Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 			},
 		},
@@ -436,8 +436,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RevisionId": {
@@ -451,8 +451,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"WorkflowId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 					},
 				},
@@ -804,15 +804,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"From": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Total": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Workflows": {
 					Type: "array",
@@ -829,21 +829,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Description": {
 								Type:      "string",
-								MinLength: core.IntPtr(0),
-								MaxLength: core.IntPtr(1024),
+								MinLength: new(0),
+								MaxLength: new(1024),
 							},
 							"Id": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(36),
+								MinLength: new(1),
+								MaxLength: new(36),
 							},
 							"Logging": {
 								Type: "boolean",
 							},
 							"Name": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(1),
+								MaxLength: new(64),
 								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 							},
 							"Publish": {
@@ -857,8 +857,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Properties: map[string]*core.BodySchema{
 										"Name": {
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(64),
+											MinLength: new(1),
+											MaxLength: new(64),
 										},
 									},
 								},
@@ -954,11 +954,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"From": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Suggests": {
 					Type: "array",
@@ -968,12 +968,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"Count": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(1),
+								Minimum: new(1.0),
 							},
 							"Name": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(1),
+								MaxLength: new(64),
 								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 							},
 						},
@@ -981,7 +981,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"Total": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -1080,21 +1080,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Description": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(1024),
+							MinLength: new(0),
+							MaxLength: new(1024),
 						},
 						"Id": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"Logging": {
 							Type: "boolean",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Publish": {
@@ -1108,8 +1108,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"Name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(64),
+										MinLength: new(1),
+										MaxLength: new(64),
 									},
 								},
 							},
@@ -1205,7 +1205,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Executions": {
 					Type: "array",
@@ -1215,8 +1215,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"Args": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(65536),
+								MinLength: new(1),
+								MaxLength: new(65536),
 							},
 							"CancelRequestedAt": {
 								Type: "string",
@@ -1229,35 +1229,35 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Error": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(65536),
+								MinLength: new(1),
+								MaxLength: new(65536),
 							},
 							"ExecutionId": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(36),
+								MinLength: new(1),
+								MaxLength: new(36),
 							},
 							"FailedAt": {
 								Type: "string",
 							},
 							"Name": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(1),
+								MaxLength: new(64),
 								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 							},
 							"Result": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(65536),
+								MinLength: new(1),
+								MaxLength: new(65536),
 							},
 							"Revision": {
 								Type: "integer",
 							},
 							"RevisionAlias": {
 								Type:      "string",
-								MinLength: core.IntPtr(0),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(0),
+								MaxLength: new(64),
 								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 							},
 							"RunAt": {
@@ -1269,7 +1269,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"StepCount": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
+								Minimum: new(0.0),
 							},
 							"SucceededAt": {
 								Type: "string",
@@ -1290,21 +1290,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"Description": {
 										Type:      "string",
-										MinLength: core.IntPtr(0),
-										MaxLength: core.IntPtr(1024),
+										MinLength: new(0),
+										MaxLength: new(1024),
 									},
 									"Id": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(36),
+										MinLength: new(1),
+										MaxLength: new(36),
 									},
 									"Logging": {
 										Type: "boolean",
 									},
 									"Name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(64),
+										MinLength: new(1),
+										MaxLength: new(64),
 										Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 									},
 									"Publish": {
@@ -1318,8 +1318,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Properties: map[string]*core.BodySchema{
 												"Name": {
 													Type:      "string",
-													MinLength: core.IntPtr(1),
-													MaxLength: core.IntPtr(64),
+													MinLength: new(1),
+													MaxLength: new(64),
 												},
 											},
 										},
@@ -1334,11 +1334,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"From": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Total": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -1430,8 +1430,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"Args": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"CancelRequestedAt": {
 							Type: "string",
@@ -1444,35 +1444,35 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Error": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"ExecutionId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"FailedAt": {
 							Type: "string",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Result": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"Revision": {
 							Type: "integer",
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RunAt": {
@@ -1484,7 +1484,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"StepCount": {
 							Type:    "integer",
-							Minimum: core.Float64Ptr(0),
+							Minimum: new(0.0),
 						},
 						"SucceededAt": {
 							Type: "string",
@@ -1505,21 +1505,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"Description": {
 									Type:      "string",
-									MinLength: core.IntPtr(0),
-									MaxLength: core.IntPtr(1024),
+									MinLength: new(0),
+									MaxLength: new(1024),
 								},
 								"Id": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(36),
+									MinLength: new(1),
+									MaxLength: new(36),
 								},
 								"Logging": {
 									Type: "boolean",
 								},
 								"Name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(64),
+									MinLength: new(1),
+									MaxLength: new(64),
 									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 								},
 								"Publish": {
@@ -1533,8 +1533,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"Name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(64),
+												MinLength: new(1),
+												MaxLength: new(64),
 											},
 										},
 									},
@@ -1631,11 +1631,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"From": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Histories": {
 					Type: "array",
@@ -1648,21 +1648,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"JobId": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(1),
+								MaxLength: new(64),
 							},
 							"Meta": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
+								MinLength: new(1),
 							},
 							"StackTrace": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
+								MinLength: new(1),
 							},
 							"ThreadId": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(1),
+								MaxLength: new(64),
 							},
 							"Type": {
 								Type: "string",
@@ -1670,19 +1670,19 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Variables": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
+								MinLength: new(1),
 							},
 							"WorkflowExecutionId": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(36),
+								MinLength: new(1),
+								MaxLength: new(36),
 							},
 						},
 					},
 				},
 				"Total": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -1769,11 +1769,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"From": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"Revisions": {
 					Type: "array",
@@ -1786,8 +1786,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"RevisionAlias": {
 								Type:      "string",
-								MinLength: core.IntPtr(0),
-								MaxLength: core.IntPtr(64),
+								MinLength: new(0),
+								MaxLength: new(64),
 								Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 							},
 							"RevisionId": {
@@ -1801,15 +1801,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"WorkflowId": {
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(36),
+								MinLength: new(1),
+								MaxLength: new(36),
 							},
 						},
 					},
 				},
 				"Total": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
+					Minimum: new(0.0),
 				},
 				"is_ok": {
 					Type: "boolean",
@@ -1903,8 +1903,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RevisionId": {
@@ -1918,8 +1918,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"WorkflowId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 					},
 				},
@@ -2020,21 +2020,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Description": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(1024),
+							MinLength: new(0),
+							MaxLength: new(1024),
 						},
 						"Id": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"Logging": {
 							Type: "boolean",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Publish": {
@@ -2048,8 +2048,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"Name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(64),
+										MinLength: new(1),
+										MaxLength: new(64),
 									},
 								},
 							},
@@ -2219,21 +2219,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Description": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(1024),
+							MinLength: new(0),
+							MaxLength: new(1024),
 						},
 						"Id": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"Logging": {
 							Type: "boolean",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Publish": {
@@ -2247,8 +2247,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Properties: map[string]*core.BodySchema{
 									"Name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(64),
+										MinLength: new(1),
+										MaxLength: new(64),
 									},
 								},
 							},
@@ -2348,8 +2348,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"Args": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"CancelRequestedAt": {
 							Type: "string",
@@ -2362,35 +2362,35 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Error": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"ExecutionId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"FailedAt": {
 							Type: "string",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Result": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"Revision": {
 							Type: "integer",
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RunAt": {
@@ -2402,7 +2402,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"StepCount": {
 							Type:    "integer",
-							Minimum: core.Float64Ptr(0),
+							Minimum: new(0.0),
 						},
 						"SucceededAt": {
 							Type: "string",
@@ -2423,21 +2423,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"Description": {
 									Type:      "string",
-									MinLength: core.IntPtr(0),
-									MaxLength: core.IntPtr(1024),
+									MinLength: new(0),
+									MaxLength: new(1024),
 								},
 								"Id": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(36),
+									MinLength: new(1),
+									MaxLength: new(36),
 								},
 								"Logging": {
 									Type: "boolean",
 								},
 								"Name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(64),
+									MinLength: new(1),
+									MaxLength: new(64),
 									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 								},
 								"Publish": {
@@ -2451,8 +2451,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"Name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(64),
+												MinLength: new(1),
+												MaxLength: new(64),
 											},
 										},
 									},
@@ -2567,8 +2567,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"Args": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"CancelRequestedAt": {
 							Type: "string",
@@ -2581,35 +2581,35 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Error": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"ExecutionId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"FailedAt": {
 							Type: "string",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Result": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"Revision": {
 							Type: "integer",
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RunAt": {
@@ -2621,7 +2621,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"StepCount": {
 							Type:    "integer",
-							Minimum: core.Float64Ptr(0),
+							Minimum: new(0.0),
 						},
 						"SucceededAt": {
 							Type: "string",
@@ -2642,21 +2642,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"Description": {
 									Type:      "string",
-									MinLength: core.IntPtr(0),
-									MaxLength: core.IntPtr(1024),
+									MinLength: new(0),
+									MaxLength: new(1024),
 								},
 								"Id": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(36),
+									MinLength: new(1),
+									MaxLength: new(36),
 								},
 								"Logging": {
 									Type: "boolean",
 								},
 								"Name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(64),
+									MinLength: new(1),
+									MaxLength: new(64),
 									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 								},
 								"Publish": {
@@ -2670,8 +2670,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"Name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(64),
+												MinLength: new(1),
+												MaxLength: new(64),
 											},
 										},
 									},
@@ -2698,8 +2698,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Properties: map[string]*core.BodySchema{
 						"Args": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"CancelRequestedAt": {
 							Type: "string",
@@ -2712,35 +2712,35 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Error": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"ExecutionId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 						"FailedAt": {
 							Type: "string",
 						},
 						"Name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(1),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 						},
 						"Result": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(65536),
+							MinLength: new(1),
+							MaxLength: new(65536),
 						},
 						"Revision": {
 							Type: "integer",
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RunAt": {
@@ -2752,7 +2752,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"StepCount": {
 							Type:    "integer",
-							Minimum: core.Float64Ptr(0),
+							Minimum: new(0.0),
 						},
 						"SucceededAt": {
 							Type: "string",
@@ -2773,21 +2773,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"Description": {
 									Type:      "string",
-									MinLength: core.IntPtr(0),
-									MaxLength: core.IntPtr(1024),
+									MinLength: new(0),
+									MaxLength: new(1024),
 								},
 								"Id": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(36),
+									MinLength: new(1),
+									MaxLength: new(36),
 								},
 								"Logging": {
 									Type: "boolean",
 								},
 								"Name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(64),
+									MinLength: new(1),
+									MaxLength: new(64),
 									Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]+$",
 								},
 								"Publish": {
@@ -2801,8 +2801,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"Name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(64),
+												MinLength: new(1),
+												MaxLength: new(64),
 											},
 										},
 									},
@@ -2918,8 +2918,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RevisionId": {
@@ -2933,8 +2933,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"WorkflowId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 					},
 				},
@@ -3042,8 +3042,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"RevisionAlias": {
 							Type:      "string",
-							MinLength: core.IntPtr(0),
-							MaxLength: core.IntPtr(64),
+							MinLength: new(0),
+							MaxLength: new(64),
 							Pattern:   "^[a-zA-Z0-9_\\-ーぁ-んァ-ヶ一-龠]*$",
 						},
 						"RevisionId": {
@@ -3057,8 +3057,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"WorkflowId": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(36),
+							MinLength: new(1),
+							MaxLength: new(36),
 						},
 					},
 				},

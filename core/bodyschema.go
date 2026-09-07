@@ -40,12 +40,6 @@ type BodySchema struct {
 	Enum []any
 }
 
-// IntPtr returns a pointer to v, for building schema literals.
-func IntPtr(v int) *int { return &v }
-
-// Float64Ptr returns a pointer to v, for building schema literals.
-func Float64Ptr(v float64) *float64 { return &v }
-
 // patternCache keeps compiled patterns out of the schemas themselves, which
 // are shared package-level literals and must not be mutated.
 var patternCache sync.Map // string -> *regexp.Regexp

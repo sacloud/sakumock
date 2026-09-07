@@ -22,19 +22,19 @@ func TestBodySchemaValidate(t *testing.T) {
 		Required: []string{"metrics_storage_id", "query"},
 		Properties: map[string]*core.BodySchema{
 			"metrics_storage_id": {Type: "integer", Nullable: true},
-			"query":              {Type: "string", MinLength: core.IntPtr(1), MaxLength: core.IntPtr(10)},
-			"name":               {Type: "string", MaxLength: core.IntPtr(4)},
-			"threshold":          {Type: "string", Nullable: true, MinLength: core.IntPtr(1)},
+			"query":              {Type: "string", MinLength: new(1), MaxLength: new(10)},
+			"name":               {Type: "string", MaxLength: new(4)},
+			"threshold":          {Type: "string", Nullable: true, MinLength: new(1)},
 			"open":               {Type: "boolean"},
 			"level":              {Type: "string", Enum: []any{"warning", "critical"}},
-			"count":              {Type: "integer", Minimum: core.Float64Ptr(1), Maximum: core.Float64Ptr(10)},
-			"rate":               {Type: "number", Minimum: core.Float64Ptr(0), ExclusiveMinimum: true},
+			"count":              {Type: "integer", Minimum: new(float64(1)), Maximum: new(float64(10))},
+			"rate":               {Type: "number", Minimum: new(float64(0)), ExclusiveMinimum: true},
 			"code":               {Type: "string", Pattern: `^[0-9]{3}$`},
 			"tags": {
 				Type:     "array",
-				Items:    &core.BodySchema{Type: "string", MinLength: core.IntPtr(1)},
-				MinItems: core.IntPtr(1),
-				MaxItems: core.IntPtr(3),
+				Items:    &core.BodySchema{Type: "string", MinLength: new(1)},
+				MinItems: new(1),
+				MaxItems: new(3),
 			},
 			"settings": {
 				Type:     "object",
@@ -83,8 +83,8 @@ func TestBodySchemaValidate(t *testing.T) {
 		{"array item violation", ruleSchema, `{"metrics_storage_id": 1, "query": "up", "tags": ["a", ""]}`, "tags[1] must not be empty"},
 		{"nested required", ruleSchema, `{"metrics_storage_id": 1, "query": "up", "settings": {}}`, "settings.source is required"},
 		{"nested type", ruleSchema, `{"metrics_storage_id": 1, "query": "up", "settings": {"source": 1}}`, "settings.source must be a string"},
-		{"untyped schema applies matching constraints", &core.BodySchema{MaxLength: core.IntPtr(2)}, `"abc"`, "request body must be at most 2 characters"},
-		{"untyped schema ignores other types", &core.BodySchema{MaxLength: core.IntPtr(2)}, `123`, ""},
+		{"untyped schema applies matching constraints", &core.BodySchema{MaxLength: new(2)}, `"abc"`, "request body must be at most 2 characters"},
+		{"untyped schema ignores other types", &core.BodySchema{MaxLength: new(2)}, `123`, ""},
 		{"top-level enum", &core.BodySchema{Enum: []any{float64(1), float64(2)}}, `3`, "request body must be one of 1, 2"},
 	}
 

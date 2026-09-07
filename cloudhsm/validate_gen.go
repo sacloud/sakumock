@@ -44,7 +44,7 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MaxLength: core.IntPtr(255),
+						MaxLength: new(255),
 					},
 					"ServiceClass": {
 						Type: "string",
@@ -86,7 +86,7 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MaxLength: core.IntPtr(255),
+						MaxLength: new(255),
 					},
 				},
 			},
@@ -132,7 +132,7 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MaxLength: core.IntPtr(255),
+						MaxLength: new(255),
 					},
 					"ServiceClass": {
 						Type: "string",
@@ -174,7 +174,7 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MaxLength: core.IntPtr(255),
+						MaxLength: new(255),
 					},
 				},
 			},
@@ -228,7 +228,7 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MaxLength: core.IntPtr(255),
+						MaxLength: new(255),
 					},
 					"ServiceClass": {
 						Type: "string",
@@ -266,7 +266,7 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"Name": {
 						Type:      "string",
-						MaxLength: core.IntPtr(255),
+						MaxLength: new(255),
 					},
 					"ServiceClass": {
 						Type: "string",
@@ -352,7 +352,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(255),
+								MaxLength: new(255),
 							},
 							"ServiceClass": {
 								Type: "string",
@@ -408,7 +408,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(255),
+								MaxLength: new(255),
 							},
 						},
 					},
@@ -452,7 +452,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 					},
 				},
@@ -508,7 +508,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 						"ServiceClass": {
 							Type: "string",
@@ -589,7 +589,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Name": {
 								Type:      "string",
-								MaxLength: core.IntPtr(255),
+								MaxLength: new(255),
 							},
 							"ServiceClass": {
 								Type: "string",
@@ -633,7 +633,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 						"ServiceClass": {
 							Type: "string",
@@ -686,7 +686,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 						"ServiceClass": {
 							Type: "string",
@@ -730,7 +730,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 					},
 				},
@@ -763,7 +763,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 						"ServiceClass": {
 							Type: "string",
@@ -807,7 +807,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 					},
 				},
@@ -863,7 +863,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 						"ServiceClass": {
 							Type: "string",
@@ -903,7 +903,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Name": {
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 						},
 						"ServiceClass": {
 							Type: "string",

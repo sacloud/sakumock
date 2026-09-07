@@ -63,22 +63,22 @@ func TestUserLifecycle(t *testing.T) {
 	}
 }
 
-func createTestApp(ctx context.Context, t *testing.T, appOp apprunsdk.ApplicationAPI) *v1.HandlerPostApplication {
+func createTestApp(ctx context.Context, t *testing.T, appOp apprunsdk.ApplicationAPI) *v1.HandlerCreateApplication {
 	t.Helper()
-	created, err := appOp.Create(ctx, &v1.PostApplicationBody{
+	created, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 		Name:           "test-app",
 		TimeoutSeconds: 60,
 		Port:           8080,
 		MinScale:       0,
 		MaxScale:       1,
-		Components: []v1.PostApplicationBodyComponentsItem{
+		Components: []v1.CreateApplicationBodyComponentsItem{
 			{
 				Name:      "web",
-				MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU05,
-				MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
-				DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
-					ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
-						v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+				MaxCPU:    v1.CreateApplicationBodyComponentsItemMaxCPU05,
+				MaxMemory: v1.CreateApplicationBodyComponentsItemMaxMemory1Gi,
+				DeploySource: v1.CreateApplicationBodyComponentsItemDeploySource{
+					ContainerRegistry: v1.NewOptCreateApplicationBodyComponentsItemDeploySourceContainerRegistry(
+						v1.CreateApplicationBodyComponentsItemDeploySourceContainerRegistry{
 							Image: "nginx:latest",
 						},
 					),
@@ -252,12 +252,12 @@ func TestTrafficManagement(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	trafficBody := v1.PutTrafficsBody{
-		v1.NewPutTrafficsBodyItem0PutTrafficsBodyItem(v1.PutTrafficsBodyItem0{
+	trafficBody := v1.UpdateTrafficBody{
+		v1.NewUpdateTrafficBodyItem0UpdateTrafficBodyItem(v1.UpdateTrafficBodyItem0{
 			IsLatestVersion: true,
 			Percent:         70,
 		}),
-		v1.NewPutTrafficsBodyItem1PutTrafficsBodyItem(v1.PutTrafficsBodyItem1{
+		v1.NewUpdateTrafficBodyItem1UpdateTrafficBodyItem(v1.UpdateTrafficBodyItem1{
 			VersionName: traffic.Data[0].VersionName,
 			Percent:     30,
 		}),
@@ -289,9 +289,9 @@ func TestPacketFilter(t *testing.T) {
 		t.Fatal("expected packet filter to be disabled by default")
 	}
 
-	updated, err := pfOp.Update(ctx, created.ID, &v1.PatchPacketFilter{
+	updated, err := pfOp.Update(ctx, created.ID, &v1.PatchPacketFilterBody{
 		IsEnabled: v1.NewOptBool(true),
-		Settings: []v1.PatchPacketFilterSettingsItem{
+		Settings: []v1.PatchPacketFilterBodySettingsItem{
 			{
 				FromIP:             "192.168.1.0",
 				FromIPPrefixLength: 24,
@@ -329,14 +329,14 @@ func TestValidation(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	appOp := apprunsdk.NewApplicationOp(client)
 
-	validComponents := []v1.PostApplicationBodyComponentsItem{
+	validComponents := []v1.CreateApplicationBodyComponentsItem{
 		{
 			Name:      "web",
-			MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU05,
-			MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
-			DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
-				ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
-					v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+			MaxCPU:    v1.CreateApplicationBodyComponentsItemMaxCPU05,
+			MaxMemory: v1.CreateApplicationBodyComponentsItemMaxMemory1Gi,
+			DeploySource: v1.CreateApplicationBodyComponentsItemDeploySource{
+				ContainerRegistry: v1.NewOptCreateApplicationBodyComponentsItemDeploySourceContainerRegistry(
+					v1.CreateApplicationBodyComponentsItemDeploySourceContainerRegistry{
 						Image: "nginx:latest",
 					},
 				),
@@ -345,7 +345,7 @@ func TestValidation(t *testing.T) {
 	}
 
 	t.Run("reserved port", func(t *testing.T) {
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "test", TimeoutSeconds: 60, Port: 8443, MinScale: 0, MaxScale: 1,
 			Components: validComponents,
 		})
@@ -355,7 +355,7 @@ func TestValidation(t *testing.T) {
 	})
 
 	t.Run("timeout out of range", func(t *testing.T) {
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "test", TimeoutSeconds: 999, Port: 8080, MinScale: 0, MaxScale: 1,
 			Components: validComponents,
 		})
@@ -365,7 +365,7 @@ func TestValidation(t *testing.T) {
 	})
 
 	t.Run("min_scale > max_scale", func(t *testing.T) {
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 5, MaxScale: 2,
 			Components: validComponents,
 		})
@@ -375,7 +375,7 @@ func TestValidation(t *testing.T) {
 	})
 
 	t.Run("max_scale out of range", func(t *testing.T) {
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 20,
 			Components: validComponents,
 		})
@@ -385,22 +385,22 @@ func TestValidation(t *testing.T) {
 	})
 
 	t.Run("reserved env key", func(t *testing.T) {
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
-			Components: []v1.PostApplicationBodyComponentsItem{
+			Components: []v1.CreateApplicationBodyComponentsItem{
 				{
 					Name:      "web",
-					MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU05,
-					MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
-					DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
-						ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
-							v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+					MaxCPU:    v1.CreateApplicationBodyComponentsItemMaxCPU05,
+					MaxMemory: v1.CreateApplicationBodyComponentsItemMaxMemory1Gi,
+					DeploySource: v1.CreateApplicationBodyComponentsItemDeploySource{
+						ContainerRegistry: v1.NewOptCreateApplicationBodyComponentsItemDeploySourceContainerRegistry(
+							v1.CreateApplicationBodyComponentsItemDeploySourceContainerRegistry{
 								Image: "nginx:latest",
 							},
 						),
 					},
-					Env: v1.NewOptNilPostApplicationBodyComponentsItemEnvItemArray([]v1.PostApplicationBodyComponentsItemEnvItem{
-						{Key: v1.NewOptString("PORT"), Value: v1.NewOptString("3000")},
+					Env: v1.NewOptNilRequestEnv(v1.RequestEnv{
+						{Key: "PORT", Value: "3000"},
 					}),
 				},
 			},
@@ -411,16 +411,16 @@ func TestValidation(t *testing.T) {
 	})
 
 	t.Run("invalid cpu/memory combination", func(t *testing.T) {
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "test", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
-			Components: []v1.PostApplicationBodyComponentsItem{
+			Components: []v1.CreateApplicationBodyComponentsItem{
 				{
 					Name:      "web",
-					MaxCPU:    v1.PostApplicationBodyComponentsItemMaxCPU2,
-					MaxMemory: v1.PostApplicationBodyComponentsItemMaxMemory1Gi,
-					DeploySource: v1.PostApplicationBodyComponentsItemDeploySource{
-						ContainerRegistry: v1.NewOptPostApplicationBodyComponentsItemDeploySourceContainerRegistry(
-							v1.PostApplicationBodyComponentsItemDeploySourceContainerRegistry{
+					MaxCPU:    v1.CreateApplicationBodyComponentsItemMaxCPU2,
+					MaxMemory: v1.CreateApplicationBodyComponentsItemMaxMemory1Gi,
+					DeploySource: v1.CreateApplicationBodyComponentsItemDeploySource{
+						ContainerRegistry: v1.NewOptCreateApplicationBodyComponentsItemDeploySourceContainerRegistry(
+							v1.CreateApplicationBodyComponentsItemDeploySourceContainerRegistry{
 								Image: "nginx:latest",
 							},
 						),
@@ -435,7 +435,7 @@ func TestValidation(t *testing.T) {
 
 	t.Run("application limit", func(t *testing.T) {
 		for i := range 5 {
-			_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+			_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 				Name: fmt.Sprintf("app-%d", i), TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
 				Components: validComponents,
 			})
@@ -443,7 +443,7 @@ func TestValidation(t *testing.T) {
 				t.Fatalf("create app %d: %v", i, err)
 			}
 		}
-		_, err := appOp.Create(ctx, &v1.PostApplicationBody{
+		_, err := appOp.Create(ctx, &v1.CreateApplicationBody{
 			Name: "app-over-limit", TimeoutSeconds: 60, Port: 8080, MinScale: 0, MaxScale: 1,
 			Components: validComponents,
 		})

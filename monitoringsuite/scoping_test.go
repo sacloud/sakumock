@@ -36,7 +36,7 @@ func TestAlertRuleProjectScoping(t *testing.T) {
 	rule, err := ruleOp.Create(ctx, pidA, mssdk.AlertRuleCreateParams{
 		MetricsStorageID: sid,
 		Query:            "up == 0",
-		Name:             ref("rule"),
+		Name:             new("rule"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +46,7 @@ func TestAlertRuleProjectScoping(t *testing.T) {
 	if _, err := ruleOp.Read(ctx, pidB, uid); err == nil {
 		t.Fatal("expected error reading rule through another project")
 	}
-	if _, err := ruleOp.Update(ctx, pidB, uid, mssdk.AlertRuleUpdateParams{Name: ref("hijacked")}); err == nil {
+	if _, err := ruleOp.Update(ctx, pidB, uid, mssdk.AlertRuleUpdateParams{Name: new("hijacked")}); err == nil {
 		t.Fatal("expected error updating rule through another project")
 	}
 	if err := ruleOp.Delete(ctx, pidB, uid); err == nil {
@@ -78,7 +78,7 @@ func TestMetricsStorageKeyScoping(t *testing.T) {
 	}
 	sidB := ridOf(t, storageB.GetResourceID())
 
-	key, err := op.CreateKey(ctx, sidA, ref("key"))
+	key, err := op.CreateKey(ctx, sidA, new("key"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestMetricsStorageKeyScoping(t *testing.T) {
 	if _, err := op.ReadKey(ctx, sidB, uid); err == nil {
 		t.Fatal("expected error reading key through another storage")
 	}
-	if _, err := op.UpdateKey(ctx, sidB, uid, ref("hijacked")); err == nil {
+	if _, err := op.UpdateKey(ctx, sidB, uid, new("hijacked")); err == nil {
 		t.Fatal("expected error updating key through another storage")
 	}
 	if err := op.DeleteKey(ctx, sidB, uid); err == nil {

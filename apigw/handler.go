@@ -21,8 +21,7 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func (s *Server) writeStoreError(w http.ResponseWriter, err error) {
-	var se *StoreError
-	if errors.As(err, &se) {
+	if se, ok := errors.AsType[*StoreError](err); ok {
 		writeError(w, se.Status, se.Message)
 		return
 	}

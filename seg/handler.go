@@ -244,8 +244,6 @@ type applianceApplyResponse struct {
 	IsOk            bool                     `json:"is_ok"`
 }
 
-func strPtr(s string) *string { return &s }
-
 func settingsToJSON(settings *SettingsRecord) *applianceSettingsJSON {
 	if settings == nil {
 		return nil
@@ -321,31 +319,29 @@ func interfaceToJSON(iface InterfaceRecord) interfaceJSON {
 		},
 	}
 	if iface.IPAddress != "" {
-		out.IPAddress = strPtr(iface.IPAddress)
+		out.IPAddress = new(iface.IPAddress)
 	}
 	if iface.UserIPAddress != "" {
-		out.UserIPAddress = strPtr(iface.UserIPAddress)
+		out.UserIPAddress = new(iface.UserIPAddress)
 	}
 	if iface.HasSubnet {
 		out.Switch.Subnet = &subnetJSON{
 			NetworkAddress: iface.NetworkAddress,
 			NetworkMaskLen: iface.NetworkMaskLen,
 			DefaultRoute:   iface.DefaultRoute,
-			Internet:       internetInfoJSON{BandWidthMbps: intPtr(100)},
+			Internet:       internetInfoJSON{BandWidthMbps: new(100)},
 		}
 	}
 	return out
 }
 
-func intPtr(n int) *int { return &n }
-
 func simpleInterfaceToJSON(iface InterfaceRecord) simpleInterfaceJSON {
 	out := simpleInterfaceJSON{Switch: simpleInterfaceSwitchJSON{Scope: iface.Scope}}
 	if iface.IPAddress != "" {
-		out.IPAddress = strPtr(iface.IPAddress)
+		out.IPAddress = new(iface.IPAddress)
 	}
 	if iface.UserIPAddress != "" {
-		out.UserIPAddress = strPtr(iface.UserIPAddress)
+		out.UserIPAddress = new(iface.UserIPAddress)
 	}
 	return out
 }
@@ -358,11 +354,11 @@ func applianceToJSON(a ApplianceRecord) applianceJSON {
 
 	var settingsHashPtr *string
 	if a.SettingsHash != "" {
-		settingsHashPtr = strPtr(a.SettingsHash)
+		settingsHashPtr = new(a.SettingsHash)
 	}
 
-	hostName := strPtr("sac-mock-" + a.ID)
-	hostInfoURL := strPtr("")
+	hostName := new("sac-mock-" + a.ID)
+	hostInfoURL := new("")
 	host := hostInfoJSON{Name: hostName, InfoURL: hostInfoURL}
 
 	servers := make([]serverRemarkJSON, len(a.Servers))
@@ -386,8 +382,8 @@ func applianceToJSON(a ApplianceRecord) applianceJSON {
 		},
 		Availability: a.Availability,
 		Instance: instanceJSON{
-			Status:          strPtr(a.PowerStatus),
-			StatusChangedAt: strPtr(core.FormatRFC3339(a.StatusChangedAt)),
+			Status:          new(a.PowerStatus),
+			StatusChangedAt: new(core.FormatRFC3339(a.StatusChangedAt)),
 			Host:            host,
 			Hosts:           []hostInfoJSON{host},
 		},

@@ -140,7 +140,7 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 			{TargetPort: 80},
 		},
 		EnvVars: []version.EnvironmentVariable{
-			{Key: "FOO", Value: strPtr("bar")},
+			{Key: "FOO", Value: new("bar")},
 		},
 	})
 	if err != nil {
@@ -259,5 +259,3 @@ func TestServiceClasses(t *testing.T) {
 		t.Fatal("expected at least one worker service class")
 	}
 }
-
-func strPtr(s string) *string { return &s }

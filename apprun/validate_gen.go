@@ -35,26 +35,26 @@ var bodySchemas = map[string]*core.BodySchema{
 										},
 										"image": {
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(128),
+											MinLength: new(1),
+											MaxLength: new(128),
 										},
 										"password": {
 											Type:      "string",
 											Nullable:  true,
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(63),
+											MinLength: new(1),
+											MaxLength: new(63),
 										},
 										"server": {
 											Type:      "string",
 											Nullable:  true,
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(128),
+											MinLength: new(1),
+											MaxLength: new(128),
 										},
 										"username": {
 											Type:      "string",
 											Nullable:  true,
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(63),
+											MinLength: new(1),
+											MaxLength: new(63),
 										},
 									},
 								},
@@ -64,7 +64,8 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:     "array",
 							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "object",
+								Type:     "object",
+								Required: []string{"key", "value"},
 								Properties: map[string]*core.BodySchema{
 									"key": {
 										Type: "string",
@@ -85,8 +86,8 @@ var bodySchemas = map[string]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(255),
+							MinLength: new(1),
+							MaxLength: new(255),
 						},
 						"probe": {
 							Type:     "object",
@@ -116,9 +117,25 @@ var bodySchemas = map[string]*core.BodySchema{
 										},
 										"port": {
 											Type:    "integer",
-											Minimum: core.Float64Ptr(1),
-											Maximum: core.Float64Ptr(65535),
+											Minimum: new(1.0),
+											Maximum: new(65535.0),
 										},
+									},
+								},
+							},
+						},
+						"secret": {
+							Type:     "array",
+							Nullable: true,
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"key"},
+								Properties: map[string]*core.BodySchema{
+									"key": {
+										Type: "string",
+									},
+									"value": {
+										Type: "string",
 									},
 								},
 							},
@@ -128,28 +145,28 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"max_scale": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(10),
+				Minimum: new(1.0),
+				Maximum: new(10.0),
 			},
 			"min_scale": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(10),
+				Minimum: new(0.0),
+				Maximum: new(10.0),
 			},
 			"port": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(65535),
+				Minimum: new(1.0),
+				Maximum: new(65535.0),
 			},
 			"scale_target_concurrency": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(50),
-				Maximum: core.Float64Ptr(200),
+				Minimum: new(50.0),
+				Maximum: new(200.0),
 			},
 			"timeout_seconds": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(300),
+				Minimum: new(1.0),
+				Maximum: new(300.0),
 			},
 		},
 	},
@@ -173,7 +190,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						},
 					},
 				},
-				MaxItems: core.IntPtr(10),
+				MaxItems: new(10),
 			},
 		},
 	},
@@ -196,26 +213,26 @@ var bodySchemas = map[string]*core.BodySchema{
 									Properties: map[string]*core.BodySchema{
 										"image": {
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(128),
+											MinLength: new(1),
+											MaxLength: new(128),
 										},
 										"password": {
 											Type:      "string",
 											Nullable:  true,
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(63),
+											MinLength: new(1),
+											MaxLength: new(63),
 										},
 										"server": {
 											Type:      "string",
 											Nullable:  true,
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(128),
+											MinLength: new(1),
+											MaxLength: new(128),
 										},
 										"username": {
 											Type:      "string",
 											Nullable:  true,
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(63),
+											MinLength: new(1),
+											MaxLength: new(63),
 										},
 									},
 								},
@@ -225,7 +242,8 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:     "array",
 							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "object",
+								Type:     "object",
+								Required: []string{"key", "value"},
 								Properties: map[string]*core.BodySchema{
 									"key": {
 										Type: "string",
@@ -246,8 +264,8 @@ var bodySchemas = map[string]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(255),
+							MinLength: new(1),
+							MaxLength: new(255),
 						},
 						"probe": {
 							Type:     "object",
@@ -277,9 +295,25 @@ var bodySchemas = map[string]*core.BodySchema{
 										},
 										"port": {
 											Type:    "integer",
-											Minimum: core.Float64Ptr(1),
-											Maximum: core.Float64Ptr(65535),
+											Minimum: new(1.0),
+											Maximum: new(65535.0),
 										},
+									},
+								},
+							},
+						},
+						"secret": {
+							Type:     "array",
+							Nullable: true,
+							Items: &core.BodySchema{
+								Type:     "object",
+								Required: []string{"key", "value"},
+								Properties: map[string]*core.BodySchema{
+									"key": {
+										Type: "string",
+									},
+									"value": {
+										Type: "string",
 									},
 								},
 							},
@@ -289,33 +323,33 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"max_scale": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(10),
+				Minimum: new(1.0),
+				Maximum: new(10.0),
 			},
 			"min_scale": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(10),
+				Minimum: new(0.0),
+				Maximum: new(10.0),
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 			},
 			"port": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(65535),
+				Minimum: new(1.0),
+				Maximum: new(65535.0),
 			},
 			"scale_target_concurrency": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(50),
-				Maximum: core.Float64Ptr(200),
+				Minimum: new(50.0),
+				Maximum: new(200.0),
 			},
 			"timeout_seconds": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(300),
+				Minimum: new(1.0),
+				Maximum: new(300.0),
 			},
 		},
 	},
@@ -458,7 +492,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -506,9 +541,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"port": {
 												Type:    "integer",
-												Minimum: core.Float64Ptr(1),
-												Maximum: core.Float64Ptr(65535),
+												Minimum: new(1.0),
+												Maximum: new(65535.0),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -524,21 +571,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"max_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(1.0),
+					Maximum: new(10.0),
 				},
 				"min_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(0.0),
+					Maximum: new(10.0),
 				},
 				"name": {
 					Type: "string",
 				},
 				"port": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(65535),
+					Minimum: new(1.0),
+					Maximum: new(65535.0),
 				},
 				"public_url": {
 					Type: "string",
@@ -548,8 +595,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"scale_target_concurrency": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(50),
-					Maximum: core.Float64Ptr(200),
+					Minimum: new(50.0),
+					Maximum: new(200.0),
 				},
 				"status": {
 					Type: "string",
@@ -557,8 +604,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"timeout_seconds": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(300),
+					Minimum: new(1.0),
+					Maximum: new(300.0),
 				},
 			},
 		},
@@ -592,12 +639,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"from_ip_prefix_length": {
 								Type:    "integer",
-								Minimum: core.Float64Ptr(0),
-								Maximum: core.Float64Ptr(32),
+								Minimum: new(0.0),
+								Maximum: new(32.0),
 							},
 						},
 					},
-					MaxItems: core.IntPtr(10),
+					MaxItems: new(10),
 				},
 			},
 		},
@@ -773,7 +820,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -821,9 +869,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"port": {
 												Type:    "integer",
-												Minimum: core.Float64Ptr(1),
-												Maximum: core.Float64Ptr(65535),
+												Minimum: new(1.0),
+												Maximum: new(65535.0),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -839,26 +899,26 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"max_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(1.0),
+					Maximum: new(10.0),
 				},
 				"min_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(0.0),
+					Maximum: new(10.0),
 				},
 				"name": {
 					Type: "string",
 				},
 				"port": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(65535),
+					Minimum: new(1.0),
+					Maximum: new(65535.0),
 				},
 				"scale_target_concurrency": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(50),
-					Maximum: core.Float64Ptr(200),
+					Minimum: new(50.0),
+					Maximum: new(200.0),
 				},
 				"status": {
 					Type: "string",
@@ -866,8 +926,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"timeout_seconds": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(300),
+					Minimum: new(1.0),
+					Maximum: new(300.0),
 				},
 			},
 		},
@@ -967,7 +1027,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -1015,9 +1076,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"port": {
 												Type:    "integer",
-												Minimum: core.Float64Ptr(1),
-												Maximum: core.Float64Ptr(65535),
+												Minimum: new(1.0),
+												Maximum: new(65535.0),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -1030,21 +1103,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"max_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(1.0),
+					Maximum: new(10.0),
 				},
 				"min_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(0.0),
+					Maximum: new(10.0),
 				},
 				"name": {
 					Type: "string",
 				},
 				"port": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(65535),
+					Minimum: new(1.0),
+					Maximum: new(65535.0),
 				},
 				"public_url": {
 					Type: "string",
@@ -1054,8 +1127,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"scale_target_concurrency": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(50),
-					Maximum: core.Float64Ptr(200),
+					Minimum: new(50.0),
+					Maximum: new(200.0),
 				},
 				"status": {
 					Type: "string",
@@ -1063,8 +1136,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"timeout_seconds": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(300),
+					Minimum: new(1.0),
+					Maximum: new(300.0),
 				},
 				"updated_at": {
 					Type: "string",
@@ -1105,7 +1178,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 						},
 					},
-					MaxItems: core.IntPtr(10),
+					MaxItems: new(10),
 				},
 			},
 		},
@@ -1154,7 +1227,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"env": {
 								Type: "array",
 								Items: &core.BodySchema{
-									Type: "object",
+									Type:     "object",
+									Required: []string{"key", "value"},
 									Properties: map[string]*core.BodySchema{
 										"key": {
 											Type: "string",
@@ -1202,9 +1276,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"port": {
 												Type:    "integer",
-												Minimum: core.Float64Ptr(1),
-												Maximum: core.Float64Ptr(65535),
+												Minimum: new(1.0),
+												Maximum: new(65535.0),
 											},
+										},
+									},
+								},
+							},
+							"secret": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type:     "object",
+									Required: []string{"key"},
+									Properties: map[string]*core.BodySchema{
+										"key": {
+											Type: "string",
 										},
 									},
 								},
@@ -1220,21 +1306,21 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"max_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(1.0),
+					Maximum: new(10.0),
 				},
 				"min_scale": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(0),
-					Maximum: core.Float64Ptr(10),
+					Minimum: new(0.0),
+					Maximum: new(10.0),
 				},
 				"name": {
 					Type: "string",
 				},
 				"port": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(65535),
+					Minimum: new(1.0),
+					Maximum: new(65535.0),
 				},
 				"public_url": {
 					Type: "string",
@@ -1244,8 +1330,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"scale_target_concurrency": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(50),
-					Maximum: core.Float64Ptr(200),
+					Minimum: new(50.0),
+					Maximum: new(200.0),
 				},
 				"status": {
 					Type: "string",
@@ -1253,8 +1339,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"timeout_seconds": {
 					Type:    "integer",
-					Minimum: core.Float64Ptr(1),
-					Maximum: core.Float64Ptr(300),
+					Minimum: new(1.0),
+					Maximum: new(300.0),
 				},
 			},
 		},

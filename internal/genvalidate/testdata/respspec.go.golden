@@ -15,7 +15,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},

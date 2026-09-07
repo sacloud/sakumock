@@ -74,7 +74,7 @@ func (s *Server) logStorageToJSON(st *LogStorage, wrapped bool) logStorageJSON {
 		Usage:              usage,
 	}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }
@@ -245,7 +245,7 @@ func (s *Server) metricsStorageToJSON(st *MetricsStorage, wrapped bool) metricsS
 		Usage:       usage,
 	}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }
@@ -365,7 +365,7 @@ func (s *Server) traceStorageToJSON(st *TraceStorage, wrapped bool) traceStorage
 		ServicePrincipalID:  st.ServicePrincipalID,
 	}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }
@@ -496,7 +496,7 @@ type traceKeyJSON struct {
 func logMetricsKeyToJSON(k *AccessKey, wrapped bool) logMetricsKeyJSON {
 	j := logMetricsKeyJSON{ID: k.ID, UID: k.UID, Secret: k.Secret, Token: k.Token, Description: k.Description}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }
@@ -504,7 +504,7 @@ func logMetricsKeyToJSON(k *AccessKey, wrapped bool) logMetricsKeyJSON {
 func traceKeyToJSON(k *AccessKey, wrapped bool) traceKeyJSON {
 	j := traceKeyJSON{UID: k.UID, Secret: k.Secret, Token: k.Token, Description: k.Description}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }

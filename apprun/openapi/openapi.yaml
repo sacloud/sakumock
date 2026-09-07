@@ -1,18 +1,18 @@
 openapi: 3.0.0
 info:
-  version: 1.3.0
+  version: 1.5.0
   title: AppRun共用型 APIドキュメント
   contact:
     name: SAKURA internet Inc.
   license:
     name: Copyright(C) SAKURA internet Inc. all rights reserved.
-  description: "---\n「AppRun共用型」が提供するAPIの利用方法とサンプルを公開しております。\n\n# 基本的な使い方\n\n## APIキーの発行\n\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。  \nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n\n<div class=\"warning\">\n<b>操作マニュアル</b><br />\n<ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## 入力パラメータ\n\nAPIの入力には送信先URLに対して、いくつかのヘッダーとAPIキーを送信します。\n\n* 認証方式はHTTP Basic認証です。APIキーのアクセストークンをユーザーID、アクセストークンシークレットをパスワードとして指定します。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     'https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications'\n```\n\n## 出力結果と応答コード（HTTPステータスコード）\n\nAPIからの結果は、「応答コード（HTTPステータスコード）」と、「JSON形式(UTF-8)の結果」として出力されます。\n\n応答コードは、リクエストが成功したのか、失敗したのか大まかな情報を判断することができるもので、例えば失敗したときには、なぜこのような結果になったのかなど、具体的な情報は応答コードと主に返された本文を見ることで把握することができます。\n\n| 結果                                | 応答コード/status   |\n|-------------------------------------|---------------------|\n| 成功（要求を受け付けた）            | 2xx                 |\n| 失敗（要求が受け付けられなかった）  | 4xx, 5xx            |\n\n```\n# 出力結果サンプル（レスポンスヘッダー）\nHTTP/1.1 200 OK\nServer: nginx\nDate: Tue, 16 Nov 2021 12:39:48 GMT\nContent-Type: application/json; charset=UTF-8\nContent-Length: 443\nConnection: keep-alive\nStatus: 200 OK\nPragma: no-cache\nCache-Control: no-cache\nX-Sakura-Proxy-Microtime: 66245\nX-Sakura-Proxy-Decode-Microtime: 62\nX-Sakura-Content-Length: 443\nX-Sakura-Serial: 86ab6c743f72aa5ea6f17e254fd5f803\nX-Content-Type-Options: nosniff\nX-XSS-Protection: 1; mode=block\nX-Frame-Options: DENY\nX-Sakura-Encode-Microtime: 260\nVary: Accept-Encoding\n```\n\n```\n# 出力結果サンプル（レスポンスボディー）\n{\n  \"error\": {\n    \"code\": 401,\n    \"message\": \"Login Required\",\n    \"errors\": [\n      {\n        \"domain\": \"global\",\n        \"reason\": \"required\",\n        \"message\": \"Login Required\",\n        \"location_type\": \"header\",\n        \"location\": \"Authorization\"\n      }\n    ]\n  }\n}\n```\n\n# 利用例\n\n## 1.ユーザーの作成\n\nAppRun共用型の利用を開始するには**ユーザー**を作成します。\n\nユーザーとは、AppRun共用型を利用するための独立したユーザーであり、ユーザー作成および削除による料金の発生はございません。  \nなお、すでにユーザーを作成済みの場合は、再度ユーザーの作成は不要です。\n\nユーザーを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/user\n```\n\nユーザーの作成が完了すると、\n\n* アプリケーションの作成、更新、削除\n* バージョンの確認、削除\n* トラフィック分散の確認、変更\n\nなどの操作が可能になります。\n\n## 2.アプリケーションの作成、取得、更新、削除\n\nユーザーを作成後、**アプリケーション**の作成、更新、削除が可能になります。\n\nアプリケーションを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"name\": \"Application\",\n  \"timeout_seconds\": 60,\n  \"port\": 8080,\n  \"min_scale\": 0,\n  \"max_scale\": 1,\n  \"scale_target_concurrency\": 100,\n  \"components\": [\n    {\n      \"name\": \"Component01\",\n      \"max_cpu\": \"0.5\",\n      \"max_memory\": \"1Gi\",\n      \"deploy_source\": {\n        \"container_registry\": {\n          \"image\": \"my-app.sakuracr.jp/my-app:latest\"\n        }\n      },\n      \"env\": [\n        {\n          \"key\": \"TARGET\",\n          \"value\": \"World\"\n        }\n      ],\n      \"probe\": {\n        \"http_get\": {\n          \"path\": \"/\",\n          \"port\": 8080,\n          \"headers\": [\n            {\n              \"name\": \"Custom-Header\",\n              \"value\": \"Awesome\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications\n```\n\n上記で作成したアプリケーションを取得するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n上記で作成したアプリケーションを更新するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"components\": [\n    {\n      \"name\": \"Component01 updated\",\n      \"max_cpu\": \"0.5\",\n      \"max_memory\": \"1Gi\",\n      \"deploy_source\": {\n        \"container_registry\": {\n          \"image\": \"my-app.sakuracr.jp/my-app-v2:latest\"\n        }\n      }\n    }\n  ],\n  \"all_traffic_available\": true\n}\n\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PATCH \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n上記で作成したアプリケーションを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n## 3.バージョンの取得、削除\n\nアプリケーションを作成、更新した際、その設定情報をバージョンとして保存します。\n\nバージョンを取得するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/versions/{version_id}\n```\n\n上記で作成したバージョンを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/versions/{version_id}\n```\n\n## 4.トラフィック分散の確認、変更\n\nアプリケーションは指定のバージョンへトラフィックを分散します。\n\nトラフィック分散を確認するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/traffics\n```\n\nトラフィック分散を変更するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n[\n  {\n    \"is_latest_version\": true,\n    \"percent\": 50\n  },\n  {\n    \"version_name\": \"Application-861850d6-8240-7c31-9b69-80ea4466918d-1726726814\",\n    \"percent\": 50\n  }\n]\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PUT \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/traffics\n```\n\n## 5.パケットフィルタの確認、変更\n\nアプリケーションに対してパケットフィルタを指定できます。\n\nパケットフィルタを確認するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/packet_filter\n```\n\nパケットフィルタを変更するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"is_enabled\": true,\n  \"settings\": [\n    {\n      \"from_ip\": \"198.51.100.2\",\n      \"from_ip_prefix_length\": 24\n    }\n  ]\n}\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PATCH \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/packet_filter\n```\n----"
+  description: "---\n「AppRun共用型」が提供するAPIの利用方法とサンプルを公開しております。\n\n# 基本的な使い方\n\n## APIキーの発行\n\nAPIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。  \nAPIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。\n\n|   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |\n|------------|------------------------------|--------------------------------------|\n| ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |\n| パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |\n\n<div class=\"warning\">\n<b>操作マニュアル</b><br />\n<ul><li><a href=\"https://manual.sakura.ad.jp/cloud/api/apikey.html\">APIキー | さくらのクラウド ドキュメント</a></li></ul>\n</div>\n\n## 入力パラメータ\n\nAPIの入力には送信先URLに対して、いくつかのヘッダーとAPIキーを送信します。\n\n* 認証方式はHTTP Basic認証です。APIキーのアクセストークンをユーザーID、アクセストークンシークレットをパスワードとして指定します。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     'https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications'\n```\n\n## 出力結果\n\nAPIからの結果は「JSON形式(UTF-8)の結果」として出力されます。\n\n```\n# 出力結果サンプル（レスポンスボディー）\n{\n  \"error\": {\n    \"code\": 401,\n    \"message\": \"Login Required\",\n    \"errors\": [\n      {\n        \"domain\": \"global\",\n        \"reason\": \"required\",\n        \"message\": \"Login Required\",\n        \"location_type\": \"header\",\n        \"location\": \"Authorization\"\n      }\n    ]\n  }\n}\n```\n\n# 利用例\n\n## 1.ユーザーの作成\n\nAppRun共用型の利用を開始するには**ユーザー**を作成します。\n\nユーザーとは、AppRun共用型を利用するための独立したユーザーであり、ユーザー作成および削除による料金の発生はございません。  \nなお、すでにユーザーを作成済みの場合は、再度ユーザーの作成は不要です。\n\nユーザーを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/user\n```\n\nユーザーの作成が完了すると、\n\n* アプリケーションの作成、更新、削除\n* バージョンの確認、削除\n* トラフィック分散の確認、変更\n\nなどの操作が可能になります。\n\n## 2.アプリケーションの作成、取得、更新、削除\n\nユーザーを作成後、**アプリケーション**の作成、更新、削除が可能になります。\n\nアプリケーションを作成するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"name\": \"Application\",\n  \"timeout_seconds\": 60,\n  \"port\": 8080,\n  \"min_scale\": 0,\n  \"max_scale\": 1,\n  \"scale_target_concurrency\": 100,\n  \"components\": [\n    {\n      \"name\": \"Component01\",\n      \"max_cpu\": \"0.5\",\n      \"max_memory\": \"1Gi\",\n      \"deploy_source\": {\n        \"container_registry\": {\n          \"image\": \"my-app.sakuracr.jp/my-app:latest\"\n        }\n      },\n      \"env\": [\n        {\n          \"key\": \"TARGET\",\n          \"value\": \"World\"\n        }\n      ],\n      \"probe\": {\n        \"http_get\": {\n          \"path\": \"/\",\n          \"port\": 8080,\n          \"headers\": [\n            {\n              \"name\": \"Custom-Header\",\n              \"value\": \"Awesome\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X POST \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications\n```\n\n上記で作成したアプリケーションを取得するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n上記で作成したアプリケーションを更新するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"components\": [\n    {\n      \"name\": \"Component01 updated\",\n      \"max_cpu\": \"0.5\",\n      \"max_memory\": \"1Gi\",\n      \"deploy_source\": {\n        \"container_registry\": {\n          \"image\": \"my-app.sakuracr.jp/my-app-v2:latest\"\n        }\n      }\n    }\n  ],\n  \"all_traffic_available\": true\n}\n\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PATCH \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n上記で作成したアプリケーションを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}\n```\n\n## 3.バージョンの取得、削除\n\nアプリケーションを作成、更新した際、その設定情報をバージョンとして保存します。\n\nバージョンを取得するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/versions/{version_id}\n```\n\n上記で作成したバージョンを削除するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X DELETE \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/versions/{version_id}\n```\n\n## 4.トラフィック分散の確認、変更\n\nアプリケーションは指定のバージョンへトラフィックを分散します。\n\nトラフィック分散を確認するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/traffics\n```\n\nトラフィック分散を変更するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n[\n  {\n    \"is_latest_version\": true,\n    \"percent\": 50\n  },\n  {\n    \"version_name\": \"Application-861850d6-8240-7c31-9b69-80ea4466918d-1726726814\",\n    \"percent\": 50\n  }\n]\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PUT \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/traffics\n```\n\n## 5.パケットフィルタの確認、変更\n\nアプリケーションに対してパケットフィルタを指定できます。\n\nパケットフィルタを確認するには以下のような入力を行います。\n\n```\n# 入力サンプル\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X GET \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/packet_filter\n```\n\nパケットフィルタを変更するには以下のような入力を行います。\n\n```\n# 入力サンプル\nvi request_body.json\ncat request_body.json\n{\n  \"is_enabled\": true,\n  \"settings\": [\n    {\n      \"from_ip\": \"198.51.100.2\",\n      \"from_ip_prefix_length\": 24\n    }\n  ]\n}\ncurl -u '01234567-89ab-cdef-0123-456789abcdef:SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM' \\\n     -X PATCH \\\n     -d '@request_body.json' \\\n     https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api/applications/{id}/packet_filter\n```\n----"
 servers:
   - url: https://secure.sakura.ad.jp/cloud/api/apprun/1.0/apprun/api
 paths:
   /user:
     get:
-      operationId: getUser
+      operationId: readUser
       tags:
         - ユーザー
       summary: ユーザー情報を取得します。
@@ -23,7 +23,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.getUser'
+                $ref: '#/components/schemas/handler.readUser'
         '401':
           description: AppRun共用型の認証に失敗しました。
           content:
@@ -57,7 +57,7 @@ paths:
                   - $ref: '#/components/schemas/model.defaultError'
                   - $ref: '#/components/schemas/model.cloudctrlError'
     post:
-      operationId: postUser
+      operationId: createUser
       tags:
         - ユーザー
       summary: ユーザーを作成します。
@@ -68,7 +68,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.postUser'
+                $ref: '#/components/schemas/handler.createUser'
         '401':
           description: AppRun共用型の認証に失敗しました。
           content:
@@ -187,7 +187,7 @@ paths:
                   - $ref: '#/components/schemas/model.defaultError'
                   - $ref: '#/components/schemas/model.cloudctrlError'
     post:
-      operationId: postApplication
+      operationId: createApplication
       tags:
         - アプリケーション
       summary: アプリケーションを作成します。
@@ -198,14 +198,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/postApplicationBody'
+              $ref: '#/components/schemas/createApplicationBody'
       responses:
         '201':
           description: アプリケーションの作成に成功しました。
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.postApplication'
+                $ref: '#/components/schemas/handler.createApplication'
         '400':
           description: リクエストが不正です。
           content:
@@ -248,7 +248,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
   /applications/{id}:
     get:
-      operationId: getApplication
+      operationId: readApplication
       parameters:
         - in: path
           name: id
@@ -265,7 +265,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.getApplication'
+                $ref: '#/components/schemas/handler.readApplication'
         '400':
           description: リクエストが不正です。
           content:
@@ -437,7 +437,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
   /applications/{id}/status:
     get:
-      operationId: getApplicationStatus
+      operationId: readApplicationStatus
       parameters:
         - in: path
           name: id
@@ -454,7 +454,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.getApplicationStatus'
+                $ref: '#/components/schemas/handler.readApplicationStatus'
         '400':
           description: リクエストが不正です。
           content:
@@ -497,7 +497,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
   /applications/{id}/traffics:
     get:
-      operationId: listApplicationTraffics
+      operationId: listApplicationTraffic
       parameters:
         - in: path
           name: id
@@ -514,7 +514,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.listTraffics'
+                $ref: '#/components/schemas/handler.listTraffic'
         '400':
           description: リクエストが不正です。
           content:
@@ -556,7 +556,7 @@ paths:
                   - $ref: '#/components/schemas/model.defaultError'
                   - $ref: '#/components/schemas/model.cloudctrlError'
     put:
-      operationId: putApplicationTraffic
+      operationId: updateApplicationTraffic
       parameters:
         - in: path
           name: id
@@ -575,14 +575,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/putTrafficsBody'
+              $ref: '#/components/schemas/updateTrafficBody'
       responses:
         '200':
           description: アプリケーショントラフィック分散の変更に成功しました。
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.putTraffics'
+                $ref: '#/components/schemas/handler.updateTraffic'
         '400':
           description: リクエストが不正です。
           content:
@@ -723,7 +723,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
   /applications/{id}/versions/{version_id}:
     get:
-      operationId: getApplicationVersion
+      operationId: readApplicationVersion
       parameters:
         - in: path
           name: id
@@ -745,7 +745,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.getVersion'
+                $ref: '#/components/schemas/handler.readVersion'
         '400':
           description: リクエストが不正です。
           content:
@@ -848,7 +848,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
   /applications/{id}/versions/{version_id}/status:
     get:
-      operationId: getApplicationVersionStatus
+      operationId: readApplicationVersionStatus
       parameters:
         - in: path
           name: id
@@ -870,7 +870,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.getVersionStatus'
+                $ref: '#/components/schemas/handler.readVersionStatus'
         '400':
           description: リクエストが不正です。
           content:
@@ -913,7 +913,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
   /applications/{id}/packet_filter:
     get:
-      operationId: getPacketFilter
+      operationId: readApplicationPacketFilter
       parameters:
         - in: path
           name: id
@@ -931,7 +931,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/handler.getPacketFilter'
+                $ref: '#/components/schemas/handler.readPacketFilter'
         '400':
           description: リクエストが不正です。
           content:
@@ -973,7 +973,7 @@ paths:
                   - $ref: '#/components/schemas/model.defaultError'
                   - $ref: '#/components/schemas/model.cloudctrlError'
     patch:
-      operationId: patchPacketFilter
+      operationId: patchApplicationPacketFilter
       parameters:
         - in: path
           name: id
@@ -991,7 +991,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/patchPacketFilter'
+              $ref: '#/components/schemas/patchPacketFilterBody'
       responses:
         '200':
           description: パケットフィルタの変更に成功しました。
@@ -1041,7 +1041,7 @@ paths:
                   - $ref: '#/components/schemas/model.cloudctrlError'
 components:
   schemas:
-    handler.getUser:
+    handler.readUser:
       type: object
       required:
         - limit
@@ -1055,7 +1055,7 @@ components:
               description: プロジェクトで作成できるアプリケーション数の上限
               type: integer
               example: 5
-    handler.postUser:
+    handler.createUser:
       type: object
       required:
         - limit
@@ -1137,7 +1137,7 @@ components:
                 description: 作成日時
                 type: string
                 format: date-time
-    handler.postApplication:
+    handler.createApplication:
       type: object
       required:
         - id
@@ -1240,19 +1240,9 @@ components:
                         type: string
                         example: apprun
               env:
-                description: コンポーネントに渡す環境変数
-                type: array
-                items:
-                  type: object
-                  properties:
-                    key:
-                      description: 環境変数名
-                      type: string
-                      example: MY_ENV
-                    value:
-                      description: 環境変数の値
-                      type: string
-                      example: my_value
+                $ref: '#/components/schemas/response.env'
+              secret:
+                $ref: '#/components/schemas/response.secret'
               probe:
                 description: コンポーネントのプローブ設定
                 type: object
@@ -1309,7 +1299,7 @@ components:
           description: 作成日時
           type: string
           format: date-time
-    handler.getApplication:
+    handler.readApplication:
       type: object
       required:
         - id
@@ -1412,19 +1402,9 @@ components:
                         type: string
                         example: apprun
               env:
-                description: コンポーネントに渡す環境変数
-                type: array
-                items:
-                  type: object
-                  properties:
-                    key:
-                      description: 環境変数名
-                      type: string
-                      example: MY_ENV
-                    value:
-                      description: 環境変数の値
-                      type: string
-                      example: my_value
+                $ref: '#/components/schemas/response.env'
+              secret:
+                $ref: '#/components/schemas/response.secret'
               probe:
                 description: コンポーネントのプローブ設定
                 type: object
@@ -1580,19 +1560,9 @@ components:
                         type: string
                         example: apprun
               env:
-                description: コンポーネントに渡す環境変数
-                type: array
-                items:
-                  type: object
-                  properties:
-                    key:
-                      description: 環境変数名
-                      type: string
-                      example: MY_ENV
-                    value:
-                      description: 環境変数の値
-                      type: string
-                      example: my_value
+                $ref: '#/components/schemas/response.env'
+              secret:
+                $ref: '#/components/schemas/response.secret'
               probe:
                 description: コンポーネントのプローブ設定
                 type: object
@@ -1649,10 +1619,10 @@ components:
           description: 更新日時
           type: string
           format: date-time
-    handler.getApplicationStatus:
+    handler.readApplicationStatus:
       type: object
-      x-go-name: HandlerGetApplicationOnlyStatus
-      x-ogen-name: HandlerGetApplicationOnlyStatus
+      x-go-name: HandlerReadApplicationOnlyStatus
+      x-ogen-name: HandlerReadApplicationOnlyStatus
       required:
         - status
         - message
@@ -1732,7 +1702,7 @@ components:
                 description: 作成日時
                 type: string
                 format: date-time
-    handler.getVersion:
+    handler.readVersion:
       type: object
       required:
         - id
@@ -1841,19 +1811,9 @@ components:
                         type: string
                         example: apprun
               env:
-                description: コンポーネントに渡す環境変数
-                type: array
-                items:
-                  type: object
-                  properties:
-                    key:
-                      description: 環境変数名
-                      type: string
-                      example: MY_ENV
-                    value:
-                      description: 環境変数の値
-                      type: string
-                      example: my_value
+                $ref: '#/components/schemas/response.env'
+              secret:
+                $ref: '#/components/schemas/response.secret'
               probe:
                 description: コンポーネントのプローブ設定
                 type: object
@@ -1894,10 +1854,10 @@ components:
           description: 作成日時
           type: string
           format: date-time
-    handler.getVersionStatus:
+    handler.readVersionStatus:
       type: object
-      x-go-name: HandlerGetApplicationVersionOnlyStatus
-      x-ogen-name: HandlerGetApplicationVersionOnlyStatus
+      x-go-name: HandlerReadApplicationVersionOnlyStatus
+      x-ogen-name: HandlerReadApplicationVersionOnlyStatus
       required:
         - status
         - message
@@ -1914,7 +1874,7 @@ components:
           description: ステータス失敗時のメッセージ
           type: string
           example: Failed to authenticate with the registry
-    handler.listTraffics:
+    handler.listTraffic:
       type: object
       required:
         - data
@@ -1943,7 +1903,7 @@ components:
                 description: トラフィック分散の割合
                 type: integer
                 example: 100
-    handler.putTraffics:
+    handler.updateTraffic:
       type: object
       required:
         - data
@@ -1973,7 +1933,7 @@ components:
                 description: トラフィック分散の割合
                 type: integer
                 example: 100
-    handler.getPacketFilter:
+    handler.readPacketFilter:
       type: object
       required:
         - is_enabled
@@ -2029,7 +1989,7 @@ components:
                 type: integer
                 description: IPv4アドレスprefix長
                 example: 0
-    postApplicationBody:
+    createApplicationBody:
       type: object
       required:
         - name
@@ -2152,22 +2112,27 @@ components:
                         maxLength: 63
                         nullable: true
               env:
-                description: コンポーネントに渡す環境変数
+                $ref: '#/components/schemas/request.env'
+              secret:
+                description: コンポーネントに渡す環境変数（機密情報の設定に使用可能）
                 type: array
                 nullable: true
                 items:
                   type: object
+                  required:
+                    - key
+                    - value
                   properties:
                     key:
                       description: |
                         環境変数名。
                         ただし、K_SERVICE, K_CONFIGURATION, K_REVISION, PORTは予約済みのため設定不可。
                       type: string
-                      example: MY_ENV
+                      example: MY_SECRET
                     value:
                       description: 環境変数の値
                       type: string
-                      example: my_value
+                      example: my_secret_value
               probe:
                 description: コンポーネントのプローブ設定
                 type: object
@@ -2316,22 +2281,26 @@ components:
                       action:
                         $ref: '#/components/schemas/containerRegistryAction'
               env:
-                description: コンポーネントに渡す環境変数
+                $ref: '#/components/schemas/request.env'
+              secret:
+                description: コンポーネントに渡す環境変数（機密情報の設定に使用可能）
                 type: array
                 nullable: true
                 items:
                   type: object
+                  required:
+                    - key
                   properties:
                     key:
                       description: |
                         環境変数名。
                         ただし、K_SERVICE, K_CONFIGURATION, K_REVISION, PORTは予約済みのため設定不可。
                       type: string
-                      example: MY_ENV
+                      example: MY_SECRET
                     value:
-                      description: 環境変数の値
+                      description: 環境変数の値。valueを指定しない場合は、最新のバージョンで保存された値が使用されます。
                       type: string
-                      example: my_value
+                      example: my_secret_value
               probe:
                 description: コンポーネントのプローブ設定
                 type: object
@@ -2384,7 +2353,56 @@ components:
         - new
         - keep
       nullable: true
-    putTrafficsBody:
+    response.env:
+      description: コンポーネントに渡す環境変数
+      type: array
+      items:
+        type: object
+        required:
+          - key
+          - value
+        properties:
+          key:
+            description: 環境変数名
+            type: string
+            example: MY_ENV
+          value:
+            description: 環境変数の値
+            type: string
+            example: my_value
+    request.env:
+      description: コンポーネントに渡す環境変数
+      type: array
+      nullable: true
+      items:
+        type: object
+        required:
+          - key
+          - value
+        properties:
+          key:
+            description: |
+              環境変数名。
+              ただし、K_SERVICE, K_CONFIGURATION, K_REVISION, PORTは予約済みのため設定不可。
+            type: string
+            example: MY_ENV
+          value:
+            description: 環境変数の値
+            type: string
+            example: my_value
+    response.secret:
+      description: コンポーネントに渡す環境変数（レスポンスに値は表示されません）
+      type: array
+      items:
+        type: object
+        required:
+          - key
+        properties:
+          key:
+            description: 環境変数名
+            type: string
+            example: MY_SECRET
+    updateTrafficBody:
       type: array
       items:
         oneOf:
@@ -2411,7 +2429,7 @@ components:
               percent:
                 description: トラフィック分散の割合
                 type: integer
-    patchPacketFilter:
+    patchPacketFilterBody:
       type: object
       properties:
         is_enabled:

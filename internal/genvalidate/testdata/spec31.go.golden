@@ -16,7 +16,7 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"source": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
+				MinLength: new(1),
 			},
 		},
 	},
@@ -27,19 +27,19 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(60),
+				MinLength: new(1),
+				MaxLength: new(60),
 				Pattern:   "^[a-zA-Z0-9_-]+$",
 			},
 			"priority": {
-				MinLength: core.IntPtr(1),
-				Minimum:   core.Float64Ptr(0),
+				MinLength: new(1),
+				Minimum:   new(0.0),
 			},
 			"timeout": {
 				Type:             "integer",
 				Nullable:         true,
-				Minimum:          core.Float64Ptr(5),
-				Maximum:          core.Float64Ptr(900),
+				Minimum:          new(5.0),
+				Maximum:          new(900.0),
 				ExclusiveMaximum: true,
 			},
 		},

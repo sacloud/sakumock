@@ -35,8 +35,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"rsa": {
@@ -97,16 +97,16 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"tags": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -145,8 +145,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"refreshTokenParamName": {
@@ -183,15 +183,15 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"connectTimeout": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(2147483646),
+				Minimum: new(1.0),
+				Maximum: new(2147483646.0),
 			},
 			"corsConfig": {
 				Type: "object",
 				Properties: map[string]*core.BodySchema{
 					"accessControlAllowHeaders": {
 						Type:      "string",
-						MaxLength: core.IntPtr(4000),
+						MaxLength: new(4000),
 					},
 					"accessControlAllowMethods": {
 						Type: "array",
@@ -202,11 +202,11 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"accessControlAllowOrigins": {
 						Type:      "string",
-						MaxLength: core.IntPtr(4000),
+						MaxLength: new(4000),
 					},
 					"accessControlExposedHeaders": {
 						Type:      "string",
-						MaxLength: core.IntPtr(4000),
+						MaxLength: new(4000),
 					},
 					"credentials": {
 						Type: "boolean",
@@ -227,7 +227,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"host": {
 				Type:      "string",
-				MaxLength: core.IntPtr(253),
+				MaxLength: new(253),
 				Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
 			},
 			"id": {
@@ -235,8 +235,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"objectStorageConfig": {
@@ -281,13 +281,13 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"path": {
 				Type:      "string",
-				MaxLength: core.IntPtr(255),
+				MaxLength: new(255),
 				Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
 			},
 			"port": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(65535),
+				Minimum: new(0.0),
+				Maximum: new(65535.0),
 			},
 			"protocol": {
 				Type: "string",
@@ -295,17 +295,17 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"readTimeout": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(2147483646),
+				Minimum: new(1.0),
+				Maximum: new(2147483646.0),
 			},
 			"retries": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(32767),
+				Minimum: new(0.0),
+				Maximum: new(32767.0),
 			},
 			"routeHost": {
 				Type:      "string",
-				MaxLength: core.IntPtr(253),
+				MaxLength: new(253),
 			},
 			"subscription": {
 				Type:     "object",
@@ -320,8 +320,8 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -329,8 +329,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"writeTimeout": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(2147483646),
+				Minimum: new(1.0),
+				Maximum: new(2147483646.0),
 			},
 		},
 	},
@@ -353,7 +353,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"httpsRedirectStatusCode": {
 				Type: "integer",
-				Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+				Enum: []any{float64(301.0), float64(302.0), float64(303.0), float64(307.0), float64(308.0), float64(426.0)},
 			},
 			"id": {
 				Type: "string",
@@ -368,7 +368,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:    "string",
 							Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 						},
-						MinItems: core.IntPtr(1),
+						MinItems: new(1),
 					},
 					"protocols": {
 						Type: "string",
@@ -389,13 +389,13 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"path": {
 				Type:      "string",
-				MaxLength: core.IntPtr(255),
+				MaxLength: new(255),
 				Pattern:   "^(\\/|~\\/).*",
 			},
 			"preserveHost": {
@@ -407,8 +407,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"regexPriority": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(255),
+				Minimum: new(0.0),
+				Maximum: new(255.0),
 			},
 			"requestBuffering": {
 				Type: "boolean",
@@ -426,8 +426,8 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -473,16 +473,16 @@ var bodySchemas = map[string]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(255),
+							MinLength: new(1),
+							MaxLength: new(255),
 							Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 						},
 						"tags": {
 							Type: "array",
 							Items: &core.BodySchema{
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(255),
+								MinLength: new(1),
+								MaxLength: new(255),
 							},
 						},
 						"updatedAt": {
@@ -504,7 +504,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:    "string",
 							Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 						},
-						MinItems: core.IntPtr(1),
+						MinItems: new(1),
 					},
 					"protocols": {
 						Type: "string",
@@ -518,16 +518,16 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"tags": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -561,8 +561,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"rsa": {
@@ -606,16 +606,16 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"tags": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -654,8 +654,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"refreshTokenParamName": {
@@ -692,15 +692,15 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"connectTimeout": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(2147483646),
+				Minimum: new(1.0),
+				Maximum: new(2147483646.0),
 			},
 			"corsConfig": {
 				Type: "object",
 				Properties: map[string]*core.BodySchema{
 					"accessControlAllowHeaders": {
 						Type:      "string",
-						MaxLength: core.IntPtr(4000),
+						MaxLength: new(4000),
 					},
 					"accessControlAllowMethods": {
 						Type: "array",
@@ -711,11 +711,11 @@ var bodySchemas = map[string]*core.BodySchema{
 					},
 					"accessControlAllowOrigins": {
 						Type:      "string",
-						MaxLength: core.IntPtr(4000),
+						MaxLength: new(4000),
 					},
 					"accessControlExposedHeaders": {
 						Type:      "string",
-						MaxLength: core.IntPtr(4000),
+						MaxLength: new(4000),
 					},
 					"credentials": {
 						Type: "boolean",
@@ -736,7 +736,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"host": {
 				Type:      "string",
-				MaxLength: core.IntPtr(253),
+				MaxLength: new(253),
 				Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
 			},
 			"id": {
@@ -744,8 +744,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"objectStorageConfig": {
@@ -790,13 +790,13 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"path": {
 				Type:      "string",
-				MaxLength: core.IntPtr(255),
+				MaxLength: new(255),
 				Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
 			},
 			"port": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(65535),
+				Minimum: new(0.0),
+				Maximum: new(65535.0),
 			},
 			"protocol": {
 				Type: "string",
@@ -804,24 +804,24 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"readTimeout": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(2147483646),
+				Minimum: new(1.0),
+				Maximum: new(2147483646.0),
 			},
 			"retries": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(32767),
+				Minimum: new(0.0),
+				Maximum: new(32767.0),
 			},
 			"routeHost": {
 				Type:      "string",
-				MaxLength: core.IntPtr(253),
+				MaxLength: new(253),
 			},
 			"tags": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -829,8 +829,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"writeTimeout": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(1),
-				Maximum: core.Float64Ptr(2147483646),
+				Minimum: new(1.0),
+				Maximum: new(2147483646.0),
 			},
 		},
 	},
@@ -853,7 +853,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"httpsRedirectStatusCode": {
 				Type: "integer",
-				Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+				Enum: []any{float64(301.0), float64(302.0), float64(303.0), float64(307.0), float64(308.0), float64(426.0)},
 			},
 			"id": {
 				Type: "string",
@@ -868,7 +868,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:    "string",
 							Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 						},
-						MinItems: core.IntPtr(1),
+						MinItems: new(1),
 					},
 					"protocols": {
 						Type: "string",
@@ -889,13 +889,13 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"path": {
 				Type:      "string",
-				MaxLength: core.IntPtr(255),
+				MaxLength: new(255),
 				Pattern:   "^(\\/|~\\/).*",
 			},
 			"preserveHost": {
@@ -907,8 +907,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"regexPriority": {
 				Type:    "integer",
-				Minimum: core.Float64Ptr(0),
-				Maximum: core.Float64Ptr(255),
+				Minimum: new(0.0),
+				Maximum: new(255.0),
 			},
 			"requestBuffering": {
 				Type: "boolean",
@@ -926,8 +926,8 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -949,7 +949,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"value": {
@@ -965,12 +965,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[\\x20-\\x7E]*$",
 								},
 							},
@@ -983,12 +983,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_.]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
 								},
 							},
@@ -1003,7 +1003,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 						},
 					},
@@ -1019,7 +1019,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"value": {
@@ -1035,12 +1035,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[\\x20-\\x7E]*$",
 								},
 							},
@@ -1053,12 +1053,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_.]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
 								},
 							},
@@ -1077,7 +1077,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 						},
 					},
@@ -1085,7 +1085,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^[a-zA-Z0-9-_]+$",
 						},
 					},
@@ -1093,7 +1093,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^[a-zA-Z0-9-_.]+$",
 						},
 					},
@@ -1109,12 +1109,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"from": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"to": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 							},
@@ -1127,12 +1127,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"from": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_]+$",
 								},
 								"to": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_]+$",
 								},
 							},
@@ -1145,12 +1145,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"from": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_.]+$",
 								},
 								"to": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_.]+$",
 								},
 							},
@@ -1168,7 +1168,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"value": {
@@ -1184,12 +1184,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[\\x20-\\x7E]*$",
 								},
 							},
@@ -1202,12 +1202,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-_.]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
 								},
 							},
@@ -1230,12 +1230,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[\\x20-\\x7E]*$",
 								},
 							},
@@ -1245,8 +1245,8 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:    "integer",
-							Minimum: core.Float64Ptr(100),
-							Maximum: core.Float64Ptr(999),
+							Minimum: new(100.0),
+							Maximum: new(999.0),
 						},
 					},
 					"json": {
@@ -1256,7 +1256,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"value": {
@@ -1274,7 +1274,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 						},
 					},
@@ -1290,12 +1290,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[\\x20-\\x7E]*$",
 								},
 							},
@@ -1305,8 +1305,8 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:    "integer",
-							Minimum: core.Float64Ptr(100),
-							Maximum: core.Float64Ptr(999),
+							Minimum: new(100.0),
+							Maximum: new(999.0),
 						},
 					},
 					"json": {
@@ -1316,7 +1316,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"value": {
@@ -1334,7 +1334,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^[a-zA-Z0-9-]+$",
 						},
 					},
@@ -1342,15 +1342,15 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:    "integer",
-							Minimum: core.Float64Ptr(100),
-							Maximum: core.Float64Ptr(999),
+							Minimum: new(100.0),
+							Maximum: new(999.0),
 						},
 					},
 					"jsonKeys": {
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:      "string",
-							MaxLength: core.IntPtr(255),
+							MaxLength: new(255),
 							Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 						},
 					},
@@ -1366,12 +1366,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"from": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-]+$",
 								},
 								"to": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-]+$",
 								},
 							},
@@ -1381,8 +1381,8 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:    "integer",
-							Minimum: core.Float64Ptr(100),
-							Maximum: core.Float64Ptr(999),
+							Minimum: new(100.0),
+							Maximum: new(999.0),
 						},
 					},
 					"json": {
@@ -1392,12 +1392,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"from": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"to": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 							},
@@ -1418,12 +1418,12 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[a-zA-Z0-9-]+$",
 								},
 								"value": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^[\\x20-\\x7E]*$",
 								},
 							},
@@ -1433,8 +1433,8 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "array",
 						Items: &core.BodySchema{
 							Type:    "integer",
-							Minimum: core.Float64Ptr(100),
-							Maximum: core.Float64Ptr(999),
+							Minimum: new(100.0),
+							Maximum: new(999.0),
 						},
 					},
 					"json": {
@@ -1444,7 +1444,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"key": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 								},
 								"value": {
@@ -1492,16 +1492,16 @@ var bodySchemas = map[string]*core.BodySchema{
 						},
 						"name": {
 							Type:      "string",
-							MinLength: core.IntPtr(1),
-							MaxLength: core.IntPtr(255),
+							MinLength: new(1),
+							MaxLength: new(255),
 							Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 						},
 						"tags": {
 							Type: "array",
 							Items: &core.BodySchema{
 								Type:      "string",
-								MinLength: core.IntPtr(1),
-								MaxLength: core.IntPtr(255),
+								MinLength: new(1),
+								MaxLength: new(255),
 							},
 						},
 						"updatedAt": {
@@ -1523,7 +1523,7 @@ var bodySchemas = map[string]*core.BodySchema{
 							Type:    "string",
 							Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 						},
-						MinItems: core.IntPtr(1),
+						MinItems: new(1),
 					},
 					"protocols": {
 						Type: "string",
@@ -1537,16 +1537,16 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 			"name": {
 				Type:      "string",
-				MinLength: core.IntPtr(1),
-				MaxLength: core.IntPtr(255),
+				MinLength: new(1),
+				MaxLength: new(255),
 				Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 			},
 			"tags": {
 				Type: "array",
 				Items: &core.BodySchema{
 					Type:      "string",
-					MinLength: core.IntPtr(1),
-					MaxLength: core.IntPtr(255),
+					MinLength: new(1),
+					MaxLength: new(255),
 				},
 			},
 			"updatedAt": {
@@ -1953,8 +1953,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"rsa": {
@@ -2095,16 +2095,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"tags": {
 										Type: "array",
 										Items: &core.BodySchema{
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(255),
+											MinLength: new(1),
+											MaxLength: new(255),
 										},
 									},
 									"updatedAt": {
@@ -2163,16 +2163,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"tags": {
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -2250,8 +2250,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"refreshTokenParamName": {
@@ -2354,8 +2354,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"refreshTokenParamName": {
@@ -2377,8 +2377,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(255),
+												MinLength: new(1),
+												MaxLength: new(255),
 												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 											},
 										},
@@ -2459,7 +2459,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"maxRequests": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(0),
+										Minimum: new(0.0),
 									},
 									"maxRequestsUnit": {
 										Type: "string",
@@ -2467,7 +2467,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"maxServices": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(0),
+										Minimum: new(0.0),
 									},
 									"name": {
 										Type: "string",
@@ -2480,7 +2480,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"unitRequests": {
 												Type:    "integer",
-												Minimum: core.Float64Ptr(0),
+												Minimum: new(0.0),
 											},
 										},
 									},
@@ -2527,15 +2527,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"connectTimeout": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(1),
-										Maximum: core.Float64Ptr(2147483646),
+										Minimum: new(1.0),
+										Maximum: new(2147483646.0),
 									},
 									"corsConfig": {
 										Type: "object",
 										Properties: map[string]*core.BodySchema{
 											"accessControlAllowHeaders": {
 												Type:      "string",
-												MaxLength: core.IntPtr(4000),
+												MaxLength: new(4000),
 											},
 											"accessControlAllowMethods": {
 												Type: "array",
@@ -2546,11 +2546,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"accessControlAllowOrigins": {
 												Type:      "string",
-												MaxLength: core.IntPtr(4000),
+												MaxLength: new(4000),
 											},
 											"accessControlExposedHeaders": {
 												Type:      "string",
-												MaxLength: core.IntPtr(4000),
+												MaxLength: new(4000),
 											},
 											"credentials": {
 												Type: "boolean",
@@ -2571,7 +2571,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"host": {
 										Type:      "string",
-										MaxLength: core.IntPtr(253),
+										MaxLength: new(253),
 										Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
 									},
 									"id": {
@@ -2579,8 +2579,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"objectStorageConfig": {
@@ -2625,13 +2625,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"path": {
 										Type:      "string",
-										MaxLength: core.IntPtr(255),
+										MaxLength: new(255),
 										Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
 									},
 									"port": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(0),
-										Maximum: core.Float64Ptr(65535),
+										Minimum: new(0.0),
+										Maximum: new(65535.0),
 									},
 									"protocol": {
 										Type: "string",
@@ -2639,17 +2639,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"readTimeout": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(1),
-										Maximum: core.Float64Ptr(2147483646),
+										Minimum: new(1.0),
+										Maximum: new(2147483646.0),
 									},
 									"retries": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(0),
-										Maximum: core.Float64Ptr(32767),
+										Minimum: new(0.0),
+										Maximum: new(32767.0),
 									},
 									"routeHost": {
 										Type:      "string",
-										MaxLength: core.IntPtr(253),
+										MaxLength: new(253),
 									},
 									"subscription": {
 										Type:     "object",
@@ -2667,8 +2667,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Type: "array",
 										Items: &core.BodySchema{
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(255),
+											MinLength: new(1),
+											MaxLength: new(255),
 										},
 									},
 									"updatedAt": {
@@ -2676,8 +2676,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"writeTimeout": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(1),
-										Maximum: core.Float64Ptr(2147483646),
+										Minimum: new(1.0),
+										Maximum: new(2147483646.0),
 									},
 								},
 							},
@@ -2730,15 +2730,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"connectTimeout": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(1),
-									Maximum: core.Float64Ptr(2147483646),
+									Minimum: new(1.0),
+									Maximum: new(2147483646.0),
 								},
 								"corsConfig": {
 									Type: "object",
 									Properties: map[string]*core.BodySchema{
 										"accessControlAllowHeaders": {
 											Type:      "string",
-											MaxLength: core.IntPtr(4000),
+											MaxLength: new(4000),
 										},
 										"accessControlAllowMethods": {
 											Type: "array",
@@ -2749,11 +2749,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"accessControlAllowOrigins": {
 											Type:      "string",
-											MaxLength: core.IntPtr(4000),
+											MaxLength: new(4000),
 										},
 										"accessControlExposedHeaders": {
 											Type:      "string",
-											MaxLength: core.IntPtr(4000),
+											MaxLength: new(4000),
 										},
 										"credentials": {
 											Type: "boolean",
@@ -2774,7 +2774,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"host": {
 									Type:      "string",
-									MaxLength: core.IntPtr(253),
+									MaxLength: new(253),
 									Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
 								},
 								"id": {
@@ -2782,8 +2782,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"objectStorageConfig": {
@@ -2828,13 +2828,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"path": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
 								},
 								"port": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(0),
-									Maximum: core.Float64Ptr(65535),
+									Minimum: new(0.0),
+									Maximum: new(65535.0),
 								},
 								"protocol": {
 									Type: "string",
@@ -2842,17 +2842,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"readTimeout": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(1),
-									Maximum: core.Float64Ptr(2147483646),
+									Minimum: new(1.0),
+									Maximum: new(2147483646.0),
 								},
 								"retries": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(0),
-									Maximum: core.Float64Ptr(32767),
+									Minimum: new(0.0),
+									Maximum: new(32767.0),
 								},
 								"routeHost": {
 									Type:      "string",
-									MaxLength: core.IntPtr(253),
+									MaxLength: new(253),
 								},
 								"subscription": {
 									Type:     "object",
@@ -2870,8 +2870,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -2879,8 +2879,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"writeTimeout": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(1),
-									Maximum: core.Float64Ptr(2147483646),
+									Minimum: new(1.0),
+									Maximum: new(2147483646.0),
 								},
 							},
 						},
@@ -2942,7 +2942,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"httpsRedirectStatusCode": {
 										Type: "integer",
-										Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+										Enum: []any{float64(301.0), float64(302.0), float64(303.0), float64(307.0), float64(308.0), float64(426.0)},
 									},
 									"id": {
 										Type: "string",
@@ -2956,13 +2956,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"path": {
 										Type:      "string",
-										MaxLength: core.IntPtr(255),
+										MaxLength: new(255),
 										Pattern:   "^(\\/|~\\/).*",
 									},
 									"preserveHost": {
@@ -2974,8 +2974,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"regexPriority": {
 										Type:    "integer",
-										Minimum: core.Float64Ptr(0),
-										Maximum: core.Float64Ptr(255),
+										Minimum: new(0.0),
+										Maximum: new(255.0),
 									},
 									"requestBuffering": {
 										Type: "boolean",
@@ -2993,8 +2993,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Type: "array",
 										Items: &core.BodySchema{
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(255),
+											MinLength: new(1),
+											MaxLength: new(255),
 										},
 									},
 									"updatedAt": {
@@ -3067,7 +3067,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"httpsRedirectStatusCode": {
 									Type: "integer",
-									Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+									Enum: []any{float64(301.0), float64(302.0), float64(303.0), float64(307.0), float64(308.0), float64(426.0)},
 								},
 								"id": {
 									Type: "string",
@@ -3082,7 +3082,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Type:    "string",
 												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 											},
-											MinItems: core.IntPtr(1),
+											MinItems: new(1),
 										},
 										"protocols": {
 											Type: "string",
@@ -3103,13 +3103,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"path": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^(\\/|~\\/).*",
 								},
 								"preserveHost": {
@@ -3121,8 +3121,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"regexPriority": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(0),
-									Maximum: core.Float64Ptr(255),
+									Minimum: new(0.0),
+									Maximum: new(255.0),
 								},
 								"requestBuffering": {
 									Type: "boolean",
@@ -3140,8 +3140,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -3211,13 +3211,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(255),
+												MinLength: new(1),
+												MaxLength: new(255),
 												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 											},
 										},
 									},
-									MinItems: core.IntPtr(1),
+									MinItems: new(1),
 								},
 								"isACLEnabled": {
 									Type: "boolean",
@@ -3282,7 +3282,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"value": {
@@ -3298,12 +3298,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[\\x20-\\x7E]*$",
 													},
 												},
@@ -3316,12 +3316,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_.]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
 													},
 												},
@@ -3336,7 +3336,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 											},
 										},
@@ -3352,7 +3352,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"value": {
@@ -3368,12 +3368,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[\\x20-\\x7E]*$",
 													},
 												},
@@ -3386,12 +3386,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_.]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
 													},
 												},
@@ -3410,7 +3410,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 											},
 										},
@@ -3418,7 +3418,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^[a-zA-Z0-9-_]+$",
 											},
 										},
@@ -3426,7 +3426,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^[a-zA-Z0-9-_.]+$",
 											},
 										},
@@ -3442,12 +3442,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"from": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"to": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 												},
@@ -3460,12 +3460,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"from": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_]+$",
 													},
 													"to": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_]+$",
 													},
 												},
@@ -3478,12 +3478,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"from": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_.]+$",
 													},
 													"to": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_.]+$",
 													},
 												},
@@ -3501,7 +3501,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"value": {
@@ -3517,12 +3517,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[\\x20-\\x7E]*$",
 													},
 												},
@@ -3535,12 +3535,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-_.]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([\\w\\-._~!$&'()*+,;=:%]|%[0-9a-fA-F]{2})*$",
 													},
 												},
@@ -3608,12 +3608,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[\\x20-\\x7E]*$",
 													},
 												},
@@ -3623,8 +3623,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:    "integer",
-												Minimum: core.Float64Ptr(100),
-												Maximum: core.Float64Ptr(999),
+												Minimum: new(100.0),
+												Maximum: new(999.0),
 											},
 										},
 										"json": {
@@ -3634,7 +3634,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"value": {
@@ -3652,7 +3652,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 											},
 										},
@@ -3668,12 +3668,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[\\x20-\\x7E]*$",
 													},
 												},
@@ -3683,8 +3683,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:    "integer",
-												Minimum: core.Float64Ptr(100),
-												Maximum: core.Float64Ptr(999),
+												Minimum: new(100.0),
+												Maximum: new(999.0),
 											},
 										},
 										"json": {
@@ -3694,7 +3694,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"value": {
@@ -3712,7 +3712,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^[a-zA-Z0-9-]+$",
 											},
 										},
@@ -3720,15 +3720,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:    "integer",
-												Minimum: core.Float64Ptr(100),
-												Maximum: core.Float64Ptr(999),
+												Minimum: new(100.0),
+												Maximum: new(999.0),
 											},
 										},
 										"jsonKeys": {
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:      "string",
-												MaxLength: core.IntPtr(255),
+												MaxLength: new(255),
 												Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 											},
 										},
@@ -3744,12 +3744,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"from": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-]+$",
 													},
 													"to": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-]+$",
 													},
 												},
@@ -3759,8 +3759,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:    "integer",
-												Minimum: core.Float64Ptr(100),
-												Maximum: core.Float64Ptr(999),
+												Minimum: new(100.0),
+												Maximum: new(999.0),
 											},
 										},
 										"json": {
@@ -3770,12 +3770,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"from": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"to": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 												},
@@ -3796,12 +3796,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[a-zA-Z0-9-]+$",
 													},
 													"value": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^[\\x20-\\x7E]*$",
 													},
 												},
@@ -3811,8 +3811,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											Type: "array",
 											Items: &core.BodySchema{
 												Type:    "integer",
-												Minimum: core.Float64Ptr(100),
-												Maximum: core.Float64Ptr(999),
+												Minimum: new(100.0),
+												Maximum: new(999.0),
 											},
 										},
 										"json": {
@@ -3822,7 +3822,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Properties: map[string]*core.BodySchema{
 													"key": {
 														Type:      "string",
-														MaxLength: core.IntPtr(255),
+														MaxLength: new(255),
 														Pattern:   "^([a-zA-Z0-9_~\\-\\\\\\p{L}]+(\\.[a-zA-Z0-9_~\\-\\\\\\p{L}]+)*)$",
 													},
 													"value": {
@@ -3899,8 +3899,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"planId": {
@@ -3970,8 +3970,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"plan": {
@@ -3979,7 +3979,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Properties: map[string]*core.BodySchema{
 										"maxRequests": {
 											Type:    "integer",
-											Minimum: core.Float64Ptr(0),
+											Minimum: new(0.0),
 										},
 										"maxRequestsUnit": {
 											Type: "string",
@@ -3987,7 +3987,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"maxServices": {
 											Type:    "integer",
-											Minimum: core.Float64Ptr(0),
+											Minimum: new(0.0),
 										},
 										"overage": {
 											Type: "object",
@@ -3997,7 +3997,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												},
 												"unitRequests": {
 													Type:    "integer",
-													Minimum: core.Float64Ptr(0),
+													Minimum: new(0.0),
 												},
 											},
 										},
@@ -4089,16 +4089,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												},
 												"name": {
 													Type:      "string",
-													MinLength: core.IntPtr(1),
-													MaxLength: core.IntPtr(255),
+													MinLength: new(1),
+													MaxLength: new(255),
 													Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 												},
 												"tags": {
 													Type: "array",
 													Items: &core.BodySchema{
 														Type:      "string",
-														MinLength: core.IntPtr(1),
-														MaxLength: core.IntPtr(255),
+														MinLength: new(1),
+														MaxLength: new(255),
 													},
 												},
 												"updatedAt": {
@@ -4112,16 +4112,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 									"tags": {
 										Type: "array",
 										Items: &core.BodySchema{
 											Type:      "string",
-											MinLength: core.IntPtr(1),
-											MaxLength: core.IntPtr(255),
+											MinLength: new(1),
+											MaxLength: new(255),
 										},
 									},
 									"updatedAt": {
@@ -4193,16 +4193,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(255),
+												MinLength: new(1),
+												MaxLength: new(255),
 												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 											},
 											"tags": {
 												Type: "array",
 												Items: &core.BodySchema{
 													Type:      "string",
-													MinLength: core.IntPtr(1),
-													MaxLength: core.IntPtr(255),
+													MinLength: new(1),
+													MaxLength: new(255),
 												},
 											},
 											"updatedAt": {
@@ -4224,7 +4224,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Type:    "string",
 												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 											},
-											MinItems: core.IntPtr(1),
+											MinItems: new(1),
 										},
 										"protocols": {
 											Type: "string",
@@ -4238,16 +4238,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"tags": {
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -4431,8 +4431,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									},
 									"name": {
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 										Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 									},
 								},
@@ -4501,8 +4501,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"rsa": {
@@ -4661,16 +4661,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"tags": {
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -4754,8 +4754,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"refreshTokenParamName": {
@@ -4853,15 +4853,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"connectTimeout": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(1),
-									Maximum: core.Float64Ptr(2147483646),
+									Minimum: new(1.0),
+									Maximum: new(2147483646.0),
 								},
 								"corsConfig": {
 									Type: "object",
 									Properties: map[string]*core.BodySchema{
 										"accessControlAllowHeaders": {
 											Type:      "string",
-											MaxLength: core.IntPtr(4000),
+											MaxLength: new(4000),
 										},
 										"accessControlAllowMethods": {
 											Type: "array",
@@ -4872,11 +4872,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"accessControlAllowOrigins": {
 											Type:      "string",
-											MaxLength: core.IntPtr(4000),
+											MaxLength: new(4000),
 										},
 										"accessControlExposedHeaders": {
 											Type:      "string",
-											MaxLength: core.IntPtr(4000),
+											MaxLength: new(4000),
 										},
 										"credentials": {
 											Type: "boolean",
@@ -4897,7 +4897,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"host": {
 									Type:      "string",
-									MaxLength: core.IntPtr(253),
+									MaxLength: new(253),
 									Pattern:   "^((([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]*\\.)+[a-zA-Z]{2,})|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)))$",
 								},
 								"id": {
@@ -4905,8 +4905,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"objectStorageConfig": {
@@ -4951,13 +4951,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"path": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^\\/[a-zA-Z0-9_\\-\\/!.*'()-]*$",
 								},
 								"port": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(0),
-									Maximum: core.Float64Ptr(65535),
+									Minimum: new(0.0),
+									Maximum: new(65535.0),
 								},
 								"protocol": {
 									Type: "string",
@@ -4965,17 +4965,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"readTimeout": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(1),
-									Maximum: core.Float64Ptr(2147483646),
+									Minimum: new(1.0),
+									Maximum: new(2147483646.0),
 								},
 								"retries": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(0),
-									Maximum: core.Float64Ptr(32767),
+									Minimum: new(0.0),
+									Maximum: new(32767.0),
 								},
 								"routeHost": {
 									Type:      "string",
-									MaxLength: core.IntPtr(253),
+									MaxLength: new(253),
 								},
 								"subscription": {
 									Type:     "object",
@@ -4990,8 +4990,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -4999,8 +4999,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"writeTimeout": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(1),
-									Maximum: core.Float64Ptr(2147483646),
+									Minimum: new(1.0),
+									Maximum: new(2147483646.0),
 								},
 							},
 						},
@@ -5084,7 +5084,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"httpsRedirectStatusCode": {
 									Type: "integer",
-									Enum: []any{float64(301), float64(302), float64(303), float64(307), float64(308), float64(426)},
+									Enum: []any{float64(301.0), float64(302.0), float64(303.0), float64(307.0), float64(308.0), float64(426.0)},
 								},
 								"id": {
 									Type: "string",
@@ -5099,7 +5099,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Type:    "string",
 												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 											},
-											MinItems: core.IntPtr(1),
+											MinItems: new(1),
 										},
 										"protocols": {
 											Type: "string",
@@ -5120,13 +5120,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"path": {
 									Type:      "string",
-									MaxLength: core.IntPtr(255),
+									MaxLength: new(255),
 									Pattern:   "^(\\/|~\\/).*",
 								},
 								"preserveHost": {
@@ -5138,8 +5138,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"regexPriority": {
 									Type:    "integer",
-									Minimum: core.Float64Ptr(0),
-									Maximum: core.Float64Ptr(255),
+									Minimum: new(0.0),
+									Maximum: new(255.0),
 								},
 								"requestBuffering": {
 									Type: "boolean",
@@ -5157,8 +5157,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {
@@ -5272,16 +5272,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 											},
 											"name": {
 												Type:      "string",
-												MinLength: core.IntPtr(1),
-												MaxLength: core.IntPtr(255),
+												MinLength: new(1),
+												MaxLength: new(255),
 												Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 											},
 											"tags": {
 												Type: "array",
 												Items: &core.BodySchema{
 													Type:      "string",
-													MinLength: core.IntPtr(1),
-													MaxLength: core.IntPtr(255),
+													MinLength: new(1),
+													MaxLength: new(255),
 												},
 											},
 											"updatedAt": {
@@ -5303,7 +5303,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 												Type:    "string",
 												Pattern: "^(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)){3}$",
 											},
-											MinItems: core.IntPtr(1),
+											MinItems: new(1),
 										},
 										"protocols": {
 											Type: "string",
@@ -5317,16 +5317,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 								"name": {
 									Type:      "string",
-									MinLength: core.IntPtr(1),
-									MaxLength: core.IntPtr(255),
+									MinLength: new(1),
+									MaxLength: new(255),
 									Pattern:   "^[\\p{L}\\p{N}._\\-]+$",
 								},
 								"tags": {
 									Type: "array",
 									Items: &core.BodySchema{
 										Type:      "string",
-										MinLength: core.IntPtr(1),
-										MaxLength: core.IntPtr(255),
+										MinLength: new(1),
+										MaxLength: new(255),
 									},
 								},
 								"updatedAt": {

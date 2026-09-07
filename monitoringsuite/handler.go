@@ -66,8 +66,6 @@ func writePage[T any](w http.ResponseWriter, items []T) {
 	})
 }
 
-func boolPtr(b bool) *bool { return &b }
-
 func idKey(id int64) string { return strconv.FormatInt(id, 10) }
 
 type projectJSON struct {
@@ -94,7 +92,7 @@ func projectToJSON(p *Project, wrapped bool) projectJSON {
 		CreatedAt:   core.FormatRFC3339Nano(p.CreatedAt),
 	}
 	if wrapped {
-		j.IsOk = boolPtr(true)
+		j.IsOk = new(true)
 	}
 	return j
 }

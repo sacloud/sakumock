@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.11.1](https://github.com/sacloud/sakumock/compare/v0.11.0...v0.11.1) - 2026-09-19
+### 📦 Dependency Updates
+- build(deps): Bump google.golang.org/grpc from 1.83.1 to 1.83.2 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/182
+### Other Changes
+- Rename CLAUDE.md to AGENTS.md by @fujiwara in https://github.com/sacloud/sakumock/pull/188
+
 ## [v0.11.0](https://github.com/sacloud/sakumock/compare/v0.10.0...v0.11.0) - 2026-09-07
 ### 🚀 New Features
 - apprun: follow OpenAPI v1.5.0 (component secrets) on sacloud-sdk-go v0.2.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/180

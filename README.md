@@ -385,7 +385,7 @@ defer srv.Close()
 
 ## Contributing
 
-See [CLAUDE.md](CLAUDE.md) for module conventions, file structure, public API contracts, port allocation, and the architectural guidelines each service must follow.
+See [AGENTS.md](AGENTS.md) for module conventions, file structure, public API contracts, port allocation, and the architectural guidelines each service must follow.
 
 ## License
 

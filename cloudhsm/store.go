@@ -9,9 +9,9 @@ type CloudHSMRecord struct {
 	Description        string
 	Availability       string // "precreate", "available", "discontinued"
 	Tags               []string
-	Ipv4NetworkAddress string
-	Ipv4PrefixLength   int
-	Ipv4Address        string
+	IPv4NetworkAddress string
+	IPv4PrefixLength   int
+	IPv4Address        string
 	CreatedAt          time.Time
 	ModifiedAt         time.Time
 }
@@ -29,11 +29,11 @@ type ClientRecord struct {
 
 // PeerRecord represents an IPsec peer registered against a CloudHSM.
 type PeerRecord struct {
-	ID         string
-	CloudHSMID string
-	Index      int
-	Status     string // "DOWN", "UP", "CLEANING", ""
-	Routes     []string
+	ID          string
+	CloudHSMID  string
+	SecretKey   string
+	Enabled     bool
+	Description string
 }
 
 // LicenseRecord represents a CloudHSM software license, a top-level resource
@@ -47,8 +47,18 @@ type LicenseRecord struct {
 	ModifiedAt  time.Time
 }
 
+// DocumentRecord represents a downloadable document attached to a software
+// license.
+type DocumentRecord struct {
+	ID         string
+	LicenseID  string
+	Name       string
+	CreatedAt  time.Time
+	ModifiedAt time.Time
+}
+
 // Store is the storage backend for CloudHSM partitions, their clients and
-// peers, and software licenses.
+// peers, and software licenses with their documents.
 type Store interface {
 	ListCloudHSMs() []CloudHSMRecord
 	ReadCloudHSM(id string) (CloudHSMRecord, error)
@@ -59,11 +69,11 @@ type Store interface {
 	ListClients(hsmID string) ([]ClientRecord, error)
 	CreateClient(hsmID, name, certificate string) (ClientRecord, error)
 	ReadClient(hsmID, id string) (ClientRecord, error)
-	UpdateClient(hsmID, id, name, certificate string) (ClientRecord, error)
+	UpdateClient(hsmID, id, name string) (ClientRecord, error)
 	DeleteClient(hsmID, id string) error
 
 	ListPeers(hsmID string) ([]PeerRecord, error)
-	CreatePeer(hsmID, peerID string) (PeerRecord, error)
+	CreatePeer(hsmID, peerID, secretKey string) (PeerRecord, error)
 	DeletePeer(hsmID, peerID string) error
 
 	ListLicenses() []LicenseRecord
@@ -71,6 +81,9 @@ type Store interface {
 	ReadLicense(id string) (LicenseRecord, error)
 	UpdateLicense(id, name, description string, tags []string) (LicenseRecord, error)
 	DeleteLicense(id string) error
+
+	ListDocuments(licenseID string) ([]DocumentRecord, error)
+	ReadDocument(licenseID, id string) (DocumentRecord, error)
 
 	Close() error
 }

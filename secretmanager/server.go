@@ -96,7 +96,7 @@ func NewHandler(cfg Config) (*Server, error) {
 				writeError(w, status, message)
 			}),
 		),
-		validator:     core.NewBodyValidator(bodySchemas, writeError, core.WithNonEmpty(bodyNonEmptyFields)),
+		validator:     core.NewBodyValidator(bodySchemas, writeError),
 		respValidator: core.NewResponseValidator(responseSchemas, logger),
 	}
 	if cfg.idGen != nil {

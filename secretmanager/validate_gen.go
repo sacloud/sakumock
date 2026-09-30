@@ -18,8 +18,7 @@ var bodySchemas = map[string]*core.BodySchema{
 				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
 					"Name": {
-						Type:      "string",
-						MaxLength: new(255),
+						Type: "string",
 					},
 				},
 			},
@@ -33,30 +32,25 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type:     "object",
 				Required: []string{"KmsKeyID", "Name"},
 				Properties: map[string]*core.BodySchema{
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
-						Type: "string",
-					},
-					"ID": {
 						Type: "string",
 					},
 					"KmsKeyID": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
-					},
-					"ModifiedAt": {
-						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -71,15 +65,14 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type:     "object",
 				Required: []string{"Name", "Value"},
 				Properties: map[string]*core.BodySchema{
-					"LatestVersion": {
-						Type: "integer",
-					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 					"Value": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
 					},
 				},
 			},
@@ -94,10 +87,8 @@ var bodySchemas = map[string]*core.BodySchema{
 				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
 					"Name": {
-						Type: "string",
-					},
-					"Value": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
 					},
 					"Version": {
 						Type:     "integer",
@@ -115,29 +106,20 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type:     "object",
 				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"KmsKeyID": {
-						Type: "string",
-					},
-					"ModifiedAt": {
 						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -160,7 +142,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /secretmanager/vaults": {
 		200: {
 			Type:     "object",
-			Required: []string{"Count", "Vaults"},
+			Required: []string{"Count", "From", "Total", "Vaults", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type: "integer",
@@ -175,7 +157,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Type: "array",
 					Items: &core.BodySchema{
 						Type:     "object",
-						Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+						Required: []string{"CreatedAt", "Description", "ID", "KmsKeyID", "ModifiedAt", "Name", "Tags"},
 						Properties: map[string]*core.BodySchema{
 							"CreatedAt": {
 								Type: "string",
@@ -197,13 +179,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								MaxLength: new(255),
 							},
 							"Tags": {
-								Type: "array",
+								Type:     "array",
+								Nullable: true,
 								Items: &core.BodySchema{
-									Type: "string",
+									Type:      "string",
+									MinLength: new(1),
 								},
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -211,11 +198,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /secretmanager/vaults/{vault_resource_id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"Vault"},
+			Required: []string{"Vault", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Vault": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+					Required: []string{"CreatedAt", "Description", "ID", "KmsKeyID", "ModifiedAt", "Name", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
@@ -237,12 +224,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							MaxLength: new(255),
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -250,7 +242,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /secretmanager/vaults/{vault_resource_id}/secrets": {
 		200: {
 			Type:     "object",
-			Required: []string{"Count", "Secrets"},
+			Required: []string{"Count", "From", "Secrets", "Total", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type: "integer",
@@ -277,17 +269,20 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"Total": {
 					Type: "integer",
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"POST /secretmanager/vaults": {
 		201: {
 			Type:     "object",
-			Required: []string{"Vault"},
+			Required: []string{"Vault", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Vault": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+					Required: []string{"KmsKeyID", "Name"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
@@ -310,12 +305,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							MaxLength: new(255),
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -323,14 +323,15 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"POST /secretmanager/vaults/{vault_resource_id}/secrets": {
 		201: {
 			Type:     "object",
-			Required: []string{"Secret"},
+			Required: []string{"Secret", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Secret": {
 					Type:     "object",
 					Required: []string{"LatestVersion", "Name"},
 					Properties: map[string]*core.BodySchema{
 						"LatestVersion": {
-							Type: "integer",
+							Type:    "integer",
+							Minimum: new(1.0),
 						},
 						"Name": {
 							Type:      "string",
@@ -338,17 +339,20 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"POST /secretmanager/vaults/{vault_resource_id}/secrets/unveil": {
 		200: {
 			Type:     "object",
-			Required: []string{"Secret"},
+			Required: []string{"Secret", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Secret": {
 					Type:     "object",
-					Required: []string{"Name", "Value"},
+					Required: []string{"Name", "Value", "Version"},
 					Properties: map[string]*core.BodySchema{
 						"Name": {
 							Type: "string",
@@ -357,10 +361,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Type: "string",
 						},
 						"Version": {
-							Type:     "integer",
-							Nullable: true,
+							Type: "integer",
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -368,11 +374,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"PUT /secretmanager/vaults/{vault_resource_id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"Vault"},
+			Required: []string{"Vault", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Vault": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "ID", "KmsKeyID", "ModifiedAt", "Name"},
+					Required: []string{"CreatedAt", "Description", "ID", "KmsKeyID", "ModifiedAt", "Name", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
@@ -394,12 +400,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							MaxLength: new(255),
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},

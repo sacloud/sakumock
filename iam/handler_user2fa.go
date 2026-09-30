@@ -25,10 +25,6 @@ type securityKeyJSON struct {
 	LastUsedAt   *string `json:"last_used_at"`
 }
 
-type updateSecurityKeyRequest struct {
-	Name string `json:"name"`
-}
-
 // seedTrustedDeviceRequest and seedSecurityKeyRequest are the bodies of the
 // mock-only seeding endpoints; every field is optional.
 type seedTrustedDeviceRequest struct {
@@ -172,26 +168,6 @@ func (s *Server) handleReadSecurityKey(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, securityKeyToJSON(key))
-}
-
-func (s *Server) handleUpdateSecurityKey(w http.ResponseWriter, r *http.Request) {
-	user, ok := s.user2faUser(w, r)
-	if !ok {
-		return
-	}
-	key, ok := s.securityKey(w, r, user)
-	if !ok {
-		return
-	}
-	var req updateSecurityKeyRequest
-	if err := core.ReadJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	key.Name = req.Name
-	s.store.securityKeys.set(idKey(key.ID), key)
-	s.logger.Debug("security key updated", "user_id", user.ID, "id", key.ID)
 	core.WriteJSON(w, http.StatusOK, securityKeyToJSON(key))
 }
 

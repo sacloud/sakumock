@@ -183,7 +183,8 @@ func (s *MemoryStore) Delete(id string) error {
 	return nil
 }
 
-// Rotate adds a version of the key's material and makes it the latest.
+// Rotate adds a version of the key's material and makes it the latest. For a
+// key that is not active it returns the unchanged key with an error.
 func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -193,7 +194,7 @@ func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {
 		return KeyRecord{}, fmt.Errorf("key %q not found", id)
 	}
 	if k.Status != "active" {
-		return KeyRecord{}, fmt.Errorf("key %q is not active", id)
+		return *k, fmt.Errorf("key %q is not active", id)
 	}
 	k.LatestVersion++
 	k.ModifiedAt = time.Now()
@@ -212,9 +213,27 @@ func (s *MemoryStore) ChangeStatus(id, status string) error {
 		return fmt.Errorf("key %q not found", id)
 	}
 	k.Status = status
+	k.DeletionScheduledAfter = nil
 	k.ModifiedAt = time.Now()
 	s.logger.Debug("key status changed", "id", id, "status", status)
 	return nil
+}
+
+// ScheduleDestruction marks the key "pending_destruction", to be destroyed
+// after the given time.
+func (s *MemoryStore) ScheduleDestruction(id string, after time.Time) (KeyRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	k, ok := s.keys[id]
+	if !ok {
+		return KeyRecord{}, fmt.Errorf("key %q not found", id)
+	}
+	k.Status = "pending_destruction"
+	k.DeletionScheduledAfter = &after
+	k.ModifiedAt = time.Now()
+	s.logger.Debug("key destruction scheduled", "id", id, "after", after)
+	return *k, nil
 }
 
 // ciphertextVersionSize is the length of the key version prefix that starts

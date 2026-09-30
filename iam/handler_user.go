@@ -24,6 +24,10 @@ type userJSON struct {
 	UpdatedAt               string     `json:"updated_at"`
 }
 
+// mockMemberCode is the member (会員) code every user and the auth context
+// belong to; the mock models a single member.
+const mockMemberCode = "mem00001"
+
 type userMember struct {
 	ID   int    `json:"id"`
 	Code string `json:"code"`
@@ -55,7 +59,7 @@ type registerEmailRequest struct {
 func (s *Server) userToJSON(r *UserRecord) userJSON {
 	return userJSON{
 		ID:                      r.ID,
-		Member:                  userMember{ID: 1, Code: "mem00001"},
+		Member:                  userMember{ID: 1, Code: mockMemberCode},
 		Name:                    r.Name,
 		Code:                    r.Code,
 		Status:                  r.Status,

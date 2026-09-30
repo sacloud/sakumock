@@ -10,6 +10,10 @@ import (
 	"github.com/sacloud/sakumock/core"
 )
 
+// maxSecretVersions is how many versions of a secret the real API retains,
+// counting the latest; creating a newer version drops the oldest one.
+const maxSecretVersions = 50
+
 type secret struct {
 	name     string
 	versions map[int]string
@@ -163,6 +167,7 @@ func (s *MemoryStore) Create(vaultID, name, value string) (int, error) {
 	}
 	sec.latest++
 	sec.versions[sec.latest] = value
+	delete(sec.versions, sec.latest-maxSecretVersions)
 	return sec.latest, nil
 }
 

@@ -31,7 +31,7 @@ func TestStoreLogIncludesServiceName(t *testing.T) {
 
 	// Creating a secret lazily creates its vault, emitting a store log line.
 	op := newTestSecretOp(t, ts.URL, "vault-logging")
-	if _, err := op.Create(t.Context(), v1.CreateSecret{Name: "foo", Value: "bar"}); err != nil {
+	if _, err := op.Create(t.Context(), v1.CreateSecretRequest{Name: "foo", Value: "bar"}); err != nil {
 		t.Fatal(err)
 	}
 

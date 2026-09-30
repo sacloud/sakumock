@@ -15,45 +15,29 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"CloudHSM": {
 				Type:     "object",
-				Required: []string{"Ipv4NetworkAddress", "Ipv4PrefixLength", "Name"},
+				Required: []string{"IPv4NetworkAddress", "IPv4PrefixLength", "Name"},
 				Properties: map[string]*core.BodySchema{
-					"Availability": {
-						Type: "string",
-						Enum: []any{"precreate", "available", "discontinued"},
-					},
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
 						Type: "string",
 					},
-					"ID": {
-						Type: "string",
+					"IPv4NetworkAddress": {
+						Type:      "string",
+						MinLength: new(1),
 					},
-					"Ipv4Address": {
-						Type: "string",
-					},
-					"Ipv4NetworkAddress": {
-						Type: "string",
-					},
-					"Ipv4PrefixLength": {
+					"IPv4PrefixLength": {
 						Type: "integer",
-					},
-					"ModifiedAt": {
-						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
-					"ServiceClass": {
-						Type: "string",
-						Enum: []any{"cloud/cloudhsm/partition"},
-					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -68,24 +52,13 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type:     "object",
 				Required: []string{"Certificate", "Name"},
 				Properties: map[string]*core.BodySchema{
-					"Availability": {
-						Type: "string",
-						Enum: []any{"precreate", "available", "discontinued"},
-					},
 					"Certificate": {
-						Type: "string",
-					},
-					"CreatedAt": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"ModifiedAt": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 				},
@@ -101,37 +74,31 @@ var bodySchemas = map[string]*core.BodySchema{
 				Required: []string{"ID", "SecretKey"},
 				Properties: map[string]*core.BodySchema{
 					"ID": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
 					},
 					"SecretKey": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
 					},
 				},
 			},
 		},
 	},
-	// NOTE: required property "CloudHSM" at POST /cloudhsm/licenses is not defined in properties; requirement skipped
 	"POST /{zone}/api/cloud/1.1/cloudhsm/licenses": {
-		Type: "object",
+		Type:     "object",
+		Required: []string{"License"},
 		Properties: map[string]*core.BodySchema{
 			"License": {
 				Type:     "object",
-				Required: []string{"Name", "ServiceClass", "Tags"},
+				Required: []string{"Name", "ServiceClass"},
 				Properties: map[string]*core.BodySchema{
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"ModifiedAt": {
 						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 					"ServiceClass": {
@@ -139,9 +106,11 @@ var bodySchemas = map[string]*core.BodySchema{
 						Enum: []any{"cloud/cloudhsm/license/l7"},
 					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -156,126 +125,72 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type:     "object",
 				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
-					"Availability": {
-						Type: "string",
-						Enum: []any{"precreate", "available", "discontinued"},
-					},
-					"Certificate": {
-						Type: "string",
-					},
-					"CreatedAt": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"ModifiedAt": {
-						Type: "string",
-					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 				},
 			},
 		},
 	},
-	// NOTE: required property "initial_data" at PUT /cloudhsm/cloudhsms/{resource_id}.CloudHSM is not defined in properties; requirement skipped
 	"PUT /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{resource_id}": {
 		Type:     "object",
 		Required: []string{"CloudHSM"},
 		Properties: map[string]*core.BodySchema{
 			"CloudHSM": {
 				Type:     "object",
-				Required: []string{"Ipv4NetworkAddress", "Ipv4PrefixLength", "Name"},
+				Required: []string{"IPv4NetworkAddress", "IPv4PrefixLength", "Name"},
 				Properties: map[string]*core.BodySchema{
-					"Availability": {
-						Type: "string",
-						Enum: []any{"precreate", "available", "discontinued"},
-					},
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
 						Type: "string",
 					},
-					"ID": {
-						Type: "string",
+					"IPv4NetworkAddress": {
+						Type:      "string",
+						MinLength: new(1),
 					},
-					"Ipv4Address": {
-						Type: "string",
-					},
-					"Ipv4NetworkAddress": {
-						Type: "string",
-					},
-					"Ipv4PrefixLength": {
+					"IPv4PrefixLength": {
 						Type: "integer",
-					},
-					"LocalRouter": {
-						Type:     "object",
-						Nullable: true,
-						Properties: map[string]*core.BodySchema{
-							"ResourceID": {
-								Type: "string",
-							},
-							"SecretKey": {
-								Type: "string",
-							},
-						},
-					},
-					"ModifiedAt": {
-						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
-					"ServiceClass": {
-						Type: "string",
-						Enum: []any{"cloud/cloudhsm/partition"},
-					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
 			},
 		},
 	},
-	// NOTE: required property "CloudHSM" at PUT /cloudhsm/licenses/{resource_id} is not defined in properties; requirement skipped
 	"PUT /{zone}/api/cloud/1.1/cloudhsm/licenses/{resource_id}": {
-		Type: "object",
+		Type:     "object",
+		Required: []string{"License"},
 		Properties: map[string]*core.BodySchema{
 			"License": {
 				Type:     "object",
-				Required: []string{"Description", "Name", "Tags"},
+				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"ModifiedAt": {
 						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
-					"ServiceClass": {
-						Type: "string",
-						Enum: []any{"cloud/cloudhsm/license/l7"},
-					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -301,17 +216,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /{zone}/api/cloud/1.1/cloudhsm/licenses/{resource_id}": {
 		204: nil,
 	},
-	// NOTE: required property "initial_data" at GET /cloudhsm/cloudhsms response 200.CloudHSMs[] is not defined in properties; requirement skipped
 	"GET /{zone}/api/cloud/1.1/cloudhsm/cloudhsms": {
 		200: {
 			Type:     "object",
-			Required: []string{"CloudHSMs", "Count"},
+			Required: []string{"CloudHSMs", "Count", "From", "Total", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"CloudHSMs": {
 					Type: "array",
 					Items: &core.BodySchema{
 						Type:     "object",
-						Required: []string{"Availability", "CreatedAt", "ID", "Ipv4Address", "Ipv4NetworkAddress", "Ipv4PrefixLength", "LocalRouter", "ModifiedAt", "Name", "ServiceClass"},
+						Required: []string{"Availability", "CreatedAt", "Description", "ID", "IPv4Address", "IPv4NetworkAddress", "IPv4PrefixLength", "InitialData", "LocalRouter", "ModifiedAt", "Name", "ServiceClass", "Tags"},
 						Properties: map[string]*core.BodySchema{
 							"Availability": {
 								Type: "string",
@@ -326,14 +240,30 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							"ID": {
 								Type: "string",
 							},
-							"Ipv4Address": {
+							"IPv4Address": {
 								Type: "string",
 							},
-							"Ipv4NetworkAddress": {
+							"IPv4NetworkAddress": {
 								Type: "string",
 							},
-							"Ipv4PrefixLength": {
+							"IPv4PrefixLength": {
 								Type: "integer",
+							},
+							"InitialData": {
+								Type:     "object",
+								Nullable: true,
+								Required: []string{"Certificate", "PartitionID", "PartitionName"},
+								Properties: map[string]*core.BodySchema{
+									"Certificate": {
+										Type: "string",
+									},
+									"PartitionID": {
+										Type: "string",
+									},
+									"PartitionName": {
+										Type: "string",
+									},
+								},
 							},
 							"LocalRouter": {
 								Type:     "object",
@@ -359,9 +289,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Enum: []any{"cloud/cloudhsm/partition"},
 							},
 							"Tags": {
-								Type: "array",
+								Type:     "array",
+								Nullable: true,
 								Items: &core.BodySchema{
-									Type: "string",
+									Type:      "string",
+									MinLength: new(1),
 								},
 							},
 						},
@@ -376,13 +308,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"Total": {
 					Type: "integer",
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"GET /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{cloudhsm_resource_id}/clients": {
 		200: {
 			Type:     "object",
-			Required: []string{"Clients", "Count"},
+			Required: []string{"Clients", "Count", "From", "Total", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Clients": {
 					Type: "array",
@@ -422,13 +357,16 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"Total": {
 					Type: "integer",
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"GET /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{cloudhsm_resource_id}/clients/{id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"Client"},
+			Required: []string{"Client", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Client": {
 					Type:     "object",
@@ -456,18 +394,20 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
-	// NOTE: required property "initial_data" at GET /cloudhsm/cloudhsms/{resource_id} response 200.CloudHSM is not defined in properties; requirement skipped
 	"GET /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{resource_id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"CloudHSM"},
+			Required: []string{"CloudHSM", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"CloudHSM": {
 					Type:     "object",
-					Required: []string{"Availability", "CreatedAt", "ID", "Ipv4Address", "Ipv4NetworkAddress", "Ipv4PrefixLength", "LocalRouter", "ModifiedAt", "Name", "ServiceClass"},
+					Required: []string{"Availability", "CreatedAt", "Description", "ID", "IPv4Address", "IPv4NetworkAddress", "IPv4PrefixLength", "InitialData", "LocalRouter", "ModifiedAt", "Name", "ServiceClass", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"Availability": {
 							Type: "string",
@@ -482,14 +422,30 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"ID": {
 							Type: "string",
 						},
-						"Ipv4Address": {
+						"IPv4Address": {
 							Type: "string",
 						},
-						"Ipv4NetworkAddress": {
+						"IPv4NetworkAddress": {
 							Type: "string",
 						},
-						"Ipv4PrefixLength": {
+						"IPv4PrefixLength": {
 							Type: "integer",
+						},
+						"InitialData": {
+							Type:     "object",
+							Nullable: true,
+							Required: []string{"Certificate", "PartitionID", "PartitionName"},
+							Properties: map[string]*core.BodySchema{
+								"Certificate": {
+									Type: "string",
+								},
+								"PartitionID": {
+									Type: "string",
+								},
+								"PartitionName": {
+									Type: "string",
+								},
+							},
 						},
 						"LocalRouter": {
 							Type:     "object",
@@ -515,12 +471,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Enum: []any{"cloud/cloudhsm/partition"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -528,32 +489,31 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{resource_id}/peers": {
 		200: {
 			Type:     "object",
-			Required: []string{"Peers"},
+			Required: []string{"Peers", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Peers": {
 					Type: "array",
 					Items: &core.BodySchema{
 						Type:     "object",
-						Required: []string{"ID"},
+						Required: []string{"ID", "SecretKey"},
 						Properties: map[string]*core.BodySchema{
+							"Description": {
+								Type: "string",
+							},
+							"Enabled": {
+								Type: "boolean",
+							},
 							"ID": {
 								Type: "string",
 							},
-							"Index": {
-								Type: "integer",
-							},
-							"Routes": {
-								Type: "array",
-								Items: &core.BodySchema{
-									Type: "string",
-								},
-							},
-							"Status": {
+							"SecretKey": {
 								Type: "string",
-								Enum: []any{"DOWN", "UP", "CLEANING", ""},
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -561,7 +521,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /{zone}/api/cloud/1.1/cloudhsm/licenses": {
 		200: {
 			Type:     "object",
-			Required: []string{"Count", "Licenses"},
+			Required: []string{"Count", "From", "Licenses", "Total", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type: "integer",
@@ -596,9 +556,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								Enum: []any{"cloud/cloudhsm/license/l7"},
 							},
 							"Tags": {
-								Type: "array",
+								Type:     "array",
+								Nullable: true,
 								Items: &core.BodySchema{
-									Type: "string",
+									Type:      "string",
+									MinLength: new(1),
 								},
 							},
 						},
@@ -607,13 +569,57 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"Total": {
 					Type: "integer",
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
-	// NOTE: required property "CloudHSM" at GET /cloudhsm/licenses/{resource_id} response 200 is not defined in properties; requirement skipped
+	"GET /{zone}/api/cloud/1.1/cloudhsm/licenses/{license_resource_id}/documents": {
+		200: {
+			Type:     "object",
+			Required: []string{"CloudHSMDocuments", "Count", "From", "Total", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"CloudHSMDocuments": {
+					Type: "array",
+					Items: &core.BodySchema{
+						Type:     "object",
+						Required: []string{"CreatedAt", "ID", "ModifiedAt", "Name"},
+						Properties: map[string]*core.BodySchema{
+							"CreatedAt": {
+								Type: "string",
+							},
+							"ID": {
+								Type: "string",
+							},
+							"ModifiedAt": {
+								Type: "string",
+							},
+							"Name": {
+								Type: "string",
+							},
+						},
+					},
+				},
+				"Count": {
+					Type: "integer",
+				},
+				"From": {
+					Type: "integer",
+				},
+				"Total": {
+					Type: "integer",
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
 	"GET /{zone}/api/cloud/1.1/cloudhsm/licenses/{resource_id}": {
 		200: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"License", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"License": {
 					Type:     "object",
@@ -640,12 +646,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Enum: []any{"cloud/cloudhsm/license/l7"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -653,11 +664,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"POST /{zone}/api/cloud/1.1/cloudhsm/cloudhsms": {
 		201: {
 			Type:     "object",
-			Required: []string{"CloudHSM"},
+			Required: []string{"CloudHSM", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"CloudHSM": {
 					Type:     "object",
-					Required: []string{"Availability", "CreatedAt", "ID", "Ipv4Address", "Ipv4NetworkAddress", "Ipv4PrefixLength", "ModifiedAt", "Name", "ServiceClass"},
+					Required: []string{"IPv4NetworkAddress", "IPv4PrefixLength", "Name"},
 					Properties: map[string]*core.BodySchema{
 						"Availability": {
 							Type: "string",
@@ -672,13 +683,13 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"ID": {
 							Type: "string",
 						},
-						"Ipv4Address": {
+						"IPv4Address": {
 							Type: "string",
 						},
-						"Ipv4NetworkAddress": {
+						"IPv4NetworkAddress": {
 							Type: "string",
 						},
-						"Ipv4PrefixLength": {
+						"IPv4PrefixLength": {
 							Type: "integer",
 						},
 						"ModifiedAt": {
@@ -693,12 +704,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Enum: []any{"cloud/cloudhsm/partition"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -706,11 +722,11 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"POST /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{cloudhsm_resource_id}/clients": {
 		201: {
 			Type:     "object",
-			Required: []string{"Client"},
+			Required: []string{"Client", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Client": {
 					Type:     "object",
-					Required: []string{"Availability", "Certificate", "CreatedAt", "ID", "ModifiedAt", "Name"},
+					Required: []string{"Certificate", "Name"},
 					Properties: map[string]*core.BodySchema{
 						"Availability": {
 							Type: "string",
@@ -734,20 +750,23 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"POST /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{resource_id}/peers": {
 		204: nil,
 	},
-	// NOTE: required property "CloudHSM" at POST /cloudhsm/licenses response 201 is not defined in properties; requirement skipped
 	"POST /{zone}/api/cloud/1.1/cloudhsm/licenses": {
 		201: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"License", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"License": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "ID", "ModifiedAt", "Name", "ServiceClass", "Tags"},
+					Required: []string{"Name", "ServiceClass"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
@@ -770,12 +789,37 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Enum: []any{"cloud/cloudhsm/license/l7"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
+	},
+	"POST /{zone}/api/cloud/1.1/cloudhsm/licenses/{license_resource_id}/documents/{id}/download": {
+		200: {
+			Type:     "object",
+			Required: []string{"Document", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Document": {
+					Type:     "object",
+					Required: []string{"URL"},
+					Properties: map[string]*core.BodySchema{
+						"URL": {
+							Type: "string",
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -783,7 +827,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"PUT /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{cloudhsm_resource_id}/clients/{id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"Client"},
+			Required: []string{"Client", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Client": {
 					Type:     "object",
@@ -811,18 +855,20 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
-	// NOTE: required property "initial_data" at PUT /cloudhsm/cloudhsms/{resource_id} response 200.CloudHSM is not defined in properties; requirement skipped
 	"PUT /{zone}/api/cloud/1.1/cloudhsm/cloudhsms/{resource_id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"CloudHSM"},
+			Required: []string{"CloudHSM", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"CloudHSM": {
 					Type:     "object",
-					Required: []string{"Availability", "CreatedAt", "ID", "Ipv4Address", "Ipv4NetworkAddress", "Ipv4PrefixLength", "LocalRouter", "ModifiedAt", "Name", "ServiceClass"},
+					Required: []string{"Availability", "CreatedAt", "Description", "ID", "IPv4Address", "IPv4NetworkAddress", "IPv4PrefixLength", "InitialData", "LocalRouter", "ModifiedAt", "Name", "ServiceClass", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"Availability": {
 							Type: "string",
@@ -837,14 +883,30 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						"ID": {
 							Type: "string",
 						},
-						"Ipv4Address": {
+						"IPv4Address": {
 							Type: "string",
 						},
-						"Ipv4NetworkAddress": {
+						"IPv4NetworkAddress": {
 							Type: "string",
 						},
-						"Ipv4PrefixLength": {
+						"IPv4PrefixLength": {
 							Type: "integer",
+						},
+						"InitialData": {
+							Type:     "object",
+							Nullable: true,
+							Required: []string{"Certificate", "PartitionID", "PartitionName"},
+							Properties: map[string]*core.BodySchema{
+								"Certificate": {
+									Type: "string",
+								},
+								"PartitionID": {
+									Type: "string",
+								},
+								"PartitionName": {
+									Type: "string",
+								},
+							},
 						},
 						"LocalRouter": {
 							Type:     "object",
@@ -870,20 +932,25 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Enum: []any{"cloud/cloudhsm/partition"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
-	// NOTE: required property "CloudHSM" at PUT /cloudhsm/licenses/{resource_id} response 200 is not defined in properties; requirement skipped
 	"PUT /{zone}/api/cloud/1.1/cloudhsm/licenses/{resource_id}": {
 		200: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"License", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"License": {
 					Type:     "object",
@@ -910,12 +977,17 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Enum: []any{"cloud/cloudhsm/license/l7"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},

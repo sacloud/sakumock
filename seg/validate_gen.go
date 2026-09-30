@@ -138,7 +138,7 @@ var bodySchemas = map[string]*core.BodySchema{
 												},
 												"Type": {
 													Type: "string",
-													Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+													Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 												},
 											},
 										},
@@ -219,7 +219,7 @@ var bodySchemas = map[string]*core.BodySchema{
 												},
 												"Type": {
 													Type: "string",
-													Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+													Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 												},
 											},
 										},
@@ -552,7 +552,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 													},
 													"Type": {
 														Type: "string",
-														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 													},
 												},
 											},
@@ -632,6 +632,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Tags": {
 							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
 						},
 					},
 				},
@@ -958,7 +961,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 														},
 														"Type": {
 															Type: "string",
-															Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+															Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 														},
 													},
 												},
@@ -1038,6 +1041,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Tags": {
 								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
 							},
 						},
 					},
@@ -1360,7 +1366,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 													},
 													"Type": {
 														Type: "string",
-														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 													},
 												},
 											},
@@ -1440,6 +1446,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Tags": {
 							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
 						},
 					},
 				},
@@ -1808,7 +1817,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 													},
 													"Type": {
 														Type: "string",
-														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 													},
 												},
 											},
@@ -1888,6 +1897,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Tags": {
 							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
 						},
 					},
 				},
@@ -2200,7 +2212,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 													},
 													"Type": {
 														Type: "string",
-														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "AppRunDedicatedControlPlane"},
+														Enum: []any{"ObjectStorage", "ContainerRegistry", "MonitoringSuite", "AIEngine", "SimpleAI", "AppRunDedicatedControlPlane"},
 													},
 												},
 											},
@@ -2280,6 +2292,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Tags": {
 							Type: "array",
+							Items: &core.BodySchema{
+								Type: "string",
+							},
 						},
 					},
 				},

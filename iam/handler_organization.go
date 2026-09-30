@@ -27,6 +27,7 @@ type authContextJSON struct {
 	ResourceID         int64  `json:"resource_id"`
 	AuthType           string `json:"auth_type"`
 	LimitedToProjectID *int   `json:"limited_to_project_id"`
+	MemberCode         string `json:"member_code"`
 }
 
 func (s *Server) handleReadOrganization(w http.ResponseWriter, _ *http.Request) {
@@ -109,5 +110,6 @@ func (s *Server) handleAuthContext(w http.ResponseWriter, _ *http.Request) {
 		ResourceID:         1,
 		AuthType:           "apikey",
 		LimitedToProjectID: nil,
+		MemberCode:         mockMemberCode,
 	})
 }

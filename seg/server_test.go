@@ -210,3 +210,50 @@ func TestCreateRejectsEmptyServerIPAddress(t *testing.T) {
 		t.Fatalf("rejected create must not be stored, got %d appliances", len(listed.Appliances))
 	}
 }
+
+func TestUpdateEnabledServiceSimpleAI(t *testing.T) {
+	srv := seg.NewTestServer(seg.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	op := segsdk.NewServiceEndpointGatewayOp(newTestClient(t, srv.TestURL()))
+
+	created, err := op.Create(ctx, v1.ModelsApplianceApplianceCreateRequest{
+		Appliance: v1.ModelsApplianceApplianceCreateBody{
+			Remark: v1.ModelsRemarkApplianceCreateRemark{
+				Switch:  v1.ModelsRemarkSwitchRemark{ID: "123456789012"},
+				Network: v1.ModelsRemarkNetworkRemark{NetworkMaskLen: 24},
+				Servers: []v1.ModelsRemarkServerRemark{{IPAddress: "192.0.2.15"}},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := created.Appliance.ID
+
+	if _, err := op.Update(ctx, id, v1.ModelsApplianceApplianceUpdateRequest{
+		Appliance: v1.ModelsApplianceApplianceUpdateBody{
+			Settings: v1.ModelsSettingsApplianceSettings{
+				ServiceEndpointGateway: v1.ModelsSettingsServiceEndpointGatewaySettings{
+					EnabledServices: []v1.ModelsSettingsEnabledService{
+						{
+							Type:   v1.ModelsSettingsEnabledServiceTypeSimpleAI,
+							Config: v1.ModelsSettingsServiceConfig{Endpoints: []string{"simpleai.is1.api.sacloud.jp"}},
+						},
+					},
+				},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	read, err := op.Read(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	services := read.Appliance.Settings.Value.ServiceEndpointGateway.EnabledServices
+	if len(services) != 1 || services[0].Type != v1.ModelsSettingsEnabledServiceTypeSimpleAI {
+		t.Fatalf("unexpected enabled services: %+v", services)
+	}
+}

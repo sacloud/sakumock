@@ -650,7 +650,9 @@
           },
           "Tags": {
             "type": "array",
-            "items": {},
+            "items": {
+              "type": "string"
+            },
             "description": "タグ情報"
           }
         }
@@ -1993,6 +1995,7 @@
               "ContainerRegistry",
               "MonitoringSuite",
               "AIEngine",
+              "SimpleAI",
               "AppRunDedicatedControlPlane"
             ],
             "description": "接続先マネージドサービス\n\n| Type | 説明 |\n|---|---|\n| ObjectStorage | オブジェクトストレージ |\n| ContainerRegistry | コンテナレジストリ |\n| MonitoringSuite | モニタリングスイート |\n| AppRunDedicatedControlPlane | AppRun専有型コントロールプレーン |"

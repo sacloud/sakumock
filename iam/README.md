@@ -64,7 +64,7 @@ Run `sakumock-iam --routes` for the full list. The server implements the followi
 | User email | `POST /compat/users/{user_id}/register-email`, `POST /compat/users/{user_id}/unregister-email` |
 | User OTP | `POST /compat/users/{user_id}/deactivate-otp` |
 | Trusted devices | `GET /compat/users/{user_id}/trusted-devices`, `DELETE /compat/users/{user_id}/trusted-devices/{trusted_device_id}`, `POST /compat/users/{user_id}/clear-trusted-devices` |
-| Security keys | `GET /compat/users/{user_id}/security-keys`, `GET /compat/users/{user_id}/security-keys/{security_key_id}`, `PUT /compat/users/{user_id}/security-keys/{security_key_id}`, `DELETE /compat/users/{user_id}/security-keys/{security_key_id}` |
+| Security keys | `GET /compat/users/{user_id}/security-keys`, `GET /compat/users/{user_id}/security-keys/{security_key_id}`, `DELETE /compat/users/{user_id}/security-keys/{security_key_id}` |
 | Groups | `GET /groups`, `POST /groups`, `GET /groups/{group_id}`, `PUT /groups/{group_id}`, `DELETE /groups/{group_id}` |
 | Group memberships | `GET /groups/{group_id}/memberships`, `PUT /groups/{group_id}/memberships` |
 | Projects | `GET /projects`, `POST /projects`, `GET /projects/{project_id}`, `PUT /projects/{project_id}`, `DELETE /projects/{project_id}`, `POST /move-projects` |

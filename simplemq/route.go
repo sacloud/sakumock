@@ -37,10 +37,10 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		dp("DELETE", "/v1/queues/{queueName}/messages/{messageId}", "Delete a message from the queue", s.handleDelete),
 		cp("POST", "/commonserviceitem", "Create a queue", s.handleCreateQueue),
 		cp("GET", "/commonserviceitem", "List queues", s.handleListQueues),
-		cp("GET", "/commonserviceitem/{id}", "Get a queue", s.handleGetQueue),
-		cp("PUT", "/commonserviceitem/{id}", "Update queue settings", s.handleConfigQueue),
+		cp("GET", "/commonserviceitem/{id}", "Get a queue", s.handleReadQueue),
+		cp("PUT", "/commonserviceitem/{id}", "Update queue settings", s.handleUpdateQueue),
 		cp("DELETE", "/commonserviceitem/{id}", "Delete a queue", s.handleDeleteQueue),
-		cp("GET", "/commonserviceitem/{id}/simplemq/message-count", "Get message count for a queue", s.handleGetMessageCount),
+		cp("GET", "/commonserviceitem/{id}/simplemq/message-count", "Get message count for a queue", s.handleReadMessageCount),
 		cp("PUT", "/commonserviceitem/{id}/simplemq/rotate-apikey", "Rotate the API key for a queue", s.handleRotateAPIKey),
 		cp("DELETE", "/commonserviceitem/{id}/simplemq/messages", "Clear all messages from a queue", s.handleClearMessages),
 	}

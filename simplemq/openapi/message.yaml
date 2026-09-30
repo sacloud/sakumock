@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  version: 1.1.0
+  version: 1.1.2
   title: シンプルMQ API
   description: |
     ---
@@ -9,9 +9,9 @@ info:
     # はじめに
 
     「シンプルMQ」は、ソフトウェア同士を非同期に連携するために、ソフトウェアコンポーネント間でのデータの送受信ができる、マネージド型のメッセージキューサービスです。
-    シンプルMQを使うには、さくらのクラウド コントロールパネルもしくはさくらのクラウドAPI ([ドキュメント](./sacloud/)) でシンプルMQのキューを作成します。
+    シンプルMQを使うには、さくらのクラウド コントロールパネルもしくは [シンプルMQ さくらのクラウドAPI](https://manual.sakura.ad.jp/api/cloud/portal/?api=simplemq-sacloud-api) でシンプルMQのキューを作成します。
     キューを作成するとAPIキーが発行されます。
-    APIリクエストは、そのキーを `Auhorization header` の `Bearer token` に使用します。
+    APIリクエストは、そのキーを `Authorization header` の `Bearer token` に使用します。
 
     APIエンドポイント：https://simplemq.tk1b.api.sacloud.jp
 
@@ -24,8 +24,8 @@ paths:
 
   /v1/queues/{queueName}/messages:
     post:
-      summary: メッセージのsend
-      description: キューに対するメッセージのsend (enqueue)
+      summary: メッセージの送信
+      description: キューに対するメッセージの送信 (enqueue)
       operationId: sendMessage
       security:
         - ApiKeyAuth: []
@@ -79,8 +79,8 @@ paths:
                 $ref: "#/components/schemas/Error"
 
     get:
-      summary: メッセージのreceive
-      description: キューに対するメッセージのreceive (dequeue)
+      summary: メッセージの受信
+      description: キューからのメッセージの受信 (dequeue)
       operationId: receiveMessage
       security:
         - ApiKeyAuth: []
@@ -335,7 +335,7 @@ components:
     MessageContent:
       description: メッセージ本文
       type: string
-      maxLength: 256000
+      maxLength: 256000 # NOTE: 最大256KB
       pattern: '^[0-9a-zA-Z+/=]*$'
 
     SendRequest:

@@ -35,7 +35,6 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("POST", "/compat/users/{user_id}/clear-trusted-devices", "Clear trusted devices", s.handleClearTrustedDevices),
 		route("GET", "/compat/users/{user_id}/security-keys", "List security keys", s.handleListUserSecurityKeys),
 		route("GET", "/compat/users/{user_id}/security-keys/{security_key_id}", "Get a security key", s.handleReadSecurityKey),
-		route("PUT", "/compat/users/{user_id}/security-keys/{security_key_id}", "Update security key", s.handleUpdateSecurityKey),
 		route("DELETE", "/compat/users/{user_id}/security-keys/{security_key_id}", "Delete security key", s.handleDeleteSecurityKey),
 		// Trusted devices and security keys are created in the browser (a
 		// two-factor login and a WebAuthn registration), so the real API has no

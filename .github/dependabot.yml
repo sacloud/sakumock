@@ -10,6 +10,11 @@ updates:
         patterns:
           - go.opentelemetry.io/*
 
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
   # Provider pinned by test/terraform/.terraform.lock.hcl for the
   # terraform-integration CI job.
   - package-ecosystem: terraform

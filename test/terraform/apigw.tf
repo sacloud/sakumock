@@ -17,7 +17,7 @@ resource "sakura_apigw_service" "test" {
 resource "sakura_apigw_route" "test" {
   name       = "sakumock_tf_route"
   service_id = sakura_apigw_service.test.id
-  protocols  = "http,https"
+  protocols  = "https"
   path       = "/"
   methods    = ["GET", "POST"]
 

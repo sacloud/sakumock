@@ -188,14 +188,6 @@ func TestUserSecurityKeys(t *testing.T) {
 		t.Errorf("last_used_at = %v, want null", got.LastUsedAt)
 	}
 
-	updated, err := op.UpdateSecurityKey(ctx, key.ID, "renamed")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if updated.Name != "renamed" {
-		t.Errorf("name = %q, want renamed", updated.Name)
-	}
-
 	if err := op.DeleteSecurityKey(ctx, key.ID); err != nil {
 		t.Fatal(err)
 	}

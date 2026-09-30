@@ -16,6 +16,7 @@ type secretResponse struct {
 
 type wrappedSecret struct {
 	Secret secretResponse `json:"Secret"`
+	IsOk   bool           `json:"is_ok"`
 }
 
 type createSecretRequest struct {
@@ -46,12 +47,13 @@ type wrappedUnveilRequest struct {
 
 type unveilResponse struct {
 	Name    string `json:"Name"`
-	Version *int   `json:"Version"`
+	Version int    `json:"Version"`
 	Value   string `json:"Value"`
 }
 
 type wrappedUnveilResponse struct {
 	Secret unveilResponse `json:"Secret"`
+	IsOk   bool           `json:"is_ok"`
 }
 
 type paginatedSecretList struct {
@@ -59,6 +61,7 @@ type paginatedSecretList struct {
 	From    int              `json:"From"`
 	Total   int              `json:"Total"`
 	Secrets []secretResponse `json:"Secrets"`
+	IsOk    bool             `json:"is_ok"`
 }
 
 func (s *Server) buildMux() *http.ServeMux {
@@ -81,17 +84,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleListSecrets(w http.ResponseWriter, r *http.Request) {
 	vaultID := r.PathValue("vault_resource_id")
+	p, err := core.ParsePage(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	secrets := s.store.List(vaultID)
 	items := make([]secretResponse, len(secrets))
 	for i, sec := range secrets {
 		items[i] = secretResponse{Name: sec.Name, LatestVersion: sec.LatestVersion}
 	}
-	s.logger.Debug("secrets listed", "vault_id", vaultID, "count", len(items))
+	paged := core.Paginate(items, p)
+	s.logger.Debug("secrets listed", "vault_id", vaultID, "count", len(paged))
 	core.WriteJSON(w, http.StatusOK, paginatedSecretList{
-		Count:   len(items),
-		From:    0,
+		Count:   len(paged),
+		From:    p.From,
 		Total:   len(items),
-		Secrets: items,
+		Secrets: paged,
+		IsOk:    true,
 	})
 }
 
@@ -110,6 +120,7 @@ func (s *Server) handleCreateSecret(w http.ResponseWriter, r *http.Request) {
 	s.logger.Debug("secret created", "vault_id", vaultID, "name", req.Secret.Name, "version", latestVersion)
 	core.WriteJSON(w, http.StatusCreated, wrappedSecret{
 		Secret: secretResponse{Name: req.Secret.Name, LatestVersion: latestVersion},
+		IsOk:   true,
 	})
 }
 
@@ -150,9 +161,10 @@ func (s *Server) handleUnveil(w http.ResponseWriter, r *http.Request) {
 	core.WriteJSON(w, http.StatusOK, wrappedUnveilResponse{
 		Secret: unveilResponse{
 			Name:    req.Secret.Name,
-			Version: &actualVersion,
+			Version: actualVersion,
 			Value:   value,
 		},
+		IsOk: true,
 	})
 }
 

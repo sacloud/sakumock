@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sm "github.com/sacloud/sacloud-sdk-go/api/secretmanager"
-	v1 "github.com/sacloud/sacloud-sdk-go/api/secretmanager/apis/v1"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 
 	"github.com/sacloud/sakumock/secretmanager"
@@ -29,26 +28,26 @@ func newTestVaultOp(t *testing.T, serverURL string) sm.VaultAPI {
 
 func TestVaultLifecycle(t *testing.T) {
 	srv := secretmanager.NewTestServer(secretmanager.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 	ctx := t.Context()
 	vaultOp := newTestVaultOp(t, srv.TestURL())
 
-	created, err := vaultOp.Create(ctx, v1.CreateVault{
+	created, err := vaultOp.Create(ctx, sm.CreateVaultParams{
 		Name:        "my-vault",
 		KmsKeyID:    "990000000123",
-		Description: v1.NewOptString("desc"),
+		Description: new("desc"),
 		Tags:        []string{"a", "b"},
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
-	if created.ID == "" {
+	if created.ID.Or("") == "" {
 		t.Fatal("expected a non-empty vault ID")
 	}
 	if created.Name != "my-vault" || created.KmsKeyID != "990000000123" {
 		t.Errorf("unexpected create result: %+v", created)
 	}
-	id := created.ID
+	id := created.ID.Value
 
 	got, err := vaultOp.Read(ctx, id)
 	if err != nil {
@@ -58,7 +57,7 @@ func TestVaultLifecycle(t *testing.T) {
 		t.Errorf("unexpected read result: %+v", got)
 	}
 
-	list, err := vaultOp.List(ctx)
+	list, err := vaultOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatalf("list: %v", err)
 	}
@@ -72,11 +71,9 @@ func TestVaultLifecycle(t *testing.T) {
 		t.Errorf("created vault %s not found in list of %d", id, len(list))
 	}
 
-	updated, err := vaultOp.Update(ctx, id, v1.Vault{
-		ID:       id,
-		Name:     "renamed",
-		KmsKeyID: "990000000123",
-		Tags:     []string{"c"},
+	updated, err := vaultOp.Update(ctx, id, sm.UpdateVaultParams{
+		Name: "renamed",
+		Tags: []string{"c"},
 	})
 	if err != nil {
 		t.Fatalf("update: %v", err)

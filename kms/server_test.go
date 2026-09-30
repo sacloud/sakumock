@@ -1,8 +1,13 @@
 package kms_test
 
 import (
+	"errors"
+	"net/http"
+	"slices"
 	"testing"
+	"time"
 
+	ogenvalidate "github.com/ogen-go/ogen/validate"
 	kmssdk "github.com/sacloud/sacloud-sdk-go/api/kms"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/kms/apis/v1"
 	"github.com/sacloud/sacloud-sdk-go/common/saclient"
@@ -34,7 +39,7 @@ func TestKeyLifecycle(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	keys, err := keyOp.List(ctx)
+	keys, err := keyOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,10 +47,9 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 keys, got %d", len(keys))
 	}
 
-	created, err := keyOp.Create(ctx, v1.CreateKey{
-		Name:      "test-key",
-		KeyOrigin: v1.KeyOriginEnumGenerated,
-		Tags:      []string{"env:test"},
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{
+		Name: "test-key",
+		Tags: []string{"env:test"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -53,12 +57,12 @@ func TestKeyLifecycle(t *testing.T) {
 	if created.Name != "test-key" {
 		t.Fatalf("unexpected name: %s", created.Name)
 	}
-	if created.KeyOrigin != v1.KeyOriginEnumGenerated {
+	if created.KeyOrigin != v1.CreateKeyResponseKeyOriginGenerated {
 		t.Fatalf("unexpected origin: %s", created.KeyOrigin)
 	}
 	keyID := created.ID
 
-	keys, err = keyOp.List(ctx)
+	keys, err = keyOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +72,7 @@ func TestKeyLifecycle(t *testing.T) {
 	if keys[0].Name != "test-key" {
 		t.Fatalf("unexpected name: %s", keys[0].Name)
 	}
-	if keys[0].Status != v1.KeyStatusEnumActive {
+	if keys[0].Status != v1.KeyStatusActive {
 		t.Fatalf("unexpected status: %s", keys[0].Status)
 	}
 
@@ -80,11 +84,9 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read response: %+v", read)
 	}
 
-	updated, err := keyOp.Update(ctx, keyID, v1.Key{
+	updated, err := keyOp.Update(ctx, keyID, kmssdk.UpdateParams{
 		Name:        "updated-key",
-		Description: "updated description",
-		KeyOrigin:   v1.KeyOriginEnumGenerated,
-		Status:      v1.KeyStatusEnumActive,
+		Description: new("updated description"),
 		Tags:        []string{"env:prod"},
 	})
 	if err != nil {
@@ -109,7 +111,7 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	keys, err = keyOp.List(ctx)
+	keys, err = keyOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,16 +156,13 @@ func TestMultipleKeys(t *testing.T) {
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
 	for _, name := range []string{"key-alpha", "key-beta", "key-gamma"} {
-		_, err := keyOp.Create(ctx, v1.CreateKey{
-			Name:      name,
-			KeyOrigin: v1.KeyOriginEnumGenerated,
-		})
+		_, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: name})
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	keys, err := keyOp.List(ctx)
+	keys, err := keyOp.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,10 +177,7 @@ func TestRotateKey(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	created, err := keyOp.Create(ctx, v1.CreateKey{
-		Name:      "rotate-test",
-		KeyOrigin: v1.KeyOriginEnumGenerated,
-	})
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "rotate-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +187,7 @@ func TestRotateKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rotated.LatestVersion.Or(0) != 2 {
+	if rotated.LatestVersion != 2 {
 		t.Fatalf("expected version 2 after rotate, got %v", rotated.LatestVersion)
 	}
 }
@@ -202,34 +198,35 @@ func TestChangeStatus(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	created, err := keyOp.Create(ctx, v1.CreateKey{
-		Name:      "status-test",
-		KeyOrigin: v1.KeyOriginEnumGenerated,
-	})
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "status-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	keyID := created.ID
 
-	if err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStatusStatusRestricted); err != nil {
+	status, err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStateRequestStatusRestricted)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if status != v1.ChangeKeyStateStatusRestricted {
+		t.Fatalf("expected restricted in response, got %s", status)
 	}
 	read, err := keyOp.Read(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if read.Status != v1.KeyStatusEnumRestricted {
+	if read.Status != v1.KeyStatusRestricted {
 		t.Fatalf("expected restricted, got %s", read.Status)
 	}
 
-	if err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStatusStatusActive); err != nil {
+	if _, err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStateRequestStatusActive); err != nil {
 		t.Fatal(err)
 	}
 	read, err = keyOp.Read(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if read.Status != v1.KeyStatusEnumActive {
+	if read.Status != v1.KeyStatusActive {
 		t.Fatalf("expected active, got %s", read.Status)
 	}
 }
@@ -240,17 +237,14 @@ func TestEncryptDecrypt(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	created, err := keyOp.Create(ctx, v1.CreateKey{
-		Name:      "encrypt-test",
-		KeyOrigin: v1.KeyOriginEnumGenerated,
-	})
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "encrypt-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	keyID := created.ID
 
 	plaintext := []byte("hello, KMS!")
-	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.EncryptionRequestAlgoAes256Gcm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,10 +267,7 @@ func TestEncryptDecryptAfterRotate(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	created, err := keyOp.Create(ctx, v1.CreateKey{
-		Name:      "rotate-encrypt-test",
-		KeyOrigin: v1.KeyOriginEnumGenerated,
-	})
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "rotate-encrypt-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -284,7 +275,7 @@ func TestEncryptDecryptAfterRotate(t *testing.T) {
 
 	// Encrypt with v1
 	plaintext := []byte("secret data")
-	cipher1, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	cipher1, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.EncryptionRequestAlgoAes256Gcm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +294,7 @@ func TestEncryptDecryptAfterRotate(t *testing.T) {
 	}
 
 	// Encrypt with v2
-	cipher2, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	cipher2, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.EncryptionRequestAlgoAes256Gcm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -318,25 +309,118 @@ func TestScheduleDestruction(t *testing.T) {
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	created, err := keyOp.Create(ctx, v1.CreateKey{
-		Name:      "destroy-test",
-		KeyOrigin: v1.KeyOriginEnumGenerated,
-	})
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "destroy-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	keyID := created.ID
 
-	if err := keyOp.ScheduleDestruction(ctx, keyID, 7); err != nil {
+	before := time.Now()
+	scheduled, err := keyOp.ScheduleDestruction(ctx, keyID, 30)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if scheduled.Status != v1.KeyScheduledDestructionStatusPendingDestruction {
+		t.Fatalf("expected pending_destruction, got %s", scheduled.Status)
+	}
+	after, ok := scheduled.DeletionScheduledAfter.Get()
+	if !ok {
+		t.Fatal("expected DeletionScheduledAfter to be set")
+	}
+	if want := before.AddDate(0, 0, 30); after.Before(want.Add(-time.Second)) || after.After(want.Add(time.Minute)) {
+		t.Fatalf("DeletionScheduledAfter = %v, want about %v", after, want)
 	}
 
 	read, err := keyOp.Read(ctx, keyID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if read.Status != v1.KeyStatusEnumPendingDestruction {
+	if read.Status != v1.KeyStatusPendingDestruction {
 		t.Fatalf("expected pending_destruction, got %s", read.Status)
+	}
+	if !read.DeletionScheduledAfter.IsSet() || read.DeletionScheduledAfter.IsNull() {
+		t.Fatal("expected DeletionScheduledAfter on the key")
+	}
+
+	// Reactivating the key cancels the scheduled destruction.
+	if _, err := keyOp.ChangeStatus(ctx, keyID, v1.ChangeKeyStateRequestStatusActive); err != nil {
+		t.Fatal(err)
+	}
+	read, err = keyOp.Read(ctx, keyID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !read.DeletionScheduledAfter.IsNull() {
+		t.Fatalf("expected null DeletionScheduledAfter after reactivation, got %+v", read.DeletionScheduledAfter)
+	}
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations: %+v", v)
+	}
+}
+
+func TestListKeysPagination(t *testing.T) {
+	srv := kms.NewTestServer(kms.Config{})
+	defer srv.Close()
+	ctx := t.Context()
+	keyOp := newTestKeyOp(t, srv.TestURL())
+
+	for _, name := range []string{"k1", "k2", "k3", "k4", "k5"} {
+		if _, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: name}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, tc := range []struct {
+		count, from *int
+		want        []string
+	}{
+		{nil, nil, []string{"k1", "k2", "k3", "k4", "k5"}},
+		{new(2), nil, []string{"k1", "k2"}},
+		{new(2), new(2), []string{"k3", "k4"}},
+		{new(10), new(3), []string{"k4", "k5"}},
+		{nil, new(4), []string{"k5"}},
+		{nil, new(10), []string{}},
+	} {
+		keys, err := keyOp.List(ctx, tc.count, tc.from)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := make([]string, len(keys))
+		for i, k := range keys {
+			got[i] = k.Name
+		}
+		if !slices.Equal(got, tc.want) {
+			t.Errorf("List(count=%v, from=%v) = %v, want %v", deref(tc.count), deref(tc.from), got, tc.want)
+		}
+	}
+	if v := srv.SpecViolations(); len(v) != 0 {
+		t.Errorf("spec violations: %+v", v)
+	}
+}
+
+func deref(p *int) any {
+	if p == nil {
+		return nil
+	}
+	return *p
+}
+
+func TestRotateInactiveKeyForbidden(t *testing.T) {
+	srv := kms.NewTestServer(kms.Config{})
+	defer srv.Close()
+	ctx := t.Context()
+	keyOp := newTestKeyOp(t, srv.TestURL())
+
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "suspended"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := keyOp.ChangeStatus(ctx, created.ID, v1.ChangeKeyStateRequestStatusSuspended); err != nil {
+		t.Fatal(err)
+	}
+	_, err = keyOp.Rotate(ctx, created.ID)
+	var statusErr *ogenvalidate.UnexpectedStatusCodeError
+	if !errors.As(err, &statusErr) || statusErr.StatusCode != http.StatusForbidden {
+		t.Fatalf("Rotate on suspended key: err = %v, want 403", err)
 	}
 }
 
@@ -358,12 +442,12 @@ func TestPresetKey(t *testing.T) {
 	if got.ID != keyID {
 		t.Errorf("ID = %q, want %q", got.ID, keyID)
 	}
-	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.EncryptionRequestAlgoAes256Gcm)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// A key created afterwards must not reuse the preset ID.
-	created, err := keyOp.Create(ctx, v1.CreateKey{Name: "after-preset", KeyOrigin: v1.KeyOriginEnumGenerated})
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "after-preset"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -409,7 +493,7 @@ func TestPresetKeyRotated(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	cipher, err := keyOp.Encrypt(ctx, keyID, plaintext, v1.EncryptionRequestAlgoAes256Gcm)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -427,7 +511,7 @@ func TestPresetKeyRotated(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.LatestVersion.Or(0) != 3 {
+	if got.LatestVersion != 3 {
 		t.Errorf("LatestVersion = %v, want 3", got.LatestVersion)
 	}
 	decrypted, err := keyOp2.Decrypt(ctx, keyID, cipher)
@@ -438,7 +522,7 @@ func TestPresetKeyRotated(t *testing.T) {
 		t.Errorf("decrypted = %q, want %q", decrypted, plaintext)
 	}
 	// Ciphertexts made before the restart at version 1 still decrypt too.
-	cipher1, err := keyOp2.Encrypt(ctx, keyID, plaintext, v1.KeyEncryptAlgoEnumAes256Gcm)
+	cipher1, err := keyOp2.Encrypt(ctx, keyID, plaintext, v1.EncryptionRequestAlgoAes256Gcm)
 	if err != nil {
 		t.Fatal(err)
 	}

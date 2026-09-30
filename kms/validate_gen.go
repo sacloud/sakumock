@@ -17,33 +17,24 @@ var bodySchemas = map[string]*core.BodySchema{
 				Type:     "object",
 				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"KeyOrigin": {
-						Type: "string",
-						Enum: []any{"generated", "imported"},
-					},
-					"ModifiedAt": {
 						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
 					"PlainKey": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
 					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -59,7 +50,9 @@ var bodySchemas = map[string]*core.BodySchema{
 				Required: []string{"Cipher"},
 				Properties: map[string]*core.BodySchema{
 					"Cipher": {
-						Type: "string",
+						Type:      "string",
+						MinLength: new(1),
+						MaxLength: new(3072),
 					},
 				},
 			},
@@ -89,11 +82,12 @@ var bodySchemas = map[string]*core.BodySchema{
 		Required: []string{"Key"},
 		Properties: map[string]*core.BodySchema{
 			"Key": {
-				Type:     "object",
-				Required: []string{"PendingDays"},
+				Type: "object",
 				Properties: map[string]*core.BodySchema{
 					"PendingDays": {
-						Type: "integer",
+						Type:    "integer",
+						Minimum: new(7.0),
+						Maximum: new(90.0),
 					},
 				},
 			},
@@ -104,7 +98,8 @@ var bodySchemas = map[string]*core.BodySchema{
 		Required: []string{"Key"},
 		Properties: map[string]*core.BodySchema{
 			"Key": {
-				Type: "object",
+				Type:     "object",
+				Required: []string{"Status"},
 				Properties: map[string]*core.BodySchema{
 					"Status": {
 						Type: "string",
@@ -120,43 +115,22 @@ var bodySchemas = map[string]*core.BodySchema{
 		Properties: map[string]*core.BodySchema{
 			"Key": {
 				Type:     "object",
-				Required: []string{"Description", "Name", "Tags"},
+				Required: []string{"Name"},
 				Properties: map[string]*core.BodySchema{
-					"CreatedAt": {
-						Type: "string",
-					},
 					"Description": {
-						Type: "string",
-					},
-					"ID": {
-						Type: "string",
-					},
-					"KeyOrigin": {
-						Type: "string",
-						Enum: []any{"generated", "imported"},
-					},
-					"LatestVersion": {
-						Type: "integer",
-					},
-					"ModifiedAt": {
 						Type: "string",
 					},
 					"Name": {
 						Type:      "string",
+						MinLength: new(1),
 						MaxLength: new(255),
 					},
-					"ServiceClass": {
-						Type: "string",
-						Enum: []any{"cloud/kms/key", "cloud/kms/key/legacy"},
-					},
-					"Status": {
-						Type: "string",
-						Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
-					},
 					"Tags": {
-						Type: "array",
+						Type:     "array",
+						Nullable: true,
 						Items: &core.BodySchema{
-							Type: "string",
+							Type:      "string",
+							MinLength: new(1),
 						},
 					},
 				},
@@ -176,7 +150,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /kms/keys": {
 		200: {
 			Type:     "object",
-			Required: []string{"Count", "Keys"},
+			Required: []string{"Count", "From", "Keys", "Total", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Count": {
 					Type: "integer",
@@ -188,10 +162,14 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 					Type: "array",
 					Items: &core.BodySchema{
 						Type:     "object",
-						Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+						Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "LatestVersion", "ModifiedAt", "Name", "ServiceClass", "Status", "Tags"},
 						Properties: map[string]*core.BodySchema{
 							"CreatedAt": {
 								Type: "string",
+							},
+							"DeletionScheduledAfter": {
+								Type:     "string",
+								Nullable: true,
 							},
 							"Description": {
 								Type: "string",
@@ -219,12 +197,14 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"Status": {
 								Type: "string",
-								Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+								Enum: []any{"active", "restricted", "suspended", "pending_destruction", "destroyed"},
 							},
 							"Tags": {
-								Type: "array",
+								Type:     "array",
+								Nullable: true,
 								Items: &core.BodySchema{
-									Type: "string",
+									Type:      "string",
+									MinLength: new(1),
 								},
 							},
 						},
@@ -233,20 +213,27 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"Total": {
 					Type: "integer",
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"GET /kms/keys/{resource_id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"Key"},
+			Required: []string{"Key", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Key": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "LatestVersion", "ModifiedAt", "Name", "ServiceClass", "Status", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
+						},
+						"DeletionScheduledAfter": {
+							Type:     "string",
+							Nullable: true,
 						},
 						"Description": {
 							Type: "string",
@@ -274,15 +261,20 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Status": {
 							Type: "string",
-							Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction", "destroyed"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -290,14 +282,18 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"POST /kms/keys": {
 		201: {
 			Type:     "object",
-			Required: []string{"Key"},
+			Required: []string{"Key", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Key": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "ID", "KeyOrigin", "ModifiedAt", "Name"},
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "LatestVersion", "ModifiedAt", "Name", "ServiceClass", "Status", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
+						},
+						"DeletionScheduledAfter": {
+							Type:     "string",
+							Nullable: true,
 						},
 						"Description": {
 							Type: "string",
@@ -309,6 +305,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Type: "string",
 							Enum: []any{"generated", "imported"},
 						},
+						"LatestVersion": {
+							Type: "integer",
+						},
 						"ModifiedAt": {
 							Type: "string",
 						},
@@ -316,16 +315,26 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Type:      "string",
 							MaxLength: new(255),
 						},
-						"PlainKey": {
+						"ServiceClass": {
 							Type: "string",
+							Enum: []any{"cloud/kms/key", "cloud/kms/key/legacy"},
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction", "destroyed"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -333,20 +342,19 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"POST /kms/keys/{resource_id}/decrypt": {
 		200: {
 			Type:     "object",
-			Required: []string{"Key"},
+			Required: []string{"Key", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Key": {
 					Type:     "object",
 					Required: []string{"Plain"},
 					Properties: map[string]*core.BodySchema{
-						"Algo": {
-							Type: "string",
-							Enum: []any{"aes-256-gcm", "aes-256-cbc", "aes-256-kw"},
-						},
 						"Plain": {
 							Type: "string",
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},
@@ -354,7 +362,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"POST /kms/keys/{resource_id}/encrypt": {
 		200: {
 			Type:     "object",
-			Required: []string{"Key"},
+			Required: []string{"Key", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Key": {
 					Type:     "object",
@@ -365,20 +373,27 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
 	},
 	"POST /kms/keys/{resource_id}/rotate": {
 		200: {
 			Type:     "object",
-			Required: []string{"Key"},
+			Required: []string{"Key", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Key": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "LatestVersion", "ModifiedAt", "Name", "ServiceClass", "Status", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
+						},
+						"DeletionScheduledAfter": {
+							Type:     "string",
+							Nullable: true,
 						},
 						"Description": {
 							Type: "string",
@@ -406,37 +421,85 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Status": {
 							Type: "string",
-							Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction", "destroyed"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
 				},
+				"is_ok": {
+					Type: "boolean",
+				},
 			},
 		},
-		403: nil,
 	},
 	"POST /kms/keys/{resource_id}/schedule-destruction": {
-		200: nil,
+		200: {
+			Type:     "object",
+			Required: []string{"Key", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"DeletionScheduledAfter", "Status"},
+					Properties: map[string]*core.BodySchema{
+						"DeletionScheduledAfter": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"Status": {
+							Type: "string",
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction", "destroyed"},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
 	},
 	"POST /kms/keys/{resource_id}/status": {
-		200: nil,
+		200: {
+			Type:     "object",
+			Required: []string{"Key", "is_ok"},
+			Properties: map[string]*core.BodySchema{
+				"Key": {
+					Type:     "object",
+					Required: []string{"Status"},
+					Properties: map[string]*core.BodySchema{
+						"Status": {
+							Type: "string",
+							Enum: []any{"active", "restricted", "suspended"},
+						},
+					},
+				},
+				"is_ok": {
+					Type: "boolean",
+				},
+			},
+		},
 	},
 	"PUT /kms/keys/{resource_id}": {
 		200: {
 			Type:     "object",
-			Required: []string{"Key"},
+			Required: []string{"Key", "is_ok"},
 			Properties: map[string]*core.BodySchema{
 				"Key": {
 					Type:     "object",
-					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "ModifiedAt", "Name", "Status", "Tags"},
+					Required: []string{"CreatedAt", "Description", "ID", "KeyOrigin", "LatestVersion", "ModifiedAt", "Name", "ServiceClass", "Status", "Tags"},
 					Properties: map[string]*core.BodySchema{
 						"CreatedAt": {
 							Type: "string",
+						},
+						"DeletionScheduledAfter": {
+							Type:     "string",
+							Nullable: true,
 						},
 						"Description": {
 							Type: "string",
@@ -464,15 +527,20 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"Status": {
 							Type: "string",
-							Enum: []any{"active", "restricted", "suspended", "pending_destruction"},
+							Enum: []any{"active", "restricted", "suspended", "pending_destruction", "destroyed"},
 						},
 						"Tags": {
-							Type: "array",
+							Type:     "array",
+							Nullable: true,
 							Items: &core.BodySchema{
-								Type: "string",
+								Type:      "string",
+								MinLength: new(1),
 							},
 						},
 					},
+				},
+				"is_ok": {
+					Type: "boolean",
 				},
 			},
 		},

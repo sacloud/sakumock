@@ -86,6 +86,11 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 | POST | `/kms/keys/{resource_id}/encrypt` | Encrypt data |
 | POST | `/kms/keys/{resource_id}/decrypt` | Decrypt data |
 
+- `GET /kms/keys` returns keys oldest first and honors the optional `From` (0-based start index, default `0`) and `Count` (page size; `0` or absent returns all) query parameters; the response's `Total` is the number of keys before paging.
+- `POST /kms/keys/{resource_id}/schedule-destruction` sets the key to `pending_destruction` with `DeletionScheduledAfter` = now + `PendingDays` (7–90, default 7). The key is never actually destroyed; changing its status back via `/status` clears the schedule.
+- A key created with `PlainKey` is reported with `KeyOrigin: imported`, but the mock still generates its own key material (use [`--key`](#fixed-keys) for fixed material).
+- Rotating a key that is not `active` returns `403 Forbidden`.
+
 ## Mock-only endpoints
 
 Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.

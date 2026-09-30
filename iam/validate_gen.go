@@ -241,15 +241,6 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	"PUT /compat/users/{user_id}/security-keys/{security_key_id}": {
-		Type:     "object",
-		Required: []string{"name"},
-		Properties: map[string]*core.BodySchema{
-			"name": {
-				Type: "string",
-			},
-		},
-	},
 	"PUT /folders/{folder_id}": {
 		Type:     "object",
 		Required: []string{"name"},
@@ -1703,7 +1694,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"GET /auth/context": {
 		200: {
 			Type:     "object",
-			Required: []string{"auth_type", "limited_to_project_id", "resource_id"},
+			Required: []string{"auth_type", "limited_to_project_id", "member_code", "resource_id"},
 			Properties: map[string]*core.BodySchema{
 				"auth_type": {
 					Type: "string",
@@ -1712,6 +1703,9 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"limited_to_project_id": {
 					Type:     "integer",
 					Nullable: true,
+				},
+				"member_code": {
+					Type: "string",
 				},
 				"resource_id": {
 					Type: "integer",
@@ -8431,106 +8425,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		503: {
-			Type:     "object",
-			Required: []string{"detail", "status", "title", "type"},
-			Properties: map[string]*core.BodySchema{
-				"detail": {
-					Type: "string",
-				},
-				"status": {
-					Type: "integer",
-				},
-				"title": {
-					Type: "string",
-				},
-				"type": {
-					Type: "string",
-				},
-			},
-		},
-	},
-	"PUT /compat/users/{user_id}/security-keys/{security_key_id}": {
-		200: {
-			Type:     "object",
-			Required: []string{"aaguid", "id", "last_used_at", "name", "registered_at", "sign_count"},
-			Properties: map[string]*core.BodySchema{
-				"aaguid": {
-					Type: "string",
-				},
-				"id": {
-					Type:    "integer",
-					Minimum: new(1.0),
-				},
-				"last_used_at": {
-					Type:     "string",
-					Nullable: true,
-				},
-				"name": {
-					Type: "string",
-				},
-				"registered_at": {
-					Type: "string",
-				},
-				"sign_count": {
-					Type: "integer",
-				},
-			},
-		},
-		401: {
-			Type:     "object",
-			Required: []string{"detail", "status", "title", "type"},
-			Properties: map[string]*core.BodySchema{
-				"detail": {
-					Type: "string",
-				},
-				"status": {
-					Type: "integer",
-				},
-				"title": {
-					Type: "string",
-				},
-				"type": {
-					Type: "string",
-				},
-			},
-		},
-		403: {
-			Type:     "object",
-			Required: []string{"detail", "status", "title", "type"},
-			Properties: map[string]*core.BodySchema{
-				"detail": {
-					Type: "string",
-				},
-				"status": {
-					Type: "integer",
-				},
-				"title": {
-					Type: "string",
-				},
-				"type": {
-					Type: "string",
-				},
-			},
-		},
-		404: {
-			Type:     "object",
-			Required: []string{"detail", "status", "title", "type"},
-			Properties: map[string]*core.BodySchema{
-				"detail": {
-					Type: "string",
-				},
-				"status": {
-					Type: "integer",
-				},
-				"title": {
-					Type: "string",
-				},
-				"type": {
-					Type: "string",
-				},
-			},
-		},
-		429: {
 			Type:     "object",
 			Required: []string{"detail", "status", "title", "type"},
 			Properties: map[string]*core.BodySchema{

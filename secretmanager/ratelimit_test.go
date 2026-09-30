@@ -29,7 +29,7 @@ func vaultListURL(base string) string {
 
 func TestRateLimitDisabled(t *testing.T) {
 	srv := secretmanager.NewTestServer(secretmanager.Config{})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := vaultListURL(srv.TestURL())
 	for range 30 {
@@ -41,7 +41,7 @@ func TestRateLimitDisabled(t *testing.T) {
 
 func TestRateLimitExceeded(t *testing.T) {
 	srv := secretmanager.NewTestServer(secretmanager.Config{RateLimit: 2})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := vaultListURL(srv.TestURL())
 	for i := range 2 {
@@ -69,7 +69,7 @@ func TestRateLimitWindowMatchesProductionQuota(t *testing.T) {
 		RateLimit:       100,
 		RateLimitWindow: time.Minute,
 	})
-	defer srv.Close()
+	defer closeAndCheck(t, srv)
 
 	url := vaultListURL(srv.TestURL())
 	for i := range 100 {

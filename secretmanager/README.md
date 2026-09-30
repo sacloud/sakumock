@@ -90,6 +90,8 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 | `DELETE` | `/secretmanager/vaults/{vault_resource_id}/secrets` | Delete a secret |
 | `POST` | `/secretmanager/vaults/{vault_resource_id}/secrets/unveil` | Reveal a secret value |
 
+Both list endpoints accept the optional `Count` (page size) and `From` (zero-based index of the first item) query parameters; `Total` in the response is the number of items before paging. Each secret keeps its latest 50 versions: creating a newer one drops the oldest, and unveiling a dropped version returns 404.
+
 ## Mock-only endpoints
 
 Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.

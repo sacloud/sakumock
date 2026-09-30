@@ -1,6 +1,6 @@
 # sakumock/cloudhsm
 
-A CloudHSM (hardware security module) compatible mock server for local development and testing. It implements the CloudHSM partition, client certificate, IPsec peer, and software license APIs (full CRUD where the real API supports it) with in-memory storage.
+A CloudHSM (hardware security module) compatible mock server for local development and testing. It implements the CloudHSM partition, client certificate, IPsec peer, software license, and license document APIs (full CRUD where the real API supports it) with in-memory storage.
 
 ## Install
 
@@ -80,8 +80,18 @@ All paths are served under `/{zone}/api/cloud/1.1` (see above); the table below 
 | GET | `/cloudhsm/licenses/{resource_id}` | Get a CloudHSM software license |
 | PUT | `/cloudhsm/licenses/{resource_id}` | Update a CloudHSM software license |
 | DELETE | `/cloudhsm/licenses/{resource_id}` | Delete a CloudHSM software license |
+| GET | `/cloudhsm/licenses/{license_resource_id}/documents` | List documents of a CloudHSM software license |
+| POST | `/cloudhsm/licenses/{license_resource_id}/documents/{id}/download` | Get the download URL of a license document |
 
-Peers have no update API (create/list/delete only). Creating a peer returns `204 No Content` (no body), matching the real API; listing peers returns a bare `{"Peers": [...]}` array without pagination fields, unlike the other list endpoints.
+Paginated list endpoints (CloudHSMs, clients, licenses, documents) honor the `Count` (page size) and `From` (0-based start index) query parameters; `Total` is the number of items before paging.
+
+Peers have no update API (create/list/delete only). Creating a peer returns `204 No Content` (no body), matching the real API; listing peers returns `{"Peers": [...]}` (each with its `ID`, `SecretKey`, and `Enabled: true`) without pagination fields, unlike the other list endpoints.
+
+A client's certificate is immutable: updating a client changes only its `Name`.
+
+Every license is created with one document (`license.zip`). The mock hosts no files, so its download URL points at `example.com`.
+
+`InitialData` (partition name/ID and server certificate) is always `null`.
 
 ## Mock-only endpoints
 

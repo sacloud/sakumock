@@ -88,7 +88,7 @@ type cpCreateQueueRequest struct {
 	} `json:"CommonServiceItem"`
 }
 
-type cpConfigQueueRequest struct {
+type cpUpdateQueueRequest struct {
 	CommonServiceItem struct {
 		Description string `json:"Description"`
 		Settings    struct {
@@ -149,7 +149,7 @@ func (s *Server) handleListQueues(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Server) handleGetQueue(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleReadQueue(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	q, err := s.store.GetQueueByID(id)
 	if err != nil {
@@ -166,7 +166,7 @@ func (s *Server) handleGetQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Server) handleConfigQueue(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleUpdateQueue(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	body, err := io.ReadAll(r.Body)
@@ -174,7 +174,7 @@ func (s *Server) handleConfigQueue(w http.ResponseWriter, r *http.Request) {
 		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "failed to read body")
 		return
 	}
-	var req cpConfigQueueRequest
+	var req cpUpdateQueueRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		core.WriteStandardError(w, http.StatusBadRequest, "bad_request", "invalid JSON")
 		return
@@ -229,7 +229,7 @@ func (s *Server) handleDeleteQueue(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Server) handleGetMessageCount(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleReadMessageCount(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	now := time.Now()
 

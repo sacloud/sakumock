@@ -1,7 +1,7 @@
 openapi: 3.1.0
 
 info:
-  version: 1.0.0
+  version: 1.1.2
   title: シンプルMQ さくらのクラウドAPI
   contact:
     url: https://help.sakura.ad.jp/contact/
@@ -13,7 +13,7 @@ info:
 
     「シンプルMQ」は、ソフトウェア同士を非同期に連携するために、ソフトウェアコンポーネント間でのデータの送受信ができる、マネージド型のメッセージキューサービスです。
     シンプルMQのリソースを作成・削除するには、さくらのクラウド コントロールパネルか下記APIを利用します。
-    キューへのメッセージの送受信などについては、[シンプルMQ API ドキュメント](../) を参照してください。
+    キューへのメッセージの送受信などについては、[シンプルMQ APIドキュメント](https://manual.sakura.ad.jp/api/cloud/portal/?api=simplemq-api) を参照してください。
 
     # 基本的な使い方
     ## APIキーの発行
@@ -43,6 +43,7 @@ paths:
   /commonserviceitem:
     post:
       summary: キューの作成
+      description: キューを利用するためには、キュー作成後にAPIキーの発行が必要になります。
       operationId: createQueue
       requestBody:
         required: true
@@ -111,7 +112,7 @@ paths:
 
     get:
       summary: キュー一覧の取得
-      operationId: getQueues
+      operationId: listQueues
       description: |-
         クエリパラメータに下記のようにフィルタを設定することでシンプルMQのリソースのみを取得できます
         `/commonserviceitem?{"Filter":{"Provider.Class":"simplemq"}}`
@@ -173,7 +174,7 @@ paths:
   /commonserviceitem/{id}:
     get:
       summary: キューの取得
-      operationId: getQueue
+      operationId: readQueue
       parameters:
         - $ref: "#/components/parameters/resourceIdPathParam"
       responses:
@@ -235,7 +236,7 @@ paths:
 
     put:
       summary: キューの設定変更
-      operationId: configQueue
+      operationId: updateQueue
       description: キュー名の変更は不可
       parameters:
         - $ref: "#/components/parameters/resourceIdPathParam"
@@ -371,7 +372,7 @@ paths:
   /commonserviceitem/{id}/simplemq/message-count:
     get:
       summary: メッセージ数の取得
-      operationId: getMessageCount
+      operationId: readMessageCount
       parameters:
         - $ref: "#/components/parameters/resourceIdPathParam"
       responses:
@@ -441,7 +442,8 @@ paths:
 
   /commonserviceitem/{id}/simplemq/rotate-apikey:
     put:
-      summary: APIキーの発行
+      summary: APIキーの再発行
+      description: 発行済みのAPIキーを無効化し、新たにAPIキーを発行します。
       operationId: rotateAPIKey
       parameters:
         - $ref: "#/components/parameters/resourceIdPathParam"

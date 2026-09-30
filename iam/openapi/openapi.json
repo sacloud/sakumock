@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "さくらのクラウドIAM API",
-    "version": "1.3.0",
+    "version": "2.1.0",
     "contact": {
       "name": "SAKURA internet Inc."
     },
@@ -11,11 +11,6 @@
   "servers": [
     {
       "url": "https://secure.sakura.ad.jp/cloud/api/iam/1.0"
-    }
-  ],
-  "security": [
-    {
-      "ServicePrincipalAuth": []
     }
   ],
   "tags": [
@@ -100,9 +95,15 @@
       "description": "ユーザープロビジョニングに関する機能"
     }
   ],
+  "security": [
+    {
+      "ServicePrincipalAuth": []
+    }
+  ],
   "paths": {
     "/compat/users": {
       "get": {
+        "operationId": "listUsers",
         "tags": [
           "user"
         ],
@@ -189,6 +190,7 @@
         }
       },
       "post": {
+        "operationId": "createUser",
         "tags": [
           "user"
         ],
@@ -316,6 +318,7 @@
         }
       ],
       "get": {
+        "operationId": "readUser",
         "tags": [
           "user"
         ],
@@ -374,6 +377,7 @@
         }
       },
       "put": {
+        "operationId": "updateUser",
         "tags": [
           "user"
         ],
@@ -480,6 +484,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteUser",
         "tags": [
           "user"
         ],
@@ -548,6 +553,7 @@
         }
       ],
       "post": {
+        "operationId": "deactivateOtp",
         "tags": [
           "user-2fa"
         ],
@@ -607,6 +613,7 @@
         }
       ],
       "get": {
+        "operationId": "listTrustedDevices",
         "tags": [
           "user-2fa"
         ],
@@ -693,6 +700,7 @@
         }
       ],
       "delete": {
+        "operationId": "deleteTrustedDevice",
         "tags": [
           "user-2fa"
         ],
@@ -751,6 +759,7 @@
         }
       ],
       "post": {
+        "operationId": "clearTrustedDevices",
         "tags": [
           "user-2fa"
         ],
@@ -809,6 +818,7 @@
         }
       ],
       "post": {
+        "operationId": "registerEmail",
         "tags": [
           "user"
         ],
@@ -897,6 +907,7 @@
         }
       ],
       "post": {
+        "operationId": "unregisterEmail",
         "tags": [
           "user"
         ],
@@ -955,6 +966,7 @@
         }
       ],
       "get": {
+        "operationId": "listSecurityKeys",
         "tags": [
           "user-2fa"
         ],
@@ -1041,6 +1053,7 @@
         }
       ],
       "get": {
+        "operationId": "readSecurityKey",
         "tags": [
           "user-2fa"
         ],
@@ -1122,84 +1135,8 @@
           }
         }
       },
-      "put": {
-        "tags": [
-          "user-2fa"
-        ],
-        "summary": "ユーザのセキュリティキーを更新する",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "name"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "セキュリティキー名",
-                    "example": "ユーザが任意に設定する名前"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserSecurityKey"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "認証情報が無効",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Http401Unauthorized"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "アクセス権限がない",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Http403Forbidden"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "指定したセキュリティキーが存在しない",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Http404NotFound"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "APIリクエストのレートリミット超過",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Http429TooManyRequests"
-                }
-              }
-            }
-          }
-        }
-      },
       "delete": {
+        "operationId": "deleteSecurityKey",
         "tags": [
           "user-2fa"
         ],
@@ -1253,6 +1190,7 @@
     },
     "/groups": {
       "get": {
+        "operationId": "listGroups",
         "tags": [
           "group"
         ],
@@ -1348,6 +1286,7 @@
         }
       },
       "post": {
+        "operationId": "createGroup",
         "tags": [
           "group"
         ],
@@ -1458,6 +1397,7 @@
         }
       ],
       "get": {
+        "operationId": "readGroup",
         "tags": [
           "group"
         ],
@@ -1516,6 +1456,7 @@
         }
       },
       "put": {
+        "operationId": "updateGroup",
         "tags": [
           "group"
         ],
@@ -1618,6 +1559,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteGroup",
         "tags": [
           "group"
         ],
@@ -1686,6 +1628,7 @@
         }
       ],
       "get": {
+        "operationId": "listMemberships",
         "tags": [
           "group"
         ],
@@ -1744,6 +1687,7 @@
         }
       },
       "put": {
+        "operationId": "updateMemberships",
         "tags": [
           "group"
         ],
@@ -1856,6 +1800,7 @@
     },
     "/iam-roles": {
       "get": {
+        "operationId": "listIamRoles",
         "tags": [
           "iam-role"
         ],
@@ -1937,6 +1882,7 @@
         }
       ],
       "get": {
+        "operationId": "readIamRole",
         "tags": [
           "iam-role"
         ],
@@ -1997,6 +1943,7 @@
     },
     "/id-roles": {
       "get": {
+        "operationId": "listIdRoles",
         "tags": [
           "id-role"
         ],
@@ -2078,6 +2025,7 @@
         }
       ],
       "get": {
+        "operationId": "readIdRole",
         "tags": [
           "id-role"
         ],
@@ -2138,6 +2086,7 @@
     },
     "/projects": {
       "get": {
+        "operationId": "listProjects",
         "tags": [
           "project"
         ],
@@ -2242,6 +2191,7 @@
         }
       },
       "post": {
+        "operationId": "createProject",
         "tags": [
           "project"
         ],
@@ -2371,6 +2321,7 @@
     },
     "/move-projects": {
       "post": {
+        "operationId": "moveProjects",
         "tags": [
           "project"
         ],
@@ -2481,6 +2432,7 @@
         }
       ],
       "get": {
+        "operationId": "readProject",
         "tags": [
           "project"
         ],
@@ -2539,6 +2491,7 @@
         }
       },
       "put": {
+        "operationId": "updateProject",
         "tags": [
           "project"
         ],
@@ -2643,6 +2596,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteProject",
         "tags": [
           "project"
         ],
@@ -2721,6 +2675,7 @@
         }
       ],
       "get": {
+        "operationId": "readProjectIamPolicy",
         "tags": [
           "iam-policy"
         ],
@@ -2814,6 +2769,7 @@
         }
       },
       "put": {
+        "operationId": "updateProjectIamPolicy",
         "tags": [
           "iam-policy"
         ],
@@ -2892,6 +2848,25 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Http400BadRequest"
+                },
+                "examples": {
+                  "LowestGrantableResourceInvalid": {
+                    "summary": "付与可能な最低階層を満たしていない",
+                    "value": {
+                      "type": "about:blank",
+                      "status": 400,
+                      "title": "invalid",
+                      "detail": "Invalid input.",
+                      "errors": {
+                        "role": [
+                          {
+                            "message": "\"folder-admin\"はフォルダ階層以上にのみ付与可能です",
+                            "code": "invalid"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -2956,6 +2931,7 @@
         }
       ],
       "get": {
+        "operationId": "readFolderIamPolicy",
         "tags": [
           "iam-policy"
         ],
@@ -3049,6 +3025,7 @@
         }
       },
       "put": {
+        "operationId": "updateFolderIamPolicy",
         "tags": [
           "iam-policy"
         ],
@@ -3127,6 +3104,25 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Http400BadRequest"
+                },
+                "examples": {
+                  "LowestGrantableResourceInvalid": {
+                    "summary": "付与可能な最低階層を満たしていない",
+                    "value": {
+                      "type": "about:blank",
+                      "status": 400,
+                      "title": "invalid",
+                      "detail": "Invalid input.",
+                      "errors": {
+                        "role": [
+                          {
+                            "message": "\"servicepolicy-admin\"は組織階層以上にのみ付与可能です",
+                            "code": "invalid"
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -3186,6 +3182,7 @@
     },
     "/organization-iam-policy": {
       "get": {
+        "operationId": "readOrganizationIamPolicy",
         "tags": [
           "iam-policy"
         ],
@@ -3269,6 +3266,7 @@
         }
       },
       "put": {
+        "operationId": "updateOrganizationIamPolicy",
         "tags": [
           "iam-policy"
         ],
@@ -3396,6 +3394,7 @@
     },
     "/organization-id-policy": {
       "get": {
+        "operationId": "readOrganizationIdPolicy",
         "tags": [
           "id-policy"
         ],
@@ -3479,6 +3478,7 @@
         }
       },
       "put": {
+        "operationId": "updateOrganizationIdPolicy",
         "tags": [
           "id-policy"
         ],
@@ -3606,6 +3606,7 @@
     },
     "/service-principals": {
       "get": {
+        "operationId": "listServicePrincipals",
         "tags": [
           "service-principal"
         ],
@@ -3700,6 +3701,7 @@
         }
       },
       "post": {
+        "operationId": "createServicePrincipal",
         "tags": [
           "service-principal"
         ],
@@ -3808,6 +3810,7 @@
         }
       ],
       "get": {
+        "operationId": "readServicePrincipal",
         "tags": [
           "service-principal"
         ],
@@ -3866,6 +3869,7 @@
         }
       },
       "put": {
+        "operationId": "updateServicePrincipal",
         "tags": [
           "service-principal"
         ],
@@ -3959,6 +3963,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteServicePrincipal",
         "tags": [
           "service-principal"
         ],
@@ -4022,6 +4027,7 @@
     },
     "/service-principals/oauth2/token": {
       "post": {
+        "operationId": "issueServicePrincipalToken",
         "tags": [
           "service-principal"
         ],
@@ -4084,6 +4090,7 @@
     },
     "/service-principals/{service_principal_id}/keys": {
       "get": {
+        "operationId": "listServicePrincipalKeys",
         "tags": [
           "service-principal"
         ],
@@ -4177,6 +4184,7 @@
     },
     "/service-principals/{service_principal_id}/upload-key": {
       "post": {
+        "operationId": "uploadServicePrincipalKey",
         "tags": [
           "service-principal"
         ],
@@ -4269,6 +4277,7 @@
     },
     "/service-principals/{service_principal_id}/keys/{service_principal_key_id}/enable": {
       "post": {
+        "operationId": "enableServicePrincipalKey",
         "tags": [
           "service-principal"
         ],
@@ -4346,6 +4355,7 @@
     },
     "/service-principals/{service_principal_id}/keys/{service_principal_key_id}/disable": {
       "post": {
+        "operationId": "disableServicePrincipalKey",
         "tags": [
           "service-principal"
         ],
@@ -4423,6 +4433,7 @@
     },
     "/service-principals/{service_principal_id}/keys/{service_principal_key_id}": {
       "delete": {
+        "operationId": "deleteServicePrincipalKey",
         "tags": [
           "service-principal"
         ],
@@ -4484,6 +4495,7 @@
     },
     "/compat/api-keys": {
       "get": {
+        "operationId": "listApiKeys",
         "tags": [
           "project-apikey"
         ],
@@ -4571,6 +4583,7 @@
         }
       },
       "post": {
+        "operationId": "createApiKey",
         "tags": [
           "project-apikey"
         ],
@@ -4748,6 +4761,7 @@
         }
       ],
       "get": {
+        "operationId": "readApiKey",
         "tags": [
           "project-apikey"
         ],
@@ -4815,6 +4829,7 @@
         }
       },
       "put": {
+        "operationId": "updateApiKey",
         "tags": [
           "project-apikey"
         ],
@@ -4967,6 +4982,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteApiKey",
         "tags": [
           "project-apikey"
         ],
@@ -5031,6 +5047,7 @@
     },
     "/sso-profiles": {
       "get": {
+        "operationId": "listSsoProfiles",
         "tags": [
           "sso"
         ],
@@ -5105,6 +5122,7 @@
         }
       },
       "post": {
+        "operationId": "createSsoProfile",
         "tags": [
           "sso"
         ],
@@ -5251,6 +5269,7 @@
         }
       ],
       "get": {
+        "operationId": "readSsoProfile",
         "tags": [
           "sso"
         ],
@@ -5309,6 +5328,7 @@
         }
       },
       "put": {
+        "operationId": "updateSsoProfile",
         "tags": [
           "sso"
         ],
@@ -5427,6 +5447,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteSsoProfile",
         "tags": [
           "sso"
         ],
@@ -5495,6 +5516,7 @@
         }
       ],
       "post": {
+        "operationId": "assignSsoProfile",
         "tags": [
           "sso"
         ],
@@ -5571,6 +5593,7 @@
         }
       ],
       "post": {
+        "operationId": "unassignSsoProfile",
         "tags": [
           "sso"
         ],
@@ -5631,6 +5654,7 @@
     },
     "/folders": {
       "post": {
+        "operationId": "createFolder",
         "tags": [
           "folder"
         ],
@@ -5753,6 +5777,7 @@
         }
       },
       "get": {
+        "operationId": "listFolders",
         "tags": [
           "folder"
         ],
@@ -5852,6 +5877,7 @@
         }
       ],
       "put": {
+        "operationId": "updateFolder",
         "tags": [
           "folder"
         ],
@@ -5957,6 +5983,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteFolder",
         "tags": [
           "folder"
         ],
@@ -6040,6 +6067,7 @@
         }
       },
       "get": {
+        "operationId": "readFolder",
         "tags": [
           "folder"
         ],
@@ -6090,6 +6118,7 @@
     },
     "/move-folders": {
       "post": {
+        "operationId": "moveFolders",
         "tags": [
           "folder"
         ],
@@ -6195,6 +6224,7 @@
     },
     "/organization": {
       "get": {
+        "operationId": "readOrganization",
         "tags": [
           "organization"
         ],
@@ -6253,6 +6283,7 @@
         }
       },
       "put": {
+        "operationId": "updateOrganization",
         "tags": [
           "organization"
         ],
@@ -6333,6 +6364,7 @@
     },
     "/organization-service-policy": {
       "put": {
+        "operationId": "updateOrganizationServicePolicy",
         "tags": [
           "organization"
         ],
@@ -6565,6 +6597,7 @@
         }
       },
       "get": {
+        "operationId": "readOrganizationServicePolicy",
         "tags": [
           "organization"
         ],
@@ -6959,6 +6992,7 @@
     },
     "/enable-service-policy": {
       "post": {
+        "operationId": "enableServicePolicy",
         "tags": [
           "service-policy"
         ],
@@ -7022,6 +7056,7 @@
     },
     "/disable-service-policy": {
       "post": {
+        "operationId": "disableServicePolicy",
         "tags": [
           "service-policy"
         ],
@@ -7085,6 +7120,7 @@
     },
     "/service-policy-status": {
       "get": {
+        "operationId": "checkServicePolicyStatus",
         "tags": [
           "service-policy"
         ],
@@ -7155,6 +7191,7 @@
     },
     "/service-policy-rule-templates": {
       "get": {
+        "operationId": "listServicePolicyRuleTemplates",
         "tags": [
           "service-policy"
         ],
@@ -7259,6 +7296,7 @@
     },
     "/organization-password-policy": {
       "get": {
+        "operationId": "readOrganizationPasswordPolicy",
         "tags": [
           "auth"
         ],
@@ -7307,6 +7345,7 @@
         }
       },
       "put": {
+        "operationId": "updateOrganizationPasswordPolicy",
         "tags": [
           "auth"
         ],
@@ -7377,6 +7416,7 @@
     },
     "/organization-auth-conditions": {
       "get": {
+        "operationId": "readOrganizationAuthConditions",
         "tags": [
           "auth"
         ],
@@ -7462,6 +7502,7 @@
         }
       },
       "put": {
+        "operationId": "updateOrganizationAuthConditions",
         "tags": [
           "auth"
         ],
@@ -7568,8 +7609,8 @@
             "ServicePrincipalAuth": []
           }
         ],
-        "description": "APIキーとサービスプリンシパルが操作可能なプロジェクトのIDを取得する。usacloudなどOSSプロダクトからの利用を想定としたAPI。",
-        "operationId": "GetAuthContext",
+        "description": "APIキー・サービスプリンシパルの属性情報を取得する。usacloudなどOSSプロダクトからの利用を想定としたAPI。",
+        "operationId": "readAuthContext",
         "tags": [
           "auth"
         ],
@@ -7583,7 +7624,8 @@
                   "required": [
                     "resource_id",
                     "auth_type",
-                    "limited_to_project_id"
+                    "limited_to_project_id",
+                    "member_code"
                   ],
                   "properties": {
                     "resource_id": {
@@ -7607,6 +7649,12 @@
                       "nullable": true,
                       "description": "操作可能なプロジェクトのID。現状、APIキー・サービスプリンシパルが属するプロジェクトのIDが設定されるが、将来的に操作可能なプロジェクトの制限が撤廃された場合にはnullが設定される可能性がある。",
                       "example": 123456789012
+                    },
+                    "member_code": {
+                      "type": "string",
+                      "nullable": false,
+                      "description": "APIキー・サービスプリンシパルに紐づく会員IDを取得する",
+                      "example": "aaa00000"
                     }
                   }
                 }
@@ -7628,6 +7676,7 @@
     },
     "/scim-configurations": {
       "get": {
+        "operationId": "listScimConfigurations",
         "tags": [
           "scim"
         ],
@@ -7702,6 +7751,7 @@
         }
       },
       "post": {
+        "operationId": "createScimConfiguration",
         "tags": [
           "scim"
         ],
@@ -7804,6 +7854,7 @@
         }
       ],
       "get": {
+        "operationId": "readScimConfiguration",
         "tags": [
           "scim"
         ],
@@ -7862,6 +7913,7 @@
         }
       },
       "put": {
+        "operationId": "updateScimConfiguration",
         "tags": [
           "scim"
         ],
@@ -7950,6 +8002,7 @@
         }
       },
       "delete": {
+        "operationId": "deleteScimConfiguration",
         "tags": [
           "scim"
         ],
@@ -8025,6 +8078,7 @@
         }
       ],
       "post": {
+        "operationId": "regenerateScimConfigurationToken",
         "tags": [
           "scim"
         ],
@@ -9902,3 +9956,4 @@
     }
   }
 }
+

@@ -52,6 +52,9 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/cloudhsm/licenses/{resource_id}", "Get a CloudHSM software license", s.handleReadLicense),
 		route("PUT", "/cloudhsm/licenses/{resource_id}", "Update a CloudHSM software license", s.handleUpdateLicense),
 		route("DELETE", "/cloudhsm/licenses/{resource_id}", "Delete a CloudHSM software license", s.handleDeleteLicense),
+
+		route("GET", "/cloudhsm/licenses/{license_resource_id}/documents", "List documents of a CloudHSM software license", s.handleListDocuments),
+		route("POST", "/cloudhsm/licenses/{license_resource_id}/documents/{id}/download", "Get the download URL of a license document", s.handleDownloadDocument),
 	}
 	return append(table, core.SpecViolationRoutes(s.respValidator)...)
 }

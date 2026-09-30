@@ -23,6 +23,7 @@ type vaultJSON struct {
 
 type wrappedVault struct {
 	Vault vaultJSON `json:"Vault"`
+	IsOk  bool      `json:"is_ok"`
 }
 
 type paginatedVaultList struct {
@@ -30,6 +31,7 @@ type paginatedVaultList struct {
 	From   int         `json:"From"`
 	Total  int         `json:"Total"`
 	Vaults []vaultJSON `json:"Vaults"`
+	IsOk   bool        `json:"is_ok"`
 }
 
 type vaultRequestBody struct {
@@ -60,16 +62,23 @@ func toVaultJSON(v *Vault) vaultJSON {
 }
 
 func (s *Server) handleListVaults(w http.ResponseWriter, r *http.Request) {
+	p, err := core.ParsePage(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	vaults := s.store.ListVaults()
 	items := make([]vaultJSON, len(vaults))
 	for i, v := range vaults {
 		items[i] = toVaultJSON(v)
 	}
+	paged := core.Paginate(items, p)
 	core.WriteJSON(w, http.StatusOK, paginatedVaultList{
-		Count:  len(items),
-		From:   0,
+		Count:  len(paged),
+		From:   p.From,
 		Total:  len(items),
-		Vaults: items,
+		Vaults: paged,
+		IsOk:   true,
 	})
 }
 
@@ -81,7 +90,7 @@ func (s *Server) handleCreateVault(w http.ResponseWriter, r *http.Request) {
 	}
 	v := s.store.CreateVault(req.Vault.Name, req.Vault.KmsKeyID, req.Vault.Description, req.Vault.Tags)
 	s.logger.Debug("vault created", "vault_id", v.ID, "name", v.Name)
-	core.WriteJSON(w, http.StatusCreated, wrappedVault{Vault: toVaultJSON(v)})
+	core.WriteJSON(w, http.StatusCreated, wrappedVault{Vault: toVaultJSON(v), IsOk: true})
 }
 
 func (s *Server) handleGetVault(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +100,7 @@ func (s *Server) handleGetVault(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "vault not found")
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v)})
+	core.WriteJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v), IsOk: true})
 }
 
 func (s *Server) handleUpdateVault(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +115,7 @@ func (s *Server) handleUpdateVault(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "vault not found")
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v)})
+	core.WriteJSON(w, http.StatusOK, wrappedVault{Vault: toVaultJSON(v), IsOk: true})
 }
 
 func (s *Server) handleDeleteVault(w http.ResponseWriter, r *http.Request) {

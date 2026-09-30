@@ -319,7 +319,7 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	created, err := spOp.Create(ctx, v1.ServicePrincipalsPostReq{
+	created, err := spOp.Create(ctx, v1.CreateServicePrincipalReq{
 		ProjectID:   proj.ID,
 		Name:        "test-sp",
 		Description: "test description",
@@ -659,6 +659,9 @@ func TestAuthContext(t *testing.T) {
 	if ac.AuthType != "apikey" {
 		t.Fatalf("unexpected auth_type: %s", ac.AuthType)
 	}
+	if ac.MemberCode == "" {
+		t.Fatal("member_code is empty")
+	}
 }
 
 func TestSSOProfileLifecycle(t *testing.T) {
@@ -668,7 +671,7 @@ func TestSSOProfileLifecycle(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	ssoOp := sso.NewSSOOp(client)
 
-	created, err := ssoOp.Create(ctx, v1.SSOProfilesPostReq{
+	created, err := ssoOp.Create(ctx, v1.CreateSsoProfileReq{
 		Name:           "test-sso",
 		Description:    "test SSO profile",
 		IdpEntityID:    "https://idp.example.com/entity",
@@ -811,7 +814,7 @@ func TestServicePolicyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected rule templates: %+v", tpls)
 	}
 
-	putRes, err := client.OrganizationServicePolicyPut(ctx, &v1.OrganizationServicePolicyPutReq{
+	putRes, err := client.UpdateOrganizationServicePolicy(ctx, &v1.UpdateOrganizationServicePolicyReq{
 		Rules: []v1.Rule{{
 			Code:     "example.rule.bool",
 			IsActive: true,
@@ -821,14 +824,14 @@ func TestServicePolicyLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := putRes.(*v1.OrganizationServicePolicyPutOK); !ok {
+	if _, ok := putRes.(*v1.UpdateOrganizationServicePolicyOK); !ok {
 		t.Fatalf("unexpected put response: %#v", putRes)
 	}
-	getRes, err := client.OrganizationServicePolicyGet(ctx, v1.OrganizationServicePolicyGetParams{})
+	getRes, err := client.ReadOrganizationServicePolicy(ctx, v1.ReadOrganizationServicePolicyParams{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	rules, ok := getRes.(*v1.OrganizationServicePolicyGetOK)
+	rules, ok := getRes.(*v1.ReadOrganizationServicePolicyOK)
 	if !ok {
 		t.Fatalf("unexpected get response: %#v", getRes)
 	}

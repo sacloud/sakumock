@@ -73,7 +73,7 @@ Queue resources (control plane) can be managed with the SDK's queue client or an
 tool that talks to the `/commonserviceitem` endpoints.
 
 A queue created via the control plane uses the visibility timeout and expiration set
-on it (`configQueue`). For data plane requests to a queue that was never created via
+on it (`updateQueue`). For data plane requests to a queue that was never created via
 the control plane, the queue is created automatically on first access using the
 server's default settings. When using in-memory storage (default), all data is lost
 when the server stops. Use `--database` for persistent storage.

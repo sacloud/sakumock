@@ -14,6 +14,12 @@ type localRouterResponse struct {
 	SecretKey  string `json:"SecretKey"`
 }
 
+type initialDataResponse struct {
+	PartitionName string `json:"PartitionName"`
+	PartitionID   string `json:"PartitionID"`
+	Certificate   string `json:"Certificate"`
+}
+
 type cloudhsmResponse struct {
 	ID                 string               `json:"ID"`
 	CreatedAt          string               `json:"CreatedAt"`
@@ -23,10 +29,11 @@ type cloudhsmResponse struct {
 	Name               string               `json:"Name"`
 	Description        string               `json:"Description"`
 	Tags               []string             `json:"Tags"`
-	Ipv4NetworkAddress string               `json:"Ipv4NetworkAddress"`
-	Ipv4PrefixLength   int                  `json:"Ipv4PrefixLength"`
-	Ipv4Address        string               `json:"Ipv4Address"`
+	IPv4NetworkAddress string               `json:"IPv4NetworkAddress"`
+	IPv4PrefixLength   int                  `json:"IPv4PrefixLength"`
+	IPv4Address        string               `json:"IPv4Address"`
 	LocalRouter        *localRouterResponse `json:"LocalRouter"`
+	InitialData        *initialDataResponse `json:"InitialData"`
 }
 
 type createCloudHSMResponse struct {
@@ -38,17 +45,19 @@ type createCloudHSMResponse struct {
 	Name               string   `json:"Name"`
 	Description        string   `json:"Description"`
 	Tags               []string `json:"Tags"`
-	Ipv4NetworkAddress string   `json:"Ipv4NetworkAddress"`
-	Ipv4PrefixLength   int      `json:"Ipv4PrefixLength"`
-	Ipv4Address        string   `json:"Ipv4Address"`
+	IPv4NetworkAddress string   `json:"IPv4NetworkAddress"`
+	IPv4PrefixLength   int      `json:"IPv4PrefixLength"`
+	IPv4Address        string   `json:"IPv4Address"`
 }
 
 type wrappedCloudHSM struct {
 	CloudHSM cloudhsmResponse `json:"CloudHSM"`
+	IsOk     bool             `json:"is_ok"`
 }
 
 type wrappedCreateCloudHSM struct {
 	CloudHSM createCloudHSMResponse `json:"CloudHSM"`
+	IsOk     bool                   `json:"is_ok"`
 }
 
 type paginatedCloudHSMList struct {
@@ -56,6 +65,7 @@ type paginatedCloudHSMList struct {
 	From      int                `json:"From"`
 	Total     int                `json:"Total"`
 	CloudHSMs []cloudhsmResponse `json:"CloudHSMs"`
+	IsOk      bool               `json:"is_ok"`
 }
 
 type createCloudHSMRequest struct {
@@ -63,8 +73,8 @@ type createCloudHSMRequest struct {
 		Name               string   `json:"Name"`
 		Description        string   `json:"Description"`
 		Tags               []string `json:"Tags"`
-		Ipv4NetworkAddress string   `json:"Ipv4NetworkAddress"`
-		Ipv4PrefixLength   int      `json:"Ipv4PrefixLength"`
+		IPv4NetworkAddress string   `json:"IPv4NetworkAddress"`
+		IPv4PrefixLength   int      `json:"IPv4PrefixLength"`
 	} `json:"CloudHSM"`
 }
 
@@ -73,8 +83,8 @@ type updateCloudHSMRequest struct {
 		Name               string   `json:"Name"`
 		Description        string   `json:"Description"`
 		Tags               []string `json:"Tags"`
-		Ipv4NetworkAddress string   `json:"Ipv4NetworkAddress"`
-		Ipv4PrefixLength   int      `json:"Ipv4PrefixLength"`
+		IPv4NetworkAddress string   `json:"IPv4NetworkAddress"`
+		IPv4PrefixLength   int      `json:"IPv4PrefixLength"`
 	} `json:"CloudHSM"`
 }
 
@@ -89,6 +99,7 @@ type clientResponse struct {
 
 type wrappedClient struct {
 	Client clientResponse `json:"Client"`
+	IsOk   bool           `json:"is_ok"`
 }
 
 type paginatedClientList struct {
@@ -96,24 +107,32 @@ type paginatedClientList struct {
 	From    int              `json:"From"`
 	Total   int              `json:"Total"`
 	Clients []clientResponse `json:"Clients"`
+	IsOk    bool             `json:"is_ok"`
 }
 
-type clientRequest struct {
+type createClientRequest struct {
 	Client struct {
 		Name        string `json:"Name"`
 		Certificate string `json:"Certificate"`
 	} `json:"Client"`
 }
 
+type updateClientRequest struct {
+	Client struct {
+		Name string `json:"Name"`
+	} `json:"Client"`
+}
+
 type peerResponse struct {
-	ID     string   `json:"ID"`
-	Index  int      `json:"Index"`
-	Status string   `json:"Status"`
-	Routes []string `json:"Routes"`
+	ID          string `json:"ID"`
+	SecretKey   string `json:"SecretKey"`
+	Enabled     bool   `json:"Enabled"`
+	Description string `json:"Description"`
 }
 
 type peerListResponse struct {
 	Peers []peerResponse `json:"Peers"`
+	IsOk  bool           `json:"is_ok"`
 }
 
 type createPeerRequest struct {
@@ -135,6 +154,7 @@ type licenseResponse struct {
 
 type wrappedLicense struct {
 	License licenseResponse `json:"License"`
+	IsOk    bool            `json:"is_ok"`
 }
 
 type paginatedLicenseList struct {
@@ -142,6 +162,31 @@ type paginatedLicenseList struct {
 	From     int               `json:"From"`
 	Total    int               `json:"Total"`
 	Licenses []licenseResponse `json:"Licenses"`
+	IsOk     bool              `json:"is_ok"`
+}
+
+type documentResponse struct {
+	ID         string `json:"ID"`
+	CreatedAt  string `json:"CreatedAt"`
+	ModifiedAt string `json:"ModifiedAt"`
+	Name       string `json:"Name"`
+}
+
+type paginatedDocumentList struct {
+	Count             int                `json:"Count"`
+	From              int                `json:"From"`
+	Total             int                `json:"Total"`
+	CloudHSMDocuments []documentResponse `json:"CloudHSMDocuments"`
+	IsOk              bool               `json:"is_ok"`
+}
+
+type documentDownloadResponse struct {
+	URL string `json:"URL"`
+}
+
+type wrappedDocumentDownload struct {
+	Document documentDownloadResponse `json:"Document"`
+	IsOk     bool                     `json:"is_ok"`
 }
 
 type licenseRequest struct {
@@ -180,10 +225,11 @@ func cloudhsmRecordToResponse(h CloudHSMRecord) cloudhsmResponse {
 		Name:               h.Name,
 		Description:        h.Description,
 		Tags:               h.Tags,
-		Ipv4NetworkAddress: h.Ipv4NetworkAddress,
-		Ipv4PrefixLength:   h.Ipv4PrefixLength,
-		Ipv4Address:        h.Ipv4Address,
+		IPv4NetworkAddress: h.IPv4NetworkAddress,
+		IPv4PrefixLength:   h.IPv4PrefixLength,
+		IPv4Address:        h.IPv4Address,
 		LocalRouter:        nil,
+		InitialData:        nil,
 	}
 }
 
@@ -197,23 +243,30 @@ func cloudhsmRecordToCreateResponse(h CloudHSMRecord) createCloudHSMResponse {
 		Name:               h.Name,
 		Description:        h.Description,
 		Tags:               h.Tags,
-		Ipv4NetworkAddress: h.Ipv4NetworkAddress,
-		Ipv4PrefixLength:   h.Ipv4PrefixLength,
-		Ipv4Address:        h.Ipv4Address,
+		IPv4NetworkAddress: h.IPv4NetworkAddress,
+		IPv4PrefixLength:   h.IPv4PrefixLength,
+		IPv4Address:        h.IPv4Address,
 	}
 }
 
 func (s *Server) handleListCloudHSMs(w http.ResponseWriter, r *http.Request) {
 	hsms := s.store.ListCloudHSMs()
-	items := make([]cloudhsmResponse, len(hsms))
-	for i, h := range hsms {
+	p, err := core.ParsePage(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	page := core.Paginate(hsms, p)
+	items := make([]cloudhsmResponse, len(page))
+	for i, h := range page {
 		items[i] = cloudhsmRecordToResponse(h)
 	}
 	core.WriteJSON(w, http.StatusOK, paginatedCloudHSMList{
 		Count:     len(items),
-		From:      0,
-		Total:     len(items),
+		From:      p.From,
+		Total:     len(hsms),
 		CloudHSMs: items,
+		IsOk:      true,
 	})
 }
 
@@ -223,13 +276,13 @@ func (s *Server) handleCreateCloudHSM(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	h, err := s.store.CreateCloudHSM(req.CloudHSM.Name, req.CloudHSM.Description, req.CloudHSM.Tags, req.CloudHSM.Ipv4NetworkAddress, req.CloudHSM.Ipv4PrefixLength)
+	h, err := s.store.CreateCloudHSM(req.CloudHSM.Name, req.CloudHSM.Description, req.CloudHSM.Tags, req.CloudHSM.IPv4NetworkAddress, req.CloudHSM.IPv4PrefixLength)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	s.logger.Debug("cloudhsm created", "id", h.ID, "name", h.Name)
-	core.WriteJSON(w, http.StatusCreated, wrappedCreateCloudHSM{CloudHSM: cloudhsmRecordToCreateResponse(h)})
+	core.WriteJSON(w, http.StatusCreated, wrappedCreateCloudHSM{CloudHSM: cloudhsmRecordToCreateResponse(h), IsOk: true})
 }
 
 func (s *Server) handleReadCloudHSM(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +292,7 @@ func (s *Server) handleReadCloudHSM(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedCloudHSM{CloudHSM: cloudhsmRecordToResponse(h)})
+	core.WriteJSON(w, http.StatusOK, wrappedCloudHSM{CloudHSM: cloudhsmRecordToResponse(h), IsOk: true})
 }
 
 func (s *Server) handleUpdateCloudHSM(w http.ResponseWriter, r *http.Request) {
@@ -249,12 +302,12 @@ func (s *Server) handleUpdateCloudHSM(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	h, err := s.store.UpdateCloudHSM(id, req.CloudHSM.Name, req.CloudHSM.Description, req.CloudHSM.Tags, req.CloudHSM.Ipv4NetworkAddress, req.CloudHSM.Ipv4PrefixLength)
+	h, err := s.store.UpdateCloudHSM(id, req.CloudHSM.Name, req.CloudHSM.Description, req.CloudHSM.Tags, req.CloudHSM.IPv4NetworkAddress, req.CloudHSM.IPv4PrefixLength)
 	if err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedCloudHSM{CloudHSM: cloudhsmRecordToResponse(h)})
+	core.WriteJSON(w, http.StatusOK, wrappedCloudHSM{CloudHSM: cloudhsmRecordToResponse(h), IsOk: true})
 }
 
 func (s *Server) handleDeleteCloudHSM(w http.ResponseWriter, r *http.Request) {
@@ -284,21 +337,28 @@ func (s *Server) handleListClients(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	items := make([]clientResponse, len(clients))
-	for i, c := range clients {
+	p, err := core.ParsePage(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	page := core.Paginate(clients, p)
+	items := make([]clientResponse, len(page))
+	for i, c := range page {
 		items[i] = clientRecordToResponse(c)
 	}
 	core.WriteJSON(w, http.StatusOK, paginatedClientList{
 		Count:   len(items),
-		From:    0,
-		Total:   len(items),
+		From:    p.From,
+		Total:   len(clients),
 		Clients: items,
+		IsOk:    true,
 	})
 }
 
 func (s *Server) handleCreateClient(w http.ResponseWriter, r *http.Request) {
 	hsmID := r.PathValue("cloudhsm_resource_id")
-	var req clientRequest
+	var req createClientRequest
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -309,7 +369,7 @@ func (s *Server) handleCreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("cloudhsm client created", "hsm_id", hsmID, "id", c.ID, "name", c.Name)
-	core.WriteJSON(w, http.StatusCreated, wrappedClient{Client: clientRecordToResponse(c)})
+	core.WriteJSON(w, http.StatusCreated, wrappedClient{Client: clientRecordToResponse(c), IsOk: true})
 }
 
 func (s *Server) handleReadClient(w http.ResponseWriter, r *http.Request) {
@@ -320,23 +380,23 @@ func (s *Server) handleReadClient(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedClient{Client: clientRecordToResponse(c)})
+	core.WriteJSON(w, http.StatusOK, wrappedClient{Client: clientRecordToResponse(c), IsOk: true})
 }
 
 func (s *Server) handleUpdateClient(w http.ResponseWriter, r *http.Request) {
 	hsmID := r.PathValue("cloudhsm_resource_id")
 	id := r.PathValue("id")
-	var req clientRequest
+	var req updateClientRequest
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	c, err := s.store.UpdateClient(hsmID, id, req.Client.Name, req.Client.Certificate)
+	c, err := s.store.UpdateClient(hsmID, id, req.Client.Name)
 	if err != nil {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedClient{Client: clientRecordToResponse(c)})
+	core.WriteJSON(w, http.StatusOK, wrappedClient{Client: clientRecordToResponse(c), IsOk: true})
 }
 
 func (s *Server) handleDeleteClient(w http.ResponseWriter, r *http.Request) {
@@ -351,10 +411,10 @@ func (s *Server) handleDeleteClient(w http.ResponseWriter, r *http.Request) {
 
 func peerRecordToResponse(p PeerRecord) peerResponse {
 	return peerResponse{
-		ID:     p.ID,
-		Index:  p.Index,
-		Status: p.Status,
-		Routes: p.Routes,
+		ID:          p.ID,
+		SecretKey:   p.SecretKey,
+		Enabled:     p.Enabled,
+		Description: p.Description,
 	}
 }
 
@@ -369,7 +429,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	for i, p := range peers {
 		items[i] = peerRecordToResponse(p)
 	}
-	core.WriteJSON(w, http.StatusOK, peerListResponse{Peers: items})
+	core.WriteJSON(w, http.StatusOK, peerListResponse{Peers: items, IsOk: true})
 }
 
 func (s *Server) handleCreatePeer(w http.ResponseWriter, r *http.Request) {
@@ -383,7 +443,7 @@ func (s *Server) handleCreatePeer(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	p, err := s.store.CreatePeer(hsmID, req.Peer.ID)
+	p, err := s.store.CreatePeer(hsmID, req.Peer.ID, req.Peer.SecretKey)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -416,15 +476,22 @@ func licenseRecordToResponse(l LicenseRecord) licenseResponse {
 
 func (s *Server) handleListLicenses(w http.ResponseWriter, r *http.Request) {
 	licenses := s.store.ListLicenses()
-	items := make([]licenseResponse, len(licenses))
-	for i, l := range licenses {
+	p, err := core.ParsePage(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	page := core.Paginate(licenses, p)
+	items := make([]licenseResponse, len(page))
+	for i, l := range page {
 		items[i] = licenseRecordToResponse(l)
 	}
 	core.WriteJSON(w, http.StatusOK, paginatedLicenseList{
 		Count:    len(items),
-		From:     0,
-		Total:    len(items),
+		From:     p.From,
+		Total:    len(licenses),
 		Licenses: items,
+		IsOk:     true,
 	})
 }
 
@@ -440,7 +507,7 @@ func (s *Server) handleCreateLicense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Debug("cloudhsm license created", "id", l.ID, "name", l.Name)
-	core.WriteJSON(w, http.StatusCreated, wrappedLicense{License: licenseRecordToResponse(l)})
+	core.WriteJSON(w, http.StatusCreated, wrappedLicense{License: licenseRecordToResponse(l), IsOk: true})
 }
 
 func (s *Server) handleReadLicense(w http.ResponseWriter, r *http.Request) {
@@ -450,7 +517,7 @@ func (s *Server) handleReadLicense(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedLicense{License: licenseRecordToResponse(l)})
+	core.WriteJSON(w, http.StatusOK, wrappedLicense{License: licenseRecordToResponse(l), IsOk: true})
 }
 
 func (s *Server) handleUpdateLicense(w http.ResponseWriter, r *http.Request) {
@@ -465,7 +532,7 @@ func (s *Server) handleUpdateLicense(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	core.WriteJSON(w, http.StatusOK, wrappedLicense{License: licenseRecordToResponse(l)})
+	core.WriteJSON(w, http.StatusOK, wrappedLicense{License: licenseRecordToResponse(l), IsOk: true})
 }
 
 func (s *Server) handleDeleteLicense(w http.ResponseWriter, r *http.Request) {
@@ -475,6 +542,54 @@ func (s *Server) handleDeleteLicense(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleListDocuments(w http.ResponseWriter, r *http.Request) {
+	docs, err := s.store.ListDocuments(r.PathValue("license_resource_id"))
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	p, err := core.ParsePage(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	page := core.Paginate(docs, p)
+	items := make([]documentResponse, len(page))
+	for i, d := range page {
+		items[i] = documentResponse{
+			ID:         d.ID,
+			CreatedAt:  core.FormatRFC3339Nano(d.CreatedAt),
+			ModifiedAt: core.FormatRFC3339Nano(d.ModifiedAt),
+			Name:       d.Name,
+		}
+	}
+	core.WriteJSON(w, http.StatusOK, paginatedDocumentList{
+		Count:             len(items),
+		From:              p.From,
+		Total:             len(docs),
+		CloudHSMDocuments: items,
+		IsOk:              true,
+	})
+}
+
+func (s *Server) handleDownloadDocument(w http.ResponseWriter, r *http.Request) {
+	d, err := s.store.ReadDocument(r.PathValue("license_resource_id"), r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	core.WriteJSON(w, http.StatusOK, wrappedDocumentDownload{
+		Document: documentDownloadResponse{URL: documentURL(d)},
+		IsOk:     true,
+	})
+}
+
+// documentURL returns the download URL handed out for a license document.
+// The mock hosts no files, so it points at a reserved example.com name.
+func documentURL(d DocumentRecord) string {
+	return "https://example.com/cloudhsm/licenses/" + d.LicenseID + "/documents/" + d.ID + "/" + d.Name
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {

@@ -33,6 +33,7 @@ type MemoryStore struct {
 	clients  map[string]map[string]*ClientRecord // hsmID -> clientID -> record
 	peers    map[string]map[string]*PeerRecord   // hsmID -> peerID -> record
 	licenses map[string]*LicenseRecord
+	docs     map[string]map[string]*DocumentRecord // licenseID -> documentID -> record
 	ids      *core.IDGenerator
 	logger   *slog.Logger
 }
@@ -47,6 +48,7 @@ func NewMemoryStore(logger *slog.Logger) *MemoryStore {
 		clients:  make(map[string]map[string]*ClientRecord),
 		peers:    make(map[string]map[string]*PeerRecord),
 		licenses: make(map[string]*LicenseRecord),
+		docs:     make(map[string]map[string]*DocumentRecord),
 		ids:      core.NewIDGenerator(core.DefaultIDBase()),
 		logger:   logger,
 	}
@@ -97,9 +99,9 @@ func (s *MemoryStore) CreateCloudHSM(name, description string, tags []string, ip
 		Description:        description,
 		Availability:       "available",
 		Tags:               tags,
-		Ipv4NetworkAddress: ipv4Net,
-		Ipv4PrefixLength:   ipv4Prefix,
-		Ipv4Address:        firstUsableAddress(ipv4Net),
+		IPv4NetworkAddress: ipv4Net,
+		IPv4PrefixLength:   ipv4Prefix,
+		IPv4Address:        firstUsableAddress(ipv4Net),
 		CreatedAt:          now,
 		ModifiedAt:         now,
 	}
@@ -125,9 +127,9 @@ func (s *MemoryStore) UpdateCloudHSM(id, name, description string, tags []string
 		tags = []string{}
 	}
 	h.Tags = tags
-	h.Ipv4NetworkAddress = ipv4Net
-	h.Ipv4PrefixLength = ipv4Prefix
-	h.Ipv4Address = firstUsableAddress(ipv4Net)
+	h.IPv4NetworkAddress = ipv4Net
+	h.IPv4PrefixLength = ipv4Prefix
+	h.IPv4Address = firstUsableAddress(ipv4Net)
 	h.ModifiedAt = time.Now()
 	s.logger.Debug("cloudhsm updated", "id", id, "name", name)
 	return *h, nil
@@ -206,8 +208,8 @@ func (s *MemoryStore) ReadClient(hsmID, id string) (ClientRecord, error) {
 	return *c, nil
 }
 
-// UpdateClient applies the given values to an existing client.
-func (s *MemoryStore) UpdateClient(hsmID, id, name, certificate string) (ClientRecord, error) {
+// UpdateClient renames an existing client; its certificate is immutable.
+func (s *MemoryStore) UpdateClient(hsmID, id, name string) (ClientRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -220,7 +222,6 @@ func (s *MemoryStore) UpdateClient(hsmID, id, name, certificate string) (ClientR
 		return ClientRecord{}, fmt.Errorf("cloudhsm client %q not found", id)
 	}
 	c.Name = name
-	c.Certificate = certificate
 	c.ModifiedAt = time.Now()
 	s.logger.Debug("cloudhsm client updated", "hsm_id", hsmID, "id", id, "name", name)
 	return *c, nil
@@ -256,12 +257,12 @@ func (s *MemoryStore) ListPeers(hsmID string) ([]PeerRecord, error) {
 	for _, p := range peers {
 		result = append(result, *p)
 	}
-	sort.Slice(result, func(i, j int) bool { return result[i].Index < result[j].Index })
+	sort.Slice(result, func(i, j int) bool { return result[i].ID < result[j].ID })
 	return result, nil
 }
 
 // CreatePeer registers an IPsec peer against the CloudHSM.
-func (s *MemoryStore) CreatePeer(hsmID, peerID string) (PeerRecord, error) {
+func (s *MemoryStore) CreatePeer(hsmID, peerID, secretKey string) (PeerRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -275,9 +276,8 @@ func (s *MemoryStore) CreatePeer(hsmID, peerID string) (PeerRecord, error) {
 	p := &PeerRecord{
 		ID:         peerID,
 		CloudHSMID: hsmID,
-		Index:      len(peers) + 1,
-		Status:     "UP",
-		Routes:     []string{},
+		SecretKey:  secretKey,
+		Enabled:    true,
 	}
 	peers[peerID] = p
 	s.logger.Debug("cloudhsm peer created", "hsm_id", hsmID, "id", peerID)
@@ -333,6 +333,10 @@ func (s *MemoryStore) CreateLicense(name, description string, tags []string) (Li
 		ModifiedAt:  now,
 	}
 	s.licenses[id] = l
+	docID := s.generateID()
+	s.docs[id] = map[string]*DocumentRecord{
+		docID: {ID: docID, LicenseID: id, Name: "license.zip", CreatedAt: now, ModifiedAt: now},
+	}
 	s.logger.Debug("cloudhsm license created", "id", id, "name", name)
 	return *l, nil
 }
@@ -378,8 +382,42 @@ func (s *MemoryStore) DeleteLicense(id string) error {
 		return fmt.Errorf("cloudhsm license %q not found", id)
 	}
 	delete(s.licenses, id)
+	delete(s.docs, id)
 	s.logger.Debug("cloudhsm license deleted", "id", id)
 	return nil
+}
+
+// ListDocuments returns the documents attached to the license, oldest first.
+func (s *MemoryStore) ListDocuments(licenseID string) ([]DocumentRecord, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	docs, ok := s.docs[licenseID]
+	if !ok {
+		return nil, fmt.Errorf("cloudhsm license %q not found", licenseID)
+	}
+	result := make([]DocumentRecord, 0, len(docs))
+	for _, d := range docs {
+		result = append(result, *d)
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].ID < result[j].ID })
+	return result, nil
+}
+
+// ReadDocument returns one document of the license.
+func (s *MemoryStore) ReadDocument(licenseID, id string) (DocumentRecord, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	docs, ok := s.docs[licenseID]
+	if !ok {
+		return DocumentRecord{}, fmt.Errorf("cloudhsm license %q not found", licenseID)
+	}
+	d, ok := docs[id]
+	if !ok {
+		return DocumentRecord{}, fmt.Errorf("cloudhsm document %q not found", id)
+	}
+	return *d, nil
 }
 
 // Close releases the resources held by the store.

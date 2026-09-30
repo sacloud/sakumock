@@ -1,5 +1,15 @@
 version: 2
 updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # OpenTelemetry modules are released together and must move in lockstep.
+      opentelemetry:
+        patterns:
+          - go.opentelemetry.io/*
+
   # Provider pinned by test/terraform/.terraform.lock.hcl for the
   # terraform-integration CI job.
   - package-ecosystem: terraform

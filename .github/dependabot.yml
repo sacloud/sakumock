@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # Provider pinned by test/terraform/.terraform.lock.hcl for the
+  # terraform-integration CI job.
+  - package-ecosystem: terraform
+    directory: /test/terraform
+    schedule:
+      interval: weekly

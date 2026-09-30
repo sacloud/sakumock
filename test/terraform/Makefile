@@ -4,8 +4,8 @@
 test:
 	go test -tags terraform -v ./...
 
-# Remove artifacts left behind by running `terraform` / `sakumock all` manually
-# here (the .gitignore'd Terraform state plus the generated .env). The automated
-# test uses a temp dir, so these are never needed by it.
+# Remove artifacts left behind by running `terraform` / `sakumock all` here
+# (the .gitignore'd Terraform state plus the generated .env). The committed
+# .terraform.lock.hcl is kept.
 clean:
-	rm -rf .terraform .terraform.lock.hcl *.tfstate *.tfstate.* .env
+	rm -rf .terraform *.tfstate *.tfstate.* .env

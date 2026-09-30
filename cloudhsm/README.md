@@ -93,6 +93,8 @@ Every license is created with one document (`license.zip`). The mock hosts no fi
 
 `InitialData` (partition name/ID and server certificate) is always `null`.
 
+API spec 1.2.0 renamed the `Ipv4*` fields to `IPv4*`. For clients built on the older SDK (e.g. terraform-provider-sakura v3.14.2), requests may still use `Ipv4NetworkAddress` / `Ipv4PrefixLength`, and CloudHSM responses carry both spellings.
+
 ## Mock-only endpoints
 
 Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they observe the mock itself.

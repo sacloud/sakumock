@@ -24,10 +24,11 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 			Route: core.Route{Method: method, Path: path, Description: desc, Kind: "api"},
 			// Fault injection outermost (an injected fault is an
 			// infrastructure-level failure, so it may mask a would-be 429/400),
-			// then rate limit, then spec-derived body validation, then the
+			// then rate limit, then legacy Ipv4* renaming (legacy_ipv4.go),
+			// then spec-derived body validation, then the
 			// handler. Response validation sits innermost so only what the
 			// handler itself produces is checked against the spec.
-			Handler: s.fault.Middleware(rl(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h)))),
+			Handler: s.fault.Middleware(rl(legacyIPv4Names(s.validator.Middleware(method, path, s.respValidator.Middleware(method, path, h))))),
 		}
 	}
 	table := []core.RegisteredRoute{

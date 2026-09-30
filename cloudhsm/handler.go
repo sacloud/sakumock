@@ -34,6 +34,7 @@ type cloudhsmResponse struct {
 	IPv4Address        string               `json:"IPv4Address"`
 	LocalRouter        *localRouterResponse `json:"LocalRouter"`
 	InitialData        *initialDataResponse `json:"InitialData"`
+	legacyIPv4Response
 }
 
 type createCloudHSMResponse struct {
@@ -48,6 +49,7 @@ type createCloudHSMResponse struct {
 	IPv4NetworkAddress string   `json:"IPv4NetworkAddress"`
 	IPv4PrefixLength   int      `json:"IPv4PrefixLength"`
 	IPv4Address        string   `json:"IPv4Address"`
+	legacyIPv4Response
 }
 
 type wrappedCloudHSM struct {
@@ -230,6 +232,7 @@ func cloudhsmRecordToResponse(h CloudHSMRecord) cloudhsmResponse {
 		IPv4Address:        h.IPv4Address,
 		LocalRouter:        nil,
 		InitialData:        nil,
+		legacyIPv4Response: newLegacyIPv4(h),
 	}
 }
 
@@ -246,6 +249,7 @@ func cloudhsmRecordToCreateResponse(h CloudHSMRecord) createCloudHSMResponse {
 		IPv4NetworkAddress: h.IPv4NetworkAddress,
 		IPv4PrefixLength:   h.IPv4PrefixLength,
 		IPv4Address:        h.IPv4Address,
+		legacyIPv4Response: newLegacyIPv4(h),
 	}
 }
 

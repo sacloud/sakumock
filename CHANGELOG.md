@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.12.0](https://github.com/sacloud/sakumock/compare/v0.11.0...v0.12.0) - 2026-09-30
+
+### 🚀 New Features
+- Update sacloud-sdk-go to v0.3.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/189
+### 📦 Dependency Updates
+- build(deps): Bump google.golang.org/grpc from 1.83.1 to 1.83.2 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/182
+- build(deps): update OpenTelemetry trace exporters to v1.45.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/187
+- build(deps): Bump actions/checkout from 6.0.2 to 7.0.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/195
+- build(deps): Bump Songmu/tagpr from 1.19.0 to 1.21.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/194
+- build(deps): Bump hashicorp/setup-terraform from 3.1.2 to 4.0.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/193
+- build(deps): Bump docker/setup-buildx-action from 4.1.0 to 4.4.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/192
+- build(deps): Bump docker/setup-qemu-action from 4.1.0 to 4.4.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/191
+- build(deps): Bump the opentelemetry group with 6 updates by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/196
+- build(deps): Bump github.com/aws/aws-sdk-go-v2/service/s3 from 1.103.3 to 1.113.4 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/197
+- build(deps): Bump google.golang.org/grpc from 1.83.2 to 1.84.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/200
+- build(deps): Bump github.com/alecthomas/kong from 1.15.0 to 1.16.1 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/199
+- build(deps): Bump github.com/coreos/go-oidc/v3 from 3.19.0 to 3.21.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/198
+### Other Changes
+- Rename CLAUDE.md to AGENTS.md by @fujiwara in https://github.com/sacloud/sakumock/pull/188
+- Pin the Terraform provider and enable Dependabot version updates by @fujiwara in https://github.com/sacloud/sakumock/pull/190
+
 ## [v0.11.0](https://github.com/sacloud/sakumock/compare/v0.10.0...v0.11.0) - 2026-09-07
 ### 🚀 New Features
 - apprun: follow OpenAPI v1.5.0 (component secrets) on sacloud-sdk-go v0.2.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/180

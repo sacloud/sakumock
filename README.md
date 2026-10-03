@@ -8,23 +8,25 @@ A local mock server suite for SAKURA Cloud APIs, inspired by [LocalStack](https:
 
 Every service is available as a subcommand of the single `sakumock` binary (e.g. `sakumock simplemq`), and as a Go library for spinning up in-process test servers. See each service's README for details.
 
-| Service | Default Port | Module | Description |
-|---|---|---|---|
-| [simplemq](simplemq/) | 18080 | `github.com/sacloud/sakumock/simplemq` | SimpleMQ message API |
-| [secretmanager](secretmanager/) | 18082 | `github.com/sacloud/sakumock/secretmanager` | SecretManager API |
-| [kms](kms/) | 18081 | `github.com/sacloud/sakumock/kms` | KMS key management API |
-| [simplenotification](simplenotification/) | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
-| [monitoringsuite](monitoringsuite/) | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
-| [eventbus](eventbus/) | 18085 | `github.com/sacloud/sakumock/eventbus` | EventBus control-plane API |
-| [objectstorage](objectstorage/) | 18086 | `github.com/sacloud/sakumock/objectstorage` | Object Storage control-plane API (optional S3 data plane via versitygw) |
-| [iam](iam/) | 18087 | `github.com/sacloud/sakumock/iam` | IAM control-plane API |
-| [apprun](apprun/) | 18088 | `github.com/sacloud/sakumock/apprun` | AppRun control-plane API (optional Docker data plane) |
-| [apprundedicated](apprundedicated/) | 18089 | `github.com/sacloud/sakumock/apprundedicated` | AppRun Dedicated control-plane API (optional Docker data plane) |
-| [workflows](workflows/) | 18090 | `github.com/sacloud/sakumock/workflows` | Workflows control-plane API (optional Runbook execution engine) |
-| [apigw](apigw/) | 18091 | `github.com/sacloud/sakumock/apigw` | API Gateway control-plane API (optional gateway data plane) |
-| [cloudhsm](cloudhsm/) | 18092 | `github.com/sacloud/sakumock/cloudhsm` | CloudHSM control-plane API |
-| [seg](seg/) | 18093 | `github.com/sacloud/sakumock/seg` | Service Endpoint Gateway control-plane API |
-| [addon](addon/) | 18094 | `github.com/sacloud/sakumock/addon` | Add-on API (AI / CDN / security / data analytics resources) |
+Under `sakumock all` every control plane shares one listener (`127.0.0.1:18000` by default) and is served under its **Path** (e.g. `http://127.0.0.1:18000/kms`). A service run on its own (`sakumock kms`) or under `sakumock all --per-service-ports` listens on its **Standalone Port** instead, at the root path.
+
+| Service | Path | Standalone Port | Module | Description |
+|---|---|---|---|---|
+| [simplemq](simplemq/) | `/simplemq` | 18080 | `github.com/sacloud/sakumock/simplemq` | SimpleMQ message API |
+| [secretmanager](secretmanager/) | `/secretmanager` | 18082 | `github.com/sacloud/sakumock/secretmanager` | SecretManager API |
+| [kms](kms/) | `/kms` | 18081 | `github.com/sacloud/sakumock/kms` | KMS key management API |
+| [simplenotification](simplenotification/) | `/simplenotification` | 18083 | `github.com/sacloud/sakumock/simplenotification` | Simple Notification message-send API |
+| [monitoringsuite](monitoringsuite/) | `/monitoringsuite` | 18084 | `github.com/sacloud/sakumock/monitoringsuite` | Monitoring Suite control-plane API |
+| [eventbus](eventbus/) | `/eventbus` | 18085 | `github.com/sacloud/sakumock/eventbus` | EventBus control-plane API |
+| [objectstorage](objectstorage/) | `/objectstorage` | 18086 | `github.com/sacloud/sakumock/objectstorage` | Object Storage control-plane API (optional S3 data plane via versitygw) |
+| [iam](iam/) | `/iam` | 18087 | `github.com/sacloud/sakumock/iam` | IAM control-plane API |
+| [apprun](apprun/) | `/apprun` | 18088 | `github.com/sacloud/sakumock/apprun` | AppRun control-plane API (optional Docker data plane) |
+| [apprundedicated](apprundedicated/) | `/apprun-dedicated` | 18089 | `github.com/sacloud/sakumock/apprundedicated` | AppRun Dedicated control-plane API (optional Docker data plane) |
+| [workflows](workflows/) | `/workflows` | 18090 | `github.com/sacloud/sakumock/workflows` | Workflows control-plane API (optional Runbook execution engine) |
+| [apigw](apigw/) | `/apigw` | 18091 | `github.com/sacloud/sakumock/apigw` | API Gateway control-plane API (optional gateway data plane) |
+| [cloudhsm](cloudhsm/) | `/cloudhsm` | 18092 | `github.com/sacloud/sakumock/cloudhsm` | CloudHSM control-plane API |
+| [seg](seg/) | `/seg` | 18093 | `github.com/sacloud/sakumock/seg` | Service Endpoint Gateway control-plane API |
+| [addon](addon/) | `/addon` | 18094 | `github.com/sacloud/sakumock/addon` | Add-on API (AI / CDN / security / data analytics resources) |
 
 ## Quick Start
 
@@ -58,7 +60,9 @@ Run every service together in one process. This is the usual way to use sakumock
 sakumock all
 ```
 
-Run `sakumock all --help` for flags. Per-service flags are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`).
+Every service's control plane listens on `127.0.0.1:18000`, each under `/<service>` — the paths of the real APIs overlap across services, so the prefix is what tells them apart (e.g. `http://127.0.0.1:18000/kms`, `http://127.0.0.1:18000/simplemq`). Change the address with `--addr`. Data planes, when enabled, keep their own listeners (see each service's README).
+
+Run `sakumock all --help` for flags. Per-service flags are available with a service prefix (e.g. `--kms-latency`, `--simplemq-rate-limit`).
 
 ### Connect Your Application
 
@@ -85,7 +89,9 @@ without `set -a`:
 sakumock env --export > .envrc   # or: source <(sakumock env --export)
 ```
 
-By default the endpoints point at each service's listen address. When the client
+By default the endpoints point at `sakumock all`'s listen address (`--addr`, with
+each service's path). Pass `sakumock env` the same flags you pass `sakumock all`
+(`--addr`, `--per-service-ports`, `--config`, ...) and the endpoints match. When the client
 reaches sakumock over the network — most importantly from a container — pass
 `--host` to substitute the host the client actually uses (the port is kept):
 
@@ -101,7 +107,7 @@ Run `sakumock env` to see the full list of variables, or `sakumock all --help` f
 
 ### Flags
 
-Per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-addr`). Run `sakumock all --help` for a full listing.
+Per-service flags keep their defaults and are available with a service prefix (e.g. `--kms-latency`, `--simplemq-rate-limit`). Suite-wide flags such as `--addr` have no prefix. Run `sakumock all --help` for a full listing.
 
 ### Config File
 
@@ -109,8 +115,8 @@ Instead of passing many flags, `sakumock all` can read a config file (`--config`
 
 ```yaml
 # sakumock.yaml
+addr: 127.0.0.1:19000
 simplemq:
-  addr: 127.0.0.1:28080
   database: /var/lib/sakumock/mq.db
   message-expire: 96h
 kms:
@@ -121,7 +127,7 @@ kms:
 sakumock all --config sakumock.yaml
 ```
 
-Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
+Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Suite-wide flags are top-level keys (`addr`, `per-service-ports`, `listen-host`, ...). Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
 
 ### Environment Variables
 
@@ -131,9 +137,18 @@ Every per-service setting also has an environment variable, which is the most co
 KMS_LATENCY=200ms SIMPLEMQ_RATE_LIMIT=10 sakumock all
 ```
 
+### Per-Service Ports
+
+Pass `--per-service-ports` (or `SAKUMOCK_PER_SERVICE_PORTS=true`) to serve each control plane on its own port at the root path instead — the **Standalone Port** in the [service table](#services), changed with the prefixed `--<service>-addr` flag (e.g. `--kms-addr`). Pass the flag to `sakumock env` as well so the endpoints match:
+
+```bash
+sakumock all --per-service-ports
+sakumock env --per-service-ports > sakumock.env
+```
+
 ### Run a Single Service
 
-You can also run any service on its own as a subcommand (same flags, without the service prefix):
+You can also run any service on its own as a subcommand (same flags, without the service prefix). Each listens on its **Standalone Port** at the root path, e.g. `SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081`:
 
 ```bash
 sakumock simplemq &
@@ -269,7 +284,7 @@ Each service with inspection endpoints provides an `InspectionClient` — an HTT
 ```go
 import "github.com/sacloud/sakumock/eventbus"
 
-ic := eventbus.NewInspectionClient("http://localhost:18085")
+ic := eventbus.NewInspectionClient("http://localhost:18000/eventbus")
 ds, _ := ic.InjectEvent(ctx, eventbus.Event{Source: "//monitoringsuite..."})
 ds, _ = ic.Deliveries(ctx)
 _ = ic.ClearDeliveries(ctx)
@@ -305,11 +320,11 @@ A multi-platform image (`linux/amd64`, `linux/arm64`) is published to GitHub Con
 
 ### Basic Usage
 
-The default command runs every service bound to `0.0.0.0`, so published ports are reachable from the host:
+The default command runs every service bound to `0.0.0.0`, so the published port is reachable from the host. Every control plane shares port 18000, each under `/<service>`:
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 -p 18092:18092 -p 18093:18093 -p 18094:18094 \
+  -p 18000:18000 \
   ghcr.io/sacloud/sakumock:latest
 ```
 
@@ -319,7 +334,7 @@ A second tag, `:latest-dataplane` (and `:<version>-dataplane`), enables every se
 
 ```bash
 docker run --rm \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 -p 18092:18092 -p 18093:18093 -p 18094:18094 \
+  -p 18000:18000 \
   -p 28084:28084 -p 28086:28086 -p 28091:28091 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
@@ -346,7 +361,7 @@ If you do not need the AppRun data planes, disable them with environment variabl
 docker run --rm \
   -e APPRUN_ENABLE_DATA_PLANE=false \
   -e APPRUN_DEDICATED_ENABLE_DATA_PLANE=false \
-  -p 18080:18080 -p 18081:18081 -p 18082:18082 -p 18083:18083 -p 18084:18084 -p 18085:18085 -p 18086:18086 -p 18087:18087 -p 18088:18088 -p 18089:18089 -p 18090:18090 -p 18091:18091 -p 18092:18092 -p 18093:18093 -p 18094:18094 \
+  -p 18000:18000 \
   -p 28084:28084 -p 28086:28086 -p 28091:28091 \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
@@ -356,7 +371,7 @@ docker run --rm \
 Configure the mock's behavior with the per-service environment variables (see [Environment Variables](#environment-variables)) — handier than flags in a container:
 
 ```bash
-docker run --rm -p 18081:18081 \
+docker run --rm -p 18000:18000 \
   -e KMS_LATENCY=200ms -e KMS_RATE_LIMIT=10 \
   ghcr.io/sacloud/sakumock:latest
 ```

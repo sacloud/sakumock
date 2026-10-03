@@ -84,7 +84,7 @@ for _, m := range srv.Messages() {
 
 // InspectionClient — inspect messages over HTTP (e.g. against a running
 // sakumock process or container, not just in-process test servers)
-ic := simplenotification.NewInspectionClient("http://localhost:18083")
+ic := simplenotification.NewInspectionClient("http://localhost:18000/simplenotification") // standalone: http://localhost:18083
 msgs, _ := ic.Messages(ctx)        // list all accepted messages
 _ = ic.ClearMessages(ctx)          // reset
 ```

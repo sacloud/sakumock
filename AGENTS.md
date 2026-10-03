@@ -54,7 +54,8 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 
 ### Port allocation
 
-- Control-plane ports are sequential from 18080, one per service; find the next free one with `grep -h 'default:"127.0.0.1:18' */server.go`.
+- `sakumock all` serves every control plane on one listener (`--addr`, default `127.0.0.1:18000`), each mounted under `/<Name()>` (`core.NewMountHandler`); `sakumock env` and service link derive the endpoints from `ClientEnv()` via `core.MountedClientEnv`, so a new service needs nothing for this. Real API paths collide across services (`/commonserviceitem`, `/applications`, ...), so never route the shared listener by path alone.
+- Each service still has its own control-plane port (`Config.Addr`), used standalone and under `sakumock all --per-service-ports`. They are sequential from 18080, one per service; find the next free one with `grep -h 'default:"127.0.0.1:18' */server.go`.
 - A data plane gets a **separate listener at control-plane port + 10000** when its protocol or routing is fundamentally different from the control-plane HTTP API (external process such as versitygw, non-JSON wire formats such as remote-write/OTLP, Host-header routing such as the AppRun proxies and the API Gateway). The +10000 offset keeps the bands apart for ~10000 services; a small offset like +100 would collide.
 - A data plane that is just more HTTP paths or an in-process engine (simplemq messages, workflows runbooks) serves on the **same port**, with no `DATA_PLANE_ADDR`.
 

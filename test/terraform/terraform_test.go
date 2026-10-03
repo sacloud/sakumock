@@ -14,7 +14,46 @@ import (
 	"time"
 )
 
+// TestTerraformEndToEnd drives the fixture against `sakumock all` in its
+// default mode, every control plane on one listener. It runs on a dynamically
+// allocated free port rather than the fixed default, so the test never collides
+// with — or accidentally talks to — a process already listening there.
 func TestTerraformEndToEnd(t *testing.T) {
+	addr := freeAddrs(t, 1)[0]
+	runEndToEnd(t, []string{"--addr", addr}, []string{addr})
+}
+
+// TestTerraformEndToEndPerServicePorts drives the same fixture against
+// `sakumock all --per-service-ports`, each service on its own free port passed
+// via its prefixed --<service>-addr flag.
+func TestTerraformEndToEndPerServicePorts(t *testing.T) {
+	addrs := freeAddrs(t, 15)
+	flags := []string{
+		"--per-service-ports",
+		"--simplemq-addr", addrs[0],
+		"--kms-addr", addrs[1],
+		"--secretmanager-addr", addrs[2],
+		"--simplenotification-addr", addrs[3],
+		"--monitoringsuite-addr", addrs[4],
+		"--eventbus-addr", addrs[5],
+		"--objectstorage-addr", addrs[6],
+		"--iam-addr", addrs[7],
+		"--apprun-addr", addrs[8],
+		"--apprun-dedicated-addr", addrs[9],
+		"--workflows-addr", addrs[10],
+		"--apigw-addr", addrs[11],
+		"--cloudhsm-addr", addrs[12],
+		"--seg-addr", addrs[13],
+		"--addon-addr", addrs[14],
+	}
+	runEndToEnd(t, flags, addrs)
+}
+
+// runEndToEnd builds sakumock, starts `sakumock all` with flags (also passed to
+// `sakumock env`), waits for waitAddrs, and drives terraform apply → plan →
+// destroy against it.
+func runEndToEnd(t *testing.T, flags, waitAddrs []string) {
+	t.Helper()
 	tfBin, err := exec.LookPath("terraform")
 	if err != nil {
 		t.Skip("terraform binary not found in PATH; skipping end-to-end test")
@@ -35,45 +74,23 @@ func TestTerraformEndToEnd(t *testing.T) {
 		t.Fatalf("build sakumock: %v", err)
 	}
 
-	// Start `sakumock all` on dynamically allocated free ports rather than the
-	// fixed defaults, so the test never collides with — or accidentally talks
-	// to — a process already listening on those ports. The chosen address for
-	// each service is passed via its prefixed --<service>-addr flag.
-	addrs := freeAddrs(t, 14)
-	addrFlags := []string{
-		"--simplemq-addr", addrs[0],
-		"--kms-addr", addrs[1],
-		"--secretmanager-addr", addrs[2],
-		"--simplenotification-addr", addrs[3],
-		"--monitoringsuite-addr", addrs[4],
-		"--eventbus-addr", addrs[5],
-		"--objectstorage-addr", addrs[6],
-		"--iam-addr", addrs[7],
-		"--apprun-addr", addrs[8],
-		"--apprun-dedicated-addr", addrs[9],
-		"--workflows-addr", addrs[10],
-		"--apigw-addr", addrs[11],
-		"--cloudhsm-addr", addrs[12],
-		"--addon-addr", addrs[13],
-	}
-
-	// Write the client dotenv with the `env` subcommand (no server needed); the
-	// endpoints point at the same dynamic addresses passed to `all` below.
+	// Write the client dotenv with the `env` subcommand (no server needed); given
+	// the same flags, the endpoints point at the addresses `all` listens on below.
 	envFile := filepath.Join(binDir, "sakumock.env")
-	genEnv := exec.Command(sakumockBin, append([]string{"env", "--output", envFile}, addrFlags...)...)
+	genEnv := exec.Command(sakumockBin, append([]string{"env", "--output", envFile}, flags...)...)
 	genEnv.Stdout, genEnv.Stderr = os.Stdout, os.Stderr
 	if err := genEnv.Run(); err != nil {
 		t.Fatalf("sakumock env: %v", err)
 	}
 
-	srv := exec.Command(sakumockBin, append([]string{"all"}, addrFlags...)...)
+	srv := exec.Command(sakumockBin, append([]string{"all"}, flags...)...)
 	srv.Stdout, srv.Stderr = os.Stdout, os.Stderr
 	if err := srv.Start(); err != nil {
 		t.Fatalf("start sakumock all: %v", err)
 	}
 	t.Cleanup(func() { stopProcess(srv) })
 
-	for _, addr := range addrs {
+	for _, addr := range waitAddrs {
 		waitPort(t, addr)
 	}
 

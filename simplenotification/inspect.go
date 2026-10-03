@@ -19,7 +19,7 @@ type InspectionClient struct {
 }
 
 // NewInspectionClient returns a client that talks to the simplenotification
-// inspection endpoints at baseURL (e.g. "http://localhost:18083").
+// inspection endpoints at baseURL (e.g. "http://localhost:18000/simplenotification").
 func NewInspectionClient(baseURL string) *InspectionClient {
 	return &InspectionClient{
 		baseURL:    strings.TrimRight(baseURL, "/"),

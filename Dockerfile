@@ -5,12 +5,12 @@ FROM gcr.io/distroless/static-debian12:nonroot
 
 COPY sakumock /sakumock
 
-# One port per service (see the service table in README); EXPOSE is documentation
-# only — publish the ports you need with `-p`.
-EXPOSE 18080 18081 18082 18083 18084 18085 18086 18087 18088 18089 18090 18091 18092 18093 18094
+# Every service's control plane shares one port, each under /<service> (see the
+# service table in README); EXPOSE is documentation only — publish it with `-p`.
+EXPOSE 18000
 
 ENTRYPOINT ["/sakumock"]
-# Run every service bound to 0.0.0.0 so published ports are reachable from
+# Run every service bound to 0.0.0.0 so the published port is reachable from
 # outside the container. Override (e.g. `docker run ... env --host localhost`)
 # to emit client env vars instead.
 CMD ["all", "--listen-host", "0.0.0.0"]

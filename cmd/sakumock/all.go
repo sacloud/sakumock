@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"net/url"
 	"sync"
 
@@ -30,7 +31,8 @@ import (
 
 // serviceConfigs embeds every service's Config with its CLI prefix. It is
 // shared by the commands that operate on the whole suite (`all`, `env`), so
-// they expose the same per-service flags and iterate the same set of services.
+// they expose the same per-service flags and iterate the same set of services,
+// and passing the same flags to both makes the emitted endpoints match.
 //
 // Registering a new service here — as a field below and an entry in configs() —
 // is all that is needed to add it to those commands; name, address, endpoint
@@ -57,16 +59,22 @@ type serviceConfigs struct {
 	// HTTPS; otherwise plain HTTP. It is a single suite-wide option, not per
 	// service, because every listener runs on the same host (only the port differs).
 	TLS core.TLSFiles `embed:"" prefix:"tls-" envprefix:"SAKUMOCK_TLS_"`
+
+	// Addr is the one listener every control plane shares, each mounted under
+	// core.MountPath. PerServicePorts switches to a listener per service on its
+	// --<service>-addr instead. Data planes keep their own listeners either way.
+	Addr            string `name:"addr" placeholder:"ADDR" default:"127.0.0.1:18000" env:"SAKUMOCK_ADDR" help:"Listen address shared by every service's control plane, each under /<service> (e.g. /kms)"`
+	PerServicePorts bool   `name:"per-service-ports" env:"SAKUMOCK_PER_SERVICE_PORTS" help:"Serve each service's control plane on its own --<service>-addr instead of under --addr"`
 }
 
 func (c *serviceConfigs) configs() []core.ServiceConfig {
 	return []core.ServiceConfig{c.Simplemq, c.Kms, c.Secretmanager, c.Simplenotification, c.Monitoringsuite, c.Eventbus, c.Objectstorage, c.Iam, c.Apprun, c.ApprunDedicated, c.Workflows, c.Apigw, c.Cloudhsm, c.Seg, c.Addon}
 }
 
-// AllCmd runs every mock service together in a single process, each on its own
-// port. Per-service flags remain available with a service prefix (e.g.
-// --simplemq-addr, --kms-latency), so the defaults match the standalone
-// subcommands.
+// AllCmd runs every mock service together in a single process, all control
+// planes on one listener (--addr) unless --per-service-ports is set.
+// Per-service flags remain available with a service prefix (e.g. --kms-latency),
+// so the defaults match the standalone subcommands.
 type AllCmd struct {
 	serviceConfigs
 
@@ -100,6 +108,15 @@ func (c *AllCmd) bindAddr(listenAddr string) string {
 func (c *AllCmd) serviceLinkEnv() []core.EnvVar {
 	var vars []core.EnvVar
 	for _, cfg := range c.configs() {
+		if !c.PerServicePorts {
+			env, err := core.MountedClientEnv(cfg, c.bindAddr(c.Addr))
+			if err != nil {
+				slog.Warn("service link env", "service", cfg.Name(), "error", err)
+				continue
+			}
+			vars = append(vars, env...)
+			continue
+		}
 		for _, e := range cfg.ClientEnv() {
 			if c.ListenHost != "" {
 				if u, err := url.Parse(e.Value); err == nil {
@@ -173,6 +190,9 @@ func (c *AllCmd) Run(ctx context.Context) error {
 	}()
 
 	slog.Info("sakumock all starting", "version", sakumock.Version, "service_link", c.EnableServiceLink)
+	if !c.PerServicePorts {
+		return c.serveMounted(ctx, instances)
+	}
 	for _, i := range instances {
 		slog.Info("starting service", "service", i.cfg.Name(), "addr", c.bindAddr(i.cfg.ListenAddr()), "scheme", c.TLS.Scheme())
 	}
@@ -198,4 +218,26 @@ func (c *AllCmd) Run(ctx context.Context) error {
 	wg.Wait()
 
 	return errors.Join(errs...)
+}
+
+// serveMounted serves every control plane on c.Addr, each under its
+// core.MountPath.
+func (c *AllCmd) serveMounted(ctx context.Context, instances []serviceInstance) error {
+	addr := c.bindAddr(c.Addr)
+	for _, i := range instances {
+		slog.Info("starting service", "service", i.cfg.Name(), "addr", addr, "path", core.MountPath(i.cfg.Name()), "scheme", c.TLS.Scheme())
+	}
+	slog.Info("run `sakumock env` to emit a dotenv file (endpoints + dummy credentials) for your SDK / Terraform client")
+	return core.Serve(ctx, addr, mountHandler(instances), c.TLS)
+}
+
+func mountHandler(instances []serviceInstance) http.Handler {
+	handlers := make([]core.MountedHandler, 0, len(instances))
+	for _, i := range instances {
+		handlers = append(handlers, core.MountedHandler{
+			Name:    i.cfg.Name(),
+			Handler: core.TraceHandler(i.cfg.Name(), i.server),
+		})
+	}
+	return core.NewMountHandler(handlers)
 }

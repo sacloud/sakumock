@@ -12,6 +12,7 @@ import (
 
 func newTestAllCmd() *AllCmd {
 	c := &AllCmd{}
+	c.Addr = "127.0.0.1:18000"
 	c.Simplemq.Addr = "127.0.0.1:18080"
 	c.Kms.Addr = "127.0.0.1:18081"
 	c.Secretmanager.Addr = "127.0.0.1:18082"
@@ -118,4 +119,58 @@ func envLines(vars []core.EnvVar) []string {
 		lines[i] = v.Key + "=" + v.Value
 	}
 	return lines
+}
+
+func TestAllMountHandler(t *testing.T) {
+	instances, err := newTestAllCmd().build()
+	if err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	defer func() {
+		for _, i := range instances {
+			i.server.Close()
+		}
+	}()
+	h := mountHandler(instances)
+
+	for _, i := range instances {
+		path := core.MountPath(i.cfg.Name()) + "/_sakumock/spec-violations"
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		if rec.Code != http.StatusOK {
+			t.Errorf("GET %s: status %d, want 200", path, rec.Code)
+		}
+	}
+
+	// Without a mount path nothing matches: paths collide across services.
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/_sakumock/spec-violations", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("GET without mount path: status %d, want 404", rec.Code)
+	}
+}
+
+func TestAllServiceLinkEnv(t *testing.T) {
+	tests := []struct {
+		name            string
+		perServicePorts bool
+		want            string
+	}{
+		{"mounted", false, "http://0.0.0.0:18000/simplemq"},
+		{"per-service ports", true, "http://0.0.0.0:18080"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := newTestAllCmd()
+			c.PerServicePorts = tt.perServicePorts
+			c.ListenHost = "0.0.0.0"
+			got := map[string]string{}
+			for _, e := range c.serviceLinkEnv() {
+				got[e.Key] = e.Value
+			}
+			if v := got["SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE"]; v != tt.want {
+				t.Errorf("SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE = %q, want %q", v, tt.want)
+			}
+		})
+	}
 }

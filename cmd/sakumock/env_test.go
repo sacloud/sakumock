@@ -7,6 +7,7 @@ import (
 
 func newTestEnvCmd() *EnvCmd {
 	c := &EnvCmd{}
+	c.Addr = "127.0.0.1:18000"
 	c.Simplemq.Addr = "127.0.0.1:18080"
 	c.Kms.Addr = "127.0.0.1:18081"
 	c.Secretmanager.Addr = "127.0.0.1:18082"
@@ -17,8 +18,32 @@ func newTestEnvCmd() *EnvCmd {
 	return c
 }
 
-func TestEnvCmdDefaultHost(t *testing.T) {
+func TestEnvCmdDefault(t *testing.T) {
 	c := newTestEnvCmd()
+	vars, err := c.clientEnv()
+	if err != nil {
+		t.Fatalf("clientEnv: %v", err)
+	}
+	rendered := strings.Join(envLines(vars), "\n")
+	// Every service shares --addr, mounted under /<service>.
+	for _, want := range []string{
+		"SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18000/kms",
+		"SAKURA_ENDPOINTS_SIMPLE_MQ_QUEUE=http://127.0.0.1:18000/simplemq",
+		"SAKURA_ENDPOINTS_SIMPLE_MQ_MESSAGE=http://127.0.0.1:18000/simplemq",
+		"SAKURA_ENDPOINTS_EVENTBUS=http://127.0.0.1:18000/eventbus/", // trailing slash: see eventbus.Config.ClientEnv
+		"SAKURA_ENDPOINTS_APPRUN_DEDICATED=http://127.0.0.1:18000/apprun-dedicated",
+		"SAKURA_ACCESS_TOKEN=dummy",
+		"SAKURA_ACCESS_TOKEN_SECRET=dummy",
+	} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("env missing %q\n%s", want, rendered)
+		}
+	}
+}
+
+func TestEnvCmdPerServicePorts(t *testing.T) {
+	c := newTestEnvCmd()
+	c.PerServicePorts = true
 	vars, err := c.clientEnv()
 	if err != nil {
 		t.Fatalf("clientEnv: %v", err)
@@ -67,6 +92,29 @@ func TestEnvCmdDataPlane(t *testing.T) {
 
 func TestEnvCmdHostRewrite(t *testing.T) {
 	c := newTestEnvCmd()
+	c.Host = "sakumock"
+	vars, err := c.clientEnv()
+	if err != nil {
+		t.Fatalf("clientEnv: %v", err)
+	}
+	rendered := strings.Join(envLines(vars), "\n")
+	// Host is rewritten; the port and the mount path are kept.
+	for _, want := range []string{
+		"SAKURA_ENDPOINTS_KMS=http://sakumock:18000/kms",
+		"SAKURA_ENDPOINTS_EVENTBUS=http://sakumock:18000/eventbus/",
+	} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("env missing %q\n%s", want, rendered)
+		}
+	}
+	if strings.Contains(rendered, "127.0.0.1") {
+		t.Errorf("--host should have replaced every endpoint host\n%s", rendered)
+	}
+}
+
+func TestEnvCmdHostRewritePerServicePorts(t *testing.T) {
+	c := newTestEnvCmd()
+	c.PerServicePorts = true
 	c.Host = "sakumock"
 	vars, err := c.clientEnv()
 	if err != nil {

@@ -21,7 +21,7 @@ type InspectionClient struct {
 }
 
 // NewInspectionClient returns a client that talks to the eventbus inspection
-// endpoints at baseURL (e.g. "http://localhost:18085").
+// endpoints at baseURL (e.g. "http://localhost:18000/eventbus").
 func NewInspectionClient(baseURL string) *InspectionClient {
 	return &InspectionClient{
 		baseURL:    strings.TrimRight(baseURL, "/"),

@@ -72,7 +72,7 @@ for _, d := range srv.Deliveries() {
 
 // InspectionClient — drive and inspect firing over HTTP (e.g. against a
 // running sakumock process or container, not just in-process test servers)
-ic := eventbus.NewInspectionClient("http://localhost:18085")
+ic := eventbus.NewInspectionClient("http://localhost:18000/eventbus") // standalone: http://localhost:18085
 ds, _ := ic.InjectEvent(ctx, eventbus.Event{Source: "//monitoringsuite..."})
 ds, _ = ic.Tick(ctx, time.Now())   // force scheduler evaluation
 ds, _ = ic.Deliveries(ctx)         // list all recorded firings

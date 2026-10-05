@@ -112,3 +112,23 @@ func TestConfigFileUnsupportedExtension(t *testing.T) {
 		t.Fatal("expected an error for an unsupported extension, got nil")
 	}
 }
+
+func TestConfigFileSuiteWideKeys(t *testing.T) {
+	all := parseAll(t)
+	if all.Addr != "127.0.0.1:18000" || all.PerServicePorts {
+		t.Errorf("defaults: addr = %q, per-service-ports = %v; want 127.0.0.1:18000, false", all.Addr, all.PerServicePorts)
+	}
+
+	// Suite-wide flags are top-level keys, next to the per-service groups.
+	path := writeFile(t, "sakumock.yaml", "addr: 127.0.0.1:19000\nper-service-ports: true\nkms:\n  addr: 127.0.0.1:19081\n")
+	all = parseAll(t, "--config", path)
+	if all.Addr != "127.0.0.1:19000" {
+		t.Errorf("addr = %q, want 127.0.0.1:19000", all.Addr)
+	}
+	if !all.PerServicePorts {
+		t.Error("per-service-ports = false, want true")
+	}
+	if all.Kms.Addr != "127.0.0.1:19081" {
+		t.Errorf("kms addr = %q, want 127.0.0.1:19081", all.Kms.Addr)
+	}
+}

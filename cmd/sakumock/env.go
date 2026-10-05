@@ -19,7 +19,7 @@ import (
 type EnvCmd struct {
 	serviceConfigs
 
-	Host   string         `placeholder:"HOST" help:"Host the client uses to reach sakumock, substituted into every endpoint URL (the port is kept). E.g. 'localhost' for a published container port, or the compose service name. Defaults to each service's configured address."`
+	Host   string         `placeholder:"HOST" help:"Host the client uses to reach sakumock, substituted into every endpoint URL (the port is kept). E.g. 'localhost' for a published container port, or the compose service name. Defaults to the host of --addr (or of each service's address with --per-service-ports)."`
 	Output string         `name:"output" short:"o" type:"path" placeholder:"PATH" help:"Write the dotenv to this file instead of stdout. Use it where shell redirection is unavailable, e.g. a compose oneshot on the (shell-less) container image."`
 	Export bool           `help:"Prefix every line with 'export ' so the output can be sourced directly (e.g. with direnv or a plain shell)."`
 	Config configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file (same format as 'all --config')"`
@@ -28,7 +28,14 @@ type EnvCmd struct {
 func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 	var vars []core.EnvVar
 	for _, cfg := range c.configs() {
-		for _, e := range cfg.ClientEnv() {
+		env := cfg.ClientEnv()
+		if !c.PerServicePorts {
+			var err error
+			if env, err = core.MountedClientEnv(cfg, c.Addr); err != nil {
+				return nil, err
+			}
+		}
+		for _, e := range env {
 			if c.Host != "" {
 				val, err := withHost(e.Value, c.Host)
 				if err != nil {

@@ -44,3 +44,24 @@ func TestAPILatencyCancel(t *testing.T) {
 		t.Errorf("cancelled request still delayed %v", d)
 	}
 }
+
+func TestLatencyHandler(t *testing.T) {
+	ok := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusNoContent) })
+
+	// No path is exempt on a data plane: /_sakumock/ is a user path there.
+	h := core.LatencyHandler(testLatency, ok)
+	rec := httptest.NewRecorder()
+	d := elapsed(func() { h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/_sakumock/x", nil)) })
+	if d < testLatency {
+		t.Errorf("elapsed %v, want >= %v", d, testLatency)
+	}
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("status = %d, want %d", rec.Code, http.StatusNoContent)
+	}
+
+	rec = httptest.NewRecorder()
+	d = elapsed(func() { core.LatencyHandler(0, ok).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil)) })
+	if d >= testLatency {
+		t.Errorf("zero latency delayed %v", d)
+	}
+}

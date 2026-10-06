@@ -20,8 +20,9 @@ type Config struct {
 	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"APPRUN_FAULT"`
 	Debug           bool          `help:"Enable debug mode" env:"APPRUN_DEBUG" default:"false"`
 
-	EnableDataPlane bool   `help:"Enable data plane (reverse proxy to Docker containers)" env:"APPRUN_ENABLE_DATA_PLANE" default:"false"`
-	DataPlaneAddr   string `help:"Data plane address (control-plane port + 10000)" env:"APPRUN_DATA_PLANE_ADDR" default:"127.0.0.1:28088"`
+	EnableDataPlane  bool          `help:"Enable data plane (reverse proxy to Docker containers)" env:"APPRUN_ENABLE_DATA_PLANE" default:"false"`
+	DataPlaneAddr    string        `help:"Data plane address (control-plane port + 10000)" env:"APPRUN_DATA_PLANE_ADDR" default:"127.0.0.1:28088"`
+	DataPlaneLatency time.Duration `help:"Artificial latency added to every data plane response" env:"APPRUN_DATA_PLANE_LATENCY"`
 
 	idGen  *core.IDGenerator
 	logger *slog.Logger

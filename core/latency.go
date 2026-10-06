@@ -21,6 +21,19 @@ func APILatency(r *http.Request, d time.Duration) {
 	sleepCtx(r.Context(), d)
 }
 
+// LatencyHandler delays every request by d before h serves it (the
+// --data-plane-latency flag). It returns h unchanged when d is not positive.
+// Unlike APILatency no path is exempt: a data plane serves user paths.
+func LatencyHandler(d time.Duration, h http.Handler) http.Handler {
+	if d <= 0 {
+		return h
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sleepCtx(r.Context(), d)
+		h.ServeHTTP(w, r)
+	})
+}
+
 func sleepCtx(ctx context.Context, d time.Duration) {
 	if d <= 0 {
 		return

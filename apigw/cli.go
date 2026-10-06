@@ -66,7 +66,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"debug", c.Debug,
 	)
 	if c.EnableDataPlane {
-		slog.Info("data plane listening", "addr", h.DataPlaneAddr(), "scheme", c.TLS.Scheme())
+		slog.Info("data plane listening", "addr", h.DataPlaneAddr(), "latency", c.DataPlaneLatency, "scheme", c.TLS.Scheme())
 	}
 	slog.Info("to use with sacloud-sdk-go",
 		core.LogArgs(core.WithTLSScheme(append(c.ClientEnv(), core.DummyCredentialEnv()...), c.TLS.Enabled()))...)

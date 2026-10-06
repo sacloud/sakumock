@@ -69,6 +69,7 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 ### Latency
 
 - `--latency` (`Config.Latency`) is applied at the top of `Server.ServeHTTP` with `core.APILatency(r, s.latency)`, which exempts `/_sakumock/` paths. Same-port data planes are covered by it.
+- A separate-listener in-process data plane adds `DataPlaneLatency time.Duration` (`env:"<SERVICE>_DATA_PLANE_LATENCY"`) and wraps its handler inside the trace wrap: `core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency, h))` — no path is exempt there, since it serves user paths. External data planes (versitygw) have no such flag.
 
 ### Fault injection
 

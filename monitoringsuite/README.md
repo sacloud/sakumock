@@ -32,6 +32,7 @@ sakumock-monitoringsuite
 | `--tls-key` | `MONITORINGSUITE_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 | `--enable-data-plane` | `MONITORINGSUITE_ENABLE_DATA_PLANE` | `false` | Serve the telemetry data plane (Prometheus remote-write + OTLP/HTTP); ingest only |
 | `--data-plane-addr` | `MONITORINGSUITE_DATA_PLANE_ADDR` | `127.0.0.1:28084` | Listen address for the data plane (control-plane port + 10000) |
+| `--data-plane-latency` | `MONITORINGSUITE_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
 | `--data-plane-dump-dir` | `MONITORINGSUITE_DATA_PLANE_DUMP_DIR` | (none) | Write each received payload as JSON to this directory; empty disables file dumps. Combine with `--debug` to also log payloads |
 
 (Under the unified binary these are prefixed, e.g. `--monitoringsuite-enable-data-plane`.)

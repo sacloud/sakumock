@@ -29,6 +29,7 @@ sakumock-apigw
 | `--fault` | `APIGW_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--enable-data-plane` | `APIGW_ENABLE_DATA_PLANE` | `false` | Enable the gateway data plane: a separate listener routing requests by Host header to the configured upstreams |
 | `--data-plane-addr` | `APIGW_DATA_PLANE_ADDR` | `127.0.0.1:28091` | Data plane listen address (control-plane port + 10000) |
+| `--data-plane-latency` | `APIGW_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
 | `--debug` | `APIGW_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `APIGW_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `APIGW_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |

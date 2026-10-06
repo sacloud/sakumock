@@ -32,6 +32,7 @@ sakumock-apprun
 | `--tls-key` | `APPRUN_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 | `--enable-data-plane` | `APPRUN_ENABLE_DATA_PLANE` | `false` | Enable data plane (reverse proxy to Docker containers) |
 | `--data-plane-addr` | `APPRUN_DATA_PLANE_ADDR` | `127.0.0.1:28088` | Listen address for the data plane (control-plane port + 10000) |
+| `--data-plane-latency` | `APPRUN_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
 
 (Under the unified binary these are prefixed, e.g. `--apprun-enable-data-plane`.)
 

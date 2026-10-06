@@ -23,7 +23,7 @@ sakumock-monitoringsuite
 | Flag | Env | Default | Description |
 |------|-----|---------|-------------|
 | `--addr` | `MONITORINGSUITE_LOCALSERVER_ADDR` | `127.0.0.1:18084` | Listen address |
-| `--latency` | `MONITORINGSUITE_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
+| `--latency` | `MONITORINGSUITE_LATENCY` | `0` | Artificial latency added to every control-plane API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `MONITORINGSUITE_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `MONITORINGSUITE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--fault` | `MONITORINGSUITE_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
@@ -32,6 +32,7 @@ sakumock-monitoringsuite
 | `--tls-key` | `MONITORINGSUITE_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 | `--enable-data-plane` | `MONITORINGSUITE_ENABLE_DATA_PLANE` | `false` | Serve the telemetry data plane (Prometheus remote-write + OTLP/HTTP); ingest only |
 | `--data-plane-addr` | `MONITORINGSUITE_DATA_PLANE_ADDR` | `127.0.0.1:28084` | Listen address for the data plane (control-plane port + 10000) |
+| `--data-plane-latency` | `MONITORINGSUITE_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
 | `--data-plane-dump-dir` | `MONITORINGSUITE_DATA_PLANE_DUMP_DIR` | (none) | Write each received payload as JSON to this directory; empty disables file dumps. Combine with `--debug` to also log payloads |
 
 (Under the unified binary these are prefixed, e.g. `--monitoringsuite-enable-data-plane`.)

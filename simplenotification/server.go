@@ -12,7 +12,7 @@ import (
 // Config holds the Simple Notification mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18083" env:"SIMPLENOTIFICATION_LOCALSERVER_ADDR"`
-	Latency         time.Duration `help:"Artificial latency added to every response" env:"SIMPLENOTIFICATION_LATENCY"`
+	Latency         time.Duration `help:"Artificial latency added to every API response" env:"SIMPLENOTIFICATION_LATENCY"`
 	Exec            string        `help:"Shell command to run for each accepted message; the message body is piped to its stdin and metadata is exposed via SAKUMOCK_GROUP_ID / SAKUMOCK_MESSAGE_ID / SAKUMOCK_CREATED_AT environment variables" env:"SIMPLENOTIFICATION_EXEC"`
 	RateLimit       float64       `help:"HTTP rate limit on API endpoints (events per --rate-limit-window, 0 disables)" default:"0" env:"SIMPLENOTIFICATION_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"SIMPLENOTIFICATION_RATE_LIMIT_WINDOW"`

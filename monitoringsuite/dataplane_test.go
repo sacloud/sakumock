@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang/snappy"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -159,4 +160,41 @@ func encodeRemoteWrite(name string, value float64, tsMs int64) []byte {
 	req = protowire.AppendTag(req, 1, protowire.BytesType)
 	req = protowire.AppendBytes(req, ts)
 	return req
+}
+
+func TestDataPlaneLatency(t *testing.T) {
+	const latency = 200 * time.Millisecond
+	rw := snappy.Encode(nil, encodeRemoteWrite("up", 1, 1700000000000))
+	timedPost := func(t *testing.T, srv *monitoringsuite.Server) time.Duration {
+		t.Helper()
+		start := time.Now()
+		if code := post(t, "http://"+srv.DataPlaneAddr()+"/prometheus/api/v1/write", "application/x-protobuf", rw); code != http.StatusNoContent {
+			t.Fatalf("remote-write status = %d", code)
+		}
+		return time.Since(start)
+	}
+
+	t.Run("data plane latency applies", func(t *testing.T) {
+		srv := monitoringsuite.NewTestServer(monitoringsuite.Config{
+			EnableDataPlane:  true,
+			DataPlaneAddr:    "127.0.0.1:0",
+			DataPlaneLatency: latency,
+		})
+		defer srv.Close()
+		if d := timedPost(t, srv); d < latency {
+			t.Errorf("elapsed %v, want >= %v", d, latency)
+		}
+	})
+
+	t.Run("control-plane latency does not", func(t *testing.T) {
+		srv := monitoringsuite.NewTestServer(monitoringsuite.Config{
+			EnableDataPlane: true,
+			DataPlaneAddr:   "127.0.0.1:0",
+			Latency:         latency,
+		})
+		defer srv.Close()
+		if d := timedPost(t, srv); d >= latency {
+			t.Errorf("elapsed %v, want < %v", d, latency)
+		}
+	})
 }

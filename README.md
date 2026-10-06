@@ -187,6 +187,10 @@ sakumock docs --all > sakumock-docs.md     # everything concatenated (llms-full.
 
 Each service also accepts `--docs` (`sakumock kms --docs`, `sakumock-kms --docs`) to print its own README, next to `--routes` for its endpoint table.
 
+## Latency
+
+To test client timeouts, every service can delay its responses with `--latency DURATION` (e.g. `500ms`, `2s`). It applies to the control-plane API (and to same-port data planes such as simplemq messages); the mock-only `/_sakumock/` inspection endpoints are never delayed.
+
 ## Fault Injection
 
 To test how a client (SDK, Terraform provider, your application) handles server errors and network failures, every service can probabilistically inject faults into its control-plane API with `--fault CODE:RATE[:PHASE]` (repeatable):

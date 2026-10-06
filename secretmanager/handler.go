@@ -2,7 +2,6 @@ package secretmanager
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/sacloud/sakumock/core"
 )
@@ -74,9 +73,7 @@ func (s *Server) buildMux() *http.ServeMux {
 
 // ServeHTTP dispatches the request to the matching route and logs the result.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if s.latency > 0 {
-		time.Sleep(s.latency)
-	}
+	core.APILatency(r, s.latency)
 	rw := core.NewResponseRecorder(w)
 	s.mux.ServeHTTP(rw, r)
 	s.logger.Info("request", core.RequestLogArgs(r, rw)...)

@@ -12,7 +12,7 @@ import (
 // Config holds the AppRun Dedicated mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18089" env:"APPRUN_DEDICATED_LOCALSERVER_ADDR"`
-	Latency         time.Duration `help:"Artificial latency added to every response" env:"APPRUN_DEDICATED_LATENCY"`
+	Latency         time.Duration `help:"Artificial latency added to every control-plane API response" env:"APPRUN_DEDICATED_LATENCY"`
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"APPRUN_DEDICATED_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"APPRUN_DEDICATED_RATE_LIMIT_WINDOW"`
 	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"APPRUN_DEDICATED_FAULT"`

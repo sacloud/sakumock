@@ -12,7 +12,7 @@ import (
 // Config holds the CloudHSM mock server's options.
 type Config struct {
 	Addr            string        `help:"Listen address" default:"127.0.0.1:18092" env:"CLOUDHSM_LOCALSERVER_ADDR"`
-	Latency         time.Duration `help:"Artificial latency added to every response" env:"CLOUDHSM_LATENCY"`
+	Latency         time.Duration `help:"Artificial latency added to every API response" env:"CLOUDHSM_LATENCY"`
 	RateLimit       float64       `help:"HTTP rate limit (events per --rate-limit-window, 0 disables)" default:"0" env:"CLOUDHSM_RATE_LIMIT"`
 	RateLimitWindow time.Duration `help:"Window for --rate-limit (e.g. 1s, 1m)" default:"1s" env:"CLOUDHSM_RATE_LIMIT_WINDOW"`
 	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"CLOUDHSM_FAULT"`

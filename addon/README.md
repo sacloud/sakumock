@@ -24,7 +24,7 @@ sakumock-addon
 |------|-----|---------|-------------|
 | `--addr` | `ADDON_LOCALSERVER_ADDR` | `127.0.0.1:18094` | Listen address |
 | `--provisioning-delay` | `ADDON_PROVISIONING_DELAY` | `0` | How long a created resource stays in the `Running` deployment state before list/get can see it (e.g. `5s`); `0` completes immediately |
-| `--latency` | `ADDON_LATENCY` | `0` | Artificial latency added to every response (e.g. `500ms`, `2s`) |
+| `--latency` | `ADDON_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `ADDON_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `ADDON_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--fault` | `ADDON_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |

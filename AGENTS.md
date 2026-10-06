@@ -35,7 +35,7 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 
 - Path under the reserved `/_sakumock/` prefix; `/_sakumock/<noun>` for state, a verb sub-path for an action (`/_sakumock/alerts/{id}/fire`).
 - Route `Kind` is `"inspection"` (real API routes are `"api"`), even for endpoints that drive behavior — do not introduce another kind. `core.PrintRoutes` lists them under `Inspection:`.
-- They consume no rate-limit tokens and are never fault-injected.
+- They consume no rate-limit tokens, are never fault-injected, and are never delayed by `--latency`.
 
 ### Unified binary & release
 
@@ -65,6 +65,10 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 - Control planes serve via `core.Serve(ctx, addr, h, tls)`, in-process data planes via `core.ServeListener`. Embed `TLSFiles` in `Command` with `prefix:"tls-"` / `envprefix:"<SERVICE>_TLS_"`.
 - Data planes started inside `NewHandler` get the files through the unexported `Config.tls` field (set by `cli.go`, injected by the unified binary via `core.ServerOptions.TLS`). An external data plane is handed the files (objectstorage passes `--cert`/`--key` to versitygw).
 - `ClientEnv()` stays `http://`; `core.WithTLSScheme` upgrades the scheme at the edges (startup log, `sakumock env`).
+
+### Latency
+
+- `--latency` (`Config.Latency`) is applied at the top of `Server.ServeHTTP` with `core.APILatency(r, s.latency)`, which exempts `/_sakumock/` paths. Same-port data planes are covered by it.
 
 ### Fault injection
 

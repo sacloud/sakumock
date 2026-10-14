@@ -95,6 +95,7 @@ Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they ob
 |--------|------|-------------|
 | `POST` | `/_sakumock/users/{user_id}/trusted-devices` | Register a trusted device for the user |
 | `POST` | `/_sakumock/users/{user_id}/security-keys` | Register a security key for the user |
+| `GET` | `/_sakumock/health` | Liveness check (`{"status":"ok"}`) |
 | `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec (see below) |
 | `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
 

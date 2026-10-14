@@ -142,7 +142,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("POST", "/management/provisioning/initialize/", "Initialize provisioning", s.handleInitializeProvisioning),
 		route("GET", "/management/provisioning/state/", "Get provisioning state", s.handleGetProvisioning),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

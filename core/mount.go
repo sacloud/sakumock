@@ -39,12 +39,16 @@ type MountedHandler struct {
 }
 
 // NewMountHandler serves every handler under its MountPath, stripping the
-// prefix so each service sees the same paths as on its own listener.
+// prefix so each service sees the same paths as on its own listener. It also
+// serves GET HealthPath at the root, listing the mounted services.
 func NewMountHandler(handlers []MountedHandler) http.Handler {
 	mux := http.NewServeMux()
+	names := make([]string, 0, len(handlers))
 	for _, h := range handlers {
 		p := MountPath(h.Name)
 		mux.Handle(p+"/", http.StripPrefix(p, h.Handler))
+		names = append(names, h.Name)
 	}
+	mux.Handle("GET "+HealthPath, HealthHandler(names))
 	return mux
 }

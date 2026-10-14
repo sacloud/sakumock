@@ -34,7 +34,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", "/appliance/{applianceID}/power", "Power off a Service Endpoint Gateway", s.handlePowerOff),
 		route("PUT", "/appliance/{applianceID}/reset", "Reset a Service Endpoint Gateway's power status", s.handleReset),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

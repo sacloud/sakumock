@@ -117,6 +117,7 @@ These endpoints are sakumock-specific (not part of the SAKURA Cloud API) and let
 |--------|------|-------------|
 | GET | `/_sakumock/messages` | Return all accepted messages in send order |
 | DELETE | `/_sakumock/messages` | Clear all accepted messages |
+| GET | `/_sakumock/health` | Liveness check (`{"status":"ok"}`) |
 | GET | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
 | DELETE | `/_sakumock/spec-violations` | Clear the recorded violations |
 

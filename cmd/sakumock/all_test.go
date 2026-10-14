@@ -134,16 +134,32 @@ func TestAllMountHandler(t *testing.T) {
 	h := mountHandler(instances)
 
 	for _, i := range instances {
-		path := core.MountPath(i.cfg.Name()) + "/_sakumock/spec-violations"
-		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
-		if rec.Code != http.StatusOK {
-			t.Errorf("GET %s: status %d, want 200", path, rec.Code)
+		for _, p := range []string{"/_sakumock/spec-violations", core.HealthPath} {
+			path := core.MountPath(i.cfg.Name()) + p
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+			if rec.Code != http.StatusOK {
+				t.Errorf("GET %s: status %d, want 200", path, rec.Code)
+			}
 		}
 	}
 
-	// Without a mount path nothing matches: paths collide across services.
+	// The root health endpoint lists every mounted service.
 	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, core.HealthPath, nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET %s: status %d, want 200", core.HealthPath, rec.Code)
+	}
+	var health core.HealthStatus
+	if err := json.Unmarshal(rec.Body.Bytes(), &health); err != nil {
+		t.Fatal(err)
+	}
+	if health.Status != "ok" || len(health.Services) != len(instances) {
+		t.Errorf("GET %s: got %+v, want status ok with %d services", core.HealthPath, health, len(instances))
+	}
+
+	// Without a mount path nothing matches: paths collide across services.
+	rec = httptest.NewRecorder()
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/_sakumock/spec-violations", nil))
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("GET without mount path: status %d, want 404", rec.Code)

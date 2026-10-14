@@ -33,7 +33,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("POST", "/kms/keys/{resource_id}/encrypt", "Encrypt data with a key", s.handleEncrypt),
 		route("POST", "/kms/keys/{resource_id}/decrypt", "Decrypt data with a key", s.handleDecrypt),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

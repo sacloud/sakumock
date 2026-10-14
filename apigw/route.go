@@ -80,7 +80,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("PUT", "/oidc/{oidcId}", "Update an OIDC configuration", s.handleUpdateOidc),
 		route("DELETE", "/oidc/{oidcId}", "Delete an OIDC configuration", s.handleDeleteOidc),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

@@ -47,7 +47,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", "/workflows/{id}/executions/{executionId}", "Delete an execution", s.handleDeleteExecution),
 		route("GET", "/workflows/{id}/executions/{executionId}/exec_history", "List execution history", s.handleListExecutionHistory),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

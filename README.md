@@ -288,6 +288,22 @@ See each service's README for available endpoints and response shapes:
 - [eventbus — Inspection endpoints](eventbus/README.md#api-endpoints) (`/_sakumock/events`, `/_sakumock/tick`, `/_sakumock/deliveries`)
 - [simplenotification — Inspection endpoints](simplenotification/README.md#inspection-endpoints) (`/_sakumock/messages`)
 
+### Health Check
+
+`GET /_sakumock/health` answers `200 {"status":"ok"}` once a listener is serving. Under `sakumock all` it is served at the root of the shared listener and lists the mounted services; every service also serves it under its own path (`/kms/_sakumock/health`, or `/_sakumock/health` on a standalone or per-service port):
+
+```bash
+curl http://127.0.0.1:18000/_sakumock/health
+# {"status":"ok","services":["simplemq","kms",...]}
+```
+
+The image has no shell or `curl`, so `sakumock healthcheck` probes the endpoint and exits non-zero unless it answers 200 — use it as a container health check (`--url` defaults to `http://127.0.0.1:18000/_sakumock/health`; add `--insecure` for a self-signed `--tls-cert`):
+
+```yaml
+healthcheck:
+  test: ["CMD", "/sakumock", "healthcheck"]
+```
+
 ### Inspection API (Go)
 
 Each service with inspection endpoints provides an `InspectionClient` — an HTTP client that wraps the `/_sakumock/` calls and returns typed domain objects. Use it from integration tests that run against a sakumock process or container (not just in-process test servers):
@@ -395,7 +411,7 @@ set -a; source ./sakumock.env; set +a
 terraform apply
 ```
 
-For docker compose, run `env` as a oneshot that writes the file into a shared volume (the image has no shell, so use `--output` rather than `>`) and have your app load it. See [`examples/compose.yaml`](examples/compose.yaml) for a complete example.
+For docker compose, run `env` as a oneshot that writes the file into a shared volume (the image has no shell, so use `--output` rather than `>`) and have your app load it. To wait until the mock is serving, give it a `sakumock healthcheck` [health check](#health-check) and depend on `service_healthy`. See [`examples/compose.yaml`](examples/compose.yaml) for a complete example.
 
 ## Use as a Library
 

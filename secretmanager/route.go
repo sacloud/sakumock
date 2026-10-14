@@ -33,7 +33,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", base+"/secrets", "Delete a secret", s.handleDeleteSecret),
 		route("POST", base+"/secrets/unveil", "Reveal a secret value", s.handleUnveil),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

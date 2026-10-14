@@ -36,7 +36,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		{Route: core.Route{Method: "GET", Path: "/_sakumock/messages", Description: "List accepted notification messages", Kind: "inspection"}, Handler: s.handleInspectMessages},
 		{Route: core.Route{Method: "DELETE", Path: "/_sakumock/messages", Description: "Clear accepted notification messages", Kind: "inspection"}, Handler: s.handleResetMessages},
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

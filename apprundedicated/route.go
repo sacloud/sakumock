@@ -66,7 +66,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/service_classes/lb", "List LB service classes", s.handleListLBServiceClasses),
 		route("GET", "/service_classes/worker", "List worker service classes", s.handleListWorkerServiceClasses),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

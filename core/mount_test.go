@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -66,5 +67,17 @@ func TestNewMountHandler(t *testing.T) {
 		if tt.want != "" && rec.Body.String() != tt.want {
 			t.Errorf("GET %s: body %q, want %q", tt.path, rec.Body.String(), tt.want)
 		}
+	}
+}
+
+func TestNewMountHandlerHealth(t *testing.T) {
+	h := NewMountHandler([]MountedHandler{{Name: "a", Handler: http.NotFoundHandler()}})
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, HealthPath, nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET %s: status %d, want 200", HealthPath, rec.Code)
+	}
+	if got, want := rec.Body.String(), `{"status":"ok","services":["a"]}`; strings.TrimSpace(got) != want {
+		t.Errorf("GET %s: body %q, want %q", HealthPath, got, want)
 	}
 }

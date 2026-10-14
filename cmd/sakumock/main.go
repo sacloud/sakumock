@@ -29,6 +29,7 @@ type CLI struct {
 	All                AllCmd                     `cmd:"" name:"all" help:"Run all mock services together in one process"`
 	Env                EnvCmd                     `cmd:"" name:"env" help:"Print client environment variables (endpoints + dummy credentials) as a dotenv file and exit"`
 	Inspect            InspectCmd                 `cmd:"" name:"inspect" help:"Query or drive a running sakumock's inspection endpoints"`
+	Healthcheck        HealthcheckCmd             `cmd:"" name:"healthcheck" help:"Check that a running sakumock answers its health endpoint (exit 1 otherwise)"`
 	Docs               DocsCmd                    `cmd:"" name:"docs" help:"Print the embedded documentation (index, a service README, or a section of one)"`
 	Simplemq           simplemq.Command           `cmd:"" name:"simplemq" help:"SimpleMQ mock server"`
 	Kms                kms.Command                `cmd:"" name:"kms" help:"KMS mock server"`

@@ -131,5 +131,5 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("PUT", "/organization-service-policy", "Update organization service policy", s.handleUpdateOrgServicePolicy),
 		route("GET", "/service-policy-rule-templates", "List service policy rule templates", s.handleServicePolicyRuleTemplates),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }

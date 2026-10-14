@@ -39,7 +39,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/applications/{id}/packet_filter", "Get packet filter", s.handleGetPacketFilter),
 		route("PATCH", "/applications/{id}/packet_filter", "Update packet filter", s.handlePatchPacketFilter),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

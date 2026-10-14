@@ -172,6 +172,7 @@ Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they ob
 
 | Method | Path | Description |
 |--------|------|-------------|
+| `GET` | `/_sakumock/health` | Liveness check (`{"status":"ok"}`) |
 | `GET` | `/_sakumock/spec-violations` | List responses that diverged from the OpenAPI spec |
 | `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
 

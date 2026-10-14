@@ -66,7 +66,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		api("GET", "/{site}/v2/buckets/{name}/plan", "Get a bucket's plan and contract", s.handleGetBucketPlan),
 		api("PUT", "/{site}/v2/buckets/{name}/plan", "Change a bucket's plan", s.handlePutBucketPlan),
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // Routes describes every HTTP endpoint the server registers.

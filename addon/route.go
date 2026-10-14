@@ -42,7 +42,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 				"Get the deployment status of "+a+" resource", s.handleStatus(f)))
 		}
 	}
-	return append(table, core.SpecViolationRoutes(s.respValidator)...)
+	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 
 // article picks the indefinite article for a family label, so route

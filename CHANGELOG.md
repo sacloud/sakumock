@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.14.0](https://github.com/sacloud/sakumock/compare/v0.13.0...v0.14.0) - 2026-10-14
+
+### 🚀 New Features
+- Add /_sakumock/health and sakumock healthcheck by @fujiwara in https://github.com/sacloud/sakumock/pull/216
+
 ## [v0.13.0](https://github.com/sacloud/sakumock/compare/v0.12.0...v0.13.0) - 2026-10-06
 
 ### 🚀 New Features

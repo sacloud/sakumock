@@ -1,0 +1,3395 @@
+openapi: 3.0.0
+info:
+  version: 1.1.0
+  title: Workflows APIドキュメント
+  description: |
+    ***
+
+    「Workflows」が提供するAPIの利用方法とサンプルを公開しております。
+
+    # 基本的な使い方
+
+    ## APIキーの利用
+
+    認証には「APIキー」が利用できます。事前にキーを発行しておきます。
+    APIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。
+
+    | 項目名    | APIキー発行時の項目名   | このドキュメント内での例                         |
+    | ------ | -------------- | ------------------------------------ |
+    | ユーザーID | アクセストークン(UUID) | 01234567-89ab-cdef-0123-456789abcdef |
+    | パスワード  | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |
+
+      <div class="warning">
+        操作マニュアル<br />
+        <ul><li><a href="https://manual.sakura.ad.jp/cloud/api/apikey.html">APIキー | さくらのクラウド ドキュメント</a></li></ul>
+      </div>
+
+    ## 出力結果と応答コード（HTTPステータスコード）
+
+    APIからの結果は、「応答コード（HTTPステータスコード）」と、「JSON形式(UTF-8)の結果」として出力されます。
+
+    応答コードは、リクエストが成功したのか、失敗したのか大まかな情報を判断することができるもので、例えば失敗したときには、なぜこのような結果になったのかなど、具体的な情報は応答コードと主に返された本文を見ることで把握することができます。
+
+    | 結果                | 応答コード/status | レスポンス             |
+    | ----------------- | ------------ | ----------------- |
+    | 成功（要求を受け付けた）      | 2xx          | "is\_ok": true    |
+    | 失敗（要求が受け付けられなかった） | 4xx, 5xx     | "is\_fatal": true, "is\_ok": false |
+
+    ```json
+    # 出力結果サンプル(成功時)
+    {
+      "is_ok": true,
+      "Total": 0,
+      "From": 0,
+      "Count": 0,
+      "Log": []
+    }
+    ```
+
+    ```json
+    # 出力結果サンプル（認証経路で失敗時）
+    {
+      "is_fatal": true,
+      "serial": "e0f36f2b4e056e2aefc3bc1242b36f1e",
+      "status": "500 Internal Server Error",
+      "error_code": "internal_server_error",
+      "error_msg": "サーバ内部エラーが発生しました。このエラーが繰り返し発生する場合は、メンテナンス情報、サポートサイトをご確認ください。"
+    }
+    # 出力結果サンプル（ワークフロー内で失敗時）
+    {
+      "is_ok": false,
+      "Code": "H-0000",
+      "Message": "Malformed JSON in request body",
+      "Cause": []
+    }
+    ```
+
+    ## Runbookのコードサンプル
+
+    ### エラトステネスの篩
+
+    ```yaml
+    meta:
+      description: エラトステネスの篩
+    args:
+      maxNumber:
+        type: number
+        description: 素数を求める最大の数
+    steps:
+      setup:
+        assign:
+          sieve: ${array.fill(array.range(args.maxNumber), true)}
+          primes: []
+      initial:
+        assign:
+          _a: ${array.set(sieve, 0, false)}
+          _b: ${array.set(sieve, 1, false)}
+      loop:
+        for:
+          in: ${array.range(2, math.ceil(math.sqrt(args.maxNumber)))}
+          as: index
+          steps:
+            if:
+              switch:
+                # falseだったら飛ばす
+                - condition: ${sieve[index] == false}
+                  next: continue
+                # trueだったら素数
+                - condition: ${sieve[index] != false}
+                  steps:
+                    # 素数の倍数を篩にかける
+                    updateSieve:
+                      for:
+                        in: ${array.range(index * 2, args.maxNumber, index)}
+                        as: n
+                        steps:
+                          set:
+                            assign:
+                              _a: ${array.set(sieve, n, false)}
+            continue:
+      printPrimes:
+        for:
+          in: ${array.range(2, args.maxNumber)}
+          as: index
+          steps:
+            if:
+              switch:
+                - condition: ${sieve[index] == true}
+                  steps:
+                    push:
+                      assign:
+                        _a: ${array.push(primes, index)}
+                    log:
+                      assign:
+                        log: '${"素数: " + index}'
+      done:
+        return: ${primes}
+    ```
+
+    ### 住所検索
+
+    ```yaml
+    meta:
+      description: 住所検索
+    args:
+      address:
+        type: string
+        description: "住所を取得するための郵便番号"
+    steps:
+      set:
+        switch:
+          - condition: ${args.address}
+            steps:
+              x:
+                assign:
+                  address: ${args.address}
+          - condition: ${!args.address}
+            steps:
+              x:
+                assign:
+                  address: "1000001"
+      get:
+        call: http.get
+        args:
+          url: ${"https://zipcloud.ibsnet.co.jp/api/search"}
+          headers:
+            Accept: application/json
+          query:
+            zipcode: ${address}
+        result: atomBody
+      parse:
+        assign:
+          jsonData: ${json.decode(atomBody.body)}
+      done:
+        return: ${jsonData.results[0].address1 + jsonData.results[0].address2 + jsonData.results[0].address3}
+    ```
+
+    # 利用例
+
+    上記で取得した`ユーザーID`、`トークン`を利用してAPIの利用が可能になります。
+
+    ## プランの設定
+
+    プランを設定しワークフローを利用するには、以下のような入力を行います。
+
+    ### プラン一覧の確認
+
+    ```sh
+    # 入力サンプル
+    curl -u '01234567-89ab-cdef-0123-456789abcdef:sampletokensampletokensampletoke' \
+         -X GET \
+         -H 'Content-Type: application/json' \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         https://secure.sakura.ad.jp/cloud/zone/tk1b/api/workflow/1.0/plans | jq .
+    ```
+
+    ```json
+    {
+      "is_ok": true,
+      "Plans": [
+        {
+          "id": 1,
+          "name": "200Kプラン",
+          "grade": 200,
+          "basePrice": 4000,
+          "includedSteps": 200000,
+          "overageStepUnit": 1000,
+          "overagePricePerUnit": 80,
+          ...
+        },
+        {
+          "id": 2,
+          "name": "600Kプラン",
+          "grade": 300,
+          "basePrice": 10000,
+          "includedSteps": 600000,
+          "overageStepUnit": 1000,
+          "overagePricePerUnit": 80,
+          ...
+        }
+      ],
+      "TaxRate": 10
+    }
+    ```
+
+    ### プランの設定
+    上記で取得した任意の`プランID(Plans[].id)`を利用して、プランを設定します。
+
+    ```sh
+    # 入力サンプル
+    curl -u '01234567-89ab-cdef-0123-456789abcdef:sampletokensampletokensampletoke' \
+         -X POST \
+         -H 'Content-Type: application/json' \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         -d '{"PlanId": 1}' \
+         https://secure.sakura.ad.jp/cloud/zone/tk1b/api/workflow/1.0/subscription | jq .
+    ```
+
+    上記プラン設定完了後、ワークフローが利用可能になります。
+
+    ## ワークフローの作成
+
+    ワークフローを作成するには、以下のような入力を行います。
+
+    > ワークフロー作成前にRunbookの作成が必要になります。
+    > 詳しくは[構文リファレンス](https://manual.sakura.ad.jp/cloud/appliance/workflows/reference-syntax.html)を参照してください。
+
+    ### Runbookをパラメータに設定する
+
+    JSON内にYAMLを格納するために必要なこと
+
+    - Runbookの改行を `\n` に変換する。
+    - YAML内にあるダブルクォーテーションをエスケープする。
+      convertYaml.sh
+
+    ```bash
+    #!/bin/bash
+
+    # Runbookファイルを読み込み、文字列に変換
+    # 改行は\nに変換し、ダブルクォーテーションはエスケープする
+    # gsedはMacのsedで改行を含む文字列を扱うために使用
+    # Mac環境でのみ動作確認済み
+
+    # runbook_to_string 関数を定義
+    function runbook_to_string() {
+        local file_path="$1"
+        local runbook
+
+        if [ ! -f "$file_path" ]; then
+            echo "Error: File not found." >&2
+            return 1
+        fi
+
+        runbook=$(gsed ':a;N;$!ba;s/\n/\\n/g' "$file_path" | gsed 's/"/\\"/g')
+        echo "$runbook"
+    }
+
+    # コマンドラインからの引数をチェック
+    if [ $# -eq 0 ]; then
+        echo "Usage: $0 <file_path>"
+        exit 1
+    fi
+
+    # 引数からファイルパスを取得
+    file_path="$1"
+
+    # runbook_to_string 関数を呼び出し、結果を表示
+    runbook_to_string "$file_path"
+    ```
+
+    上記で作成したbashに実行権限を付け、yamlをリクエストパラメータで使えるよう文字列に変換します。
+
+    ```sh
+    chmod +x convertYaml.sh
+    ./convertYaml.sh sample.yaml
+    ```
+
+    ### ワークフローの作成
+
+    ```sh
+    # 入力サンプル
+    vi request_body.json
+
+    cat request_body.json
+    {
+        "Runbook": "[上記bashで出力した文字列]",
+        "Name": "Workflowの名前",
+        "Description": "ワークフローの説明",
+        "Publish": true,
+        "Logging": true,
+    }
+
+    curl -u '01234567-89ab-cdef-0123-456789abcdef:sampletokensampletokensampletoke' \
+         -X POST \
+         -H 'Content-Type: application/json' \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         -d '@request_body.json' \
+         https://secure.sakura.ad.jp/cloud/zone/tk1b/api/workflow/1.0/workflows/ | jq .
+    ```
+
+    ```json
+    {
+      "is_ok": true,
+      "Workflow": {
+        "Id": "uhqybrbehx8lnpo9x8hd8ikt",　<- workflowID
+        "Name": "Workflowの名前",
+        "Description": "ワークフローの説明",
+        "Publish": true,
+        "Logging": true,
+        "Tags": [
+          {
+            "Name": null
+          }
+        ],
+        "CreatedAt": "2025-01-30T17:54:28.710Z",
+        "UpdatedAt": "2025-01-30T17:54:28.710Z"
+      }
+    }
+    ```
+
+    ## ワークフローの実行
+
+    ワークフローを実行するには、以下のような入力を行います。
+
+    urlには上記で取得した`workflowID`を使います。
+
+    ```sh
+    # 入力サンプル
+    vi request_body.json
+
+    cat request_body.json
+    {}
+
+    curl -u '01234567-89ab-cdef-0123-456789abcdef:sampletokensampletokensampletoke' \
+         -X POST \
+         -H 'Content-Type: application/json' \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         -d '@request_body.json' \
+         https://secure.sakura.ad.jp/cloud/zone/tk1b/api/workflow/1.0/workflows/[workflowId]/executions | jq .
+    ```
+
+    ```json
+    {
+      "is_ok": true,
+      "Execution": {
+        "ExecutionId": "bcohwmnwlhpkhowhn80k3ird", <- executionId
+        "Name": "Workflowの名前",
+        "Workflow": {
+          "Id": "uhqybrbehx8lnpo9x8hd8ikt",　<- workflowID
+          "Name": "Workflowの名前",
+          "Description": "Workflowの説明",
+          "Publish": true,
+          "Logging": true,
+          "Tags": [
+            {
+              "Name": null
+            }
+          ],
+          "CreatedAt": "2025-01-30T17:54:28.710Z",
+          "UpdatedAt": "2025-01-30T17:54:28.710Z"
+        },
+        "Status": "Queued",
+        "Revision": 1,
+        "RevisionAlias": "string",
+        "Args": "null",
+        "Result": "null",
+        "Error": "null",
+        "CreatedAt": "2025-01-30T18:09:34.810Z",
+        "UpdatedAt": "2025-01-30T18:09:34.810Z"
+      }
+    }
+    ```
+
+    ## ワークフローの実行の履歴を取得
+
+    ワークフローの実行の履歴を取得するには、以下のような入力を行います。
+
+    urlには上記で取得した`workflowID`と`executionId`を使います。
+
+    ```sh
+    # 入力サンプル
+    curl -u '01234567-89ab-cdef-0123-456789abcdef:sampletokensampletokensampletoke' \
+         -X GET \
+         -H 'Content-Type: application/json' \
+         -H 'X-Requested-With: XMLHttpRequest' \
+         https://secure.sakura.ad.jp/cloud/zone/tk1b/api/workflow/1.0/workflows/[workflowId]/executions/[executionId]/exec_history | jq .
+    ```
+  contact:
+    name: SAKURA internet Inc.
+  license:
+    name: Copyright(C) SAKURA internet Inc. all rights reserved.
+tags:
+  - name: ワークフローの管理
+  - name: ワークフローの実行
+  - name: プラン
+  - name: サブスクリプション
+paths:
+  /workflows:
+    post:
+      operationId: createWorkflow
+      description: ワークフローを作成する
+      summary: ワークフローを作成する
+      tags:
+        - ワークフローの管理
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Name:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                Description:
+                  type: string
+                  minLength: 0
+                  maxLength: 1024
+                Runbook:
+                  type: string
+                Publish:
+                  type: boolean
+                Logging:
+                  type: boolean
+                Tags:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                    required:
+                      - Name
+                RevisionAlias:
+                  type: string
+                  minLength: 0
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                ServicePrincipalId:
+                  oneOf:
+                    - type: string
+                      pattern: ^[0-9]{12}$
+                    - type: number
+                ConcurrencyMode:
+                  type: string
+                  enum:
+                    - parallel
+                    - lock
+                    - queue
+              required:
+                - Name
+                - Runbook
+                - Publish
+                - Logging
+            example:
+              Name: sampleString
+              Description: sampleString
+              Runbook: sampleString
+              Publish: true
+              Logging: true
+              Tags:
+                - Name: sampleString
+              RevisionAlias: sampleString
+              ServicePrincipalId: sampleString
+              ConcurrencyMode: parallel
+      responses:
+        "201":
+          description: ワークフローの作成に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Workflow:
+                    type: object
+                    properties:
+                      Id:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Description:
+                        type: string
+                        minLength: 0
+                        maxLength: 1024
+                      Publish:
+                        type: boolean
+                      Logging:
+                        type: boolean
+                      Tags:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Name:
+                              type: string
+                              minLength: 1
+                              maxLength: 64
+                          required:
+                            - Name
+                      ServicePrincipalId:
+                        oneOf:
+                          - type: string
+                            pattern: ^[0-9]{12}$
+                          - type: number
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      ConcurrencyMode:
+                        type: string
+                        enum:
+                          - parallel
+                          - lock
+                          - queue
+                    required:
+                      - Id
+                      - Name
+                      - Publish
+                      - Logging
+                      - Tags
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Workflow
+              example:
+                is_ok: true
+                Workflow:
+                  Id: sampleString
+                  Name: sampleString
+                  Description: sampleString
+                  Publish: true
+                  Logging: true
+                  Tags:
+                    - Name: sampleString
+                  ServicePrincipalId: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  ConcurrencyMode: parallel
+        "400": &a1
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: Bad Request
+        "401": &a2
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: Unauthorized
+        "402": &a3
+          description: Payment Required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: Payment Required
+        "403": &a4
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: Forbidden
+        "404": &a5
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: Not Found
+        "500": &a6
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: Internal Server Error
+    get:
+      operationId: listWorkflows
+      description: ワークフローの一覧を取得する
+      summary: ワークフローの一覧を取得する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: Page
+          in: query
+          description: ページ番号
+          required: false
+          schema:
+            default: 1
+            type: integer
+            minimum: 1
+          example: 1
+        - name: PageLimit
+          in: query
+          description: 1ページあたりのリソースの取得数
+          required: false
+          schema:
+            default: 20
+            type: integer
+            minimum: 5
+            maximum: 500
+          example: 20
+        - name: SortBy
+          in: query
+          description: Workflowのソートに利用するプロパティ
+          required: false
+          schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+              - id
+          example: createdAt
+        - name: Order
+          in: query
+          description: ソートの順序
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: asc
+        - name: Published
+          in: query
+          description: 公開状態の絞り込み
+          required: false
+          schema:
+            type: boolean
+          example: true
+        - name: Name
+          in: query
+          description: ワークフロー名の絞り込み
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+          example: sampleString
+        - name: NameMatchType
+          in: query
+          description: ワークフロー名の絞り込み方法
+          required: false
+          schema:
+            type: string
+            enum:
+              - partial
+              - prefix
+          example: partial
+      responses:
+        "200":
+          description: ワークフローの一覧の取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Total:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  From:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Count:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Workflows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        Id:
+                          type: string
+                          minLength: 1
+                          maxLength: 36
+                        Name:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                          pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                        Description:
+                          type: string
+                          minLength: 0
+                          maxLength: 1024
+                        Publish:
+                          type: boolean
+                        Logging:
+                          type: boolean
+                        Tags:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              Name:
+                                type: string
+                                minLength: 1
+                                maxLength: 64
+                            required:
+                              - Name
+                        ServicePrincipalId:
+                          oneOf:
+                            - type: string
+                              pattern: ^[0-9]{12}$
+                            - type: number
+                        CreatedAt:
+                          type: string
+                          format: date-time
+                        UpdatedAt:
+                          type: string
+                          format: date-time
+                        ConcurrencyMode:
+                          type: string
+                          enum:
+                            - parallel
+                            - lock
+                            - queue
+                      required:
+                        - Id
+                        - Name
+                        - Publish
+                        - Logging
+                        - Tags
+                        - CreatedAt
+                        - UpdatedAt
+                required:
+                  - is_ok
+                  - Total
+                  - From
+                  - Count
+                  - Workflows
+              example:
+                is_ok: true
+                Total: 0
+                From: 0
+                Count: 0
+                Workflows:
+                  - Id: sampleString
+                    Name: sampleString
+                    Description: sampleString
+                    Publish: true
+                    Logging: true
+                    Tags:
+                      - Name: sampleString
+                    ServicePrincipalId: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+                    ConcurrencyMode: parallel
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /workflows/suggest:
+    get:
+      operationId: listSuggestions
+      description: ワークフローのサジェストを取得する
+      summary: ワークフローのサジェストを取得する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: Name
+          in: query
+          description: ワークフロー名の絞り込み
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+          example: sampleString
+        - name: Page
+          in: query
+          description: ページ番号
+          required: false
+          schema:
+            default: 1
+            type: integer
+            minimum: 1
+          example: 1
+        - name: PageLimit
+          in: query
+          description: 1ページあたりのリソースの取得数
+          required: false
+          schema:
+            default: 20
+            type: integer
+            minimum: 5
+            maximum: 500
+          example: 20
+        - name: SortBy
+          in: query
+          description: サジェストのソートに利用するプロパティ
+          required: false
+          schema:
+            type: string
+            enum:
+              - name
+              - count
+          example: name
+        - name: Order
+          in: query
+          description: ソートの順序
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: asc
+      responses:
+        "200":
+          description: ワークフローのサジェストの取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Total:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  From:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Count:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Suggests:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        Name:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                          pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                        Count:
+                          type: integer
+                          minimum: 1
+                      required:
+                        - Name
+                        - Count
+                required:
+                  - is_ok
+                  - Total
+                  - From
+                  - Count
+                  - Suggests
+              example:
+                is_ok: true
+                Total: 0
+                From: 0
+                Count: 0
+                Suggests:
+                  - Name: sampleString
+                    Count: 123
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /workflows/{id}:
+    get:
+      operationId: readWorkflow
+      description: ワークフローを取得する
+      summary: ワークフローを取得する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローの取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Workflow:
+                    type: object
+                    properties:
+                      Id:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Description:
+                        type: string
+                        minLength: 0
+                        maxLength: 1024
+                      Publish:
+                        type: boolean
+                      Logging:
+                        type: boolean
+                      Tags:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Name:
+                              type: string
+                              minLength: 1
+                              maxLength: 64
+                          required:
+                            - Name
+                      ServicePrincipalId:
+                        oneOf:
+                          - type: string
+                            pattern: ^[0-9]{12}$
+                          - type: number
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      ConcurrencyMode:
+                        type: string
+                        enum:
+                          - parallel
+                          - lock
+                          - queue
+                    required:
+                      - Id
+                      - Name
+                      - Publish
+                      - Logging
+                      - Tags
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Workflow
+              example:
+                is_ok: true
+                Workflow:
+                  Id: sampleString
+                  Name: sampleString
+                  Description: sampleString
+                  Publish: true
+                  Logging: true
+                  Tags:
+                    - Name: sampleString
+                  ServicePrincipalId: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  ConcurrencyMode: parallel
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+    patch:
+      operationId: patchWorkflow
+      description: ワークフローを更新する
+      summary: ワークフローを更新する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Name:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                Description:
+                  type: string
+                  minLength: 0
+                  maxLength: 1024
+                Publish:
+                  type: boolean
+                Logging:
+                  type: boolean
+                Tags:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                    required:
+                      - Name
+                ConcurrencyMode:
+                  type: string
+                  enum:
+                    - parallel
+                    - lock
+                    - queue
+            example:
+              Name: sampleString
+              Description: sampleString
+              Publish: true
+              Logging: true
+              Tags:
+                - Name: sampleString
+              ConcurrencyMode: parallel
+      responses:
+        "200":
+          description: ワークフローの更新に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Workflow:
+                    type: object
+                    properties:
+                      Id:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Description:
+                        type: string
+                        minLength: 0
+                        maxLength: 1024
+                      Publish:
+                        type: boolean
+                      Logging:
+                        type: boolean
+                      Tags:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            Name:
+                              type: string
+                              minLength: 1
+                              maxLength: 64
+                          required:
+                            - Name
+                      ServicePrincipalId:
+                        oneOf:
+                          - type: string
+                            pattern: ^[0-9]{12}$
+                          - type: number
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      ConcurrencyMode:
+                        type: string
+                        enum:
+                          - parallel
+                          - lock
+                          - queue
+                    required:
+                      - Id
+                      - Name
+                      - Publish
+                      - Logging
+                      - Tags
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Workflow
+              example:
+                is_ok: true
+                Workflow:
+                  Id: sampleString
+                  Name: sampleString
+                  Description: sampleString
+                  Publish: true
+                  Logging: true
+                  Tags:
+                    - Name: sampleString
+                  ServicePrincipalId: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  ConcurrencyMode: parallel
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+    delete:
+      operationId: deleteWorkflow
+      description: ワークフローを削除する
+      summary: ワークフローを削除する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローを削除に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                required:
+                  - is_ok
+              example:
+                is_ok: true
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "409":
+          description: ワークフローを削除できない状態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: sampleString
+        "500": *a6
+  /workflows/{id}/revisions:
+    post:
+      operationId: createRevision
+      description: ワークフローのリビジョンを追加する
+      summary: ワークフローのリビジョンを追加する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Runbook:
+                  type: string
+                RevisionAlias:
+                  type: string
+                  minLength: 0
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+              required:
+                - Runbook
+            example:
+              Runbook: sampleString
+              RevisionAlias: sampleString
+      responses:
+        "201":
+          description: ワークフローのリビジョンの追加に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Revision:
+                    type: object
+                    properties:
+                      RevisionId:
+                        type: integer
+                      WorkflowId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Runbook:
+                        type: string
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - RevisionId
+                      - WorkflowId
+                      - Runbook
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Revision
+              example:
+                is_ok: true
+                Revision:
+                  RevisionId: 123
+                  WorkflowId: sampleString
+                  RevisionAlias: sampleString
+                  Runbook: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "409":
+          description: Duplicate revision alias
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: sampleString
+        "500": *a6
+    get:
+      operationId: listRevisions
+      description: ワークフローのリビジョンの一覧を取得する
+      summary: ワークフローのリビジョンの一覧を取得する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: Page
+          in: query
+          description: ページ番号
+          required: false
+          schema:
+            default: 1
+            type: integer
+            minimum: 1
+          example: 1
+        - name: PageLimit
+          in: query
+          description: 1ページあたりのリソースの取得数
+          required: false
+          schema:
+            default: 20
+            type: integer
+            minimum: 5
+            maximum: 500
+          example: 20
+        - name: SortBy
+          in: query
+          description: Workflowのソートに利用するプロパティ
+          required: false
+          schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+              - id
+          example: createdAt
+        - name: Order
+          in: query
+          description: ソートの順序
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: asc
+        - name: Published
+          in: query
+          description: 公開状態の絞り込み
+          required: false
+          schema:
+            type: boolean
+          example: true
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローのリビジョンの一覧の取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Total:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  From:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Count:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Revisions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        RevisionId:
+                          type: integer
+                        WorkflowId:
+                          type: string
+                          minLength: 1
+                          maxLength: 36
+                        RevisionAlias:
+                          type: string
+                          minLength: 0
+                          maxLength: 64
+                          pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                        Runbook:
+                          type: string
+                        CreatedAt:
+                          type: string
+                          format: date-time
+                        UpdatedAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - RevisionId
+                        - WorkflowId
+                        - Runbook
+                        - CreatedAt
+                        - UpdatedAt
+                required:
+                  - is_ok
+                  - Total
+                  - From
+                  - Count
+                  - Revisions
+              example:
+                is_ok: true
+                Total: 0
+                From: 0
+                Count: 0
+                Revisions:
+                  - RevisionId: 123
+                    WorkflowId: sampleString
+                    RevisionAlias: sampleString
+                    Runbook: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /workflows/{id}/revisions/{revisionId}:
+    get:
+      operationId: readRevision
+      description: ワークフローのリビジョンを取得する
+      summary: ワークフローのリビジョンを取得する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: revisionId
+          in: path
+          description: Revision ID
+          required: true
+          schema:
+            type: integer
+          example: 123
+      responses:
+        "200":
+          description: ワークフローのリビジョンの取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Revision:
+                    type: object
+                    properties:
+                      RevisionId:
+                        type: integer
+                      WorkflowId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Runbook:
+                        type: string
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - RevisionId
+                      - WorkflowId
+                      - Runbook
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Revision
+              example:
+                is_ok: true
+                Revision:
+                  RevisionId: 123
+                  WorkflowId: sampleString
+                  RevisionAlias: sampleString
+                  Runbook: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /workflows/{id}/revisions/{revisionId}/revision_alias:
+    put:
+      operationId: updateRevisionAlias
+      description: ワークフローのリビジョンエイリアスを更新する
+      summary: ワークフローのリビジョンエイリアスを更新する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: revisionId
+          in: path
+          description: Revision ID
+          required: true
+          schema:
+            type: integer
+          example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                RevisionAlias:
+                  type: string
+                  minLength: 0
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+              required:
+                - RevisionAlias
+            example:
+              RevisionAlias: sampleString
+      responses:
+        "200":
+          description: ワークフローのリビジョンエイリアスの更新に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Revision:
+                    type: object
+                    properties:
+                      RevisionId:
+                        type: integer
+                      WorkflowId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Runbook:
+                        type: string
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - RevisionId
+                      - WorkflowId
+                      - Runbook
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Revision
+              example:
+                is_ok: true
+                Revision:
+                  RevisionId: 123
+                  WorkflowId: sampleString
+                  RevisionAlias: sampleString
+                  Runbook: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "409":
+          description: Duplicate revision alias
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: sampleString
+        "500": *a6
+    delete:
+      operationId: deleteRevisionAlias
+      description: ワークフローのリビジョンエイリアスを削除する
+      summary: ワークフローのリビジョンエイリアスを削除する
+      tags:
+        - ワークフローの管理
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: revisionId
+          in: path
+          description: Revision ID
+          required: true
+          schema:
+            type: integer
+          example: 123
+      responses:
+        "200":
+          description: ワークフローのリビジョンエイリアスの削除に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Revision:
+                    type: object
+                    properties:
+                      RevisionId:
+                        type: integer
+                      WorkflowId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Runbook:
+                        type: string
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - RevisionId
+                      - WorkflowId
+                      - Runbook
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Revision
+              example:
+                is_ok: true
+                Revision:
+                  RevisionId: 123
+                  WorkflowId: sampleString
+                  RevisionAlias: sampleString
+                  Runbook: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /workflows/{id}/executions:
+    post:
+      operationId: createExecution
+      description: ワークフローを実行する
+      summary: ワークフローを実行する
+      tags:
+        - ワークフローの実行
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                RevisionId:
+                  type: integer
+                RevisionAlias:
+                  type: string
+                  minLength: 0
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                Args:
+                  type: string
+                  minLength: 1
+                  maxLength: 65536
+                Name:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                  pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+            example:
+              RevisionId: 123
+              RevisionAlias: sampleString
+              Args: sampleString
+              Name: sampleString
+      responses:
+        "201":
+          description: ワークフローの実行開始をキューに登録した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Execution:
+                    type: object
+                    properties:
+                      ExecutionId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Workflow:
+                        type: object
+                        properties:
+                          Id:
+                            type: string
+                            minLength: 1
+                            maxLength: 36
+                          Name:
+                            type: string
+                            minLength: 1
+                            maxLength: 64
+                            pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                          Description:
+                            type: string
+                            minLength: 0
+                            maxLength: 1024
+                          Publish:
+                            type: boolean
+                          Logging:
+                            type: boolean
+                          Tags:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                Name:
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 64
+                              required:
+                                - Name
+                          ServicePrincipalId:
+                            oneOf:
+                              - type: string
+                                pattern: ^[0-9]{12}$
+                              - type: number
+                          CreatedAt:
+                            type: string
+                            format: date-time
+                          UpdatedAt:
+                            type: string
+                            format: date-time
+                          ConcurrencyMode:
+                            type: string
+                            enum:
+                              - parallel
+                              - lock
+                              - queue
+                        required:
+                          - Id
+                          - Name
+                          - Publish
+                          - Logging
+                          - Tags
+                          - CreatedAt
+                          - UpdatedAt
+                      Status:
+                        type: string
+                        enum:
+                          - Queued
+                          - Running
+                          - Succeeded
+                          - Failed
+                          - Canceling
+                          - Canceled
+                      Revision:
+                        type: integer
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Args:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      StepCount:
+                        default: 0
+                        type: integer
+                        minimum: 0
+                      Result:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      Error:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      RunAt:
+                        type: string
+                        format: date-time
+                      FailedAt:
+                        type: string
+                        format: date-time
+                      SucceededAt:
+                        type: string
+                        format: date-time
+                      CancelRequestedAt:
+                        type: string
+                        format: date-time
+                      CanceledAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - ExecutionId
+                      - Name
+                      - Workflow
+                      - Status
+                      - Revision
+                      - RevisionAlias
+                      - Args
+                      - StepCount
+                      - Result
+                      - Error
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Execution
+              example:
+                is_ok: true
+                Execution:
+                  ExecutionId: sampleString
+                  Name: sampleString
+                  Workflow:
+                    Id: sampleString
+                    Name: sampleString
+                    Description: sampleString
+                    Publish: true
+                    Logging: true
+                    Tags:
+                      - Name: sampleString
+                    ServicePrincipalId: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+                    ConcurrencyMode: parallel
+                  Status: Queued
+                  Revision: 123
+                  RevisionAlias: sampleString
+                  Args: sampleString
+                  StepCount: 0
+                  Result: sampleString
+                  Error: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  RunAt: 2020-01-01T00:00:00Z
+                  FailedAt: 2020-01-01T00:00:00Z
+                  SucceededAt: 2020-01-01T00:00:00Z
+                  CancelRequestedAt: 2020-01-01T00:00:00Z
+                  CanceledAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "409":
+          description: ワークフローを実行できない状態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: sampleString
+        "500": *a6
+    get:
+      operationId: listExecutions
+      description: ワークフローの実行の一覧を取得する
+      summary: ワークフローの実行の一覧を取得する
+      tags:
+        - ワークフローの実行
+      parameters:
+        - name: Page
+          in: query
+          description: ページ番号
+          required: false
+          schema:
+            default: 1
+            type: integer
+            minimum: 1
+          example: 1
+        - name: PageLimit
+          in: query
+          description: 1ページあたりのリソースの取得数
+          required: false
+          schema:
+            default: 20
+            type: integer
+            minimum: 5
+            maximum: 500
+          example: 20
+        - name: Order
+          in: query
+          description: ソートの順序
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: asc
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローの実行の一覧の取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Total:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  From:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Count:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Executions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ExecutionId:
+                          type: string
+                          minLength: 1
+                          maxLength: 36
+                        Name:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                          pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                        Workflow:
+                          type: object
+                          properties:
+                            Id:
+                              type: string
+                              minLength: 1
+                              maxLength: 36
+                            Name:
+                              type: string
+                              minLength: 1
+                              maxLength: 64
+                              pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                            Description:
+                              type: string
+                              minLength: 0
+                              maxLength: 1024
+                            Publish:
+                              type: boolean
+                            Logging:
+                              type: boolean
+                            Tags:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  Name:
+                                    type: string
+                                    minLength: 1
+                                    maxLength: 64
+                                required:
+                                  - Name
+                            ServicePrincipalId:
+                              oneOf:
+                                - type: string
+                                  pattern: ^[0-9]{12}$
+                                - type: number
+                            CreatedAt:
+                              type: string
+                              format: date-time
+                            UpdatedAt:
+                              type: string
+                              format: date-time
+                            ConcurrencyMode:
+                              type: string
+                              enum:
+                                - parallel
+                                - lock
+                                - queue
+                          required:
+                            - Id
+                            - Name
+                            - Publish
+                            - Logging
+                            - Tags
+                            - CreatedAt
+                            - UpdatedAt
+                        Status:
+                          type: string
+                          enum:
+                            - Queued
+                            - Running
+                            - Succeeded
+                            - Failed
+                            - Canceling
+                            - Canceled
+                        Revision:
+                          type: integer
+                        RevisionAlias:
+                          type: string
+                          minLength: 0
+                          maxLength: 64
+                          pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                        Args:
+                          type: string
+                          minLength: 1
+                          maxLength: 65536
+                        StepCount:
+                          default: 0
+                          type: integer
+                          minimum: 0
+                        Result:
+                          type: string
+                          minLength: 1
+                          maxLength: 65536
+                        Error:
+                          type: string
+                          minLength: 1
+                          maxLength: 65536
+                        CreatedAt:
+                          type: string
+                          format: date-time
+                        UpdatedAt:
+                          type: string
+                          format: date-time
+                        RunAt:
+                          type: string
+                          format: date-time
+                        FailedAt:
+                          type: string
+                          format: date-time
+                        SucceededAt:
+                          type: string
+                          format: date-time
+                        CancelRequestedAt:
+                          type: string
+                          format: date-time
+                        CanceledAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - ExecutionId
+                        - Name
+                        - Workflow
+                        - Status
+                        - Revision
+                        - RevisionAlias
+                        - Args
+                        - StepCount
+                        - Result
+                        - Error
+                        - CreatedAt
+                        - UpdatedAt
+                required:
+                  - is_ok
+                  - Total
+                  - From
+                  - Count
+                  - Executions
+              example:
+                is_ok: true
+                Total: 0
+                From: 0
+                Count: 0
+                Executions:
+                  - ExecutionId: sampleString
+                    Name: sampleString
+                    Workflow:
+                      Id: sampleString
+                      Name: sampleString
+                      Description: sampleString
+                      Publish: true
+                      Logging: true
+                      Tags:
+                        - Name: sampleString
+                      ServicePrincipalId: sampleString
+                      CreatedAt: 2020-01-01T00:00:00Z
+                      UpdatedAt: 2020-01-01T00:00:00Z
+                      ConcurrencyMode: parallel
+                    Status: Queued
+                    Revision: 123
+                    RevisionAlias: sampleString
+                    Args: sampleString
+                    StepCount: 0
+                    Result: sampleString
+                    Error: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+                    RunAt: 2020-01-01T00:00:00Z
+                    FailedAt: 2020-01-01T00:00:00Z
+                    SucceededAt: 2020-01-01T00:00:00Z
+                    CancelRequestedAt: 2020-01-01T00:00:00Z
+                    CanceledAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /workflows/{id}/executions/{executionId}/cancel:
+    post:
+      operationId: cancelExecution
+      description: ワークフローの実行をキャンセルする
+      summary: ワークフローの実行をキャンセルする
+      tags:
+        - ワークフローの実行
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: executionId
+          in: path
+          description: Execution ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローの実行キャンセルが完了した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Execution:
+                    type: object
+                    properties:
+                      ExecutionId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Workflow:
+                        type: object
+                        properties:
+                          Id:
+                            type: string
+                            minLength: 1
+                            maxLength: 36
+                          Name:
+                            type: string
+                            minLength: 1
+                            maxLength: 64
+                            pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                          Description:
+                            type: string
+                            minLength: 0
+                            maxLength: 1024
+                          Publish:
+                            type: boolean
+                          Logging:
+                            type: boolean
+                          Tags:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                Name:
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 64
+                              required:
+                                - Name
+                          ServicePrincipalId:
+                            oneOf:
+                              - type: string
+                                pattern: ^[0-9]{12}$
+                              - type: number
+                          CreatedAt:
+                            type: string
+                            format: date-time
+                          UpdatedAt:
+                            type: string
+                            format: date-time
+                          ConcurrencyMode:
+                            type: string
+                            enum:
+                              - parallel
+                              - lock
+                              - queue
+                        required:
+                          - Id
+                          - Name
+                          - Publish
+                          - Logging
+                          - Tags
+                          - CreatedAt
+                          - UpdatedAt
+                      Status:
+                        type: string
+                        enum:
+                          - Queued
+                          - Running
+                          - Succeeded
+                          - Failed
+                          - Canceling
+                          - Canceled
+                      Revision:
+                        type: integer
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Args:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      StepCount:
+                        default: 0
+                        type: integer
+                        minimum: 0
+                      Result:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      Error:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      RunAt:
+                        type: string
+                        format: date-time
+                      FailedAt:
+                        type: string
+                        format: date-time
+                      SucceededAt:
+                        type: string
+                        format: date-time
+                      CancelRequestedAt:
+                        type: string
+                        format: date-time
+                      CanceledAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - ExecutionId
+                      - Name
+                      - Workflow
+                      - Status
+                      - Revision
+                      - RevisionAlias
+                      - Args
+                      - StepCount
+                      - Result
+                      - Error
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Execution
+              example:
+                is_ok: true
+                Execution:
+                  ExecutionId: sampleString
+                  Name: sampleString
+                  Workflow:
+                    Id: sampleString
+                    Name: sampleString
+                    Description: sampleString
+                    Publish: true
+                    Logging: true
+                    Tags:
+                      - Name: sampleString
+                    ServicePrincipalId: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+                    ConcurrencyMode: parallel
+                  Status: Queued
+                  Revision: 123
+                  RevisionAlias: sampleString
+                  Args: sampleString
+                  StepCount: 0
+                  Result: sampleString
+                  Error: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  RunAt: 2020-01-01T00:00:00Z
+                  FailedAt: 2020-01-01T00:00:00Z
+                  SucceededAt: 2020-01-01T00:00:00Z
+                  CancelRequestedAt: 2020-01-01T00:00:00Z
+                  CanceledAt: 2020-01-01T00:00:00Z
+        "202":
+          description: ワークフローの実行キャンセルをキューに登録した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Execution:
+                    type: object
+                    properties:
+                      ExecutionId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Workflow:
+                        type: object
+                        properties:
+                          Id:
+                            type: string
+                            minLength: 1
+                            maxLength: 36
+                          Name:
+                            type: string
+                            minLength: 1
+                            maxLength: 64
+                            pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                          Description:
+                            type: string
+                            minLength: 0
+                            maxLength: 1024
+                          Publish:
+                            type: boolean
+                          Logging:
+                            type: boolean
+                          Tags:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                Name:
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 64
+                              required:
+                                - Name
+                          ServicePrincipalId:
+                            oneOf:
+                              - type: string
+                                pattern: ^[0-9]{12}$
+                              - type: number
+                          CreatedAt:
+                            type: string
+                            format: date-time
+                          UpdatedAt:
+                            type: string
+                            format: date-time
+                          ConcurrencyMode:
+                            type: string
+                            enum:
+                              - parallel
+                              - lock
+                              - queue
+                        required:
+                          - Id
+                          - Name
+                          - Publish
+                          - Logging
+                          - Tags
+                          - CreatedAt
+                          - UpdatedAt
+                      Status:
+                        type: string
+                        enum:
+                          - Queued
+                          - Running
+                          - Succeeded
+                          - Failed
+                          - Canceling
+                          - Canceled
+                      Revision:
+                        type: integer
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Args:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      StepCount:
+                        default: 0
+                        type: integer
+                        minimum: 0
+                      Result:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      Error:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      RunAt:
+                        type: string
+                        format: date-time
+                      FailedAt:
+                        type: string
+                        format: date-time
+                      SucceededAt:
+                        type: string
+                        format: date-time
+                      CancelRequestedAt:
+                        type: string
+                        format: date-time
+                      CanceledAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - ExecutionId
+                      - Name
+                      - Workflow
+                      - Status
+                      - Revision
+                      - RevisionAlias
+                      - Args
+                      - StepCount
+                      - Result
+                      - Error
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Execution
+              example:
+                is_ok: true
+                Execution:
+                  ExecutionId: sampleString
+                  Name: sampleString
+                  Workflow:
+                    Id: sampleString
+                    Name: sampleString
+                    Description: sampleString
+                    Publish: true
+                    Logging: true
+                    Tags:
+                      - Name: sampleString
+                    ServicePrincipalId: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+                    ConcurrencyMode: parallel
+                  Status: Queued
+                  Revision: 123
+                  RevisionAlias: sampleString
+                  Args: sampleString
+                  StepCount: 0
+                  Result: sampleString
+                  Error: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  RunAt: 2020-01-01T00:00:00Z
+                  FailedAt: 2020-01-01T00:00:00Z
+                  SucceededAt: 2020-01-01T00:00:00Z
+                  CancelRequestedAt: 2020-01-01T00:00:00Z
+                  CanceledAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "409":
+          description: ワークフローの実行をキャンセルできない状態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: sampleString
+        "500": *a6
+  /workflows/{id}/executions/{executionId}:
+    get:
+      operationId: readExecution
+      description: ワークフローの実行を取得する
+      summary: ワークフローの実行を取得する
+      tags:
+        - ワークフローの実行
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: executionId
+          in: path
+          description: Execution ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローの実行の取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Execution:
+                    type: object
+                    properties:
+                      ExecutionId:
+                        type: string
+                        minLength: 1
+                        maxLength: 36
+                      Name:
+                        type: string
+                        minLength: 1
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                      Workflow:
+                        type: object
+                        properties:
+                          Id:
+                            type: string
+                            minLength: 1
+                            maxLength: 36
+                          Name:
+                            type: string
+                            minLength: 1
+                            maxLength: 64
+                            pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]+$
+                          Description:
+                            type: string
+                            minLength: 0
+                            maxLength: 1024
+                          Publish:
+                            type: boolean
+                          Logging:
+                            type: boolean
+                          Tags:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                Name:
+                                  type: string
+                                  minLength: 1
+                                  maxLength: 64
+                              required:
+                                - Name
+                          ServicePrincipalId:
+                            oneOf:
+                              - type: string
+                                pattern: ^[0-9]{12}$
+                              - type: number
+                          CreatedAt:
+                            type: string
+                            format: date-time
+                          UpdatedAt:
+                            type: string
+                            format: date-time
+                          ConcurrencyMode:
+                            type: string
+                            enum:
+                              - parallel
+                              - lock
+                              - queue
+                        required:
+                          - Id
+                          - Name
+                          - Publish
+                          - Logging
+                          - Tags
+                          - CreatedAt
+                          - UpdatedAt
+                      Status:
+                        type: string
+                        enum:
+                          - Queued
+                          - Running
+                          - Succeeded
+                          - Failed
+                          - Canceling
+                          - Canceled
+                      Revision:
+                        type: integer
+                      RevisionAlias:
+                        type: string
+                        minLength: 0
+                        maxLength: 64
+                        pattern: ^[a-zA-Z0-9_\-ーぁ-んァ-ヶ一-龠]*$
+                      Args:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      StepCount:
+                        default: 0
+                        type: integer
+                        minimum: 0
+                      Result:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      Error:
+                        type: string
+                        minLength: 1
+                        maxLength: 65536
+                      CreatedAt:
+                        type: string
+                        format: date-time
+                      UpdatedAt:
+                        type: string
+                        format: date-time
+                      RunAt:
+                        type: string
+                        format: date-time
+                      FailedAt:
+                        type: string
+                        format: date-time
+                      SucceededAt:
+                        type: string
+                        format: date-time
+                      CancelRequestedAt:
+                        type: string
+                        format: date-time
+                      CanceledAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - ExecutionId
+                      - Name
+                      - Workflow
+                      - Status
+                      - Revision
+                      - RevisionAlias
+                      - Args
+                      - StepCount
+                      - Result
+                      - Error
+                      - CreatedAt
+                      - UpdatedAt
+                required:
+                  - is_ok
+                  - Execution
+              example:
+                is_ok: true
+                Execution:
+                  ExecutionId: sampleString
+                  Name: sampleString
+                  Workflow:
+                    Id: sampleString
+                    Name: sampleString
+                    Description: sampleString
+                    Publish: true
+                    Logging: true
+                    Tags:
+                      - Name: sampleString
+                    ServicePrincipalId: sampleString
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    UpdatedAt: 2020-01-01T00:00:00Z
+                    ConcurrencyMode: parallel
+                  Status: Queued
+                  Revision: 123
+                  RevisionAlias: sampleString
+                  Args: sampleString
+                  StepCount: 0
+                  Result: sampleString
+                  Error: sampleString
+                  CreatedAt: 2020-01-01T00:00:00Z
+                  UpdatedAt: 2020-01-01T00:00:00Z
+                  RunAt: 2020-01-01T00:00:00Z
+                  FailedAt: 2020-01-01T00:00:00Z
+                  SucceededAt: 2020-01-01T00:00:00Z
+                  CancelRequestedAt: 2020-01-01T00:00:00Z
+                  CanceledAt: 2020-01-01T00:00:00Z
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+    delete:
+      operationId: deleteExecution
+      description: ワークフローの実行を削除する
+      summary: ワークフローの実行を削除する
+      tags:
+        - ワークフローの実行
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: executionId
+          in: path
+          description: Execution ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローの削除に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                required:
+                  - is_ok
+              example:
+                is_ok: true
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "409":
+          description: ワークフローの実行を削除できない状態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    default: false
+                    type: boolean
+                  Message:
+                    type: string
+                required:
+                  - is_ok
+                  - Message
+              example:
+                is_ok: false
+                Message: sampleString
+        "500": *a6
+  /workflows/{id}/executions/{executionId}/exec_history:
+    get:
+      operationId: listExecutionHistories
+      description: ワークフローの実行履歴を取得する
+      summary: ワークフローの実行履歴を取得する
+      tags:
+        - ワークフローの実行
+      parameters:
+        - name: Page
+          in: query
+          description: ページ番号
+          required: false
+          schema:
+            default: 1
+            type: integer
+            minimum: 1
+          example: 1
+        - name: PageLimit
+          in: query
+          description: 1ページあたりのリソースの取得数
+          required: false
+          schema:
+            default: 20
+            type: integer
+            minimum: 5
+            maximum: 500
+          example: 20
+        - name: SortOrder
+          in: query
+          description: ソートの順序
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          example: asc
+        - name: id
+          in: path
+          description: Workflow ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+        - name: executionId
+          in: path
+          description: Execution ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 36
+          example: sampleString
+      responses:
+        "200":
+          description: ワークフローの実行履歴の取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Total:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  From:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Count:
+                    default: 0
+                    type: integer
+                    minimum: 0
+                  Histories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        WorkflowExecutionId:
+                          type: string
+                          minLength: 1
+                          maxLength: 36
+                        JobId:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                        ThreadId:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                        Type:
+                          type: string
+                          enum:
+                            - workflowWillStart
+                            - workflowDidSuspended
+                            - workflowWillResume
+                            - workflowDidCompleted
+                            - workflowDidFailed
+                            - workflowDidCanceled
+                            - stepWillExecute
+                            - stepDidExecuted
+                            - functionWillCall
+                            - functionWillRun
+                            - functionDidRun
+                            - functionDidFailed
+                        CreatedAt:
+                          type: string
+                          format: date-time
+                        Meta:
+                          type: string
+                          minLength: 1
+                        StackTrace:
+                          type: string
+                          minLength: 1
+                        Variables:
+                          type: string
+                          minLength: 1
+                      required:
+                        - WorkflowExecutionId
+                        - JobId
+                        - ThreadId
+                        - Type
+                        - CreatedAt
+                        - Meta
+                        - StackTrace
+                        - Variables
+                required:
+                  - is_ok
+                  - Total
+                  - From
+                  - Count
+                  - Histories
+              example:
+                is_ok: true
+                Total: 0
+                From: 0
+                Count: 0
+                Histories:
+                  - WorkflowExecutionId: sampleString
+                    JobId: sampleString
+                    ThreadId: sampleString
+                    Type: workflowWillStart
+                    CreatedAt: 2020-01-01T00:00:00Z
+                    Meta: sampleString
+                    StackTrace: sampleString
+                    Variables: sampleString
+        "400": *a1
+        "401": *a2
+        "402": *a3
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /plans:
+    get:
+      operationId: listPlans
+      description: 現在契約可能な Workflows の料金プランの一覧を取得します。
+      summary: プラン一覧を取得する
+      tags:
+        - プラン
+      parameters: []
+      responses:
+        "200":
+          description: プラン一覧の取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  Plans:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        grade:
+                          type: integer
+                        serviceClassPath:
+                          type: string
+                        basePrice:
+                          type: integer
+                        includedSteps:
+                          type: integer
+                        overageStepUnit:
+                          type: integer
+                        overagePricePerUnit:
+                          type: integer
+                      required:
+                        - id
+                        - name
+                        - grade
+                        - serviceClassPath
+                        - basePrice
+                        - includedSteps
+                        - overageStepUnit
+                        - overagePricePerUnit
+                  TaxRate:
+                    default: 10
+                    type: integer
+                required:
+                  - is_ok
+                  - Plans
+                  - TaxRate
+              example:
+                is_ok: true
+                Plans:
+                  - id: 123
+                    name: sampleString
+                    grade: 123
+                    serviceClassPath: sampleString
+                    basePrice: 123
+                    includedSteps: 123
+                    overageStepUnit: 123
+                    overagePricePerUnit: 123
+                TaxRate: 10
+        "400": *a1
+        "401": *a2
+        "403": *a4
+        "404": *a5
+        "500": *a6
+  /subscriptions:
+    get:
+      operationId: readSubscription
+      description: ワークフローの課金プランの取得をする
+      summary: ワークフローの課金プランの取得をする
+      tags:
+        - サブスクリプション
+      parameters: []
+      responses:
+        "200":
+          description: ワークフローのプラン取得に成功した
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_ok:
+                    type: boolean
+                  CurrentPlan:
+                    nullable: true
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      accountId:
+                        type: string
+                      contractId:
+                        type: string
+                      planId:
+                        type: integer
+                      activateFrom:
+                        type: string
+                        format: date-time
+                      activateUntil:
+                        nullable: true
+                        type: string
+                        format: date-time
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                      planName:
+                        type: string
+                    required:
+                      - id
+                      - accountId
+                      - contractId
+                      - planId
+                      - activateFrom
+                      - activateUntil
+                      - createdAt
+                      - updatedAt
+                      - planName
+                  MonthAppliedPlan:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      accountId:
+                        type: string
+                      contractId:
+                        type: string
+                      planId:
+                        type: integer
+                      activateFrom:
+                        type: string
+                        format: date-time
+                      activateUntil:
+                        nullable: true
+                        type: string
+                        format: date-time
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                      planName:
+                        type: string
+                      planGrade:
+                        type: integer
+                      basePrice:
+                        type: integer
+                      includedSteps:
+                        type: integer
+                      overageStepUnit:
+                        type: integer
+                      overagePricePerUnit:
+                        type: integer
+                    required:
+                      - id
+                      - accountId
+                      - contractId
+                      - planId
+                      - activateFrom
+                      - activateUntil
+                      - createdAt
+                      - updatedAt
+                      - planName
+                      - planGrade
+                      - basePrice
+                      - includedSteps
+                      - overageStepUnit
+                      - overagePricePerUnit
+                required:
+                  - is_ok
+              example:
+                is_ok: true
+                CurrentPlan:
+                  id: sampleString
+                  accountId: sampleString
+                  contractId: sampleString
+                  planId: 123
+                  activateFrom: 2020-01-01T00:00:00Z
+                  activateUntil: 2020-01-01T00:00:00Z
+                  createdAt: 2020-01-01T00:00:00Z
+                  updatedAt: 2020-01-01T00:00:00Z
+                  planName: sampleString
+                MonthAppliedPlan:
+                  id: sampleString
+                  accountId: sampleString
+                  contractId: sampleString
+                  planId: 123
+                  activateFrom: 2020-01-01T00:00:00Z
+                  activateUntil: 2020-01-01T00:00:00Z
+                  createdAt: 2020-01-01T00:00:00Z
+                  updatedAt: 2020-01-01T00:00:00Z
+                  planName: sampleString
+                  planGrade: 123
+                  basePrice: 123
+                  includedSteps: 123
+                  overageStepUnit: 123
+                  overagePricePerUnit: 123
+        "400": *a1
+        "401": *a2
+        "403": *a4
+        "404": *a5
+        "500": *a6
+    post:
+      operationId: createSubscription
+      description: ワークフローの課金プランの設定をする
+      summary: ワークフローの課金プランの設定をする
+      tags:
+        - サブスクリプション
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                PlanId:
+                  type: integer
+                  minimum: 1
+              required:
+                - PlanId
+            example:
+              PlanId: 123
+      responses:
+        "204":
+          description: ワークフローのプラン設定に成功した
+        "400": *a1
+        "401": *a2
+        "403": *a4
+        "404": *a5
+        "500": *a6
+    delete:
+      operationId: deleteSubscription
+      description: ワークフローの課金プランの削除をする
+      summary: ワークフローの課金プランの削除をする
+      tags:
+        - サブスクリプション
+      parameters: []
+      responses:
+        "204":
+          description: ワークフローのプラン削除に成功した
+        "400": *a1
+        "401": *a2
+        "403": *a4
+        "404": *a5
+        "500": *a6
+servers:
+  - url: https://secure.sakura.ad.jp/cloud/zone/tk1b/api/workflow/1.0
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: basic
+      description: APIキーを利用したBasic認証

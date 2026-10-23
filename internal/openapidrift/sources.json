@@ -157,7 +157,7 @@
     {
       "id": "workflows",
       "name": "Workflows",
-      "local": "workflows/openapi/openapi.json",
+      "local": "workflows/openapi/openapi.yaml",
       "source": "workflows"
     }
   ]

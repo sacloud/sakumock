@@ -1947,7 +1947,6 @@ components:
           type: array
           maxItems: 10
           items:
-            type: object
             required:
               - from_ip
               - from_ip_prefix_length
@@ -1976,7 +1975,6 @@ components:
           type: array
           maxItems: 10
           items:
-            type: object
             required:
               - from_ip
               - from_ip_prefix_length
@@ -2440,7 +2438,6 @@ components:
           type: array
           maxItems: 10
           items:
-            type: object
             required:
               - from_ip
               - from_ip_prefix_length

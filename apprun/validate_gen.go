@@ -179,7 +179,6 @@ var bodySchemas = map[string]*core.BodySchema{
 			"settings": {
 				Type: "array",
 				Items: &core.BodySchema{
-					Type:     "object",
 					Required: []string{"from_ip", "from_ip_prefix_length"},
 					Properties: map[string]*core.BodySchema{
 						"from_ip": {
@@ -631,7 +630,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"settings": {
 					Type: "array",
 					Items: &core.BodySchema{
-						Type:     "object",
 						Required: []string{"from_ip", "from_ip_prefix_length"},
 						Properties: map[string]*core.BodySchema{
 							"from_ip": {
@@ -1167,7 +1165,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				"settings": {
 					Type: "array",
 					Items: &core.BodySchema{
-						Type:     "object",
 						Required: []string{"from_ip", "from_ip_prefix_length"},
 						Properties: map[string]*core.BodySchema{
 							"from_ip": {

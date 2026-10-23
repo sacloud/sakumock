@@ -266,6 +266,14 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 		}
 		return c.compile(target, loc, append(seen, ref))
 	}
+	if inner, ok := nullableUnion(m); ok {
+		s := c.compile(inner, loc, seen)
+		if s == nil {
+			return nil
+		}
+		s.Nullable = true
+		return s
+	}
 	for _, kw := range []string{"oneOf", "anyOf", "not"} {
 		if _, ok := m[kw]; ok {
 			c.note("%s at %s left permissive", kw, loc)
@@ -517,9 +525,29 @@ func intersectEnums(a, b []any) []any {
 // schemaTypes normalizes the type keyword: 3.0 `type: "string"` yields one
 // type; the 3.1 array form `type: ["string", "null"]` yields the non-null
 // types plus the nullable flag.
+// nullableUnion recognizes the 3.1 nullable idiom `anyOf` (or `oneOf`) of a
+// schema and `{type: 'null'}`, returning the non-null branch.
+func nullableUnion(m map[string]any) (any, bool) {
+	for _, kw := range []string{"anyOf", "oneOf"} {
+		alts, ok := m[kw].([]any)
+		if !ok || len(alts) != 2 {
+			continue
+		}
+		for i, a := range alts {
+			if am, ok := a.(map[string]any); ok && len(am) == 1 && am["type"] == "null" {
+				return alts[1-i], true
+			}
+		}
+	}
+	return nil, false
+}
+
 func schemaTypes(m map[string]any) ([]string, bool) {
 	switch t := m["type"].(type) {
 	case string:
+		if t == "null" {
+			return nil, true
+		}
 		return []string{t}, false
 	case []any:
 		var types []string

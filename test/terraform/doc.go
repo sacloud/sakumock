@@ -17,7 +17,13 @@
 //
 //     Append ["<resource>"].block.attributes to inspect one resource's arguments.
 //
-//   - A failed manual run leaves terraform.tfstate holding the previous mock
-//     process's resource IDs, so the next run fails during refresh with
+//   - The test applies staged copies of the fixture, never this directory. A
+//     failed manual run here leaves terraform.tfstate holding the previous mock
+//     process's resource IDs, so the next manual run fails during refresh with
 //     unrelated 404s. Delete terraform.tfstate* (gitignored) before re-running.
+//
+//   - A fixture file whose resources fail only because the provider's SDK
+//     cannot handle portal-conformant mock behavior goes in knownSDKGaps (with
+//     its sakumock issue): it is left out of the main run and must keep failing
+//     when applied alone, so the test reports when the SDK catches up.
 package terraform

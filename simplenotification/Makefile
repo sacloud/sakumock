@@ -1,6 +1,5 @@
-OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
-OPENAPI_SUBDIR := api/simple-notification/openapi
-OPENAPI_FILES := openapi.yaml
+# The portal specs are stored as published (sakumock follows the portal).
+OPENAPI_URL := https://manual.sakura.ad.jp/api/cloud/portal/openapis/simple-notification-api.yaml
 
 .PHONY: clean test openapi generate
 
@@ -17,11 +16,10 @@ install:
 	go install github.com/sacloud/sakumock/simplenotification/cmd/sakumock-simplenotification
 
 openapi:
-	$(eval MOD_VERSION := $(shell go list -m -f '{{.Version}}' $(OPENAPI_MODULE)))
-	$(eval MOD_DIR := $(shell go env GOMODCACHE)/$(OPENAPI_MODULE)@$(MOD_VERSION))
 	mkdir -p openapi
-	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
-	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"
+	curl -fsSL -o openapi/openapi.yaml.tmp $(OPENAPI_URL) || { rm -f openapi/openapi.yaml.tmp; exit 1; }
+	mv openapi/openapi.yaml.tmp openapi/openapi.yaml
+	@echo "Fetched the portal spec(s)"
 	$(MAKE) generate
 
 generate:

@@ -64,8 +64,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Enum: []any{"cloud/saknoticedestination/2", "cloud/saknoticegroup/2", "cloud/saknoticerouting/2"},
 					},
 					"Tags": {
-						Type:     "array",
-						Nullable: true,
+						Type: "array",
 						Items: &core.BodySchema{
 							Type: "string",
 						},
@@ -143,8 +142,7 @@ var bodySchemas = map[string]*core.BodySchema{
 						Type: "string",
 					},
 					"Tags": {
-						Type:     "array",
-						Nullable: true,
+						Type: "array",
 						Items: &core.BodySchema{
 							Type: "string",
 						},
@@ -215,12 +213,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "string",
 									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
 								},
-								"Name": {
-									Type: "string",
-								},
-								"ServiceClass": {
-									Type: "string",
-								},
 							},
 						},
 						"Tags": {
@@ -290,12 +282,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									"Class": {
 										Type: "string",
 										Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
-									},
-									"Name": {
-										Type: "string",
-									},
-									"ServiceClass": {
-										Type: "string",
 									},
 								},
 							},
@@ -567,12 +553,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "string",
 									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
 								},
-								"Name": {
-									Type: "string",
-								},
-								"ServiceClass": {
-									Type: "string",
-								},
 							},
 						},
 						"Tags": {
@@ -660,12 +640,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								"Class": {
 									Type: "string",
 									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
-								},
-								"Name": {
-									Type: "string",
-								},
-								"ServiceClass": {
-									Type: "string",
 								},
 							},
 						},
@@ -755,12 +729,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								"Class": {
 									Type: "string",
 									Enum: []any{"saknoticedestination", "saknoticegroup", "saknoticerouting"},
-								},
-								"Name": {
-									Type: "string",
-								},
-								"ServiceClass": {
-									Type: "string",
 								},
 							},
 						},

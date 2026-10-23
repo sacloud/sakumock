@@ -26,6 +26,9 @@ info:
   version: "1.0.0"
   contact:
     name: simple-notification
+servers:
+  - url: "https://secure.sakura.ad.jp/cloud/zone/is1a/api/cloud/1.1"
+    description: さくらのクラウドAPIエンドポイント
 tags:
   - name: 通知送信
     description: 通知送信関連のエンドポイント
@@ -112,7 +115,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /commonserviceitem/{id}:
     get:
-      operationId: getCommonServiceItem
+      operationId: readCommonServiceItem
       tags:
         - 通知先
         - 通知先グループ
@@ -141,11 +144,11 @@ paths:
                   - CommonServiceItem
               examples:
                 通知先:
-                  $ref: "#/components/examples/GetCommonServiceItemsResponseDestination"
+                  $ref: "#/components/examples/ReadCommonServiceItemsResponseDestination"
                 通知先グループ:
-                  $ref: "#/components/examples/GetCommonServiceItemsResponseGroup"
+                  $ref: "#/components/examples/ReadCommonServiceItemsResponseGroup"
                 通知ルーティング:
-                  $ref: "#/components/examples/GetCommonServiceItemsResponseRouting"
+                  $ref: "#/components/examples/ReadCommonServiceItemsResponseRouting"
         default:
           description: "Unexpected Error"
           content:
@@ -234,7 +237,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /commonserviceitem/simplenotification/routing/reorder:
     put:
-      operationId: reorderRouting
+      operationId: reorderNotificationRouting
       tags:
         - 通知ルーティング
       summary: 通知ルーティングの並び替え
@@ -245,7 +248,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PutCommonServiceItemRoutingReorderRequest"
+              $ref: "#/components/schemas/ReorderNotificationRoutingRequest"
       responses:
         "202":
           description: "Accepted"
@@ -264,7 +267,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /commonserviceitem/{id}/simplenotification/status:
     get:
-      operationId: getCommonServiceItemStatus
+      operationId: checkNotificationDestinationStatus
       tags:
         - 通知先
       summary: 通知先ステータス情報の取得
@@ -283,7 +286,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetCommonServiceItemStatusResponse"
+                $ref: "#/components/schemas/CheckDestinationStatusResponse"
         default:
           description: "Unexpected Error"
           content:
@@ -292,7 +295,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /commonserviceitem/{id}/simplenotification/message:
     post:
-      operationId: sendNotificationMessage
+      operationId: sendNotification
       tags:
         - 通知送信
       summary: メッセージの送信
@@ -309,14 +312,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SendNotificationMessageRequest"
+              $ref: "#/components/schemas/SendNotificationRequest"
       responses:
         "202":
           description: "Accepted"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SendNotificationMessageResponse"
+                $ref: "#/components/schemas/SendNotificationResponse"
         default:
           description: "Unexpected Error"
           content:
@@ -338,10 +341,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ListSimpleNotificationHistoriesResponse"
+                $ref: "#/components/schemas/ListNotificationHistoriesResponse"
               examples:
                 通知履歴一覧:
-                  $ref: "#/components/examples/ListSimpleNotificationHistoriesResponse"
+                  $ref: "#/components/examples/ListNotificationHistoriesResponse"
         default:
           description: "Unexpected Error"
           content:
@@ -350,7 +353,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /commonserviceitem/simplenotification/history/{request_id}:
     get:
-      operationId: getNotificationHistory
+      operationId: readNotificationHistory
       tags:
         - 通知履歴
       summary: 通知履歴の取得
@@ -369,10 +372,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetSimpleNotificationHistoryResponse"
+                $ref: "#/components/schemas/ReadNotificationHistoryResponse"
               examples:
                 通知履歴:
-                  $ref: "#/components/examples/GetSimpleNotificationHistoryResponse"
+                  $ref: "#/components/examples/ReadNotificationHistoryResponse"
         default:
           description: "Unexpected Error"
           content:
@@ -381,7 +384,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /commonserviceitem/simplenotification/sources:
     get:
-      operationId: listSources
+      operationId: listNotificationSources
       tags:
         - 通知ルーティング
       summary: 通知元一覧の取得
@@ -393,7 +396,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ListSourcesResponse"
+                $ref: "#/components/schemas/ListNotificationSourcesResponse"
         default:
           description: "Unexpected Error"
           content:
@@ -414,21 +417,33 @@ components:
         Description:
           type: string
         Settings:
-          $ref: "#/components/schemas/CommonServiceItemSettings"
-        Provider:
-          $ref: "#/components/schemas/CommonServiceItemProvider"
-        Icon:
-          $ref: "#/components/schemas/CommonServiceItemIcon"
-        Tags:
-          type: array
-          items:
-            type: string
+          oneOf:
+            - $ref: "#/components/schemas/CommonServiceItemDestinationSettings"
+            - $ref: "#/components/schemas/CommonServiceItemGroupSettings"
+            - $ref: "#/components/schemas/CommonServiceItemRoutingSettings"
         CreatedAt:
           type: string
           format: date-time
         ModifiedAt:
           type: string
           format: date-time
+        Provider:
+          type: object
+          properties:
+            Class:
+              type: string
+              enum:
+                - saknoticedestination
+                - saknoticegroup
+                - saknoticerouting
+          required:
+            - Class
+        Icon:
+          $ref: "#/components/schemas/CommonServiceItemIcon"
+        Tags:
+          type: array
+          items:
+            type: string
       required:
         - ID
         - Name
@@ -439,26 +454,6 @@ components:
         - Provider
         - Icon
         - Tags
-    CommonServiceItemSettings:
-      oneOf:
-        - $ref: "#/components/schemas/DestinationSettings"
-        - $ref: "#/components/schemas/GroupSettings"
-        - $ref: "#/components/schemas/RoutingSettings"
-    CommonServiceItemProvider:
-      properties:
-        Class:
-          type: string
-          enum:
-            - saknoticedestination
-            - saknoticegroup
-            - saknoticerouting
-        Name:
-          type: string
-        ServiceClass:
-          type: string
-      required:
-        - Class
-      type: object
     CommonServiceItemIcon:
       type: object
       nullable: true
@@ -473,12 +468,6 @@ components:
           type: string
       required:
         - ID
-    CommonServiceItemServiceClass:
-      type: string
-      enum:
-        - cloud/saknoticedestination/2
-        - cloud/saknoticegroup/2
-        - cloud/saknoticerouting/2
     ListCommonServiceItemsResponse:
       type: object
       properties:
@@ -504,19 +493,38 @@ components:
               type: string
             Description:
               type: string
-            Settings:
-              $ref: "#/components/schemas/CommonServiceItemSettings"
-            Provider:
-              $ref: "#/components/schemas/CommonServiceItemProvider"
-            ServiceClass:
-              $ref: "#/components/schemas/CommonServiceItemServiceClass"
-            Icon:
-              $ref: "#/components/schemas/CommonServiceItemIcon"
             Tags:
               type: array
               items:
                 type: string
-              nullable: true
+            Icon:
+              $ref: "#/components/schemas/CommonServiceItemIcon"
+            Provider:
+              properties:
+                Class:
+                  type: string
+                  enum:
+                    - saknoticedestination
+                    - saknoticegroup
+                    - saknoticerouting
+                Name:
+                  type: string
+                ServiceClass:
+                  type: string
+              required:
+                - Class
+              type: object
+            Settings:
+              oneOf:
+                - $ref: "#/components/schemas/CommonServiceItemDestinationSettings"
+                - $ref: "#/components/schemas/CommonServiceItemGroupSettings"
+                - $ref: "#/components/schemas/CommonServiceItemRoutingSettings"
+            ServiceClass:
+              type: string
+              enum:
+                - cloud/saknoticedestination/2
+                - cloud/saknoticegroup/2
+                - cloud/saknoticerouting/2
           required:
             - Name
             - Description
@@ -541,11 +549,13 @@ components:
               type: array
               items:
                 type: string
-              nullable: true
             Icon:
               $ref: "#/components/schemas/CommonServiceItemIcon"
             Settings:
-              $ref: "#/components/schemas/CommonServiceItemSettings"
+              oneOf:
+                - $ref: "#/components/schemas/CommonServiceItemDestinationSettings"
+                - $ref: "#/components/schemas/CommonServiceItemGroupSettings"
+                - $ref: "#/components/schemas/CommonServiceItemRoutingSettings"
           required:
             - Name
             - Description
@@ -553,7 +563,7 @@ components:
             - Icon
       required:
         - CommonServiceItem
-    DestinationSettings:
+    CommonServiceItemDestinationSettings:
       type: object
       properties:
         Type:
@@ -568,7 +578,7 @@ components:
       required:
         - Type
         - Value
-    GroupSettings:
+    CommonServiceItemGroupSettings:
       type: object
       properties:
         Destinations:
@@ -580,7 +590,7 @@ components:
           type: boolean
       required:
         - Destinations
-    RoutingSettings:
+    CommonServiceItemRoutingSettings:
       type: object
       properties:
         MatchLabels:
@@ -615,7 +625,7 @@ components:
         - MatchLabels
         - TargetGroupID
         - PriorityRank
-    PutCommonServiceItemRoutingReorderRequest:
+    ReorderNotificationRoutingRequest:
       properties:
         Orders:
           items:
@@ -635,7 +645,7 @@ components:
       required:
         - Orders
       type: object
-    GetCommonServiceItemStatusResponse:
+    CheckDestinationStatusResponse:
       type: object
       properties:
         NotificationStatus:
@@ -651,7 +661,7 @@ components:
             - ModifiedAt
       required:
         - NotificationStatus
-    SendNotificationMessageRequest:
+    SendNotificationRequest:
       type: object
       properties:
         Message:
@@ -659,14 +669,14 @@ components:
           maxLength: 2048
       required:
         - Message
-    SendNotificationMessageResponse:
+    SendNotificationResponse:
       type: object
       properties:
         is_ok:
           type: boolean
       required:
         - is_ok
-    ListSimpleNotificationHistoriesResponse:
+    ListNotificationHistoriesResponse:
       type: object
       properties:
         NotificationHistories:
@@ -675,7 +685,7 @@ components:
             $ref: "#/components/schemas/NotificationHistory"
       required:
         - NotificationHistories
-    GetSimpleNotificationHistoryResponse:
+    ReadNotificationHistoryResponse:
       type: object
       properties:
         NotificationHistory:
@@ -770,7 +780,7 @@ components:
         - icon_url
         - image_url
         - title
-    ListSourcesResponse:
+    ListNotificationSourcesResponse:
       type: object
       properties:
         Sources:
@@ -880,7 +890,7 @@ components:
             Icon:
               ID: "123700100001"
             Tags: []
-    GetCommonServiceItemsResponseDestination:
+    ReadCommonServiceItemsResponseDestination:
       value:
         CommonServiceItem:
           ID: "123700010001"
@@ -896,7 +906,7 @@ components:
           Icon:
             ID: "123700100001"
           Tags: []
-    GetCommonServiceItemsResponseGroup:
+    ReadCommonServiceItemsResponseGroup:
       value:
         CommonServiceItem:
           ID: "123700020001"
@@ -913,7 +923,7 @@ components:
           Icon:
             ID: "123700100001"
           Tags: []
-    GetCommonServiceItemsResponseRouting:
+    ReadCommonServiceItemsResponseRouting:
       value:
         CommonServiceItem:
           ID: "123700030001"
@@ -1014,7 +1024,7 @@ components:
               - Name: environment
                 Value: development
             TargetGroupID: "123700020001"
-    ListSimpleNotificationHistoriesResponse:
+    ListNotificationHistoriesResponse:
       value:
         NotificationHistories:
           - request_id: "12345"
@@ -1036,7 +1046,7 @@ components:
               icon_url: "https://example.com/icon.png"
               image_url: "https://example.com/image.png"
               title: "Test Notification"
-    GetSimpleNotificationHistoryResponse:
+    ReadNotificationHistoryResponse:
       value:
         NotificationHistory:
           request_id: "12345"

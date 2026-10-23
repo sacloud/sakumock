@@ -1,6 +1,7 @@
 package objectstorage_test
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"testing"
@@ -50,6 +51,23 @@ func newClients(t *testing.T, serverURL string) (*sdk.FedClient, *sdk.SiteClient
 		t.Fatal(err)
 	}
 	return fed, site
+}
+
+type dummySecuritySource struct{}
+
+func (dummySecuritySource) BasicAuth(context.Context, v2.OperationName) (v2.BasicAuth, error) {
+	return v2.BasicAuth{}, nil
+}
+
+// newRawClient returns the SDK's generated client rooted at basePath (e.g.
+// "/fed/v1"), for operations the SDK's high-level ops do not wrap.
+func newRawClient(t *testing.T, serverURL, basePath string) *v2.Client {
+	t.Helper()
+	c, err := v2.NewClient(serverURL+basePath, dummySecuritySource{}, v2.WithClient(newTestSAClient(t, serverURL)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c
 }
 
 func TestSiteAPI(t *testing.T) {
@@ -307,6 +325,87 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 	}
 	if _, err := extra.ReadQuota(ctx); err != nil {
 		t.Fatal(err)
+	}
+
+	// Replication to a bucket in another site.
+	if _, err := bucketOp.Create(ctx, &sdk.BucketCreateParams{Bucket: "enc-bucket-replica", SiteId: "tky01"}); err != nil {
+		t.Fatal(err)
+	}
+	fedRaw := newRawClient(t, srv.TestURL(), "/fed/v1")
+	res, err := fedRaw.GetBucketReplicableTargets(ctx, v2.GetBucketReplicableTargetsParams{Name: "enc-bucket"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	targets, ok := res.(*v2.HandlerGetReplicableTargetsRes)
+	if !ok {
+		t.Fatalf("unexpected replicable-targets response: %T", res)
+	}
+	if len(targets.Data) != 1 || targets.Data[0].Name.Value != "enc-bucket-replica" {
+		t.Fatalf("unexpected replicable targets: %+v", targets.Data)
+	}
+
+	repl, err := extra.EnableReplication(ctx, "enc-bucket-replica")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repl.DestBucket.ClusterID.Value != "tky01" {
+		t.Errorf("unexpected replication destination cluster: %s", repl.DestBucket.ClusterID.Value)
+	}
+	if _, err := extra.ReadReplication(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := extra.DisableReplication(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := extra.ReadReplication(ctx); !saclient.IsNotFoundError(err) {
+		t.Fatalf("expected not-found reading disabled replication, got %v", err)
+	}
+}
+
+func TestBucketPlan(t *testing.T) {
+	srv := objectstorage.NewTestServer(objectstorage.Config{})
+	defer closeAndCheck(t, srv)
+	fed, site := newClients(t, srv.TestURL())
+	ctx := t.Context()
+
+	if _, err := sdk.NewBucketOp(fed, site).Create(ctx, &sdk.BucketCreateParams{Bucket: "plan-bucket", SiteId: testSiteID}); err != nil {
+		t.Fatal(err)
+	}
+	siteRaw := newRawClient(t, srv.TestURL(), "/"+testSiteID+"/v2")
+
+	res, err := siteRaw.GetBucketPlan(ctx, v2.GetBucketPlanParams{Name: "plan-bucket"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	current, ok := res.(*v2.GetBucketPlanOK)
+	if !ok {
+		t.Fatalf("unexpected get-plan response: %T", res)
+	}
+	contract := current.Data.Contract.Value
+	if contract.Status.Value != v2.ContractSummaryStatusActive || !contract.DeletedAt.Null {
+		t.Errorf("unexpected current contract: %+v", contract)
+	}
+	if plan := current.Data.Plan.Value; plan.ClusterID.Value != testSiteID || !plan.CapacityGib.Null {
+		t.Errorf("unexpected current plan: %+v", plan)
+	}
+
+	pres, err := siteRaw.PutBucketPlan(ctx, &v2.PlanChangeReqBody{
+		PreviousContract: v2.PlanChangeReqBodyPreviousContract{ResourceID: v2.NewOptResourceID(v2.ResourceID(contract.ResourceID.Value))},
+		NewPlan:          v2.PlanChangeReqBodyNewPlan{Type: v2.ModelPlanTypeStandard, ServiceClassPath: "objectstorage/isk01/bucket"},
+	}, v2.PutBucketPlanParams{Name: "plan-bucket"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	changed, ok := pres.(*v2.PutBucketPlanOK)
+	if !ok {
+		t.Fatalf("unexpected put-plan response: %T", pres)
+	}
+	prev, next := changed.Data.PreviousContract.Value, changed.Data.NewContract.Value
+	if prev.Status.Value != v2.ContractSummaryStatusTerminated || prev.DeletedAt.Null || !prev.DeletedAt.Set {
+		t.Errorf("unexpected previous contract: %+v", prev)
+	}
+	if next.ResourceID.Value == contract.ResourceID.Value || !next.DeletedAt.Null {
+		t.Errorf("unexpected new contract: %+v", next)
 	}
 }
 

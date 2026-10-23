@@ -119,7 +119,7 @@
     {
       "id": "objectstorage",
       "name": "Object Storage",
-      "local": "objectstorage/openapi/openapi.json",
+      "local": "objectstorage/openapi/openapi.yaml",
       "source": "objectstorage"
     },
     {

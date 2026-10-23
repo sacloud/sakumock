@@ -133,7 +133,7 @@
     {
       "id": "seg",
       "name": "Service Endpoint Gateway",
-      "local": "seg/openapi/openapi.json",
+      "local": "seg/openapi/openapi.yaml",
       "source": "seg"
     },
     {

@@ -93,7 +93,7 @@
     {
       "id": "eventbus",
       "name": "EventBus",
-      "local": "eventbus/openapi/openapi.json",
+      "local": "eventbus/openapi/openapi.yaml",
       "source": "eventbus"
     },
     {

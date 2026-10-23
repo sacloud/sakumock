@@ -68,7 +68,7 @@ func TestDataPlaneBasicAuth(t *testing.T) {
 	})
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("basic_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	createAuthUser(t, client, "basic_user", v1.UserAuthentication{
@@ -120,7 +120,7 @@ func TestDataPlaneJwtAuth(t *testing.T) {
 	})
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("jwt_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	createAuthUser(t, client, "jwt_user", v1.UserAuthentication{
@@ -184,7 +184,7 @@ func TestDataPlaneHmacAuth(t *testing.T) {
 	})
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("hmac_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	createAuthUser(t, client, "hmac_user", v1.UserAuthentication{
@@ -235,7 +235,7 @@ func TestDataPlaneACL(t *testing.T) {
 	serviceID := uuid.MustParse(svc.ID.Value.String())
 	route := createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("acl_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	host := svc.RouteHost.Value
@@ -289,7 +289,7 @@ func TestDataPlaneACLWithoutAuthentication(t *testing.T) {
 	serviceID := uuid.MustParse(svc.ID.Value.String())
 	route := createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("acl_none_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	group, err := apigwsdk.NewGroupOp(client).Create(t.Context(), &v1.Group{Name: v1.NewOptName("some_group")})
@@ -314,10 +314,10 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		svc := createUpstreamService(t, client, "ip_deny", upstream.URL, nil)
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("deny_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
-				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPS,
 				RestrictedBy: v1.IpRestrictionConfigRestrictedByDenyIps,
 				Ips:          []string{"127.0.0.1"},
 			}),
@@ -330,10 +330,10 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		svc := createUpstreamService(t, client, "ip_allow", upstream.URL, nil)
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("allow_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
-				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPS,
 				RestrictedBy: v1.IpRestrictionConfigRestrictedByAllowIps,
 				Ips:          []string{"127.0.0.1"},
 			}),
@@ -346,10 +346,10 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		svc := createUpstreamService(t, client, "ip_allow_other", upstream.URL, nil)
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("allow_other_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
-				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPS,
 				RestrictedBy: v1.IpRestrictionConfigRestrictedByAllowIps,
 				Ips:          []string{"10.0.0.1"},
 			}),
@@ -364,13 +364,13 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		})
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("user_ip_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 		})
 		user, err := apigwsdk.NewUserOp(client).Create(t.Context(), &v1.UserDetail{
 			Name: "ip_user",
 			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
-				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPS,
 				RestrictedBy: v1.IpRestrictionConfigRestrictedByDenyIps,
 				Ips:          []string{"127.0.0.1"},
 			}),
@@ -396,10 +396,10 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		})
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("both_ip_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
-				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPS,
 				RestrictedBy: v1.IpRestrictionConfigRestrictedByAllowIps,
 				Ips:          []string{"127.0.0.1"},
 			}),
@@ -407,7 +407,7 @@ func TestDataPlaneIPRestriction(t *testing.T) {
 		user, err := apigwsdk.NewUserOp(client).Create(t.Context(), &v1.UserDetail{
 			Name: "ip_both_user",
 			IpRestrictionConfig: v1.NewOptIpRestrictionConfig(v1.IpRestrictionConfig{
-				Protocols:    v1.IpRestrictionConfigProtocolsHTTPHTTPS,
+				Protocols:    v1.IpRestrictionConfigProtocolsHTTPS,
 				RestrictedBy: v1.IpRestrictionConfigRestrictedByDenyIps,
 				Ips:          []string{"127.0.0.1"},
 			}),

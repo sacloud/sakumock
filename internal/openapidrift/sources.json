@@ -67,7 +67,7 @@
     {
       "id": "apigw",
       "name": "API Gateway",
-      "local": "apigw/openapi/openapi.json",
+      "local": "apigw/openapi/openapi.yaml",
       "source": "apigw"
     },
     {

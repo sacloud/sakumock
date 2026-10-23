@@ -40,7 +40,7 @@ func TestDataPlaneCORS(t *testing.T) {
 	}, nil)
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("cors_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodPOST, v1.HTTPMethodOPTIONS},
 	})
 	host := svc.RouteHost.Value
@@ -124,7 +124,7 @@ func TestDataPlaneCORSWildcard(t *testing.T) {
 		}, nil)
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("wild_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodOPTIONS},
 		})
 		resp := gwDoWith(t, dpAddr, "OPTIONS", svc.RouteHost.Value, "/", preflight("http://anywhere.example.com", "GET"))
@@ -144,7 +144,7 @@ func TestDataPlaneCORSWildcard(t *testing.T) {
 		}, nil)
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("wild_cred_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodOPTIONS},
 		})
 		resp := gwDoWith(t, dpAddr, "OPTIONS", svc.RouteHost.Value, "/", preflight("http://spa.example.com", "GET"))
@@ -164,7 +164,7 @@ func TestDataPlaneCORSPrecedesAuthentication(t *testing.T) {
 	})
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("cors_auth_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodOPTIONS},
 	})
 	host := svc.RouteHost.Value
@@ -192,7 +192,7 @@ func TestDataPlaneCORSPreflightContinue(t *testing.T) {
 	}, nil)
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("continue_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodOPTIONS},
 	})
 
@@ -239,7 +239,7 @@ func TestDataPlaneCORSObjectStoragePreflightContinue(t *testing.T) {
 	}
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName("cors_s3_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodOPTIONS},
 	})
 

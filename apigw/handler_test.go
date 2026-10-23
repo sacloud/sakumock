@@ -235,7 +235,7 @@ func TestRouteLifecycle(t *testing.T) {
 
 	created, err := routeOp.Create(ctx, &v1.RouteDetail{
 		Name:      v1.NewOptName("test_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Path:      v1.NewOptString("/api"),
 		Hosts:     []string{svc.RouteHost.Value},
 	})
@@ -258,7 +258,7 @@ func TestRouteLifecycle(t *testing.T) {
 	// A hosts entry that is neither routeHost nor a registered domain is a 400.
 	if _, err := routeOp.Create(ctx, &v1.RouteDetail{
 		Name:      v1.NewOptName("bad_host_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Hosts:     []string{"unregistered.example.com"},
 	}); err == nil {
 		t.Error("route with unregistered host should fail")
@@ -337,7 +337,7 @@ func TestRouteLifecycle(t *testing.T) {
 
 	if err := routeOp.Update(ctx, &v1.RouteDetail{
 		Name:      v1.NewOptName("renamed_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPHTTPS),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodPOST},
 	}, routeID); err != nil {
 		t.Fatalf("update route: %v", err)
@@ -530,7 +530,7 @@ func TestDomainCertificateLifecycle(t *testing.T) {
 	routeOp := apigwsdk.NewRouteOp(client, serviceID)
 	route, err := routeOp.Create(ctx, &v1.RouteDetail{
 		Name:      v1.NewOptName("domain_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPHTTPS),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Hosts:     []string{"api.example.com"},
 	})
 	if err != nil {

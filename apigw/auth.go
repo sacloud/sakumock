@@ -254,10 +254,10 @@ func (dp *dataPlane) checkACL(w http.ResponseWriter, m *matchResult, user *User)
 	return false
 }
 
-// allowIP enforces an allow/deny client-IP list. The restriction only applies
-// when its protocols setting covers the scheme this listener serves.
+// allowIP enforces an allow/deny client-IP list. Its protocols setting is
+// always "https" per the spec, so it applies to every request.
 func (dp *dataPlane) allowIP(w http.ResponseWriter, cfg *IPRestrictionConfig, clientIP string) bool {
-	if cfg == nil || !protocolsInclude(cfg.Protocols, dp.scheme) {
+	if cfg == nil {
 		return true
 	}
 	listed := slices.Contains(cfg.IPs, clientIP)

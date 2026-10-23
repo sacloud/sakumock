@@ -85,13 +85,13 @@ Matching and forwarding semantics (Kong-style, per the spec):
 - A request matches a route when its Host is in the route's effective host set (`hosts`, or the auto-issued `host` when `hosts` is empty), its path matches the route `path`, and its method is in `methods`.
 - A route `path` starting with `~/` is a regular expression anchored at the start; anything else is a literal prefix. Regex routes rank above prefix routes; among regex routes the lowest `regexPriority` wins (0 is highest), among prefix routes the longest prefix wins.
 - `stripPath` (default true) removes the matched portion before forwarding; the service `path` is prepended. `preserveHost` (default false) keeps the client's Host header instead of the upstream host.
-- An http request matching an https-only route gets the `httpsRedirectStatusCode` response (3xx redirect, or the default 426 upgrade).
+- Routes are https-only (`protocols` accepts only `https`, per the spec). A plain-http data plane stands in for the gateway's HTTPS endpoint (as if TLS were terminated in front of it), so `https` routes are served on it; `httpsRedirectStatusCode` is stored but has no effect.
 - No match returns `404 {"message":"no Route matched with those values"}`; upstream failures return 502 and timeouts 504 — the same messages as the real gateway. `connectTimeout` bounds the dial; `readTimeout`/`writeTimeout` bound the idle time between successive read/write operations on the upstream connection (nginx-style semantics, as in the real gateway).
 - **Object storage backend**: a service with `objectStorageConfig` serves objects from the configured S3-compatible endpoint (SigV4, path-style) instead of proxying — any endpoint works: sakumock's own objectstorage data plane, MinIO, or real object storage. When targeting sakumock's objectstorage data plane, set `region` to its `--data-plane-region` (default `jp-north-1`) — versitygw validates the SigV4 credential scope, so a mismatch is a 403. The (stripPath-applied) request path plus `folderName` is the object key; `useDocumentIndex` (default) appends `index.html` to directory paths. Routes of such services allow only GET, HEAD, and OPTIONS (per the spec); a missing object is 404, backend failures are 502.
 - **CORS** (`corsConfig` on a service): preflights (OPTIONS + `Origin` + `Access-Control-Request-Method`) are answered by the gateway **before authentication** (browsers send them without credentials), honoring `accessControlAllowOrigins` (comma-separated or `*`), `accessControlAllowMethods`/`Headers`, `maxAge`, `credentials` (a wildcard origin is echoed back when credentials are on), `privateNetwork`, and `preflightContinue` (pass preflights to the upstream; for object-storage services the preflight is forwarded to the S3 endpoint, whose bucket CORS configuration answers it). Actual responses gain `Access-Control-Allow-Origin`/`-Credentials`/`-Expose-Headers` and `Vary: Origin`. The route must match the OPTIONS method for preflights, so include `OPTIONS` in `methods`.
 - **Request/response transformations** configured on a route are applied when proxying, with the real gateway's semantics: phases run allow → remove → rename → replace → add → append; `replace` only touches existing keys, `add` only missing ones, `append` accumulates; response operations respect `ifStatusCode`. Body operations apply to JSON object bodies only (dotted keys address nested fields); non-JSON and content-encoded bodies pass through untouched.
 - `retries` is best-effort: only connection-level failures of bodyless requests are retried. `X-Forwarded-For/-Proto/-Host` are set on forwarded requests. Upstream TLS certificates are **not verified** (mock convenience for self-signed local upstreams).
-- With the common `--tls-cert`/`--tls-key`, the data plane serves HTTPS and routes match the `https` protocol.
+- With the common `--tls-cert`/`--tls-key`, the data plane serves HTTPS.
 
 Authentication (the service's `authentication` field) is enforced before proxying:
 
@@ -113,7 +113,7 @@ Authentication (the service's `authentication` field) is enforced before proxyin
 - **Route `hosts`** entries must be the service's `routeHost` or a registered domain's `domainName`, per the spec.
 - **Referential integrity**: deleting a service with routes, a domain referenced by a route's `hosts`, a certificate referenced by a domain, or a subscription bound to a service is refused (400); deleting an OIDC configuration referenced by a service is refused (409). Deleting a group cascades out of user memberships and route authorizations.
 - **Secrets are echoed**: credential values (`password`, `secret`, OIDC `clientSecret`, object storage keys) are returned by GET endpoints because the SDK's generated client requires those fields on decode. Do not put real secrets into the mock.
-- **Certificates**: `expiredAt` is derived by parsing the uploaded PEM; the PEM material itself is never returned (writeOnly in the spec).
+- **Certificates**: `expiredAt` is derived by parsing the uploaded PEM; the PEM material itself is never returned (writeOnly in the spec). ACME certificate issuance (`POST /certificates/acme`, `POST /certificates/{certificateId}/acme/renew`, `.../acme/reissue`) is not implemented.
 
 ## Mock-only endpoints
 
@@ -126,3 +126,5 @@ Endpoints under `/_sakumock/` do not exist in the real SAKURA Cloud API; they ob
 | `DELETE` | `/_sakumock/spec-violations` | Clear the recorded violations |
 
 Every handler response is validated against the OpenAPI spec (status code declared, JSON body matching the response schema). A violation never alters the response the client receives: it is logged at `WARN` level and recorded — deduplicated with a count — for inspection. An empty list after exercising the endpoints you care about means the mock's responses conform to the spec.
+
+The spec is `openapi/openapi.yaml`, the [SAKURA Cloud API portal spec](https://manual.sakura.ad.jp/api/cloud/portal/openapis/apigw-api.yaml) stored as published; `make openapi` refreshes it and regenerates the validation tables.

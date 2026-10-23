@@ -155,7 +155,7 @@ func setupOidcGateway(t *testing.T, client *v1.Client, name string, upstreamURL 
 	})
 	createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 		Name:      v1.NewOptName(v1.Name(name + "_route")),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	return svc

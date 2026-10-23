@@ -125,7 +125,7 @@
     {
       "id": "secretmanager",
       "name": "SecretManager",
-      "local": "secretmanager/openapi/openapi-fixed.json",
+      "local": "secretmanager/openapi/openapi.json",
       "source": "security-encryption",
       "skipPaths": true,
       "skipComponentSetChanges": true

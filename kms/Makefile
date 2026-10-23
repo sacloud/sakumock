@@ -1,6 +1,7 @@
-OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
-OPENAPI_SUBDIR := api/kms/openapi
-OPENAPI_FILES := openapi.json
+# The portal publishes KMS, CloudHSM and SecretManager as one spec;
+# internal/splitspec extracts this service's paths and the components they use.
+OPENAPI_URL := https://manual.sakura.ad.jp/api/cloud/portal/openapis/security-encryption-api.yaml
+OPENAPI_PREFIX := /kms/
 
 .PHONY: clean test openapi generate
 
@@ -17,11 +18,11 @@ install:
 	go install github.com/sacloud/sakumock/kms/cmd/sakumock-kms
 
 openapi:
-	$(eval MOD_VERSION := $(shell go list -m -f '{{.Version}}' $(OPENAPI_MODULE)))
-	$(eval MOD_DIR := $(shell go env GOMODCACHE)/$(OPENAPI_MODULE)@$(MOD_VERSION))
 	mkdir -p openapi
-	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
-	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"
+	curl -fsSL -o openapi/.portal.yaml $(OPENAPI_URL)
+	go run github.com/sacloud/sakumock/internal/splitspec -prefix $(OPENAPI_PREFIX) -o openapi/openapi.json openapi/.portal.yaml; \
+		status=$$?; rm -f openapi/.portal.yaml; exit $$status
+	@echo "Extracted $(OPENAPI_PREFIX) from $(OPENAPI_URL)"
 	$(MAKE) generate
 
 generate:

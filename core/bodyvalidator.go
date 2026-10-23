@@ -62,13 +62,36 @@ func WithNonEmpty(fields map[string][]string) BodyValidatorOption {
 	})
 }
 
+// SDKFix is a field the SDK's hand-fixed spec treats differently from the
+// portal spec, with Source linking the SDK change (a commit or PR URL) so
+// every such deviation from the portal stays traceable.
+type SDKFix struct {
+	Path   string
+	Source string
+}
+
 // WithNullable lets the given fields (paths as in WithNonEmpty) be null. It
 // declares a relaxation the SDK's hand-fixed spec publishes over the portal
 // spec — the SDK sends null where the portal schema forbids it — so the mock
-// accepts what the published SDK sends. Cite the SDK change next to each
-// entry. Unresolvable keys or paths panic as in WithNonEmpty.
-func WithNullable(fields map[string][]string) BodyValidatorOption {
-	return overlayFields("core.WithNullable", fields, func(cur *BodySchema, _, _ string) {
+// accepts what the published SDK sends.
+//
+// It panics at construction when an entry has no Source, cannot be resolved
+// (as in WithNonEmpty), or is already nullable in the spec: the portal caught
+// up, so the override must be removed.
+func WithNullable(fields map[string][]SDKFix) BodyValidatorOption {
+	paths := make(map[string][]string, len(fields))
+	for key, fixes := range fields {
+		for _, f := range fixes {
+			if f.Source == "" {
+				panic(fmt.Sprintf("core.WithNullable: route %q property %q has no Source", key, f.Path))
+			}
+			paths[key] = append(paths[key], f.Path)
+		}
+	}
+	return overlayFields("core.WithNullable", paths, func(cur *BodySchema, key, path string) {
+		if cur.Nullable {
+			panic(fmt.Sprintf("core.WithNullable: route %q property %q is already nullable in the spec; remove the override", key, path))
+		}
 		cur.Nullable = true
 	})
 }

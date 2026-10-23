@@ -250,8 +250,9 @@ func TestWithNullable(t *testing.T) {
 	if got := do(core.NewBodyValidator(schemas, testErrWriter), `{"Item": {"Tags": null}}`); got != http.StatusBadRequest {
 		t.Fatalf("null Tags without overlay: status = %d, want 400", got)
 	}
+	fix := core.SDKFix{Path: "Item.Tags", Source: "https://example.com/sdk/commit/1"}
 	bv := core.NewBodyValidator(schemas, testErrWriter,
-		core.WithNullable(map[string][]string{"POST /items": {"Item.Tags"}}))
+		core.WithNullable(map[string][]core.SDKFix{"POST /items": {fix}}))
 	if got := do(bv, `{"Item": {"Tags": null}}`); got != http.StatusOK {
 		t.Fatalf("null Tags with overlay: status = %d, want 200", got)
 	}
@@ -262,10 +263,17 @@ func TestWithNullable(t *testing.T) {
 		t.Fatal("original schema became nullable")
 	}
 
-	defer func() {
-		if recover() == nil {
-			t.Fatal("expected panic for an unknown path")
-		}
-	}()
-	core.NewBodyValidator(schemas, testErrWriter, core.WithNullable(map[string][]string{"POST /items": {"Item.Nope"}}))
+	panics := func(name string, fields map[string][]core.SDKFix, sch map[string]*core.BodySchema) {
+		t.Helper()
+		defer func() {
+			if recover() == nil {
+				t.Errorf("%s: expected panic", name)
+			}
+		}()
+		core.NewBodyValidator(sch, testErrWriter, core.WithNullable(fields))
+	}
+	panics("unknown path", map[string][]core.SDKFix{"POST /items": {{Path: "Item.Nope", Source: fix.Source}}}, schemas)
+	panics("no source", map[string][]core.SDKFix{"POST /items": {{Path: "Item.Tags"}}}, schemas)
+	tags.Nullable = true // the portal caught up
+	panics("already nullable", map[string][]core.SDKFix{"POST /items": {fix}}, schemas)
 }

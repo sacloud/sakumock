@@ -1,5 +1,7 @@
 package simplenotification
 
+import "github.com/sacloud/sakumock/core"
+
 // bodyNonEmptyFields lists request-body string fields whose spec schema
 // declares required but no minLength, while the real API rejects an empty
 // string. core.WithNonEmpty overlays a MinLength-1 constraint for them on the
@@ -11,11 +13,14 @@ var bodyNonEmptyFields = map[string][]string{
 }
 
 // bodyNullableFields lists request-body fields the SDK sends as null although
-// the portal spec forbids it. core.WithNullable accepts null for them: the
-// SDK's hand-fixed spec (sacloud/simple-notification-api-go 2b5de682, now in
-// sacloud-sdk-go) marks the request Tags nullable, and the Terraform provider
-// sends null when no tags are set.
-var bodyNullableFields = map[string][]string{
-	"POST /commonserviceitem":     {"CommonServiceItem.Tags"},
-	"PUT /commonserviceitem/{id}": {"CommonServiceItem.Tags"},
+// the portal spec forbids it; core.WithNullable accepts null for them. The
+// Terraform provider sends null Tags when no tags are set.
+var bodyNullableFields = map[string][]core.SDKFix{
+	"POST /commonserviceitem":     {tagsNullable},
+	"PUT /commonserviceitem/{id}": {tagsNullable},
+}
+
+var tagsNullable = core.SDKFix{
+	Path:   "CommonServiceItem.Tags",
+	Source: "https://github.com/sacloud/simple-notification-api-go/commit/2b5de682",
 }

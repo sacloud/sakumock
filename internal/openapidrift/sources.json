@@ -99,7 +99,7 @@
     {
       "id": "iam",
       "name": "IAM",
-      "local": "iam/openapi/openapi.json",
+      "local": "iam/openapi/openapi.yaml",
       "source": "iam"
     },
     {

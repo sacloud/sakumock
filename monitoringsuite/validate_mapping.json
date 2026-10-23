@@ -1,0 +1,10 @@
+{
+  "pathRewrites": {
+    "{resourceId}": "{resource_id}",
+    "{projectResourceId}": "{project_resource_id}",
+    "{ruleUid}": "{rule_uid}",
+    "{logResourceId}": "{log_resource_id}",
+    "{metricsResourceId}": "{metrics_resource_id}",
+    "{traceResourceId}": "{trace_resource_id}"
+  }
+}

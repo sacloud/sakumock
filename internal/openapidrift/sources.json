@@ -113,7 +113,7 @@
     {
       "id": "monitoringsuite",
       "name": "Monitoring Suite",
-      "local": "monitoringsuite/openapi/openapi.json",
+      "local": "monitoringsuite/openapi/openapi.yaml",
       "source": "monitoring-suite"
     },
     {

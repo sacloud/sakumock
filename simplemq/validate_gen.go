@@ -9,7 +9,7 @@ import "github.com/sacloud/sakumock/core"
 // Entries for spec paths the mock does not serve are inert: the
 // core.BodyValidator lookup simply never hits them.
 var bodySchemas = map[string]*core.BodySchema{
-	// NOTE: oneOf at POST /commonserviceitem.CommonServiceItem.Icon left permissive
+	// NOTE: oneOf at POST /commonserviceitem.CommonServiceItem.Icon.ID left permissive
 	"POST /commonserviceitem": {
 		Type:     "object",
 		Required: []string{"CommonServiceItem"},
@@ -20,6 +20,27 @@ var bodySchemas = map[string]*core.BodySchema{
 				Properties: map[string]*core.BodySchema{
 					"Description": {
 						Type: "string",
+					},
+					"Icon": {
+						Type:     "object",
+						Nullable: true,
+						Properties: map[string]*core.BodySchema{
+							"Name": {
+								Type: "string",
+							},
+							"Scope": {
+								Type: "string",
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+							"URL": {
+								Type: "string",
+							},
+						},
 					},
 					"Name": {
 						Type:      "string",
@@ -58,7 +79,7 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /commonserviceitem/{id}.CommonServiceItem.Icon left permissive
+	// NOTE: oneOf at PUT /commonserviceitem/{id}.CommonServiceItem.Icon.ID left permissive
 	"PUT /commonserviceitem/{id}": {
 		Type:     "object",
 		Required: []string{"CommonServiceItem"},
@@ -69,6 +90,27 @@ var bodySchemas = map[string]*core.BodySchema{
 				Properties: map[string]*core.BodySchema{
 					"Description": {
 						Type: "string",
+					},
+					"Icon": {
+						Type:     "object",
+						Nullable: true,
+						Properties: map[string]*core.BodySchema{
+							"Name": {
+								Type: "string",
+							},
+							"Scope": {
+								Type: "string",
+							},
+							"Tags": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Type: "string",
+								},
+							},
+							"URL": {
+								Type: "string",
+							},
+						},
 					},
 					"Settings": {
 						Type:     "object",
@@ -103,9 +145,8 @@ var bodySchemas = map[string]*core.BodySchema{
 // status is declared but its body carries no checkable constraints; a
 // status absent from a route's map is not declared in the spec at all.
 var responseSchemas = map[string]map[int]*core.BodySchema{
-	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Description left permissive
 	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.ID left permissive
-	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Icon left permissive
+	// NOTE: oneOf at DELETE /commonserviceitem/{id} response 200.CommonServiceItem.Icon.ID left permissive
 	"DELETE /commonserviceitem/{id}": {
 		200: {
 			Type:     "object",
@@ -120,6 +161,31 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"CreatedAt": {
 							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
 						},
 						"ModifiedAt": {
 							Type: "string",
@@ -438,9 +504,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Description left permissive
 	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].ID left permissive
-	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Icon left permissive
+	// NOTE: oneOf at GET /commonserviceitem response 200.CommonServiceItems[].Icon.ID left permissive
 	"GET /commonserviceitem": {
 		200: {
 			Type:     "object",
@@ -457,6 +522,31 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"CreatedAt": {
 								Type: "string",
+							},
+							"Description": {
+								Type:     "string",
+								Nullable: true,
+							},
+							"Icon": {
+								Type:     "object",
+								Nullable: true,
+								Properties: map[string]*core.BodySchema{
+									"Name": {
+										Type: "string",
+									},
+									"Scope": {
+										Type: "string",
+									},
+									"Tags": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+									"URL": {
+										Type: "string",
+									},
+								},
 							},
 							"ModifiedAt": {
 								Type: "string",
@@ -598,9 +688,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Description left permissive
 	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.ID left permissive
-	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Icon left permissive
+	// NOTE: oneOf at GET /commonserviceitem/{id} response 200.CommonServiceItem.Icon.ID left permissive
 	"GET /commonserviceitem/{id}": {
 		200: {
 			Type:     "object",
@@ -615,6 +704,31 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"CreatedAt": {
 							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
 						},
 						"ModifiedAt": {
 							Type: "string",
@@ -959,9 +1073,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Description left permissive
 	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.ID left permissive
-	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Icon left permissive
+	// NOTE: oneOf at POST /commonserviceitem response 201.CommonServiceItem.Icon.ID left permissive
 	"POST /commonserviceitem": {
 		201: {
 			Type:     "object",
@@ -976,6 +1089,31 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"CreatedAt": {
 							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
 						},
 						"ModifiedAt": {
 							Type: "string",
@@ -1211,9 +1349,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Description left permissive
 	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.ID left permissive
-	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Icon left permissive
+	// NOTE: oneOf at PUT /commonserviceitem/{id} response 200.CommonServiceItem.Icon.ID left permissive
 	"PUT /commonserviceitem/{id}": {
 		200: {
 			Type:     "object",
@@ -1228,6 +1365,31 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						},
 						"CreatedAt": {
 							Type: "string",
+						},
+						"Description": {
+							Type:     "string",
+							Nullable: true,
+						},
+						"Icon": {
+							Type:     "object",
+							Nullable: true,
+							Properties: map[string]*core.BodySchema{
+								"Name": {
+									Type: "string",
+								},
+								"Scope": {
+									Type: "string",
+								},
+								"Tags": {
+									Type: "array",
+									Items: &core.BodySchema{
+										Type: "string",
+									},
+								},
+								"URL": {
+									Type: "string",
+								},
+							},
 						},
 						"ModifiedAt": {
 							Type: "string",

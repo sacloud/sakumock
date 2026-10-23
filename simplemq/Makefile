@@ -1,6 +1,6 @@
-OPENAPI_MODULE := github.com/sacloud/sacloud-sdk-go
-OPENAPI_SUBDIR := api/simplemq/openapi
-OPENAPI_FILES := message.yaml queue.yaml
+# The portal specs are stored as published (sakumock follows the portal).
+OPENAPI_URL_MESSAGE := https://manual.sakura.ad.jp/api/cloud/portal/openapis/simplemq-api.yaml
+OPENAPI_URL_QUEUE := https://manual.sakura.ad.jp/api/cloud/portal/openapis/simplemq-sacloud-api.yaml
 
 .PHONY: clean test openapi generate
 
@@ -17,11 +17,12 @@ install:
 	go install github.com/sacloud/sakumock/simplemq/cmd/sakumock-simplemq
 
 openapi:
-	$(eval MOD_VERSION := $(shell go list -m -f '{{.Version}}' $(OPENAPI_MODULE)))
-	$(eval MOD_DIR := $(shell go env GOMODCACHE)/$(OPENAPI_MODULE)@$(MOD_VERSION))
 	mkdir -p openapi
-	$(foreach f,$(OPENAPI_FILES),rm -f openapi/$(f) && cp $(MOD_DIR)/$(OPENAPI_SUBDIR)/$(f) openapi/$(f);)
-	@echo "Copied from $(OPENAPI_MODULE) $(MOD_VERSION) ($(OPENAPI_SUBDIR))"
+	curl -fsSL -o openapi/message.yaml.tmp $(OPENAPI_URL_MESSAGE) || { rm -f openapi/message.yaml.tmp; exit 1; }
+	mv openapi/message.yaml.tmp openapi/message.yaml
+	curl -fsSL -o openapi/queue.yaml.tmp $(OPENAPI_URL_QUEUE) || { rm -f openapi/queue.yaml.tmp; exit 1; }
+	mv openapi/queue.yaml.tmp openapi/queue.yaml
+	@echo "Fetched the portal spec(s)"
 	$(MAKE) generate
 
 generate:

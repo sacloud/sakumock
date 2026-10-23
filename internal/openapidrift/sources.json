@@ -1,0 +1,164 @@
+{
+  "sources": [
+    {
+      "id": "addon",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/addon-api.yaml"
+    },
+    {
+      "id": "apigw",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/apigw-api.yaml"
+    },
+    {
+      "id": "apprun",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/apprun-shared-api.yaml"
+    },
+    {
+      "id": "apprun-dedicated",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/apprun-dedicated-api.yaml"
+    },
+    {
+      "id": "eventbus",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/eventbus-api.yaml"
+    },
+    {
+      "id": "iam",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/iam-api.yaml"
+    },
+    {
+      "id": "monitoring-suite",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/monitoring-suite-api.yaml"
+    },
+    {
+      "id": "objectstorage",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/objectstorage-api.yaml"
+    },
+    {
+      "id": "security-encryption",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/security-encryption-api.yaml"
+    },
+    {
+      "id": "seg",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/seg-api.yaml"
+    },
+    {
+      "id": "simplemq-message",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/simplemq-api.yaml"
+    },
+    {
+      "id": "simplemq-queue",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/simplemq-sacloud-api.yaml"
+    },
+    {
+      "id": "simple-notification",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/simple-notification-api.yaml"
+    },
+    {
+      "id": "workflows",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/workflows-api.yaml"
+    }
+  ],
+  "specs": [
+    {
+      "id": "addon",
+      "name": "Add-on",
+      "local": "addon/openapi/openapi.json",
+      "source": "addon"
+    },
+    {
+      "id": "apigw",
+      "name": "API Gateway",
+      "local": "apigw/openapi/openapi.json",
+      "source": "apigw"
+    },
+    {
+      "id": "apprun",
+      "name": "AppRun shared",
+      "local": "apprun/openapi/openapi.yaml",
+      "source": "apprun"
+    },
+    {
+      "id": "apprun-dedicated",
+      "name": "AppRun dedicated",
+      "local": "apprundedicated/openapi/openapi.json",
+      "source": "apprun-dedicated"
+    },
+    {
+      "id": "cloudhsm",
+      "name": "CloudHSM",
+      "local": "cloudhsm/openapi/openapi.json",
+      "source": "security-encryption",
+      "skipPaths": true,
+      "skipComponentSetChanges": true
+    },
+    {
+      "id": "eventbus",
+      "name": "EventBus",
+      "local": "eventbus/openapi/openapi.json",
+      "source": "eventbus"
+    },
+    {
+      "id": "iam",
+      "name": "IAM",
+      "local": "iam/openapi/openapi.json",
+      "source": "iam"
+    },
+    {
+      "id": "kms",
+      "name": "KMS",
+      "local": "kms/openapi/openapi.json",
+      "source": "security-encryption",
+      "skipPaths": true,
+      "skipComponentSetChanges": true
+    },
+    {
+      "id": "monitoringsuite",
+      "name": "Monitoring Suite",
+      "local": "monitoringsuite/openapi/openapi.json",
+      "source": "monitoring-suite"
+    },
+    {
+      "id": "objectstorage",
+      "name": "Object Storage",
+      "local": "objectstorage/openapi/openapi.json",
+      "source": "objectstorage"
+    },
+    {
+      "id": "secretmanager",
+      "name": "SecretManager",
+      "local": "secretmanager/openapi/openapi-fixed.json",
+      "source": "security-encryption",
+      "skipPaths": true,
+      "skipComponentSetChanges": true
+    },
+    {
+      "id": "seg",
+      "name": "Service Endpoint Gateway",
+      "local": "seg/openapi/openapi.json",
+      "source": "seg"
+    },
+    {
+      "id": "simplemq-message",
+      "name": "SimpleMQ message",
+      "local": "simplemq/openapi/message.yaml",
+      "source": "simplemq-message"
+    },
+    {
+      "id": "simplemq-queue",
+      "name": "SimpleMQ queue",
+      "local": "simplemq/openapi/queue.yaml",
+      "source": "simplemq-queue"
+    },
+    {
+      "id": "simplenotification",
+      "name": "Simple Notification",
+      "local": "simplenotification/openapi/openapi.yaml",
+      "source": "simple-notification"
+    },
+    {
+      "id": "workflows",
+      "name": "Workflows",
+      "local": "workflows/openapi/openapi.json",
+      "source": "workflows"
+    }
+  ]
+}

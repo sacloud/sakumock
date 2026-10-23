@@ -61,7 +61,7 @@
     {
       "id": "addon",
       "name": "Add-on",
-      "local": "addon/openapi/openapi.json",
+      "local": "addon/openapi/openapi.yaml",
       "source": "addon"
     },
     {

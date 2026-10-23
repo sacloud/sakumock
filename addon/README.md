@@ -1,6 +1,6 @@
 # sakumock/addon
 
-An [Add-on API](https://manual.sakura.ad.jp/api/cloud/portal/openapis/addon-api.json) compatible mock server for local development and testing. It implements every add-on family — AI, CDN, security (DDoS protection / WAF / vulnerability detection), and data analytics (data lake, data warehouse, ETL, query, search, streaming) — with in-memory storage.
+An [Add-on API](https://manual.sakura.ad.jp/api/cloud/portal/openapis/addon-api.yaml) compatible mock server for local development and testing. It implements every add-on family — AI, CDN, security (DDoS protection / WAF / vulnerability detection), and data analytics (data lake, data warehouse, ETL, query, search, streaming) — with in-memory storage.
 
 The real API deploys an Azure resource group per request, so all families share one lifecycle: list, create (returns the generated resource group and deployment names), get, delete, and — except for vulnerability detection — a deployment status endpoint.
 
@@ -85,13 +85,15 @@ Every family is served under its own path prefix with the same five operations (
 
 Run `sakumock addon --routes` for the fully expanded table.
 
+Not implemented yet: `POST /cdn/{resourceGroupName}/purge` (CDN cache purge).
+
 ## Mock behavior
 
 - **Generated names.** Create returns a generated `resourceGroupName` (`<family>-<8 hex digits>`) and `deploymentName` (`<family>-deployment-<8 hex digits>`), which are the handles for every later call. Resource groups are per family: one family's name is invisible to another's endpoints.
-- **Resource data.** `GetResourceResponse.data` is free-form in the spec: it carries the deployed Azure resource, whose shape differs per family. The mock rebuilds that resource from the create request it stored, so a client — the `sacloud/sakura` Terraform provider does exactly this — can recover every setting it sent. See [Resource data](#resource-data) for the fields. The portal `url` is a synthetic `https://secure.sakura.ad.jp/cloud/addon/...` link the mock composes.
+- **Resource data.** `GetResourceResponse.data` is free-form in the spec: it carries the deployed Azure resource, whose shape differs per family. The mock rebuilds that resource from the create request it stored, so a client — the `sacloud/sakura` Terraform provider does exactly this — can recover every setting it sent. See [Resource data](#resource-data) for the fields. The portal `url` is a synthetic `https://secure.sakura.ad.jp/cloud/addon/...` link the mock composes, and `resourceGroup` echoes the resource group's `name` and `location`.
 - **Provisioning.** With `--provisioning-delay` set, a created resource group reports `provisioningState: "Running"` from the status endpoint and stays invisible to list/get (which is how the real API behaves while a deployment is running) until the delay elapses, then flips to `Succeeded`. The default is to complete immediately.
 - **Install script.** `POST /security/vulnerability` returns an `installScript` as the real API does, but the script is a harmless stand-in (Windows or Linux flavored by the request's `os`) that only prints that nothing was installed.
-- **Validation.** Request bodies are checked against the constraints generated from the OpenAPI spec into `validate_gen.go` (required fields, enums, lengths, ranges). Rejections are `400` with the spec's `{"errors": [{"code", "message"}]}` envelope.
+- **Validation.** Request bodies are checked against the constraints generated from the OpenAPI spec (`openapi/openapi.yaml`, the portal spec stored as published and refreshed by `make openapi`) into `validate_gen.go` (required fields, enums, lengths, ranges). Rejections are `400` with the spec's `{"errors": [{"code", "message"}]}` envelope.
 
 ### Resource data
 
@@ -117,7 +119,8 @@ $ curl localhost:18094/ai/ai-c00e8994
     "sku": { "name": "S0" },
     "properties": { "provisioningState": "Succeeded" }
   },
-  "url": "https://secure.sakura.ad.jp/cloud/addon/ai/ai-c00e8994"
+  "url": "https://secure.sakura.ad.jp/cloud/addon/ai/ai-c00e8994",
+  "resourceGroup": { "name": "ai-c00e8994", "location": "japaneast" }
 }
 
 $ curl localhost:18094/cdn/cdn-cb726c22
@@ -156,11 +159,12 @@ $ curl localhost:18094/cdn/cdn-cb726c22
       }
     ]
   },
-  "url": "https://secure.sakura.ad.jp/cloud/addon/cdn/cdn-cb726c22"
+  "url": "https://secure.sakura.ad.jp/cloud/addon/cdn/cdn-cb726c22",
+  "resourceGroup": { "name": "cdn-cb726c22", "location": "japaneast" }
 }
 ```
 
-The list endpoint is unaffected: its items are the spec's typed `ResourceGroupResource` (`id`, `hasData`, `data` as `ResourceGroupData`, `url`).
+The list endpoint is unaffected: its items are the spec's typed `ResourceGroupResource` (`id`, `hasData`, `data` as `ResourceGroupData`); unlike get, they carry no portal `url`.
 
 ## Use with Terraform
 

@@ -70,8 +70,9 @@ type clusterPortJSON struct {
 }
 
 type updateClusterReq struct {
-	LetsEncryptEmail   *string `json:"letsEncryptEmail,omitempty"`
-	ServicePrincipalID string  `json:"servicePrincipalID"`
+	LetsEncryptEmail   *string           `json:"letsEncryptEmail,omitempty"`
+	ServicePrincipalID string            `json:"servicePrincipalID"`
+	Ports              []clusterPortJSON `json:"ports,omitempty"`
 }
 
 type clusterDetailJSON struct {
@@ -87,6 +88,19 @@ type clusterSummaryJSON struct {
 	ClusterID string `json:"clusterID"`
 	Name      string `json:"name"`
 	Created   int64  `json:"created"`
+}
+
+// toClusterPorts converts request ports to store ports, keeping nil (ports
+// omitted) distinct from an empty list.
+func toClusterPorts(in []clusterPortJSON) []ClusterPort {
+	if in == nil {
+		return nil
+	}
+	ports := make([]ClusterPort, len(in))
+	for i, p := range in {
+		ports[i] = ClusterPort{Port: p.Port, Protocol: p.Protocol}
+	}
+	return ports
 }
 
 func toClusterDetail(c *Cluster) clusterDetailJSON {
@@ -122,13 +136,22 @@ type updateApplicationReq struct {
 }
 
 type applicationDetailJSON struct {
-	ApplicationID          string `json:"applicationID"`
-	Name                   string `json:"name"`
-	ClusterID              string `json:"clusterID"`
-	ClusterName            string `json:"clusterName"`
-	ActiveVersion          *int32 `json:"activeVersion"`
-	DesiredCount           *int32 `json:"desiredCount"`
-	ScalingCooldownSeconds int32  `json:"scalingCooldownSeconds"`
+	ApplicationID          string              `json:"applicationID"`
+	Name                   string              `json:"name"`
+	ClusterID              string              `json:"clusterID"`
+	ClusterName            string              `json:"clusterName"`
+	ActiveVersion          *int32              `json:"activeVersion"`
+	DesiredCount           *int32              `json:"desiredCount"`
+	ScalingCooldownSeconds int32               `json:"scalingCooldownSeconds"`
+	EnoughResources        enoughResourcesJSON `json:"enoughResources"`
+}
+
+// enoughResourcesJSON reports whether the cluster has enough CPU/memory to
+// deploy the application. The mock has no real capacity, so it is always
+// sufficient.
+type enoughResourcesJSON struct {
+	CPU    *bool `json:"cpu"`
+	Memory *bool `json:"memory"`
 }
 
 func (s *Server) toApplicationDetail(app *Application) applicationDetailJSON {
@@ -144,6 +167,7 @@ func (s *Server) toApplicationDetail(app *Application) applicationDetailJSON {
 		ActiveVersion:          app.ActiveVersion,
 		DesiredCount:           app.DesiredCount,
 		ScalingCooldownSeconds: app.ScalingCooldownSeconds,
+		EnoughResources:        enoughResourcesJSON{CPU: new(true), Memory: new(true)},
 	}
 }
 
@@ -723,15 +747,11 @@ func (s *Server) handleCreateCluster(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ports := make([]ClusterPort, len(req.Ports))
-	for i, p := range req.Ports {
-		ports[i] = ClusterPort{Port: p.Port, Protocol: p.Protocol}
-	}
 	cluster := &Cluster{
 		Name:               req.Name,
 		ServicePrincipalID: req.ServicePrincipalID,
 		LetsEncryptEmail:   req.LetsEncryptEmail,
-		Ports:              ports,
+		Ports:              toClusterPorts(req.Ports),
 	}
 	if err := s.store.CreateCluster(cluster); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -773,7 +793,11 @@ func (s *Server) handleUpdateCluster(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if err := s.store.UpdateCluster(id, req.ServicePrincipalID, req.LetsEncryptEmail); err != nil {
+	if msg := validateUpdateCluster(&req); msg != "" {
+		writeError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if err := s.store.UpdateCluster(id, req.ServicePrincipalID, req.LetsEncryptEmail, toClusterPorts(req.Ports)); err != nil {
 		writeError(w, http.StatusNotFound, "Not Found")
 		return
 	}

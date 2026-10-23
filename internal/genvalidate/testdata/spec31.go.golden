@@ -25,11 +25,29 @@ var bodySchemas = map[string]*core.BodySchema{
 		Type:     "object",
 		Required: []string{"name"},
 		Properties: map[string]*core.BodySchema{
+			"icon": {
+				Nullable: true,
+			},
+			"label": {
+				Type:      "string",
+				Nullable:  true,
+				MaxLength: new(8),
+			},
 			"name": {
 				Type:      "string",
 				MinLength: new(1),
 				MaxLength: new(60),
 				Pattern:   "^[a-zA-Z0-9_-]+$",
+			},
+			"owner": {
+				Type:     "object",
+				Nullable: true,
+				Required: []string{"id"},
+				Properties: map[string]*core.BodySchema{
+					"id": {
+						Type: "integer",
+					},
+				},
 			},
 			"priority": {
 				MinLength: new(1),

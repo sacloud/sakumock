@@ -310,3 +310,32 @@ func TestRoutingReorder(t *testing.T) {
 		t.Error("expected reorder of unknown routing to fail")
 	}
 }
+
+// TestNullTags covers the SDK sending Tags as null when none are set, which
+// the portal spec forbids but the SDK's published spec allows (see
+// bodyNullableFields).
+func TestNullTags(t *testing.T) {
+	srv := simplenotification.NewTestServer(simplenotification.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	destOp := sdk.NewDestinationOp(newControlPlaneClient(t, srv.TestURL()))
+
+	dest, err := destOp.Create(ctx, v1.PostCommonServiceItemRequest{
+		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
+			Name: "mail-dest",
+			Icon: v1.NilCommonServiceItemIcon{Null: true},
+			Settings: v1.CommonServiceItemSettings{
+				DestinationSettings: v1.DestinationSettings{
+					Type:  v1.DestinationSettingsType("email"),
+					Value: "ops@example.com",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("create destination with null Tags: %v", err)
+	}
+	if tags := dest.CommonServiceItem.Tags; tags == nil || len(tags) != 0 {
+		t.Errorf("Tags = %#v, want an empty array", tags)
+	}
+}

@@ -61,13 +61,13 @@
     {
       "id": "addon",
       "name": "Add-on",
-      "local": "addon/openapi/openapi.json",
+      "local": "addon/openapi/openapi.yaml",
       "source": "addon"
     },
     {
       "id": "apigw",
       "name": "API Gateway",
-      "local": "apigw/openapi/openapi.json",
+      "local": "apigw/openapi/openapi.yaml",
       "source": "apigw"
     },
     {
@@ -79,7 +79,7 @@
     {
       "id": "apprun-dedicated",
       "name": "AppRun dedicated",
-      "local": "apprundedicated/openapi/openapi.json",
+      "local": "apprundedicated/openapi/openapi.yaml",
       "source": "apprun-dedicated"
     },
     {
@@ -93,13 +93,13 @@
     {
       "id": "eventbus",
       "name": "EventBus",
-      "local": "eventbus/openapi/openapi.json",
+      "local": "eventbus/openapi/openapi.yaml",
       "source": "eventbus"
     },
     {
       "id": "iam",
       "name": "IAM",
-      "local": "iam/openapi/openapi.json",
+      "local": "iam/openapi/openapi.yaml",
       "source": "iam"
     },
     {
@@ -113,13 +113,13 @@
     {
       "id": "monitoringsuite",
       "name": "Monitoring Suite",
-      "local": "monitoringsuite/openapi/openapi.json",
+      "local": "monitoringsuite/openapi/openapi.yaml",
       "source": "monitoring-suite"
     },
     {
       "id": "objectstorage",
       "name": "Object Storage",
-      "local": "objectstorage/openapi/openapi.json",
+      "local": "objectstorage/openapi/openapi.yaml",
       "source": "objectstorage"
     },
     {
@@ -133,7 +133,7 @@
     {
       "id": "seg",
       "name": "Service Endpoint Gateway",
-      "local": "seg/openapi/openapi.json",
+      "local": "seg/openapi/openapi.yaml",
       "source": "seg"
     },
     {
@@ -157,7 +157,7 @@
     {
       "id": "workflows",
       "name": "Workflows",
-      "local": "workflows/openapi/openapi.json",
+      "local": "workflows/openapi/openapi.yaml",
       "source": "workflows"
     }
   ]

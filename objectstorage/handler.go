@@ -96,27 +96,46 @@ type bucketPlanSummary struct {
 	Type             string `json:"type"`
 	ServiceClassPath string `json:"service_class_path"`
 	ClusterID        string `json:"cluster_id"`
+	CapacityGiB      *int   `json:"capacity_gib"` // archive plans only; null otherwise
 }
 
+// planCapacityGiB is the capacity of the mock's single plan per site (see
+// handlePlans).
+const planCapacityGiB = 20000
+
+func toBucketPlanSummary(b Bucket) bucketPlanSummary {
+	p := bucketPlanSummary{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath, ClusterID: b.ClusterID}
+	if b.PlanType == "archive" {
+		p.CapacityGiB = new(planCapacityGiB)
+	}
+	return p
+}
+
+// contractData is a bucket contract. DeletedAt is required but nullable in the
+// spec: null while the contract is active, set once it is terminated.
 type contractData struct {
-	ResourceID string `json:"resource_id"`
-	Status     string `json:"status"`
-	CreatedAt  string `json:"created_at"`
+	ResourceID string  `json:"resource_id"`
+	Status     string  `json:"status"`
+	CreatedAt  string  `json:"created_at"`
+	DeletedAt  *string `json:"deleted_at"`
 }
 
 type clusterInfo struct {
-	ID              string   `json:"id"`
-	Region          string   `json:"region"`
-	DisplayName     string   `json:"display_name"`
-	DisplayNameJa   string   `json:"display_name_ja"`
-	DisplayNameEnUS string   `json:"display_name_en_us"`
-	ControlPanelURL string   `json:"control_panel_url"`
-	EndpointBase    string   `json:"endpoint_base"`
-	S3Endpoint      string   `json:"s3_endpoint"`
-	IAMEndpoint     string   `json:"iam_endpoint"`
-	APIZone         []string `json:"api_zone"`
-	StorageZone     []string `json:"storage_zone"`
-	PlanFamily      string   `json:"plan_family"`
+	ID              string `json:"id"`
+	Region          string `json:"region"`
+	DisplayName     string `json:"display_name"`
+	DisplayNameJa   string `json:"display_name_ja"`
+	DisplayNameEnUS string `json:"display_name_en_us"`
+	ControlPanelURL string `json:"control_panel_url"`
+	EndpointBase    string `json:"endpoint_base"`
+	S3Endpoint      string `json:"s3_endpoint"`
+	// S3EndpointForControlPanel is the re-signing S3 endpoint the control
+	// panel uses.
+	S3EndpointForControlPanel string   `json:"s3_endpoint_for_control_panel"`
+	DisplayOrder              int      `json:"display_order"`
+	APIZone                   []string `json:"api_zone"`
+	StorageZone               []string `json:"storage_zone"`
+	PlanFamily                string   `json:"plan_family"`
 }
 
 // clusters are the static object storage sites the real API exposes.
@@ -124,31 +143,34 @@ var clusters = []clusterInfo{
 	{
 		ID: "isk01", Region: "jp-north-1",
 		DisplayName: "石狩第1サイト", DisplayNameJa: "石狩第1サイト", DisplayNameEnUS: "Ishikari Cluster #1",
-		ControlPanelURL: "secure.sakura.ad.jp/objectstorage/isk01",
-		EndpointBase:    "isk01.objectstorage.sakurastorage.jp",
-		S3Endpoint:      "s3.isk01.objectstorage.sakurastorage.jp",
-		IAMEndpoint:     "iam.isk01.objectstorage.sakurastorage.jp",
-		APIZone:         []string{"is1a", "is1b"}, StorageZone: []string{"is1a", "is1b"},
+		ControlPanelURL:           "secure.sakura.ad.jp/objectstorage/isk01",
+		EndpointBase:              "isk01.objectstorage.sakurastorage.jp",
+		S3Endpoint:                "s3.isk01.objectstorage.sakurastorage.jp",
+		S3EndpointForControlPanel: "s3.cp.isk01.objectstorage.sakurastorage.jp",
+		DisplayOrder:              1,
+		APIZone:                   []string{"is1a", "is1b"}, StorageZone: []string{"is1a", "is1b"},
 		PlanFamily: "standard",
 	},
 	{
 		ID: "tky01", Region: "jp-east-1",
 		DisplayName: "東京第1サイト", DisplayNameJa: "東京第1サイト", DisplayNameEnUS: "Tokyo Cluster #1",
-		ControlPanelURL: "secure.sakura.ad.jp/objectstorage/tky01",
-		EndpointBase:    "tky01.objectstorage.sakurastorage.jp",
-		S3Endpoint:      "s3.tky01.objectstorage.sakurastorage.jp",
-		IAMEndpoint:     "iam.tky01.objectstorage.sakurastorage.jp",
-		APIZone:         []string{"tk1a", "tk1b"}, StorageZone: []string{"tk1a", "tk1b"},
+		ControlPanelURL:           "secure.sakura.ad.jp/objectstorage/tky01",
+		EndpointBase:              "tky01.objectstorage.sakurastorage.jp",
+		S3Endpoint:                "s3.tky01.objectstorage.sakurastorage.jp",
+		S3EndpointForControlPanel: "s3.cp.tky01.objectstorage.sakurastorage.jp",
+		DisplayOrder:              2,
+		APIZone:                   []string{"tk1a", "tk1b"}, StorageZone: []string{"tk1a", "tk1b"},
 		PlanFamily: "standard",
 	},
 	{
 		ID: "arc02", Region: "jp-north-1",
 		DisplayName: "石狩アーカイブサイト", DisplayNameJa: "石狩アーカイブサイト", DisplayNameEnUS: "Ishikari Archive Cluster #2",
-		ControlPanelURL: "secure.sakura.ad.jp/objectstorage/arc02",
-		EndpointBase:    "arc02.objectstorage.sakurastorage.jp",
-		S3Endpoint:      "s3.arc02.objectstorage.sakurastorage.jp",
-		IAMEndpoint:     "iam.arc02.objectstorage.sakurastorage.jp",
-		APIZone:         []string{"is1a", "is1b"}, StorageZone: []string{"is1a", "is1b"},
+		ControlPanelURL:           "secure.sakura.ad.jp/objectstorage/arc02",
+		EndpointBase:              "arc02.objectstorage.sakurastorage.jp",
+		S3Endpoint:                "s3.arc02.objectstorage.sakurastorage.jp",
+		S3EndpointForControlPanel: "s3.cp.arc02.objectstorage.sakurastorage.jp",
+		DisplayOrder:              3,
+		APIZone:                   []string{"is1a", "is1b"}, StorageZone: []string{"is1a", "is1b"},
 		PlanFamily: "archive",
 	},
 }
@@ -167,6 +189,14 @@ func bucketToJSON(b Bucket) bucketJSON {
 		ClusterID: b.ClusterID,
 		Name:      b.Name,
 		Plan:      planJSON{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath},
+	}
+}
+
+func toBucketListItem(b Bucket) bucketListItemJSON {
+	return bucketListItemJSON{
+		Name:       b.Name,
+		ResourceID: b.ResourceID,
+		Plan:       planJSON{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath},
 	}
 }
 
@@ -321,16 +351,14 @@ func (s *Server) handleReplicableTargets(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusNotFound, "bucket not found")
 		return
 	}
-	// Replicable targets are buckets in other clusters.
-	var data []bucketJSON
+	// Replicable targets are buckets in other clusters, rendered in the same
+	// shape as the per-site bucket list.
+	data := []bucketListItemJSON{}
 	for _, b := range s.store.ListBuckets("") {
 		if b.Name == src.Name || b.ClusterID == src.ClusterID {
 			continue
 		}
-		data = append(data, bucketToJSON(b))
-	}
-	if data == nil {
-		data = []bucketJSON{}
+		data = append(data, toBucketListItem(b))
 	}
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
@@ -339,11 +367,7 @@ func (s *Server) handleListBuckets(w http.ResponseWriter, r *http.Request) {
 	buckets := s.store.ListBuckets(r.PathValue("site"))
 	data := make([]bucketListItemJSON, len(buckets))
 	for i, b := range buckets {
-		data[i] = bucketListItemJSON{
-			Name:       b.Name,
-			ResourceID: b.ResourceID,
-			Plan:       planJSON{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath},
-		}
+		data[i] = toBucketListItem(b)
 	}
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: data})
 }
@@ -518,10 +542,6 @@ func (s *Server) handleCreatePermission(w http.ResponseWriter, r *http.Request) 
 	var req permissionBody
 	if err := core.ReadJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if req.DisplayName == "" {
-		writeError(w, http.StatusBadRequest, "display_name is required")
 		return
 	}
 	p := s.store.CreatePermission(r.PathValue("site"), req.DisplayName, req.toControls())
@@ -721,7 +741,7 @@ func (s *Server) handlePlans(w http.ResponseWriter, r *http.Request) {
 			ServiceClassPath: "objectstorage/" + site + "/bucket",
 			Type:             planType,
 			ClusterID:        site,
-			CapacityGiB:      20000,
+			CapacityGiB:      planCapacityGiB,
 			Fee:              planFeeData{ForMonth: 1980, Monthly: 7200, Daily: 360, Hourly: 36},
 		},
 	}})
@@ -814,11 +834,19 @@ func (s *Server) handleDeleteEncryption(w http.ResponseWriter, r *http.Request) 
 }
 
 type bucketPenaltyData struct {
-	NumObjectsPerBucket penaltyMetric `json:"num_objects_per_bucket"`
-	AmountGiBPerBucket  penaltyMetric `json:"amount_gib_per_bucket"`
+	NumObjectsPerBucket penaltyCount  `json:"num_objects_per_bucket"`
+	AmountGiBPerBucket  penaltyAmount `json:"amount_gib_per_bucket"`
 }
 
-type penaltyMetric struct {
+// penaltyCount is a penalty metric over an object count (integers in the spec).
+type penaltyCount struct {
+	Val       int  `json:"val"`
+	Quota     int  `json:"quota"`
+	IsApplied bool `json:"is_applied"`
+}
+
+// penaltyAmount is a penalty metric over a GiB amount (numbers in the spec).
+type penaltyAmount struct {
 	Val       float64 `json:"val"`
 	Quota     float64 `json:"quota"`
 	IsApplied bool    `json:"is_applied"`
@@ -830,8 +858,8 @@ func (s *Server) handleBucketPenalty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	core.WriteJSON(w, http.StatusOK, dataResponse{Data: bucketPenaltyData{
-		NumObjectsPerBucket: penaltyMetric{Val: 0, Quota: 10000000, IsApplied: false},
-		AmountGiBPerBucket:  penaltyMetric{Val: 0, Quota: 10240, IsApplied: false},
+		NumObjectsPerBucket: penaltyCount{Val: 0, Quota: 10000000, IsApplied: false},
+		AmountGiBPerBucket:  penaltyAmount{Val: 0, Quota: 10240, IsApplied: false},
 	}})
 }
 
@@ -861,7 +889,7 @@ func (s *Server) handleGetBucketPlan(w http.ResponseWriter, r *http.Request) {
 		Plan     bucketPlanSummary `json:"plan"`
 		Contract contractData      `json:"contract"`
 	}{
-		Plan:     bucketPlanSummary{Type: b.PlanType, ServiceClassPath: b.ServiceClassPath, ClusterID: b.ClusterID},
+		Plan:     toBucketPlanSummary(b),
 		Contract: contractData{ResourceID: b.ResourceID, Status: "active", CreatedAt: core.FormatRFC3339(b.CreatedAt)},
 	}})
 }
@@ -902,8 +930,8 @@ func (s *Server) handlePutBucketPlan(w http.ResponseWriter, r *http.Request) {
 		NewContract      contractData      `json:"new_contract"`
 		Plan             bucketPlanSummary `json:"plan"`
 	}{
-		PreviousContract: contractData{ResourceID: prevResourceID, Status: "terminated", CreatedAt: core.FormatRFC3339(b.CreatedAt)},
+		PreviousContract: contractData{ResourceID: prevResourceID, Status: "terminated", CreatedAt: core.FormatRFC3339(b.CreatedAt), DeletedAt: &now},
 		NewContract:      contractData{ResourceID: nb.ResourceID, Status: "active", CreatedAt: now},
-		Plan:             bucketPlanSummary{Type: nb.PlanType, ServiceClassPath: nb.ServiceClassPath, ClusterID: nb.ClusterID},
+		Plan:             toBucketPlanSummary(nb),
 	}})
 }

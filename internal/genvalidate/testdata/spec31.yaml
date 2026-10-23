@@ -48,6 +48,17 @@ components:
             - integer
           minLength: 1
           minimum: 0
+        label:
+          anyOf:
+            - type: string
+              maxLength: 8
+            - type: 'null'
+        owner:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/Owner'
+        icon:
+          type: 'null'
     EventRequest:
       type: object
       required:
@@ -62,6 +73,13 @@ components:
         source:
           type: string
           minLength: 1
+    Owner:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
     MessageEvent:
       type: object
       properties:

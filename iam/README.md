@@ -123,6 +123,5 @@ An empty list after exercising the endpoints you care about means the mock's res
 
 ## OpenAPI spec
 
-`openapi/openapi.json` is copied from the `github.com/sacloud/sacloud-sdk-go`
-module (`api/iam/openapi`). Run `make openapi` to refresh it after
-upgrading the SDK dependency.
+`openapi/openapi.yaml` is the [portal spec](https://manual.sakura.ad.jp/api/cloud/portal/openapis/iam-api.yaml),
+stored as published. Run `make openapi` to refresh it.

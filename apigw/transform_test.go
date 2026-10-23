@@ -70,7 +70,7 @@ func TestDataPlaneRequestTransformation(t *testing.T) {
 	serviceID := uuid.MustParse(svc.ID.Value.String())
 	route := createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("req_transform_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodPOST},
 	})
 	host := svc.RouteHost.Value
@@ -168,7 +168,7 @@ func TestDataPlaneRequestTransformationMethodOverride(t *testing.T) {
 	serviceID := uuid.MustParse(svc.ID.Value.String())
 	route := createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("method_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	putJSON(t, srv, "/services/"+svc.ID.Value.String()+"/routes/"+route.ID.Value.String()+"/request",
@@ -195,7 +195,7 @@ func TestDataPlaneResponseTransformation(t *testing.T) {
 	serviceID := uuid.MustParse(svc.ID.Value.String())
 	route := createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("resp_transform_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
 	host := svc.RouteHost.Value

@@ -51,7 +51,9 @@ func closeAndCheck(t *testing.T, srv *addon.Server) {
 // opSet adapts one family's SDK operations to a common shape so the lifecycle
 // test can run over every family.
 type opSet struct {
-	name   string
+	name string
+	// path is the family's URL prefix, for raw HTTP fallbacks.
+	path   string
 	create func(context.Context) (resourceGroupName, deploymentName string, err error)
 	list   func(context.Context) ([]v1.ResourceGroupResource, error)
 	read   func(context.Context, string) (*v1.GetResourceResponse, error)
@@ -138,6 +140,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 	return []opSet{
 		{
 			name: "ai",
+			path: "/ai",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(ai.Create(ctx, testLocation, v1.AiServiceSku1))
 			},
@@ -146,6 +149,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "cdn",
+			path: "/cdn",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(cdn.Create(ctx, addonsdk.CDNCreateParams{
 					Location: testLocation, PricingLevel: v1.PricingLevel1,
@@ -157,6 +161,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "ddos",
+			path: "/security/ddos",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(ddos.Create(ctx, addonsdk.DDoSCreateParams{
 					Location: testLocation, PricingLevel: v1.PricingLevel2,
@@ -168,6 +173,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "waf",
+			path: "/security/waf",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(waf.Create(ctx, addonsdk.WAFCreateParams{
 					Location: testLocation, PricingLevel: v1.PricingLevel1,
@@ -179,6 +185,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "vulnerability",
+			path: "/security/vulnerability",
 			create: func(ctx context.Context) (string, string, error) {
 				res, err := vuln.Create(ctx, addonsdk.VulnerabilityCreateParams{
 					Location: testLocation, Os: v1.ServerOsType2,
@@ -194,6 +201,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "datalake",
+			path: "/analytics/datalake",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(datalake.Create(ctx, addonsdk.DataLakeCreateParams{
 					Location: testLocation, Performance: v1.DataLakePerformance1, Redundancy: v1.DataLakeRedundancy1,
@@ -204,6 +212,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "dwh",
+			path: "/analytics/dwh",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(dwh.Create(ctx, testLocation))
 			},
@@ -212,6 +221,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "etl",
+			path: "/analytics/etl",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(etl.Create(ctx, testLocation))
 			},
@@ -220,6 +230,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "query",
+			path: "/analytics/query",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(query.Create(ctx, testLocation))
 			},
@@ -228,6 +239,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "search",
+			path: "/analytics/search",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(search.Create(ctx, addonsdk.SearchCreateParams{
 					Location: testLocation, Sku: v1.SearchSku3, ReplicaCount: 2, PartitionCount: 2,
@@ -242,6 +254,7 @@ func opSets(t *testing.T, client *v1.Client) []opSet {
 		},
 		{
 			name: "streaming",
+			path: "/analytics/streaming",
 			create: func(ctx context.Context) (string, string, error) {
 				return deploymentNames(streaming.Create(ctx, testLocation, "30"))
 			},
@@ -292,17 +305,20 @@ func TestFamilyLifecycle(t *testing.T) {
 				t.Fatalf("unexpected resource group name in list: %q", name)
 			}
 
+			var data []byte
 			read, err := ops.read(ctx, rg)
-			if err != nil {
-				t.Fatal(err)
+			if expectSDKGap(t, "get-resource-group", err) {
+				data = rawResourceData(t, srv.TestURL()+ops.path+"/"+rg)
+			} else {
+				data = read.Data
 			}
-			if got := at(t, read.Data, "name"); got != rg {
+			if got := at(t, data, "name"); got != rg {
 				t.Fatalf("unexpected resource name in data: %v", got)
 			}
 			// Every setting the provider recovers from the free-form data
 			// must round-trip to what the create call sent.
 			for path, want := range ops.data {
-				if got := at(t, read.Data, path); got != want {
+				if got := at(t, data, path); got != want {
 					t.Errorf("data.%s = %v, want %v", path, got, want)
 				}
 			}
@@ -445,8 +461,8 @@ func TestProvisioningDelay(t *testing.T) {
 
 	time.Sleep(150 * time.Millisecond)
 
-	if _, err := ai.Read(ctx, rg); err != nil {
-		t.Fatalf("expected the resource group to be readable once provisioned: %v", err)
+	if _, err := ai.Read(ctx, rg); expectSDKGap(t, "get-resource-group", err) {
+		rawResourceData(t, srv.TestURL()+"/ai/"+rg)
 	}
 	status, err = ai.Status(ctx, rg, deployment)
 	if err != nil {
@@ -486,5 +502,69 @@ func TestSpecDerivedBodyValidation(t *testing.T) {
 	}
 	if len(body.Errors) != 1 || body.Errors[0].Message == "" {
 		t.Fatalf("unexpected error envelope: %+v", body)
+	}
+}
+
+// TestGetResponseResourceGroup checks the portal-spec fields of the get and
+// list responses over raw HTTP: the SDK (built from an older spec) rejects the
+// get response's resourceGroup as an unknown field.
+func TestGetResponseResourceGroup(t *testing.T) {
+	srv := addon.NewTestServer(addon.Config{})
+	defer closeAndCheck(t, srv)
+
+	res, err := http.Post(srv.TestURL()+"/analytics/dwh", "application/json",
+		strings.NewReader(`{"location":"japaneast"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var created struct {
+		ResourceGroupName string `json:"resourceGroupName"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&created)
+	res.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err = http.Get(srv.TestURL() + "/analytics/dwh/" + created.ResourceGroupName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got struct {
+		URL           string `json:"url"`
+		ResourceGroup struct {
+			Name     string `json:"name"`
+			Location string `json:"location"`
+		} `json:"resourceGroup"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&got)
+	res.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ResourceGroup.Name != created.ResourceGroupName || got.ResourceGroup.Location != testLocation {
+		t.Errorf("unexpected resourceGroup: %+v", got.ResourceGroup)
+	}
+	if got.URL == "" {
+		t.Error("expected a portal url")
+	}
+
+	res, err = http.Get(srv.TestURL() + "/analytics/dwh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var list struct {
+		Resources []map[string]json.RawMessage `json:"resources"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&list)
+	res.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(list.Resources))
+	}
+	if _, ok := list.Resources[0]["url"]; ok {
+		t.Error("list items must not carry url (ResourceGroupResource has no such property)")
 	}
 }

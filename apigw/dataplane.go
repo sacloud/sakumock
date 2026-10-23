@@ -31,7 +31,10 @@ type dataPlane struct {
 	store    *MemoryStore
 	logger   *slog.Logger
 	// scheme is the protocol this listener serves ("https" when the shared
-	// TLS files are set), used for route protocol matching and redirects.
+	// TLS files are set), used for URLs built from the request and
+	// X-Forwarded-Proto. Routes are https-only per the spec; a plain-http
+	// listener stands in for the gateway's HTTPS endpoint, so it is not used
+	// for route matching.
 	scheme string
 
 	mu            sync.Mutex
@@ -146,31 +149,16 @@ func (dp *dataPlane) match(w http.ResponseWriter, r *http.Request) *matchResult 
 		prefLen  int // matched prefix length, for longest-prefix ordering
 	}
 	var matched []candidate
-	var httpsOnly *Route
 
 	for _, rt := range dp.store.RoutesByHost(host) {
 		stripped, prefLen, isRegex, ok := dp.matchPath(rt, r.URL.Path)
 		if !ok || !methodAllowed(rt.Methods, r.Method) {
 			continue
 		}
-		if !protocolsInclude(rt.Protocols, dp.scheme) {
-			// Host/path/method matched but the protocol did not: remember an
-			// https-only route so an http request gets the upgrade response
-			// instead of a plain 404.
-			if rt.Protocols == "https" && dp.scheme == "http" && httpsOnly == nil {
-				cp := rt
-				httpsOnly = &cp
-			}
-			continue
-		}
 		matched = append(matched, candidate{route: rt, stripped: stripped, regex: isRegex, prefLen: prefLen})
 	}
 
 	if len(matched) == 0 {
-		if httpsOnly != nil {
-			dp.writeHTTPSRedirect(w, r, *httpsOnly)
-			return nil
-		}
 		// Kong's exact message for an unmatched request.
 		writeError(w, http.StatusNotFound, "no Route matched with those values")
 		return nil
@@ -257,32 +245,6 @@ func ensureLeadingSlash(p string) string {
 
 func methodAllowed(methods []string, method string) bool {
 	return len(methods) == 0 || slices.Contains(methods, method)
-}
-
-// protocolsInclude reports whether the route's protocols value (e.g. "http",
-// "https", "http,https") includes the scheme. Substring matching would be
-// wrong here: "https" contains "http".
-func protocolsInclude(protocols, scheme string) bool {
-	return protocols == "" || slices.Contains(strings.Split(protocols, ","), scheme)
-}
-
-// writeHTTPSRedirect answers an http request that matched an https-only
-// route: a redirect for 3xx codes, or Kong's 426 upgrade response.
-func (dp *dataPlane) writeHTTPSRedirect(w http.ResponseWriter, r *http.Request, rt Route) {
-	code := rt.HTTPSRedirectStatusCode
-	if code == 0 {
-		code = 426
-	}
-	if code == http.StatusUpgradeRequired {
-		w.Header().Set("Connection", "Upgrade")
-		w.Header().Set("Upgrade", "TLS/1.2, HTTP/1.1")
-		writeError(w, code, "Please use HTTPS protocol")
-		return
-	}
-	u := *r.URL
-	u.Scheme = "https"
-	u.Host = stripPort(r.Host)
-	http.Redirect(w, r, u.String(), code)
 }
 
 func (dp *dataPlane) proxy(w http.ResponseWriter, r *http.Request, m *matchResult) {

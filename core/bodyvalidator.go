@@ -52,53 +52,92 @@ func NewBodyValidator(schemas map[string]*BodySchema, errWrite BodyValidationErr
 // update that renames a field must fail loudly instead of silently dropping
 // the constraint.
 func WithNonEmpty(fields map[string][]string) BodyValidatorOption {
+	return overlayFields("core.WithNonEmpty", fields, func(cur *BodySchema, key, path string) {
+		if cur.Type != "string" {
+			panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is %q, not a string", key, path, cur.Type))
+		}
+		if cur.MinLength == nil {
+			cur.MinLength = new(1)
+		}
+	})
+}
+
+// SDKFix is a field the SDK's hand-fixed spec treats differently from the
+// portal spec, with Source linking the SDK change (a commit or PR URL) so
+// every such deviation from the portal stays traceable.
+type SDKFix struct {
+	Path   string
+	Source string
+}
+
+// WithNullable lets the given fields (paths as in WithNonEmpty) be null. It
+// declares a relaxation the SDK's hand-fixed spec publishes over the portal
+// spec — the SDK sends null where the portal schema forbids it — so the mock
+// accepts what the published SDK sends.
+//
+// It panics at construction when an entry has no Source, cannot be resolved
+// (as in WithNonEmpty), or is already nullable in the spec: the portal caught
+// up, so the override must be removed.
+func WithNullable(fields map[string][]SDKFix) BodyValidatorOption {
+	paths := make(map[string][]string, len(fields))
+	for key, fixes := range fields {
+		for _, f := range fixes {
+			if f.Source == "" {
+				panic(fmt.Sprintf("core.WithNullable: route %q property %q has no Source", key, f.Path))
+			}
+			paths[key] = append(paths[key], f.Path)
+		}
+	}
+	return overlayFields("core.WithNullable", paths, func(cur *BodySchema, key, path string) {
+		if cur.Nullable {
+			panic(fmt.Sprintf("core.WithNullable: route %q property %q is already nullable in the spec; remove the override", key, path))
+		}
+		cur.Nullable = true
+	})
+}
+
+// overlayFields applies apply to a copy of the field at each dotted path (a
+// "[]" suffix steps into array items), copying only the nodes along the path
+// so the schemas passed in and shared schema literals stay untouched.
+func overlayFields(name string, fields map[string][]string, apply func(cur *BodySchema, key, path string)) BodyValidatorOption {
 	return func(bv *BodyValidator) {
 		overlaid := maps.Clone(bv.schemas)
 		for _, key := range slices.Sorted(maps.Keys(fields)) {
 			if overlaid[key] == nil {
-				panic(fmt.Sprintf("core.WithNonEmpty: no schema for route %q", key))
+				panic(fmt.Sprintf("%s: no schema for route %q", name, key))
 			}
 			for _, path := range fields[key] {
-				overlaid[key] = withMinLength(overlaid[key], key, path)
+				overlaid[key] = overlayField(name, overlaid[key], key, path, apply)
 			}
 		}
 		bv.schemas = overlaid
 	}
 }
 
-// withMinLength returns a copy of schema with MinLength 1 set on the string
-// field at the dotted object-property path (a "[]" suffix steps into array
-// items), copying only the nodes along the path so shared schema literals
-// stay untouched.
-func withMinLength(schema *BodySchema, key, path string) *BodySchema {
+func overlayField(name string, schema *BodySchema, key, path string, apply func(cur *BodySchema, key, path string)) *BodySchema {
 	root := *schema
 	cur := &root
 	segs := strings.Split(path, ".")
 	for i, seg := range segs {
-		name, isArray := strings.CutSuffix(seg, "[]")
-		prop := cur.Properties[name]
+		field, isArray := strings.CutSuffix(seg, "[]")
+		prop := cur.Properties[field]
 		if prop == nil {
-			panic(fmt.Sprintf("core.WithNonEmpty: route %q has no property %q", key, strings.Join(segs[:i+1], ".")))
+			panic(fmt.Sprintf("%s: route %q has no property %q", name, key, strings.Join(segs[:i+1], ".")))
 		}
 		cur.Properties = maps.Clone(cur.Properties)
 		child := *prop
-		cur.Properties[name] = &child
+		cur.Properties[field] = &child
 		cur = &child
 		if isArray {
 			if cur.Items == nil {
-				panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is not an array", key, strings.Join(segs[:i+1], ".")))
+				panic(fmt.Sprintf("%s: route %q property %q is not an array", name, key, strings.Join(segs[:i+1], ".")))
 			}
 			items := *cur.Items
 			cur.Items = &items
 			cur = &items
 		}
 	}
-	if cur.Type != "string" {
-		panic(fmt.Sprintf("core.WithNonEmpty: route %q property %q is %q, not a string", key, path, cur.Type))
-	}
-	if cur.MinLength == nil {
-		cur.MinLength = new(1)
-	}
+	apply(cur, key, path)
 	return &root
 }
 

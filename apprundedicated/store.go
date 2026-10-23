@@ -195,7 +195,7 @@ type Store interface {
 	CreateCluster(c *Cluster) error
 	ListClusters(cursor string, maxItems int) ([]*Cluster, *string)
 	ReadCluster(id string) (*Cluster, bool)
-	UpdateCluster(id string, servicePrincipalID string, letsEncryptEmail *string) error
+	UpdateCluster(id string, servicePrincipalID string, letsEncryptEmail *string, ports []ClusterPort) error
 	DeleteCluster(id string) error
 
 	CreateApplication(app *Application) error

@@ -1,0 +1,7 @@
+{
+  "skipPaths": [
+    "/certificates/acme",
+    "/certificates/{certificateId}/acme/renew",
+    "/certificates/{certificateId}/acme/reissue"
+  ]
+}

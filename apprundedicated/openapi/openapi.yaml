@@ -1,0 +1,3565 @@
+openapi: 3.0.0
+info:
+  title: AppRun専有型 API
+  version: 1.4.0
+  contact:
+    name: SAKURA internet Inc.
+  license:
+    name: Copyright(C) SAKURA internet Inc. all rights reserved.
+  description: |
+    # 更新履歴
+
+    - 2026-07-29 (v1.4.0): クラスタのロードバランサ設定取得・更新エンドポイントを追加
+    - 2026-07-15 (v1.3.1): Response samplesを修正
+
+    ---
+
+    「AppRun専有型」が提供する API の利用方法とサンプルを公開しています。
+
+    # 基本的な使い方
+
+    ## APIキーの発行
+
+    API を利用するには、認証用の「APIキー」が必要です。事前にキーを発行してください。\
+    APIキーは、「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。
+
+    | 項目名 | APIキー発行時の項目名 | このドキュメント内での例 |
+    |--------|----------------------|--------------------------|
+    | ユーザーID | アクセストークン (UUID) | 01234567-89ab-cdef-0123-456789abcdef |
+    | パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |
+
+    ### 操作マニュアル
+
+    [APIキー | さくらのクラウド ドキュメント](https://manual.sakura.ad.jp/cloud/api/apikey.html)
+
+    ## APIエンドポイント
+
+    `https://secure.sakura.ad.jp/cloud/api/apprun-dedicated/1.0/`
+
+    ---
+externalDocs:
+  url: https://manual.sakura.ad.jp/cloud/apprun-dedicated/releasenote.html
+  description: リリースノート | さくらのクラウド マニュアル
+tags:
+  - name: application
+  - name: application_version
+  - name: cluster
+  - name: certificate
+  - name: limit
+  - name: service_class
+paths:
+  /applications:
+    post:
+      operationId: createApplication
+      summary: 新しいアプリケーションの作成
+      description: 指定したクラスタに新しいアプリケーションを作成します。1アカウントにつき最大10個まで作成可能です。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApplicationResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationRequest'
+    get:
+      operationId: listApplications
+      summary: アカウント内のアプリケーションの一覧を取得
+      description: 指定したアカウントに紐づくアプリケーションの一覧を返します。
+      parameters:
+        - name: clusterID
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+          explode: false
+        - name: cursor
+          in: query
+          required: false
+          description: 前ページの最後のID。これ以降のデータを取得するためのカーソル。ページネーションに利用します。
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          description: 1ページあたりの最大取得件数。
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 30
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListApplicationsResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application
+  /applications/{applicationID}:
+    get:
+      operationId: readApplication
+      summary: アプリケーションの詳細を取得
+      description: 指定したアプリケーションIDの詳細を返します。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadApplicationResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application
+    put:
+      operationId: updateApplication
+      summary: アプリケーション情報の更新
+      description: アプリケーションのactiveVersionなどを更新します。クラスタの変更はできません。activeVersionを変更すると指定したバージョンがデプロイされます。activeVersionをnullにするとアプリケーションは非アクティブ状態になり、デプロイされなくなります。アプリケーション削除前にはactiveVersionをnullにする必要があります。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplicationRequest'
+    delete:
+      operationId: deleteApplication
+      summary: アプリケーションの削除
+      description: |-
+        指定したアプリケーションを削除します。
+
+        ## 前提条件
+
+        - 当該アプリケーションに **アクティブなバージョンが存在しない** こと
+        - いずれのワーカノードでも当該アプリケーションの **コンテナが稼働していない** こと
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application
+  /applications/{applicationID}/containers:
+    get:
+      operationId: listApplicationContainers
+      summary: アプリケーションのノードごとのコンテナ配置情報を取得
+      description: 指定したアプリケーションの各ワーカノード上でのコンテナ配置情報を返します。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListApplicationContainersResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application
+  /applications/{applicationID}/versions:
+    post:
+      operationId: createApplicationVersion
+      summary: アプリケーションバージョンの作成
+      description: アプリケーションバージョンを作成します。アプリケーションバージョンを作成するだけではノードにデプロイされません。アプリケーションのアクティブバージョンに指定するとノードにデプロイされます。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApplicationVersionResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application_version
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationVersionRequest'
+    get:
+      operationId: listApplicationVersions
+      summary: アプリケーションバージョンの一覧を取得
+      description: 指定されたアプリケーションのバージョン一覧を返します。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+        - name: cursor
+          in: query
+          required: false
+          description: 前ページの最後のID。これ以降のデータを取得するためのカーソル。
+          schema:
+            $ref: '#/components/schemas/ApplicationVersionNumber'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 30
+            default: 30
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListApplicationVersionsResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application_version
+  /applications/{applicationID}/versions/{version}:
+    delete:
+      operationId: deleteApplicationVersion
+      summary: アプリケーションバージョンの削除
+      description: 現在ノードにデプロイされているバージョンおよびアクティブなバージョンは削除できません。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+        - name: version
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationVersionNumber'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application_version
+    get:
+      operationId: readApplicationVersion
+      summary: アプリケーションバージョンの詳細を取得
+      description: 指定されたバージョンの詳細を返します。
+      parameters:
+        - name: applicationID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationID'
+        - name: version
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApplicationVersionNumber'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadApplicationVersionResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - application_version
+  /clusters:
+    post:
+      operationId: createCluster
+      summary: クラスタの作成
+      description: 新しいクラスタを作成します。作成後にクラスタIDを返します。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateClusterResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClusterRequest'
+    get:
+      operationId: listClusters
+      summary: クラスタの一覧を取得
+      description: アカウントに紐づくクラスタの一覧を返します。ページネーションに対応します。
+      parameters:
+        - name: lastClusterID
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+          explode: false
+        - name: cursor
+          in: query
+          required: false
+          description: 前ページの最後のID。これ以降のデータを取得するためのカーソル。
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 5
+            maximum: 30
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListClustersResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}:
+    get:
+      operationId: readCluster
+      summary: クラスタの詳細を取得
+      description: 指定したクラスタの詳細を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadClusterResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+    delete:
+      operationId: deleteCluster
+      summary: クラスタの削除
+      description: 指定したクラスタを削除します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+    put:
+      operationId: updateCluster
+      summary: クラスタの更新
+      description: 指定したクラスタの設定を更新します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClusterRequest'
+  /clusters/{clusterID}/asg:
+    post:
+      operationId: createAutoScalingGroup
+      summary: オートスケーリンググループの作成
+      description: 新しいオートスケーリンググループを作成します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAutoScalingGroupResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAutoScalingGroupRequest'
+    get:
+      operationId: listAutoScalingGroups
+      summary: オートスケーリンググループの一覧を取得
+      description: クラスタに所属するオートスケーリンググループの一覧を返します。ページネーションに対応します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: lastAutoScalingGroupID
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+          explode: false
+        - name: cursor
+          in: query
+          required: false
+          description: 前ページの最後のID。これ以降のデータを取得するためのカーソル。
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 30
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAutoScalingGroupsResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}:
+    get:
+      operationId: readAutoScalingGroup
+      summary: オートスケーリンググループの詳細を取得
+      description: 指定したオートスケーリンググループの詳細を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadAutoScalingGroupResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+    delete:
+      operationId: deleteAutoScalingGroup
+      summary: オートスケーリンググループの削除
+      description: 指定したオートスケーリンググループを削除します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers:
+    post:
+      operationId: createLoadBalancer
+      summary: ロードバランサの作成
+      description: 指定したオートスケーリンググループにロードバランサを作成します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateLoadBalancerResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLoadBalancerRequest'
+    get:
+      operationId: listLoadBalancers
+      summary: ロードバランサの一覧を取得
+      description: オートスケーリンググループに属するロードバランサの一覧を返します。ページネーションに対応します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/LoadBalancerID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 2
+            maximum: 30
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListLoadBalancersResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}:
+    get:
+      operationId: readLoadBalancer
+      summary: ロードバランサの詳細を取得
+      description: 指定したロードバランサの詳細を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: loadBalancerID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LoadBalancerID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadLoadBalancerResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+    delete:
+      operationId: deleteLoadBalancer
+      summary: ロードバランサを削除する
+      description: 指定したロードバランサを削除します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: loadBalancerID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LoadBalancerID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes:
+    get:
+      operationId: listLoadBalancerNodes
+      summary: ロードバランサノードの一覧を取得
+      description: 指定したロードバランサに属するノードの一覧を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: loadBalancerID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LoadBalancerID'
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/LoadBalancerNodeID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 2
+            maximum: 30
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListLoadBalancerNodesResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/load_balancers/{loadBalancerID}/load_balancer_nodes/{loadBalancerNodeID}:
+    get:
+      operationId: readLoadBalancerNode
+      summary: ロードバランサノードの詳細を取得
+      description: 指定したロードバランサノードの詳細を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: loadBalancerID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LoadBalancerID'
+        - name: loadBalancerNodeID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LoadBalancerNodeID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadLoadBalancerNodeResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes:
+    get:
+      operationId: listWorkerNodes
+      summary: オートスケーリンググループに所属するワーカノードの一覧を取得
+      description: オートスケーリンググループに所属するワーカノードの一覧を返します。ページネーションに対応します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/WorkerNodeID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 2
+            maximum: 100
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWorkerNodesResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}:
+    get:
+      operationId: readWorkerNode
+      summary: オートスケーリンググループに所属するワーカノードの詳細を取得
+      description: 指定したワーカノードの詳細を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: workerNodeID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WorkerNodeID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadWorkerNodeResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+  /clusters/{clusterID}/asg/{autoScalingGroupID}/worker_nodes/{workerNodeID}/draining:
+    put:
+      operationId: updateWorkerNodeDraining
+      summary: ワーカノードのドレイン状態を変更する
+      description: 指定したワーカノードのドレイン状態を更新します（ドレインを有効/無効にします）。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: autoScalingGroupID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutoScalingGroupID'
+        - name: workerNodeID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WorkerNodeID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkerNodeDrainingRequest'
+  /clusters/{clusterID}/certificates:
+    post:
+      operationId: createCertificate
+      summary: 証明書の作成
+      description: 新しい証明書を作成します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCertificateResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - certificate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCertificateRequest'
+    get:
+      operationId: listCertificates
+      summary: 証明書の一覧を取得
+      description: クラスタ内の証明書一覧を返します。ページネーションに対応します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: cursor
+          in: query
+          required: false
+          description: 前ページの最後のID。これ以降のデータを取得するためのカーソル。
+          schema:
+            $ref: '#/components/schemas/CertificateID'
+          explode: false
+        - name: maxItems
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 5
+            maximum: 30
+            default: 20
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListCertificatesResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - certificate
+  /clusters/{clusterID}/certificates/{certificateID}:
+    get:
+      operationId: readCertificate
+      summary: 証明書の詳細を取得
+      description: 指定した証明書の詳細を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: certificateID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CertificateID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadCertificateResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - certificate
+    delete:
+      operationId: deleteCertificate
+      summary: 証明書の削除
+      description: 指定した証明書を削除します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: certificateID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CertificateID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - certificate
+    put:
+      operationId: updateCertificate
+      summary: 証明書の更新
+      description: 指定した証明書を更新します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+        - name: certificateID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CertificateID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - certificate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCertificateRequest'
+  /clusters/{clusterID}/load_balancer:
+    get:
+      operationId: readClusterLoadBalancer
+      summary: クラスタのロードバランサ設定を取得
+      description: 指定したクラスタに紐づくロードバランサ設定（Let's Encrypt メール設定の有無と公開ポート設定）を返します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadClusterLoadBalancerResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+    patch:
+      operationId: patchClusterLoadBalancer
+      summary: クラスタのロードバランサ設定を部分更新
+      description: 指定したクラスタに紐づくロードバランサ設定を部分更新します。未指定の項目は既存値を維持します。
+      parameters:
+        - name: clusterID
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ClusterID'
+      responses:
+        '204':
+          description: 'There is no content to send for this request, but the headers may be useful. '
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - cluster
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/PatchClusterLoadBalancerRequest'
+  /limits:
+    get:
+      operationId: readLimits
+      summary: プロジェクトのリソース制限値の取得
+      description: プロジェクトに紐づくリソース制限値を返します。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadLimitsResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - limit
+  /service_classes/lb:
+    get:
+      operationId: listLoadBalancerServiceClasses
+      summary: ロードバランササービスクラスの一覧を取得
+      description: ロードバランササービスクラスの一覧を返します。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListLoadBalancerServiceClassesResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - service_class
+  /service_classes/worker:
+    get:
+      operationId: listWorkerServiceClasses
+      summary: ワーカノードサービスクラスの一覧を取得
+      description: ワーカノードサービスクラスの一覧を返します。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWorkerServiceClassesResponse'
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - service_class
+security:
+  - BasicAuth: []
+components:
+  schemas:
+    ApplicationCurrentContainer:
+      type: object
+      required:
+        - id
+        - image
+        - state
+        - status
+        - cpuUsagePercent
+        - applicationID
+        - applicationVersion
+      properties:
+        id:
+          type: string
+          description: コンテナID
+        image:
+          type: string
+          description: イメージ名
+        state:
+          type: string
+          description: コンテナのステート（created、running、restarting、removing、paused、exited、dead のうちいずれか）
+        status:
+          type: string
+          description: コンテナのステータス
+        cpuUsagePercent:
+          type: number
+          format: float
+          description: コンテナのCPU使用率（単位：%）
+        applicationID:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationID'
+          description: アプリケーションID
+        applicationVersion:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          description: アプリケーションのバージョン
+    ApplicationCurrentContainers:
+      type: object
+      required:
+        - collectedAtSec
+        - containers
+      properties:
+        collectedAtSec:
+          type: integer
+          format: unixtime
+          description: 状態回収日時：UNIX時間（秒）
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationCurrentContainer'
+    ApplicationDesiredContainer:
+      type: object
+      required:
+        - applicationID
+        - applicationVersion
+        - cpuMillis
+        - memoryMB
+        - image
+      properties:
+        applicationID:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationID'
+          description: デプロイするアプリケーションID
+        applicationVersion:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          description: デプロイするアプリケーションのバージョン
+        cpuMillis:
+          type: integer
+          format: int64
+          description: 割り当てるCPU（単位：mCPU）
+        memoryMB:
+          type: integer
+          format: int64
+          description: 割り当てるメモリ（単位：MB）
+        image:
+          type: string
+          description: デプロイするコンテナのイメージ名
+    ApplicationDesiredContainers:
+      type: object
+      required:
+        - containers
+      properties:
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationDesiredContainer'
+    ApplicationID:
+      type: string
+      format: uuid
+    ApplicationIdentifier:
+      type: object
+      required:
+        - applicationID
+      properties:
+        applicationID:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationID'
+          description: ID
+          readOnly: true
+    ApplicationVersionIdentifier:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          readOnly: true
+    ApplicationVersionNumber:
+      type: integer
+      format: int32
+      minimum: 1
+      example: 3
+    ApplicationVersionSummary:
+      type: object
+      required:
+        - version
+        - image
+        - activeNodeCount
+        - created
+      properties:
+        version:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          readOnly: true
+        image:
+          type: string
+          maxLength: 512
+          example: nginx:latest
+        activeNodeCount:
+          type: integer
+          format: int64
+          description: 現在動いているノードの数
+          readOnly: true
+        created:
+          type: integer
+          format: unixtime
+          description: アプリケーションバージョン作成日時：UNIX時間（秒）
+          readOnly: true
+    AutoScalingGroupID:
+      type: string
+      format: uuid
+    AutoScalingGroupIdentifier:
+      type: object
+      required:
+        - autoScalingGroupID
+      properties:
+        autoScalingGroupID:
+          allOf:
+            - $ref: '#/components/schemas/AutoScalingGroupID'
+          readOnly: true
+    AutoScalingGroupNodeInterface:
+      type: object
+      required:
+        - interfaceIndex
+        - upstream
+        - connectsToLB
+      properties:
+        interfaceIndex:
+          type: integer
+          format: int16
+          description: インターフェース番号。例：eth0→0、eth1→1、eth2→2。0は必須。重複不可。
+        upstream:
+          type: string
+          description: "'shared' にすると共有セグメントに繋がります。ルータ+スイッチ、および共有セグメントにつなげられるのは eth0 のみです。"
+          title: 接続先スイッチ
+        ipPool:
+          type: array
+          items:
+            $ref: '#/components/schemas/IpRange'
+          maxItems: 20
+          description: IPプールは最大20個まで指定可能。アップストリームが 'shared' の場合は指定できません。それ以外の場合は指定必須です。
+          title: IPアドレスの割り当て範囲
+        netmaskLen:
+          type: integer
+          format: int16
+          minimum: 8
+          maximum: 29
+          description: アップストリームが 'shared' の場合、指定できません。それ以外の場合は指定必須です。
+          title: ネットマスク長
+        defaultGateway:
+          type: string
+          description: アップストリームが 'shared' の場合、指定できません。
+          title: デフォルトゲートウェイ
+        packetFilterID:
+          type: string
+          description: パケットフィルターID
+        connectsToLB:
+          type: boolean
+          description: 一つのオートスケーリンググループにつき、一つのインターフェースのみがロードバランサ接続対象となる。接続対象になった場合、そのインターフェースに割り当てられた IP アドレスがロードバランサのバックエンドとして登録される。クラスタにロードバランサポートが設定されている場合、一つのインターフェースが true である必要がある。
+          title: ロードバランサ接続対象インターフェースかどうか
+    CertificateID:
+      type: string
+      format: uuid
+      example: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+    CertificateIdentifier:
+      type: object
+      required:
+        - certificateID
+      properties:
+        certificateID:
+          allOf:
+            - $ref: '#/components/schemas/CertificateID'
+          description: 証明書ID
+          readOnly: true
+    ClusterID:
+      type: string
+      format: uuid
+      description: クラスタID
+      example: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+    ClusterIdentifier:
+      type: object
+      required:
+        - clusterID
+      properties:
+        clusterID:
+          allOf:
+            - $ref: '#/components/schemas/ClusterID'
+          readOnly: true
+    ClusterLoadBalancerPort:
+      type: object
+      required:
+        - port
+        - protocol
+      properties:
+        port:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 65535
+          description: 外部公開するポート番号。5950-5959は予約されているため指定不可
+          example: 8080
+        protocol:
+          type: string
+          enum:
+            - http
+            - https
+            - tcp
+          description: ポートで扱うプロトコル
+    ClusterLoadBalancerPortMergePatchCreateOrUpdateReplaceOnly:
+      type: object
+      required:
+        - port
+        - protocol
+      properties:
+        port:
+          type: integer
+          format: uint16
+          minimum: 1
+          maximum: 65535
+          description: 外部公開するポート番号。5950-5959は予約されているため指定不可
+          example: 8080
+        protocol:
+          type: string
+          enum:
+            - http
+            - https
+            - tcp
+          description: ポートで扱うプロトコル
+    CreateApplicationRequest:
+      type: object
+      required:
+        - name
+        - clusterID
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: アプリケーションの名前。クラスタの中ではユニーク。英数字とハイフン、アンダースコアのみ使用可能
+          example: bbs
+        clusterID:
+          allOf:
+            - $ref: '#/components/schemas/ClusterID'
+          description: デプロイ先クラスタ
+    CreateApplicationResponse:
+      type: object
+      required:
+        - application
+      properties:
+        application:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationIdentifier'
+          description: 作成されたアプリケーションの情報
+    CreateApplicationVersionRequest:
+      type: object
+      required:
+        - image
+        - cpu
+        - memory
+        - scalingMode
+        - registryUsername
+        - registryPassword
+        - registryPasswordAction
+        - exposedPorts
+        - env
+      properties:
+        image:
+          type: string
+          maxLength: 512
+          example: nginx:latest
+        cpu:
+          type: integer
+          format: int64
+          minimum: 100
+          maximum: 64000
+          example: 500
+        memory:
+          type: integer
+          format: int64
+          minimum: 128
+          maximum: 131072
+          example: 1000
+        scalingMode:
+          $ref: '#/components/schemas/ScalingMode'
+        fixedScale:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+        minScale:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          example: 1
+        maxScale:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          example: 3
+        scaleInThreshold:
+          type: integer
+          format: int32
+          minimum: 30
+          maximum: 70
+          example: 30
+        scaleOutThreshold:
+          type: integer
+          format: int32
+          minimum: 50
+          maximum: 99
+          example: 95
+        cmd:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+          description: コンテナ起動時に実行するコマンドと引数
+        registryUsername:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: レジストリのユーザ名。未設定の場合はnull。
+        registryPassword:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: レジストリのパスワード。レスポンスではマスクされる。未設定の場合はnull。
+        registryPasswordAction:
+          allOf:
+            - $ref: '#/components/schemas/RegistryPasswordAction'
+          description: レジストリパスワードの設定方法
+        exposedPorts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExposedPort'
+          maxItems: 5
+          description: アプリケーションが公開するポート番号。同一クラスタ内で、ポートの重複不可。
+        env:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateEnvironmentVariable'
+          maxItems: 50
+          description: 環境変数
+    CreateApplicationVersionResponse:
+      type: object
+      required:
+        - applicationVersion
+      properties:
+        applicationVersion:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionIdentifier'
+          description: 作成されたアプリケーションバージョンの情報
+    CreateAutoScalingGroupRequest:
+      type: object
+      required:
+        - name
+        - zone
+        - workerServiceClassPath
+        - minNodes
+        - maxNodes
+        - interfaces
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: オートスケーリンググループの名前。クラスタ内でユニーク。英数字、アンダースコア、ハイフンのみ使用可能
+        zone:
+          type: string
+          description: オートスケーリンググループのゾーン
+        nameServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4'
+          minItems: 1
+          maxItems: 3
+          description: ネームサーバ設定
+        workerServiceClassPath:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: ワーカノードのサービスクラスパス
+        minNodes:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+          description: オートスケーリンググループの最小ノード数
+        maxNodes:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+          description: オートスケーリンググループの最大ノード数
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoScalingGroupNodeInterface'
+          minItems: 1
+          maxItems: 5
+          title: ネットワークインターフェース定義
+    CreateAutoScalingGroupResponse:
+      type: object
+      required:
+        - autoScalingGroup
+      properties:
+        autoScalingGroup:
+          allOf:
+            - $ref: '#/components/schemas/AutoScalingGroupIdentifier'
+          description: 作成されたオートスケーリンググループの情報
+    CreateCertificateRequest:
+      type: object
+      required:
+        - name
+        - certificatePem
+        - privatekeyPem
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_.-]+$
+          description: 証明書の名前。クラスタ内でユニーク。英数字、アンダースコア、ハイフン、ドットのみ使用可能
+        certificatePem:
+          type: string
+          maxLength: 1000000
+          description: 証明書のPEM形式の文字列
+        privatekeyPem:
+          type: string
+          maxLength: 1000000
+          description: 証明書の秘密鍵のPEM形式の文字列
+        intermediateCertificatePem:
+          type: string
+          maxLength: 1000000
+          description: 証明書のチェーン証明書のPEM形式の文字列
+    CreateCertificateResponse:
+      type: object
+      required:
+        - certificate
+      properties:
+        certificate:
+          allOf:
+            - $ref: '#/components/schemas/CertificateIdentifier'
+          description: 作成された証明書の情報
+    CreateClusterRequest:
+      type: object
+      required:
+        - name
+        - ports
+        - servicePrincipalID
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: クラスタの名前。プロジェクト内でユニーク。英数字、アンダースコア、ハイフンのみ使用可能
+        letsEncryptEmail:
+          type: string
+          pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+          description: |-
+            Let's Encrypt による証明書発行を有効にするにはここにメールアドレスを設定します。
+            Let's Encrypt による証明書発行は HTTP-01 チャレンジになるため、80 番ポートを HTTPプロトコルで外向きに解放する必要があります。
+          title: Let's Encrypt のメールアドレス
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterLoadBalancerPort'
+          maxItems: 5
+          description: ロードバランサのポート群
+        servicePrincipalID:
+          $ref: '#/components/schemas/ServicePrincipalID'
+    CreateClusterResponse:
+      type: object
+      required:
+        - cluster
+      properties:
+        cluster:
+          allOf:
+            - $ref: '#/components/schemas/ClusterIdentifier'
+          description: 作成されたクラスタの情報
+    CreateEnvironmentVariable:
+      type: object
+      required:
+        - key
+        - secret
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 255
+        secret:
+          type: boolean
+          description: 秘密情報か否か。true の場合、value を API 等で取得することは出来ない。
+        value:
+          allOf:
+            - $ref: '#/components/schemas/EnvironmentVariableValue'
+          description: 環境変数の値。secret が true で、かつ value が指定されていない場合は前のバージョンの値が利用される。
+      description: 環境変数作成用モデル
+    CreateLoadBalancerRequest:
+      type: object
+      required:
+        - name
+        - serviceClassPath
+        - interfaces
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: ロードバランサ名。オートスケーリンググループ内でユニーク。英数字とハイフン、アンダースコアのみ使用可能
+        serviceClassPath:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: ロードバランサのサービスクラスパス
+        nameServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4'
+          minItems: 1
+          maxItems: 3
+          description: ネームサーバ設定
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancerInterface'
+          minItems: 1
+          maxItems: 5
+          description: ロードバランサのインターフェース
+    CreateLoadBalancerResponse:
+      type: object
+      required:
+        - loadBalancer
+      properties:
+        loadBalancer:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerIdentifier'
+          description: 作成されたロードバランサの情報
+      description: ロードバランサの作成レスポンス
+      example:
+        loadBalancer:
+          loadBalancerID: 123e4567-e89b-12d3-a456-426614174000
+    EnoughResources:
+      type: object
+      required:
+        - cpu
+        - memory
+      properties:
+        cpu:
+          type: boolean
+          nullable: true
+          description: CPU不足が原因でアプリケーションがデプロイできない場合はfalse。ASGスケールアウト中もfalse。nullの場合は不明。
+        memory:
+          type: boolean
+          nullable: true
+          description: メモリ不足が原因でアプリケーションがデプロイできない場合はfalse。ASGスケールアウト中もfalse。nullの場合は不明。
+    EnvironmentVariableValue:
+      type: string
+      maxLength: 4096
+    Error:
+      type: object
+      required:
+        - status
+        - title
+      properties:
+        status:
+          type: integer
+          format: int32
+        title:
+          type: string
+    ExposedPort:
+      type: object
+      required:
+        - targetPort
+        - loadBalancerPort
+        - useLetsEncrypt
+        - healthCheck
+      properties:
+        targetPort:
+          allOf:
+            - $ref: '#/components/schemas/Port'
+          description: アプリケーション内部でリッスンするポート番号。このポートがホストでリッスンされます。同一クラスタ内で、ポートの重複不可。
+        loadBalancerPort:
+          type: integer
+          allOf:
+            - $ref: '#/components/schemas/Port'
+          nullable: true
+          description: 公開先となるロードバランサのポート番号。ロードバランサに設定しない場合は null を指定する。
+        useLetsEncrypt:
+          type: boolean
+          description: Let's Encrypt を利用するかどうか（https の場合のみサポート）
+        host:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hostname'
+          maxItems: 5
+          description: |-
+            - HTTP/HTTPS のロードバランサポートを利用する場合は **必須**（1〜5件）。
+            - TCP または loadBalancerPort = null の場合は **指定不可**。
+          title: ロードバランサでホスト名ルーティングに使用されるホスト名
+        healthCheck:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/HealthCheck'
+          nullable: true
+          description: ロードバランサがアプリケーションの正常性を確認するための設定です。ヘルスチェックが有効な場合、指定したパスにアクセスし、HTTPステータスコードが 2xx または 3xx 以外の場合は、そのノードへのトラフィックが停止されます。これにより、異常なノードへのアクセスを自動的に防止できます。
+          title: ヘルスチェックの設定
+    HealthCheck:
+      type: object
+      required:
+        - path
+        - intervalSeconds
+        - timeoutSeconds
+      properties:
+        path:
+          type: string
+          maxLength: 200
+          description: ヘルスチェックのパス（HTTP の場合）
+          example: /healthz
+        intervalSeconds:
+          type: integer
+          format: int32
+          minimum: 3
+          maximum: 60
+          description: ヘルスチェックの間隔（秒）
+          default: 30
+        timeoutSeconds:
+          type: integer
+          format: int32
+          maximum: 60
+          description: ヘルスチェックのタイムアウト（秒）
+          default: 5
+    Hostname:
+      type: string
+      minLength: 1
+      maxLength: 253
+      pattern: ^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$
+      format: hostname
+      description: |-
+        ロードバランサでホスト名ルーティングに使用されるホスト名。
+        RFC1123 DNS subdomain names に準拠した形式である必要があります。
+      example: example.com
+    IpRange:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          $ref: '#/components/schemas/Ipv4'
+        end:
+          $ref: '#/components/schemas/Ipv4'
+    Ipv4:
+      type: string
+      pattern: ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$
+    Limit:
+      type: object
+      required:
+        - clusterCount
+        - autoScalingGroupCount
+        - workerNodeCount
+        - loadBalancerNodeCount
+        - applicationCount
+        - applicationVersionCountPerApplication
+      properties:
+        clusterCount:
+          type: integer
+          format: int64
+          description: クラスタの最大数
+        autoScalingGroupCount:
+          type: integer
+          format: int64
+          description: オートスケーリンググループの最大数
+        workerNodeCount:
+          type: integer
+          format: int64
+          description: ワーカノードの最大数
+        loadBalancerNodeCount:
+          type: integer
+          format: int64
+          description: ロードバランサノードの最大数
+        applicationCount:
+          type: integer
+          format: int64
+          description: アプリケーションの最大数
+        applicationVersionCountPerApplication:
+          type: integer
+          format: int64
+          description: アプリケーションあたりのバージョンの最大数
+    ListApplicationContainersResponse:
+      type: object
+      required:
+        - nodes
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerNodeContainerPlacement'
+          description: ノードごとのコンテナ配置情報リスト
+      example:
+        nodes:
+          - nodeID: b7e6a1c2-3f4d-4e2a-9b1a-2c3d4e5f6a7b
+            containersStats:
+              collectedAtSec: 1721203200
+              containers:
+                - id: container-1
+                  image: nginx:latest
+                  state: running
+                  status: Up 5 minutes
+                  cpuUsagePercent: 12.5
+                  applicationID: f47ac10b-58cc-4372-a567-0e02b2c3d479
+                  applicationVersion: 2
+            desired:
+              containers: []
+          - nodeID: c8f7b2d3-4e5f-5a6b-8c2d-3e4f5a6b7c8d
+            containersStats:
+              collectedAtSec: 1721203200
+              containers: []
+            desired:
+              containers:
+                - applicationID: 9c858901-8a57-4791-81fe-4c455b099bc9
+                  applicationVersion: 1
+                  cpuMillis: 250
+                  memoryMB: 128
+                  image: redis:alpine
+    ListApplicationVersionsResponse:
+      type: object
+      required:
+        - versions
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationVersionSummary'
+          description: アプリケーションのバージョン一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      example:
+        versions:
+          - version: 3
+            image: nginx:2
+            activeNodeCount: 1
+            created: 1577836800
+          - version: 2
+            image: nginx:2
+            activeNodeCount: 0
+            created: 1577836800
+          - version: 1
+            image: nginx:1
+            activeNodeCount: 0
+            created: 1577836800
+    ListApplicationsResponse:
+      type: object
+      required:
+        - applications
+      properties:
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadApplication'
+          description: アプリケーションの一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      example:
+        applications:
+          - applicationID: A0199B39-B361-45B9-8DF4-FC8BE494D690
+            name: my-app
+            clusterID: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+            clusterName: mock-cluster
+            activeVersion: 3
+            desiredCount: 3
+            scalingCooldownSeconds: 300
+            enoughResources:
+              cpu: true
+              memory: true
+    ListAutoScalingGroupsResponse:
+      type: object
+      required:
+        - autoScalingGroups
+      properties:
+        autoScalingGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadAutoScalingGroup'
+          description: オートスケーリンググループの一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/AutoScalingGroupID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      example:
+        autoScalingGroups:
+          - autoScalingGroupID: 123e4567-e89b-12d3-a456-426614174001
+            name: tokyo-asg
+            zone: tk1b
+            minNodes: 2
+            maxNodes: 10
+            workerNodeCount: 3
+            workerServiceClassPath: cloud/apprun/dedicated/worker/1vcpu_2gb
+            deleting: false
+            interfaces:
+              - interfaceIndex: 0
+                ipPool:
+                  - start: 192.0.1.0
+                    end: 192.0.1.255
+                netmaskLen: 24
+                upstream: '111111111111'
+                packetFilterID: pf-123456
+                defaultGateway: 192.0.1.1
+                connectsToLB: true
+              - interfaceIndex: 1
+                ipPool:
+                  - start: 192.0.2.0
+                    end: 192.0.2.255
+                netmaskLen: 24
+                upstream: '111111111112'
+                connectsToLB: false
+    ListCertificatesResponse:
+      type: object
+      required:
+        - certificates
+      properties:
+        certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadCertificate'
+          description: 証明書の一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/CertificateID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      example:
+        certificates:
+          - certificateID: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+            name: example-certificate
+            commonName: example.com
+            subjectAlternativeNames:
+              - www.example.com
+              - api.example.com
+            notBeforeSec: 1577836800
+            notAfterSec: 1640995200
+            created: 1577836800
+            updated: 1577836800
+    ListClustersResponse:
+      type: object
+      required:
+        - clusters
+      properties:
+        clusters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadClusterSummary'
+          description: クラスタの一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/ClusterID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      example:
+        clusters:
+          - clusterID: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+            name: mock-cluster
+            created: 1577836800
+    ListLoadBalancerNodesResponse:
+      type: object
+      required:
+        - loadBalancerNodes
+      properties:
+        loadBalancerNodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancerNode'
+          description: ロードバランサノードの一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerNodeID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      description: ロードバランサノードの一覧レスポンス
+      example:
+        loadBalancerNodes:
+          - loadBalancerNodeID: 550e8400-e29b-41d4-a716-446655440001
+            resourceID: '12345678901'
+            status: healthy
+            interfaces:
+              - interfaceIndex: 1
+                addresses:
+                  - address: 10.0.0.8/24
+                    vip: false
+                  - address: 10.0.1.2/24
+                    vip: true
+              - interfaceIndex: 2
+                addresses:
+                  - address: 10.0.2.8/24
+                    vip: false
+                  - address: 10.0.3.4/24
+                    vip: true
+            archiveVersion: 2025.1014.1
+            created: 1577836800
+          - loadBalancerNodeID: 660e8400-e29b-41d4-a716-446655440001
+            resourceID: '12345678901'
+            status: healthy
+            interfaces:
+              - interfaceIndex: 1
+                addresses:
+                  - address: 10.0.0.9/24
+                    vip: false
+            createErrorMessage: クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください
+            created: 1577836800
+    ListLoadBalancerServiceClassesResponse:
+      type: object
+      required:
+        - lbServiceClasses
+      properties:
+        lbServiceClasses:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancerServiceClass'
+          description: ロードバランササービスクラスの一覧
+      example:
+        lbServiceClasses:
+          - name: 1vCPU / 2GB メモリ * 1 (非冗長構成)
+            nodeCount: 1
+            path: cloud/apprun/dedicated/lb/1vcpu_2gb_1
+          - name: 1vCPU / 2GB メモリ * 2 (冗長構成)
+            nodeCount: 2
+            path: cloud/apprun/dedicated/lb/1vcpu_2gb_2
+          - name: 4vCPU / 4GB メモリ * 2 (冗長構成)
+            nodeCount: 2
+            path: cloud/apprun/dedicated/lb/4vcpu_4gb_2
+    ListLoadBalancersResponse:
+      type: object
+      required:
+        - loadBalancers
+      properties:
+        loadBalancers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadLoadBalancerSummary'
+          description: ロードバランサの一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      description: ロードバランサの一覧レスポンス
+      example:
+        loadBalancers:
+          - loadBalancerID: 550e8400-e29b-41d4-a716-446655440000
+            name: example-lb
+            serviceClassPath: cloud/apprun/dedicated/lb/1vcpu_2gb_1
+            created: 1577836800
+            deleting: false
+          - loadBalancerID: 550e8400-e29b-41d4-a716-446655440001
+            name: another-lb
+            serviceClassPath: cloud/apprun/dedicated/lb/1vcpu_2gb_1
+            created: 1577836800
+            deleting: true
+    ListWorkerNodesResponse:
+      type: object
+      required:
+        - workerNodes
+      properties:
+        workerNodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerNodeSummary'
+          description: ワーカノードの一覧
+        nextCursor:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNodeID'
+          description: 次ページのカーソル。次のリクエストでcursorとして指定する。データが残っていなければnull。
+      example:
+        workerNodes:
+          - workerNodeID: 123e4567-e89b-12d3-a456-426614174002
+            resourceID: worker-node-01
+            draining: false
+            status: healthy
+            networkInterfaces:
+              - interfaceIndex: 0
+                addresses:
+                  - address: 192.168.0.1
+              - interfaceIndex: 1
+                addresses:
+                  - address: 10.0.0.8
+            archiveVersion: 2025.1014.1
+            created: 1577836800
+          - workerNodeID: 987f6543-e21a-45c3-b123-554433221101
+            resourceID: worker-node-02
+            draining: true
+            status: healthy
+            networkInterfaces:
+              - interfaceIndex: 0
+                addresses:
+                  - address: 192.168.0.1
+              - interfaceIndex: 1
+                addresses:
+                  - address: 10.0.0.8
+            archiveVersion: 2025.1014.2
+            created: 1577836800
+          - workerNodeID: 487f6543-e21a-45c3-b123-554433221101
+            resourceID: worker-node-03
+            draining: true
+            status: creating
+            networkInterfaces:
+              - interfaceIndex: 0
+                addresses:
+                  - address: 192.168.0.1
+              - interfaceIndex: 1
+                addresses:
+                  - address: 10.0.0.8
+            archiveVersion: 2025.1014.3
+            created: 1577836800
+            createErrorMessage: クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください
+    ListWorkerServiceClassesResponse:
+      type: object
+      required:
+        - workerServiceClasses
+      properties:
+        workerServiceClasses:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerServiceClass'
+          description: ワーカノードサービスクラスの一覧
+      example:
+        workerServiceClasses:
+          - name: 1vCPU / 2GB メモリ
+            path: cloud/apprun/dedicated/worker/1vcpu_2gb
+          - name: 2vCPU / 2GB メモリ
+            path: cloud/apprun/dedicated/worker/2vcpu_2gb
+          - name: 2vCPU / 4GB メモリ
+            path: cloud/apprun/dedicated/worker/2vcpu_4gb
+          - name: 4vCPU / 8GB メモリ
+            path: cloud/apprun/dedicated/worker/4vcpu_8gb
+    LoadBalancerID:
+      type: string
+      format: uuid
+    LoadBalancerIdentifier:
+      type: object
+      required:
+        - loadBalancerID
+      properties:
+        loadBalancerID:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerID'
+          description: ロードバランサID
+          readOnly: true
+    LoadBalancerInterface:
+      type: object
+      required:
+        - interfaceIndex
+        - upstream
+      properties:
+        interfaceIndex:
+          type: integer
+          format: int16
+          description: 例：eth0→0、eth1→1、eth2→2。0は必須。重複不可。
+          title: インターフェース番号
+        upstream:
+          type: string
+          description: 接続先スイッチ
+        ipPool:
+          type: array
+          items:
+            $ref: '#/components/schemas/IpRange'
+          maxItems: 20
+          description: アップストリームが 'shared' の場合、指定できません。それ以外のときは必須です。
+          title: IPアドレスの割り当て範囲
+        netmaskLen:
+          type: integer
+          format: int16
+          minimum: 8
+          maximum: 29
+          description: アップストリームが 'shared' の場合、指定できません。それ以外のときは必須です。
+          title: ネットマスク長
+        defaultGateway:
+          type: string
+          description: アップストリームが 'shared' の場合、指定できません。
+          title: デフォルトゲートウェイ
+        vip:
+          type: string
+          pattern: ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$
+          description: アップストリームが 'shared' の場合、指定できません。
+          title: ロードバランサの VIP
+        virtualRouterID:
+          type: integer
+          format: int16
+          description: アップストリームが 'shared' の場合、指定できません。1-255 の値を指定します。ロードバランサの VIP を指定した場合は、virtualRouterID の入力は必須です。
+          title: バーチャルルーターID
+        packetFilterID:
+          type: string
+          description: パケットフィルターID
+    LoadBalancerNode:
+      type: object
+      required:
+        - loadBalancerNodeID
+        - resourceID
+        - status
+        - interfaces
+        - created
+      properties:
+        loadBalancerNodeID:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerNodeID'
+          description: ID
+        resourceID:
+          type: string
+          nullable: true
+          description: リソースID
+        status:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerNodeStatus'
+          description: ノードの状態
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancerNodeInterface'
+          description: インターフェース情報
+        archiveVersion:
+          type: string
+          description: ノードにインストールされているアーカイブのバージョン
+        createErrorMessage:
+          type: string
+          description: ノードの作成に関するエラーメッセージ
+        created:
+          type: integer
+          format: unixtime
+          description: 作成日時：UNIX時間（秒）
+    LoadBalancerNodeID:
+      type: string
+      format: uuid
+    LoadBalancerNodeInterface:
+      type: object
+      required:
+        - interfaceIndex
+        - addresses
+      properties:
+        interfaceIndex:
+          type: integer
+          format: int16
+          minimum: 0
+          description: インターフェース番号。eth0 なら 0。eth1 なら 1。
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancerNodeInterfaceAddress'
+          description: ロードバランサノードのアドレス
+    LoadBalancerNodeInterfaceAddress:
+      type: object
+      required:
+        - address
+        - vip
+      properties:
+        address:
+          type: string
+          description: アドレス
+        vip:
+          type: boolean
+          description: VIPかどうか
+    LoadBalancerNodeStatus:
+      type: string
+      enum:
+        - healthy
+        - unhealthy
+        - creating
+        - starting
+      description: ロードバランサノードの状態を表す列挙型
+    LoadBalancerServiceClass:
+      type: object
+      required:
+        - path
+        - nodeCount
+        - name
+      properties:
+        path:
+          type: string
+          description: サービスクラスのパス
+        nodeCount:
+          type: integer
+          format: int16
+          description: 割り当てられるノード数
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: サービスクラスの名前
+    PatchClusterLoadBalancerRequest:
+      type: object
+      properties:
+        letsEncryptEmail:
+          type: string
+          nullable: true
+          pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+          description: |-
+            Let's Encrypt による証明書発行を有効にするにはここにメールアドレスを設定します。
+            Let's Encrypt による証明書発行は HTTP-01 チャレンジになるため、80 番ポートを HTTPプロトコルで外向きに解放する必要があります。
+          title: Let's Encrypt のメールアドレス
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterLoadBalancerPortMergePatchCreateOrUpdateReplaceOnly'
+          maxItems: 5
+          description: ロードバランサのポート群
+    Port:
+      type: integer
+      format: uint16
+      minimum: 1
+      maximum: 65535
+      example: 8443
+    ReadApplication:
+      type: object
+      required:
+        - applicationID
+        - name
+        - clusterID
+        - clusterName
+        - activeVersion
+        - desiredCount
+        - scalingCooldownSeconds
+        - enoughResources
+      properties:
+        applicationID:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationID'
+          description: ID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: アプリケーションの名前。クラスタの中ではユニーク。英数字とハイフン、アンダースコアのみ使用可能
+          example: bbs
+        clusterID:
+          allOf:
+            - $ref: '#/components/schemas/ClusterID'
+          description: デプロイ先クラスタ
+        clusterName:
+          type: string
+          description: クラスタ名
+          example: 開発用
+        activeVersion:
+          type: integer
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          nullable: true
+          description: 利用しているバージョン
+          example: 3
+        desiredCount:
+          type: integer
+          format: int32
+          nullable: true
+          description: デプロイされているべきコンテナ数。activeVersionが未指定の場合はnull。
+        scalingCooldownSeconds:
+          type: integer
+          format: int32
+          description: スケーリングのクールダウン時間（秒）
+        enoughResources:
+          allOf:
+            - $ref: '#/components/schemas/EnoughResources'
+          description: アプリケーションをデプロイするクラスタのリソースが十分かどうか
+      description: アプリケーション
+    ReadApplicationResponse:
+      type: object
+      required:
+        - application
+      properties:
+        application:
+          allOf:
+            - $ref: '#/components/schemas/ReadApplication'
+          description: アプリケーションの情報
+      example:
+        application:
+          applicationID: A0199B39-B361-45B9-8DF4-FC8BE494D690
+          name: my-app
+          clusterID: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+          clusterName: mock-cluster
+          activeVersion: 3
+          desiredCount: 3
+          scalingCooldownSeconds: 300
+          enoughResources:
+            cpu: true
+            memory: true
+    ReadApplicationVersion:
+      type: object
+      required:
+        - version
+        - image
+        - activeNodeCount
+        - created
+        - cpu
+        - memory
+        - scalingMode
+        - registryUsername
+        - registryPassword
+        - exposedPorts
+        - env
+      properties:
+        version:
+          $ref: '#/components/schemas/ApplicationVersionNumber'
+        image:
+          type: string
+          maxLength: 512
+          example: nginx:latest
+        activeNodeCount:
+          type: integer
+          format: int64
+          description: 現在動いているノードの数
+        created:
+          type: integer
+          format: unixtime
+          description: アプリケーションバージョン作成日時：UNIX時間（秒）
+        cpu:
+          type: integer
+          format: int64
+          minimum: 100
+          maximum: 64000
+          example: 500
+        memory:
+          type: integer
+          format: int64
+          minimum: 128
+          maximum: 131072
+          example: 1000
+        scalingMode:
+          $ref: '#/components/schemas/ScalingMode'
+        fixedScale:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+        minScale:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          example: 1
+        maxScale:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 50
+          example: 3
+        scaleInThreshold:
+          type: integer
+          format: int32
+          minimum: 30
+          maximum: 70
+          example: 30
+        scaleOutThreshold:
+          type: integer
+          format: int32
+          minimum: 50
+          maximum: 99
+          example: 95
+        cmd:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+          description: コンテナ起動時に実行するコマンドと引数
+        registryUsername:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: レジストリのユーザ名。未設定の場合はnull。
+        registryPassword:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: レジストリのパスワード。レスポンスではマスクされる。未設定の場合はnull。
+        exposedPorts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExposedPort'
+          maxItems: 5
+          description: アプリケーションが公開するポート番号。同一クラスタ内で、ポートの重複不可。
+        env:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadEnvironmentVariable'
+          maxItems: 50
+          description: 環境変数
+      example:
+        version: 2
+        cpu: 500
+        memory: 500
+        scalingMode: manual
+        fixedScale: 2
+        image: nginx:2
+        registryUsername: null
+        registryPassword: null
+        exposedPorts:
+          - targetPort: 8080
+            loadBalancerPort: 8080
+            useLetsEncrypt: false
+            healthCheck:
+              path: /healthz2
+              intervalSeconds: 10
+              timeoutSeconds: 30
+        env:
+          - key: DB_DSN
+            value: postgresql://192.168.0.1:5432/foobar
+            secret: false
+          - key: DB_PASSWORD
+            value: '****'
+            secret: true
+        activeNodeCount: 0
+        created: 1577836800
+    ReadApplicationVersionResponse:
+      type: object
+      required:
+        - applicationVersion
+      properties:
+        applicationVersion:
+          allOf:
+            - $ref: '#/components/schemas/ReadApplicationVersion'
+          description: アプリケーションのバージョン情報
+      example:
+        applicationVersion:
+          version: 3
+          cpu: 500
+          memory: 500
+          scalingMode: cpu
+          minScale: 1
+          maxScale: 2
+          image: nginx:2
+          registryUsername: null
+          registryPassword: null
+          exposedPorts:
+            - targetPort: 8080
+              loadBalancerPort: 80
+              useLetsEncrypt: false
+              healthCheck:
+                path: /healthz
+                intervalSeconds: 10
+                timeoutSeconds: 30
+            - targetPort: 8084
+              loadBalancerPort: 443
+              host:
+                - example.com
+              useLetsEncrypt: true
+              healthCheck:
+                path: /monitoring/l7check
+                intervalSeconds: 10
+                timeoutSeconds: 30
+          env:
+            - key: ENV_VAR
+              value: value
+              secret: false
+            - key: DB_PASSWORD
+              value: '****'
+              secret: true
+          activeNodeCount: 1
+          created: 1577836800
+    ReadAutoScalingGroup:
+      type: object
+      required:
+        - autoScalingGroupID
+        - name
+        - zone
+        - workerServiceClassPath
+        - minNodes
+        - maxNodes
+        - workerNodeCount
+        - interfaces
+        - deleting
+      properties:
+        autoScalingGroupID:
+          $ref: '#/components/schemas/AutoScalingGroupID'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: オートスケーリンググループの名前。クラスタ内でユニーク。英数字、アンダースコア、ハイフンのみ使用可能
+        zone:
+          type: string
+          description: オートスケーリンググループのゾーン
+        nameServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4'
+          minItems: 1
+          maxItems: 3
+          description: ネームサーバ設定
+        workerServiceClassPath:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: ワーカノードのサービスクラスパス
+        minNodes:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+          description: オートスケーリンググループの最小ノード数
+        maxNodes:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 10
+          description: オートスケーリンググループの最大ノード数
+        workerNodeCount:
+          type: integer
+          format: int32
+          description: 現在のワーカノードの数
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoScalingGroupNodeInterface'
+          minItems: 1
+          maxItems: 5
+          title: ネットワークインターフェース定義
+        deleting:
+          type: boolean
+          description: 削除中
+    ReadAutoScalingGroupResponse:
+      type: object
+      required:
+        - autoScalingGroup
+      properties:
+        autoScalingGroup:
+          allOf:
+            - $ref: '#/components/schemas/ReadAutoScalingGroup'
+          description: オートスケーリンググループの情報
+      example:
+        autoScalingGroup:
+          autoScalingGroupID: 123e4567-e89b-12d3-a456-426614174001
+          name: tokyo-asg
+          zone: tk1b
+          minNodes: 2
+          maxNodes: 10
+          workerNodeCount: 3
+          workerServiceClassPath: cloud/apprun/dedicated/worker/1vcpu_2gb
+          deleting: false
+          nameServers:
+            - 192.0.2.1
+          interfaces:
+            - interfaceIndex: 0
+              netmaskLen: 24
+              upstream: '111111111111'
+              packetFilterID: pf-123456
+              defaultGateway: 192.0.1.1
+              connectsToLB: true
+            - interfaceIndex: 1
+              netmaskLen: 24
+              upstream: '111111111112'
+              connectsToLB: false
+    ReadCertificate:
+      type: object
+      required:
+        - certificateID
+        - name
+        - commonName
+        - subjectAlternativeNames
+        - notBeforeSec
+        - notAfterSec
+        - created
+        - updated
+      properties:
+        certificateID:
+          allOf:
+            - $ref: '#/components/schemas/CertificateID'
+          description: 証明書ID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_.-]+$
+          description: 証明書の名前。クラスタ内でユニーク。英数字、アンダースコア、ハイフン、ドットのみ使用可能
+        commonName:
+          type: string
+          maxLength: 255
+          description: 証明書の共通名
+        subjectAlternativeNames:
+          type: array
+          items:
+            type: string
+          description: 証明書のサブジェクト代替名（SAN）のリスト
+        notBeforeSec:
+          type: integer
+          format: unixtime
+          description: 証明書の有効開始日時：UNIX時間（秒）
+        notAfterSec:
+          type: integer
+          format: unixtime
+          description: 証明書の有効終了日時：UNIX時間（秒）
+        created:
+          type: integer
+          format: unixtime
+          description: 作成日時：UNIX時間（秒）
+        updated:
+          type: integer
+          format: unixtime
+          description: 更新日時：UNIX時間（秒）
+    ReadCertificateResponse:
+      type: object
+      required:
+        - certificate
+      properties:
+        certificate:
+          allOf:
+            - $ref: '#/components/schemas/ReadCertificate'
+          description: 証明書の情報
+      example:
+        certificate:
+          certificateID: 83B9EA83-DDB0-4385-9533-3D693A6A310F
+          name: my-certificate
+          commonName: example.com
+          subjectAlternativeNames:
+            - www.example.com
+            - api.example.com
+          notBeforeSec: 1577836800
+          notAfterSec: 1640995200
+          created: 1577836800
+          updated: 1577836800
+    ReadCluster:
+      type: object
+      required:
+        - clusterID
+        - name
+        - created
+        - hasLetsEncryptEmail
+        - ports
+        - servicePrincipalID
+      properties:
+        clusterID:
+          $ref: '#/components/schemas/ClusterID'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: クラスタの名前。プロジェクト内でユニーク。英数字、アンダースコア、ハイフンのみ使用可能
+        created:
+          type: integer
+          format: unixtime
+          description: クラスタの作成日時：UNIX時間（秒）
+        hasLetsEncryptEmail:
+          type: boolean
+          description: Let's Encrypt 用のメールアドレスが設定済みかどうか
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterLoadBalancerPort'
+          maxItems: 5
+          description: ロードバランサのポート群
+        servicePrincipalID:
+          $ref: '#/components/schemas/ServicePrincipalID'
+    ReadClusterLoadBalancer:
+      type: object
+      required:
+        - hasLetsEncryptEmail
+        - ports
+      properties:
+        hasLetsEncryptEmail:
+          type: boolean
+          description: Let's Encrypt 用のメールアドレスが設定済みかどうか
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterLoadBalancerPort'
+          maxItems: 5
+          description: ロードバランサのポート群
+    ReadClusterLoadBalancerResponse:
+      type: object
+      required:
+        - loadBalancer
+      properties:
+        loadBalancer:
+          allOf:
+            - $ref: '#/components/schemas/ReadClusterLoadBalancer'
+          description: ロードバランサ設定の情報
+      example:
+        loadBalancer:
+          hasLetsEncryptEmail: true
+          ports:
+            - port: 80
+              protocol: http
+            - port: 443
+              protocol: https
+    ReadClusterResponse:
+      type: object
+      required:
+        - cluster
+      properties:
+        cluster:
+          allOf:
+            - $ref: '#/components/schemas/ReadCluster'
+          description: クラスタの情報
+      example:
+        cluster:
+          clusterID: 13B9EA83-DDB0-4385-9533-3D693A6A310F
+          name: mock-cluster
+          hasLetsEncryptEmail: true
+          ports:
+            - port: 80
+              protocol: http
+            - port: 443
+              protocol: https
+          servicePrincipalID: '123456789012'
+          created: 1577836800
+    ReadClusterSummary:
+      type: object
+      required:
+        - clusterID
+        - name
+        - created
+      properties:
+        clusterID:
+          $ref: '#/components/schemas/ClusterID'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: クラスタの名前。プロジェクト内でユニーク。英数字、アンダースコア、ハイフンのみ使用可能
+        created:
+          type: integer
+          format: unixtime
+          description: クラスタの作成日時：UNIX時間（秒）
+    ReadEnvironmentVariable:
+      type: object
+      required:
+        - key
+        - secret
+        - value
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 255
+        secret:
+          type: boolean
+          description: 秘密情報か否か。true の場合、value を API 等で取得することは出来ない。
+        value:
+          type: string
+          allOf:
+            - $ref: '#/components/schemas/EnvironmentVariableValue'
+          nullable: true
+          description: 環境変数の値。secret が true の場合は null になる。
+      description: 環境変数の取得レスポンス
+    ReadLimitsResponse:
+      type: object
+      required:
+        - limit
+      properties:
+        limit:
+          allOf:
+            - $ref: '#/components/schemas/Limit'
+          description: プロジェクトのリソース制限値
+      example:
+        limit:
+          clusterCount: 10
+          autoScalingGroupCount: 6
+          workerNodeCount: 14
+          loadBalancerNodeCount: 6
+          applicationCount: 10
+          applicationVersionCountPerApplication: 50
+    ReadLoadBalancer:
+      type: object
+      required:
+        - loadBalancerID
+        - name
+        - serviceClassPath
+        - created
+        - deleting
+        - interfaces
+      properties:
+        loadBalancerID:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerID'
+          description: ロードバランサID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: ロードバランサ名。オートスケーリンググループ内でユニーク。英数字とハイフン、アンダースコアのみ使用可能
+        serviceClassPath:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: ロードバランサのサービスクラスパス
+        nameServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4'
+          minItems: 1
+          maxItems: 3
+          description: ネームサーバ設定
+        created:
+          type: integer
+          format: unixtime
+          description: ロードバランサの作成日時：UNIX時間（秒）
+        deleting:
+          type: boolean
+          description: 削除中
+        interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancerInterface'
+          minItems: 1
+          maxItems: 5
+          description: ロードバランサのインターフェース
+    ReadLoadBalancerNodeResponse:
+      type: object
+      required:
+        - loadBalancerNode
+      properties:
+        loadBalancerNode:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerNode'
+          description: ロードバランサノードの情報
+      description: ロードバランサノードの詳細取得レスポンス
+      example:
+        loadBalancerNode:
+          loadBalancerNodeID: 550e8400-e29b-41d4-a716-446655440001
+          resourceID: '12345678901'
+          status: healthy
+          interfaces:
+            - interfaceIndex: 1
+              addresses:
+                - address: 10.0.0.2/24
+                  vip: false
+                - address: 10.0.1.2/24
+                  vip: true
+            - interfaceIndex: 2
+              addresses:
+                - address: 10.0.2.8/24
+                  vip: false
+                - address: 10.0.3.4/24
+                  vip: true
+          archiveVersion: 2025.1014.1
+          createErrorMessage: クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください
+          created: 1577836800
+    ReadLoadBalancerResponse:
+      type: object
+      required:
+        - loadBalancer
+      properties:
+        loadBalancer:
+          allOf:
+            - $ref: '#/components/schemas/ReadLoadBalancer'
+          description: ロードバランサの情報
+      description: ロードバランサの詳細取得レスポンス
+      example:
+        loadBalancer:
+          loadBalancerID: 550e8400-e29b-41d4-a716-446655440000
+          name: example-lb
+          serviceClassPath: cloud/apprun/dedicated/lb/1vcpu_2gb_1
+          deleting: false
+          interfaces:
+            - interfaceIndex: 1
+              vip: 192.168.1.100
+              netmaskLen: 24
+              virtualRouterID: 51
+              upstream: switch1
+              packetFilterID: pf-123456
+              defaultGateway: 192.168.1.0/32
+            - interfaceIndex: 2
+              netmaskLen: 24
+              upstream: switch2
+          created: 1577836800
+    ReadLoadBalancerSummary:
+      type: object
+      required:
+        - loadBalancerID
+        - name
+        - serviceClassPath
+        - created
+        - deleting
+      properties:
+        loadBalancerID:
+          allOf:
+            - $ref: '#/components/schemas/LoadBalancerID'
+          description: ロードバランサID
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: ロードバランサ名。オートスケーリンググループ内でユニーク。英数字とハイフン、アンダースコアのみ使用可能
+        serviceClassPath:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: ロードバランサのサービスクラスパス
+        nameServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4'
+          minItems: 1
+          maxItems: 3
+          description: ネームサーバ設定
+        created:
+          type: integer
+          format: unixtime
+          description: ロードバランサの作成日時：UNIX時間（秒）
+        deleting:
+          type: boolean
+          description: 削除中
+    ReadWorkerNodeResponse:
+      type: object
+      required:
+        - workerNode
+      properties:
+        workerNode:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNode'
+          description: ワーカノードの詳細
+      example:
+        workerNode:
+          workerNodeID: 123e4567-e89b-12d3-a456-426614174002
+          resourceID: worker-node-01
+          draining: false
+          healthy: true
+          creating: false
+          status: healthy
+          created: 1577836800
+          runningContainers:
+            - containerID: container-01
+              name: nginx
+              state: running
+              status: running
+              image: nginx:latest
+              startedAt: 1577836800
+              applicationID: A0199B39-B361-45B9-8DF4-FC8BE494D690
+              applicationVersion: 1
+            - containerID: container-02
+              name: redis
+              state: running
+              status: running
+              image: redis:latest
+              startedAt: 1577836800
+              applicationID: A0199B39-B361-45B9-8DF4-FC8BE494D690
+              applicationVersion: 1
+          networkInterfaces:
+            - interfaceIndex: 0
+              addresses:
+                - address: 10.0.0.1
+            - interfaceIndex: 1
+              addresses:
+                - address: 192.168.0.1
+          archiveVersion: 2025.1014.1
+          createErrorMessage: クラスタのサービスプリンシパルにさくらのクラウドの作成・削除権限が付与されているか確認してください
+    RegistryPasswordAction:
+      type: string
+      enum:
+        - keep
+        - remove
+        - new
+    ScalingMode:
+      type: string
+      enum:
+        - manual
+        - cpu
+    ServicePrincipalID:
+      type: string
+      minLength: 12
+      maxLength: 12
+      description: サービスプリンシパルのID
+      example: '123456789012'
+    UpdateApplicationRequest:
+      type: object
+      required:
+        - activeVersion
+      properties:
+        activeVersion:
+          type: integer
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          nullable: true
+          description: 利用しているバージョン
+          example: 3
+    UpdateCertificateRequest:
+      type: object
+      required:
+        - name
+        - certificatePem
+        - privatekeyPem
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^[a-zA-Z0-9_.-]+$
+          description: 証明書の名前。クラスタ内でユニーク。英数字、アンダースコア、ハイフン、ドットのみ使用可能
+        certificatePem:
+          type: string
+          maxLength: 1000000
+          description: 証明書のPEM形式の文字列
+        privatekeyPem:
+          type: string
+          maxLength: 1000000
+          description: 証明書の秘密鍵のPEM形式の文字列
+        intermediateCertificatePem:
+          type: string
+          maxLength: 1000000
+          description: 証明書のチェーン証明書のPEM形式の文字列
+    UpdateClusterRequest:
+      type: object
+      required:
+        - servicePrincipalID
+      properties:
+        letsEncryptEmail:
+          type: string
+          pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+          description: |-
+            Let's Encrypt による証明書発行を有効にするにはここにメールアドレスを設定します。
+            Let's Encrypt による証明書発行は HTTP-01 チャレンジになるため、80 番ポートを HTTPプロトコルで外向きに解放する必要があります。
+          title: Let's Encrypt のメールアドレス
+        servicePrincipalID:
+          $ref: '#/components/schemas/ServicePrincipalID'
+        ports:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterLoadBalancerPort'
+          maxItems: 5
+          description: ロードバランサのポート群
+    UpdateWorkerNodeDrainingRequest:
+      type: object
+      required:
+        - draining
+      properties:
+        draining:
+          type: boolean
+          description: ドレイン状態にするかどうか
+      description: ワーカノードのドレイン状態を変更するリクエスト
+    WorkerNode:
+      type: object
+      required:
+        - workerNodeID
+        - resourceID
+        - draining
+        - status
+        - networkInterfaces
+        - created
+        - healthy
+        - creating
+        - runningContainers
+      properties:
+        workerNodeID:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNodeID'
+          description: ワーカノードID
+        resourceID:
+          type: string
+          nullable: true
+          description: アプライアンスリソースID
+        draining:
+          type: boolean
+          description: ドレイン状態かどうか
+        status:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNodeStatus'
+          description: ノード状態
+        networkInterfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerNodeNetworkInterface'
+          description: ネットワークインターフェース情報
+        archiveVersion:
+          type: string
+          description: ノードにインストールされているアーカイブのバージョン
+        created:
+          type: integer
+          format: unixtime
+          description: リソース作成日時：UNIX時間（秒）
+        createErrorMessage:
+          type: string
+          description: ノード作成に関するエラーメッセージ
+        healthy:
+          type: boolean
+          description: ヘルシーかどうか
+        creating:
+          type: boolean
+          description: ワーカノードが作成中かどうか
+        runningContainers:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerNodeRunningContainer'
+          description: 実行中コンテナ
+    WorkerNodeContainerPlacement:
+      type: object
+      required:
+        - nodeID
+        - containersStats
+        - desired
+      properties:
+        nodeID:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNodeID'
+          description: ワーカノードID
+        containersStats:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ApplicationCurrentContainers'
+          nullable: true
+          description: 現在配置されているコンテナ情報
+        desired:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ApplicationDesiredContainers'
+          nullable: true
+          description: desired（目標配置）情報
+    WorkerNodeID:
+      type: string
+      format: uuid
+    WorkerNodeInterfaceAddress:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          type: string
+          description: アドレス
+    WorkerNodeNetworkInterface:
+      type: object
+      required:
+        - interfaceIndex
+        - addresses
+      properties:
+        interfaceIndex:
+          type: integer
+          format: int16
+          minimum: 0
+          description: インターフェース番号。eth0 なら 0。eth1 なら 1。
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerNodeInterfaceAddress'
+          description: インターフェースに割り当てられたIPアドレスのリスト
+    WorkerNodeRunningContainer:
+      type: object
+      required:
+        - containerID
+        - name
+        - state
+        - status
+        - image
+        - startedAt
+        - applicationID
+        - applicationVersion
+      properties:
+        containerID:
+          type: string
+          description: コンテナID
+        name:
+          type: string
+          description: コンテナ名
+        state:
+          type: string
+          description: コンテナのステート（created、running、restarting、removing、paused、exited、dead のうちいずれか）
+        status:
+          type: string
+          description: コンテナのステータス
+        image:
+          type: string
+          description: コンテナのイメージ
+        startedAt:
+          type: integer
+          format: unixtime
+          description: コンテナの開始日時：UNIX時間（秒）
+        applicationID:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationID'
+          description: アプリケーションID
+        applicationVersion:
+          allOf:
+            - $ref: '#/components/schemas/ApplicationVersionNumber'
+          description: アプリケーションバージョン
+    WorkerNodeStatus:
+      type: string
+      enum:
+        - healthy
+        - unhealthy
+        - creating
+        - starting
+      description: ワーカノードの状態を表す列挙型
+    WorkerNodeSummary:
+      type: object
+      required:
+        - workerNodeID
+        - resourceID
+        - draining
+        - status
+        - networkInterfaces
+        - created
+      properties:
+        workerNodeID:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNodeID'
+          description: ワーカノードID
+        resourceID:
+          type: string
+          nullable: true
+          description: アプライアンスリソースID
+        draining:
+          type: boolean
+          description: ドレイン状態かどうか
+        status:
+          allOf:
+            - $ref: '#/components/schemas/WorkerNodeStatus'
+          description: ノード状態
+        networkInterfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkerNodeNetworkInterface'
+          description: ネットワークインターフェース情報
+        archiveVersion:
+          type: string
+          description: ノードにインストールされているアーカイブのバージョン
+        created:
+          type: integer
+          format: unixtime
+          description: リソース作成日時：UNIX時間（秒）
+        createErrorMessage:
+          type: string
+          description: ノード作成に関するエラーメッセージ
+    WorkerServiceClass:
+      type: object
+      required:
+        - path
+        - name
+      properties:
+        path:
+          type: string
+          description: サービスクラスのパス
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: サービスクラスの名前
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: Basic
+servers:
+  - url: https://secure.sakura.ad.jp/cloud/api/apprun-dedicated/1.0
+    description: AppRun専有型 API エンドポイント
+    variables: {}

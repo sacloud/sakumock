@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  version: 1.1.2
+  version: 1.1.4
   title: シンプルMQ API
   description: |
     ---
@@ -132,7 +132,7 @@ paths:
   /v1/queues/{queueName}/messages/{messageId}:
     put:
       summary: メッセージのタイムアウト延長
-      description: メッセージのタイムアウトをキューの設定値で延長
+      description: メッセージのタイムアウトを、現在時刻からキューに設定された可視性タイムアウトの秒数後の時刻まで延長
       operationId: extendMessageTimeout
       security:
         - ApiKeyAuth: []
@@ -335,7 +335,7 @@ components:
     MessageContent:
       description: メッセージ本文
       type: string
-      maxLength: 256000 # NOTE: 最大256KB
+      maxLength: 256000
       pattern: '^[0-9a-zA-Z+/=]*$'
 
     SendRequest:
@@ -345,4 +345,3 @@ components:
       properties:
         content:
           $ref: "#/components/schemas/MessageContent"
-

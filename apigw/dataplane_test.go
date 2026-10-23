@@ -144,7 +144,7 @@ func TestDataPlaneProxy(t *testing.T) {
 
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("api_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Path:      v1.NewOptString("/api"),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
@@ -219,7 +219,7 @@ func TestDataPlaneRouteOptions(t *testing.T) {
 
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:         v1.NewOptName("keep_route"),
-		Protocols:    v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols:    v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Path:         v1.NewOptString("/keep"),
 		Methods:      []v1.HTTPMethod{v1.HTTPMethodGET},
 		StripPath:    v1.NewOptBool(false),
@@ -255,7 +255,7 @@ func TestDataPlaneCustomDomain(t *testing.T) {
 	}
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("domain_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Hosts:     []string{"gw.example.com"},
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 	})
@@ -280,14 +280,14 @@ func TestDataPlaneRegexRoutes(t *testing.T) {
 	// different priorities (0 is the highest).
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("catch_all"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Path:      v1.NewOptString("/"),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 		StripPath: v1.NewOptBool(false),
 	})
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:          v1.NewOptName("regex_low"),
-		Protocols:     v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols:     v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Path:          v1.NewOptString(`~/items/\d+`),
 		Methods:       []v1.HTTPMethod{v1.HTTPMethodGET},
 		RegexPriority: v1.NewOptInt(5),
@@ -295,7 +295,7 @@ func TestDataPlaneRegexRoutes(t *testing.T) {
 	})
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:          v1.NewOptName("regex_high"),
-		Protocols:     v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols:     v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Path:          v1.NewOptString(`~/items/1\d*`),
 		Methods:       []v1.HTTPMethod{v1.HTTPMethodGET},
 		RegexPriority: v1.NewOptInt(0),
@@ -331,44 +331,6 @@ func TestDataPlaneRegexRoutes(t *testing.T) {
 	}
 }
 
-func TestDataPlaneHTTPSRedirect(t *testing.T) {
-	client, dpAddr := newGateway(t)
-	upstream := newEchoUpstream(t)
-	svc := createUpstreamService(t, client, "dp_https", upstream.URL, nil)
-	serviceID := uuid.MustParse(svc.ID.Value.String())
-	routeHost := svc.RouteHost.Value
-
-	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
-		Name:      v1.NewOptName("upgrade_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
-		Path:      v1.NewOptString("/upgrade"),
-		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
-	})
-	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
-		Name:                    v1.NewOptName("redirect_route"),
-		Protocols:               v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
-		Path:                    v1.NewOptString("/redirect"),
-		Methods:                 []v1.HTTPMethod{v1.HTTPMethodGET},
-		HttpsRedirectStatusCode: v1.NewOptRouteDetailHttpsRedirectStatusCode(v1.RouteDetailHttpsRedirectStatusCode301),
-	})
-
-	resp := gwDo(t, dpAddr, "GET", routeHost, "/upgrade")
-	if resp.StatusCode != 426 {
-		t.Errorf("status = %d, want 426", resp.StatusCode)
-	}
-	if got := resp.Header.Get("Upgrade"); !strings.Contains(got, "TLS") {
-		t.Errorf("Upgrade header = %q", got)
-	}
-
-	resp = gwDo(t, dpAddr, "GET", routeHost, "/redirect")
-	if resp.StatusCode != 301 {
-		t.Errorf("status = %d, want 301", resp.StatusCode)
-	}
-	if loc := resp.Header.Get("Location"); loc != "https://"+routeHost+"/redirect" {
-		t.Errorf("Location = %q", loc)
-	}
-}
-
 func TestDataPlaneUpstreamErrors(t *testing.T) {
 	client, dpAddr := newGateway(t)
 
@@ -379,7 +341,7 @@ func TestDataPlaneUpstreamErrors(t *testing.T) {
 		svc := createUpstreamService(t, client, "dp_down", downURL, nil)
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("down_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 		})
 		resp := gwDo(t, dpAddr, "GET", svc.RouteHost.Value, "/")
@@ -405,7 +367,7 @@ func TestDataPlaneUpstreamErrors(t *testing.T) {
 		})
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("stall_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodPOST},
 		})
 		req, err := http.NewRequestWithContext(t.Context(), "POST", "http://"+dpAddr+"/",
@@ -435,7 +397,7 @@ func TestDataPlaneUpstreamErrors(t *testing.T) {
 		})
 		createGatewayRoute(t, client, uuid.MustParse(svc.ID.Value.String()), &v1.RouteDetail{
 			Name:      v1.NewOptName("slow_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodGET},
 		})
 		resp := gwDo(t, dpAddr, "GET", svc.RouteHost.Value, "/")

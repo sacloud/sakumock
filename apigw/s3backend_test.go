@@ -91,7 +91,7 @@ func TestDataPlaneObjectStorageBackend(t *testing.T) {
 	serviceID := uuid.MustParse(svc.ID.Value.String())
 	createGatewayRoute(t, client, serviceID, &v1.RouteDetail{
 		Name:      v1.NewOptName("s3_route"),
-		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+		Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 		Methods:   []v1.HTTPMethod{v1.HTTPMethodGET, v1.HTTPMethodHEAD, v1.HTTPMethodOPTIONS},
 	})
 	host := svc.RouteHost.Value
@@ -150,7 +150,7 @@ func TestDataPlaneObjectStorageBackend(t *testing.T) {
 		// The SDK fills methods client-side, so exercise the omission with a
 		// raw request. An empty list must not expand to all methods here.
 		resp, err := http.Post(cpURL+"/services/"+svc.ID.Value.String()+"/routes", "application/json",
-			strings.NewReader(`{"name":"s3_defaults_route","protocols":"http","path":"/defaults","methods":[]}`))
+			strings.NewReader(`{"name":"s3_defaults_route","protocols":"https","path":"/defaults","methods":[]}`))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -178,7 +178,7 @@ func TestDataPlaneObjectStorageBackend(t *testing.T) {
 	t.Run("route with a write method is refused", func(t *testing.T) {
 		_, err := apigwsdk.NewRouteOp(client, serviceID).Create(t.Context(), &v1.RouteDetail{
 			Name:      v1.NewOptName("s3_post_route"),
-			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTP),
+			Protocols: v1.NewOptRouteDetailProtocols(v1.RouteDetailProtocolsHTTPS),
 			Path:      v1.NewOptString("/post"),
 			Methods:   []v1.HTTPMethod{v1.HTTPMethodPOST},
 		})

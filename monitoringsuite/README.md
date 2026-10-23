@@ -108,9 +108,11 @@ On top of that validation, you can inspect what was sent:
 
 ## OpenAPI spec
 
-`openapi/openapi.json` is copied from the `github.com/sacloud/sacloud-sdk-go`
-module (`api/monitoring-suite/openapi`). Run `make openapi` to refresh it after
-upgrading the SDK dependency.
+`openapi/openapi.yaml` is the SAKURA Cloud API portal spec
+(<https://manual.sakura.ad.jp/api/cloud/portal/openapis/monitoring-suite-api.yaml>),
+stored as published. Run `make openapi` to refresh it. The spec names path
+parameters in camelCase (`{projectResourceId}`); the mock's routes keep
+snake_case (`{project_resource_id}`), bridged by `validate_mapping.json`.
 
 ## Mock-only endpoints
 

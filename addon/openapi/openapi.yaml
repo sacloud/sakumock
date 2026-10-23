@@ -1,0 +1,2097 @@
+openapi: 3.0.4
+
+info:
+  version: 1.2.0
+  title: Add-on APIドキュメント
+  description: |
+    ---
+
+    「Add-on」が提供するAPIの利用方法とサンプルを公開しております。
+
+    # 基本的な使い方
+
+    ## APIキーの発行
+
+    APIを利用するためには、認証のための「APIキー」が必要です。事前にキーを発行しておきます。  
+    APIキーは「ユーザーID」「パスワード」に相当する「トークン」と呼ばれる認証情報で構成されています。
+
+    |   項目名   | APIキー発行時の項目名        | このドキュメント内での例             |
+    |------------|------------------------------|--------------------------------------|
+    | ユーザーID | アクセストークン(UUID)       | 01234567-89ab-cdef-0123-456789abcdef |
+    | パスワード | アクセストークンシークレット | SAMPLETOKENSAMPLETOKENSAMPLETOKENSAM |
+
+    <div class="warning">
+      <b>操作マニュアル</b><br />
+      <ul><li><a href="https://manual.sakura.ad.jp/cloud/api/apikey.html">APIキー | さくらのクラウド ドキュメント</a></li></ul>
+    </div>
+
+    ## APIエンドポイント
+    https://secure.sakura.ad.jp/cloud/api/addon/1.0/
+
+    ---
+
+  contact:
+    name: SAKURA internet Inc.
+  license:
+    name: Copyright(C) SAKURA internet Inc. all rights reserved.
+
+servers:
+  - url: https://secure.sakura.ad.jp/cloud/api/addon/1.0/
+
+paths:
+  /ai:
+    get:
+      tags:
+        - AI
+      summary: AI機能リソースの一覧を取得します。
+      description: アドオンのAI機能リソースの一覧を取得します。
+      operationId: listAiResources
+      responses:
+        '200':
+          description: AI機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: AI機能リソースが見つかりませんでした。
+    post:
+      tags:
+        - AI
+      summary: AI機能リソースを作成します。
+      description: アドオンのAI機能リソースを作成します。
+      operationId: createAiResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiRequestBody'
+        required: true
+      responses:
+        '202':
+          description: AI機能リソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/ai/{resourceGroupName}':
+    get:
+      tags:
+        - AI
+      summary: 指定されたAI機能リソースを取得します。
+      description: アドオンの指定されたAI機能リソースを取得します。
+      operationId: readAiResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AI機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: AI機能リソースが見つかりませんでした。
+    delete:
+      tags:
+        - AI
+      summary: 指定されたAI機能リソースを削除します。
+      description: アドオンの指定されたAI機能リソースを削除します。
+      operationId: deleteAiResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: AI機能リソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: AI機能リソースが見つかりませんでした。
+  '/ai/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - AI
+      summary: 指定されたAI機能リソースのステータスを取得します。
+      description: アドオンの指定されたAI機能リソースのステータスを取得します。
+      operationId: readAiResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AI機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /cdn:
+    get:
+      tags:
+        - CDN
+      summary: CDNサービスリソースの一覧を取得します。
+      description: アドオンのCDNサービスリソースの一覧を取得します。
+      operationId: listCdnResources
+      responses:
+        '200':
+          description: CDNサービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: CDNサービスリソースが見つかりませんでした。
+    post:
+      tags:
+        - CDN
+      summary: CDNサービスリソースを作成します。
+      description: アドオンのCDNサービスリソースを作成します。
+      operationId: createCdnResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkRequestBody'
+        required: true
+      responses:
+        '202':
+          description: CDNサービスリソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/cdn/{resourceGroupName}':
+    get:
+      tags:
+        - CDN
+      summary: 指定されたCDNサービスリソースを取得します。
+      description: アドオンの指定されたCDNサービスリソースを取得します。
+      operationId: readCdnResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: CDNサービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: CDNサービスリソースが見つかりませんでした。
+    delete:
+      tags:
+        - CDN
+      summary: 指定されたCDNサービスリソースを削除します。
+      description: アドオンの指定されたCDNサービスリソースを削除します。
+      operationId: deleteCdnResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: CDNサービスリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: CDNサービスリソースが見つかりませんでした。
+  '/cdn/{resourceGroupName}/purge':
+    post:
+      tags:
+        - CDN
+      summary: 指定されたCDNサービスリソースのキャッシュを削除します。
+      description: アドオンの指定されたCDNサービスリソースのキャッシュを削除します。
+      operationId: purgeCdnCache
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CachePurgeRequestBody'
+        required: true
+      responses:
+        '202':
+          description: CDNサービスリソースのキャッシュ削除を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPurgeResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: CDNサービスリソースが見つかりませんでした。
+  '/cdn/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - CDN
+      summary: 指定されたCDNサービスリソースのステータスを取得します。
+      description: アドオンの指定されたCDNサービスリソースのステータスを取得します。
+      operationId: readCdnResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          description: デプロイメント名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: CDNサービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /security/ddos:
+    get:
+      tags:
+        - セキュリティ
+      summary: DDoS対策サービスリソースの一覧を取得します。
+      description: アドオンのDDoS対策サービスリソースの一覧を取得します。
+      operationId: listDdosResources
+      responses:
+        '200':
+          description: DDoS対策サービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: DDoS対策サービスリソースが見つかりませんでした。
+    post:
+      tags:
+        - セキュリティ
+      summary: DDoS対策サービスリソースを作成します。
+      description: アドオンのDDoS対策サービスリソースを作成します。
+      operationId: createDdosResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DdosRequestBody'
+        required: true
+      responses:
+        '202':
+          description: DDoS対策サービスリソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/security/ddos/{resourceGroupName}':
+    get:
+      tags:
+        - セキュリティ
+      summary: 指定されたDDoS対策サービスリソースを取得します。
+      description: アドオンの指定されたDDoS対策サービスリソースを取得します。
+      operationId: readDdosResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: DDoS対策サービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: DDoS対策サービスリソースが見つかりませんでした。
+    delete:
+      tags:
+        - セキュリティ
+      summary: 指定されたDDoS対策サービスリソースを削除します。
+      description: アドオンの指定されたDDoS対策サービスリソースを削除します。
+      operationId: deleteDdosResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: DDoS対策サービスリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: DDoS対策サービスリソースが見つかりませんでした。
+  '/security/ddos/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - セキュリティ
+      summary: 指定されたDDoS対策サービスリソースのステータスを取得します。
+      description: アドオンの指定されたDDoS対策サービスリソースのステータスを取得します。
+      operationId: readDdosResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          description: デプロイメント名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: DDoS対策サービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /security/waf:
+    get:
+      tags:
+        - セキュリティ
+      summary: WAFサービスリソースの一覧を取得します。
+      description: アドオンのWAFサービスリソースの一覧を取得します。
+      operationId: listWafResources
+      responses:
+        '200':
+          description: WAFサービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: WAFサービスリソースが見つかりませんでした。
+    post:
+      tags:
+        - セキュリティ
+      summary: WAFサービスリソースを作成します。
+      description: アドオンのWAFサービスリソースを作成します。
+      operationId: createWafResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WafRequestBody'
+        required: true
+      responses:
+        '202':
+          description: WAFサービスリソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/security/waf/{resourceGroupName}':
+    get:
+      tags:
+        - セキュリティ
+      summary: 指定されたWAFサービスリソースを取得します。
+      description: アドオンの指定されたWAFサービスリソースを取得します。
+      operationId: readWafResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: WAFサービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: WAFサービスリソースが見つかりませんでした。
+    delete:
+      tags:
+        - セキュリティ
+      summary: 指定されたWAFサービスリソースを削除します。
+      description: アドオンの指定されたWAFサービスリソースを削除します。
+      operationId: deleteWafResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: WAFサービスリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: WAFサービスリソースが見つかりませんでした。
+  '/security/waf/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - セキュリティ
+      summary: 指定されたWAFサービスリソースのステータスを取得します。
+      description: アドオンの指定されたWAFサービスリソースのステータスを取得します。
+      operationId: readWafResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          description: デプロイメント名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: WAFサービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /security/vulnerability:
+    get:
+      tags:
+        - セキュリティ
+      summary: 脆弱性検出サービスリソースの一覧を取得します。
+      description: アドオンの脆弱性検出サービスリソースの一覧を取得します。
+      operationId: listVulnerabilityResources
+      responses:
+        '200':
+          description: 脆弱性検出サービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 脆弱性検出サービスリソースが見つかりませんでした。
+    post:
+      tags:
+        - セキュリティ
+      summary: 脆弱性検出サービスのインストールスクリプトを発行します。
+      description: アドオンの脆弱性検出サービスリソースを作成します。脆弱性検出サービスを利用するためには、レスポンスに含まれるインストールスクリプトを対象のVMで実行しエージェントをインストールする必要があります。
+      operationId: createVulnerabilityResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityRequestBody'
+        required: true
+      responses:
+        '202':
+          description: 脆弱性検出サービスのインストールスクリプトを発行しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityResponseBody'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/security/vulnerability/{resourceGroupName}':
+    get:
+      tags:
+        - セキュリティ
+      summary: 指定された脆弱性検出サービスリソースを取得します。
+      description: アドオンの指定された脆弱性検出サービスリソースを取得します。
+      operationId: readVulnerabilityResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 脆弱性検出サービスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 脆弱性検出サービスリソースが見つかりませんでした。
+    delete:
+      tags:
+        - セキュリティ
+      summary: 指定された脆弱性検出サービスリソースを削除します。
+      description: アドオンの指定された脆弱性検出サービスリソースを削除します。
+      operationId: deleteVulnerabilityResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 脆弱性検出サービスリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 脆弱性検出サービスリソースが見つかりませんでした。
+  /analytics/datalake:
+    get:
+      tags:
+        - データ分析
+      summary: データレイクリソースの一覧を取得します。
+      description: アドオンのデータレイクリソースの一覧を取得します。
+      operationId: listDatalakeResources
+      responses:
+        '200':
+          description: データレイクリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データレイクリソースが見つかりませんでした。
+    post:
+      tags:
+        - データ分析
+      summary: データレイクリソースを作成します。
+      description: アドオンのデータレイクリソースを作成します。
+      operationId: createDatalakeResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatalakePostRequestBody'
+        required: true
+      responses:
+        '202':
+          description: データレイクリソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/analytics/datalake/{resourceGroupName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたデータレイクリソースを取得します。
+      description: アドオンの指定されたデータレイクリソースを取得します。
+      operationId: readDatalakeResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: データレイクリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データレイクリソースが見つかりませんでした。
+    delete:
+      tags:
+        - データ分析
+      summary: 指定されたデータレイクリソースを削除します。
+      description: アドオンの指定されたデータレイクリソースを削除します。
+      operationId: deleteDatalakeResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: データレイクリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データレイクリソースが見つかりませんでした。
+  '/analytics/datalake/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたデータレイクリソースのステータスを取得します。
+      description: アドオンの指定されたデータレイクリソースのステータスを取得します。
+      operationId: readDatalakeResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: データレイクリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /analytics/dwh:
+    get:
+      tags:
+        - データ分析
+      summary: データウェアハウスリソースの一覧を取得します。
+      description: アドオンのデータウェアハウスリソースの一覧を取得します。
+      operationId: listDwhResources
+      responses:
+        '200':
+          description: データウェアハウスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データウェアハウスリソースが見つかりませんでした。
+    post:
+      tags:
+        - データ分析
+      summary: データウェアハウスリソースを作成します。
+      description: アドオンのデータウェアハウスリソースを作成します。
+      operationId: createDwhResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatawarehousePostRequestBody'
+        required: true
+      responses:
+        '202':
+          description: データウェアハウスリソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/analytics/dwh/{resourceGroupName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたデータウェアハウスリソースを取得します。
+      description: アドオンの指定されたデータウェアハウスリソースを取得します。
+      operationId: readDwhResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: データウェアハウスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データウェアハウスリソースが見つかりませんでした。
+    delete:
+      tags:
+        - データ分析
+      summary: 指定されたデータウェアハウスリソースを削除します。
+      description: アドオンの指定されたデータウェアハウスリソースを削除します。
+      operationId: deleteDwhResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: データウェアハウスリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データウェアハウスリソースが見つかりませんでした。
+  '/analytics/dwh/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたデータウェアハウスリソースのステータスを取得します。
+      description: アドオンの指定されたデータウェアハウスリソースのステータスを取得します。
+      operationId: readDwhResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: データウェアハウスリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /analytics/etl:
+    get:
+      tags:
+        - データ分析
+      summary: データETLリソースの一覧を取得します。
+      description: アドオンのデータETLリソースの一覧を取得します。
+      operationId: listEtlResources
+      responses:
+        '200':
+          description: データETLリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データETLリソースが見つかりませんでした。
+    post:
+      tags:
+        - データ分析
+      summary: データETLリソースを作成します。
+      description: アドオンのデータETLリソースを作成します。
+      operationId: createEtlResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtlPostRequestBody'
+        required: true
+      responses:
+        '202':
+          description: データETLリソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/analytics/etl/{resourceGroupName}':
+    delete:
+      tags:
+        - データ分析
+      summary: 指定されたデータETLリソースを削除します。
+      description: アドオンの指定されたデータETLリソースを削除します。
+      operationId: deleteEtlResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: データETLリソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データETLリソースが見つかりませんでした。
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたデータETLリソースを取得します。
+      description: アドオンの指定されたデータETLリソースを取得します。
+      operationId: readEtlResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: データETLリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: データETLリソースが見つかりませんでした。
+  '/analytics/etl/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたデータETLリソースのステータスを取得します。
+      description: アドオンの指定されたデータETLリソースのステータスを取得します。
+      operationId: readEtlResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: データETLリソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /analytics/query:
+    get:
+      tags:
+        - データ分析
+      summary: クエリ機能リソースの一覧を取得します。
+      description: アドオンのクエリ機能リソースの一覧を取得します。
+      operationId: listQueryResources
+      responses:
+        '200':
+          description: クエリ機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: クエリ機能リソースが見つかりませんでした。
+    post:
+      tags:
+        - データ分析
+      summary: クエリ機能リソースを作成します。
+      description: アドオンのクエリ機能リソースを作成します。
+      operationId: createQueryResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryPostRequestBody'
+        required: true
+      responses:
+        '202':
+          description: クエリ機能リソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/analytics/query/{resourceGroupName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたクエリ機能リソースを取得します。
+      description: アドオンの指定されたクエリ機能リソースを取得します。
+      operationId: readQueryResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: クエリ機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: クエリ機能リソースが見つかりませんでした。
+    delete:
+      tags:
+        - データ分析
+      summary: 指定されたクエリ機能リソースを削除します。
+      description: アドオンの指定されたクエリ機能リソースを削除します。
+      operationId: deleteQueryResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: クエリ機能リソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: クエリ機能リソースが見つかりませんでした。
+  '/analytics/query/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたクエリ機能リソースのステータスを取得します。
+      description: アドオンの指定されたクエリ機能リソースのステータスを取得します。
+      operationId: readQueryResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: クエリ機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /analytics/search:
+    get:
+      tags:
+        - データ分析
+      summary: 検索機能リソースの一覧を取得します。
+      description: アドオンの検索機能リソースの一覧を取得します。
+      operationId: listSearchResources
+      responses:
+        '200':
+          description: 検索機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 検索機能リソースが見つかりませんでした。
+    post:
+      tags:
+        - データ分析
+      summary: 検索機能リソースを作成します。
+      description: アドオンの検索機能リソースを作成します。
+      operationId: createSearchResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchPostRequestBody'
+        required: true
+      responses:
+        '202':
+          description: 検索機能リソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/analytics/search/{resourceGroupName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定された検索機能リソースを取得します。
+      description: アドオンの指定された検索機能リソースを取得します。
+      operationId: readSearchResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 検索機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 検索機能リソースが見つかりませんでした。
+    delete:
+      tags:
+        - データ分析
+      summary: 指定された検索機能リソースを削除します。
+      description: アドオンの指定された検索機能リソースを削除します。
+      operationId: deleteSearchResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 検索機能リソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 検索機能リソースが見つかりませんでした。
+  '/analytics/search/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定された検索機能リソースのステータスを取得します。
+      description: アドオンの指定された検索機能リソースのステータスを取得します。
+      operationId: readSearchResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 検索機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /analytics/streaming:
+    get:
+      tags:
+        - データ分析
+      summary: ストリーミング処理機能リソースの一覧を取得します。
+      description: アドオンのストリーミング処理機能リソースの一覧を取得します。
+      operationId: listStreamingResources
+      responses:
+        '200':
+          description: ストリーミング処理機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResourcesResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ストリーミング処理機能リソースが見つかりませんでした。
+    post:
+      tags:
+        - データ分析
+      summary: ストリーミング処理機能リソースを作成します。
+      description: アドオンのストリーミング処理機能リソースを作成します。
+      operationId: createStreamingResource
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StreamingRequestBody'
+        required: true
+      responses:
+        '202':
+          description: ストリーミング処理機能リソースの作成を開始しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeploymentResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/analytics/streaming/{resourceGroupName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたストリーミング処理機能リソースを取得します。
+      description: アドオンの指定されたストリーミング処理機能リソースを取得します。
+      operationId: readStreamingResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ストリーミング処理機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceResponse'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ストリーミング処理機能リソースが見つかりませんでした。
+    delete:
+      tags:
+        - データ分析
+      summary: 指定されたストリーミング処理機能リソースを削除します。
+      description: アドオンの指定されたストリーミング処理機能リソースを削除します。
+      operationId: deleteStreamingResource
+      parameters:
+        - name: resourceGroupName
+          in: path
+          description: リソースグループ名
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ストリーミング処理機能リソースの削除を開始しました。
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: ストリーミング処理機能リソースが見つかりませんでした。
+  '/analytics/streaming/status/{resourceGroupName}/{deploymentName}':
+    get:
+      tags:
+        - データ分析
+      summary: 指定されたストリーミング処理機能リソースのステータスを取得します。
+      description: アドオンの指定されたストリーミング処理機能リソースのステータスを取得します。
+      operationId: readStreamingResourceStatus
+      parameters:
+        - name: resourceGroupName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ストリーミング処理機能リソースの取得に成功しました。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '400':
+          description: リクエストが不正です。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    AiRequestBody:
+      required:
+        - location
+        - sku
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        sku:
+          $ref: '#/components/schemas/AiServiceSku'
+      additionalProperties: false
+      description: 機械学習関連機能の作成APIで受信するリクエストボディを表します。
+    AiServiceSku:
+      enum:
+        - 1
+      type: integer
+      description: "AI Servicesリソースで使用するSKUを指定します。指定値とSKUの対応は次の通りです。\r\n- 1: S0"
+      format: int32
+    AzureLocation:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          readOnly: true
+        displayName:
+          type: string
+          nullable: true
+          readOnly: true
+      additionalProperties: false
+    AzureResourceGroupData:
+      type: object
+      properties:
+        name:
+          type: string
+          description: リソースグループ名
+          nullable: true
+        location:
+          type: string
+          description: リソースグループのリージョン
+          nullable: true
+      additionalProperties: false
+      description: リソースグループの情報を表します。
+    CachePurgeRequestBody:
+      required:
+        - contentPaths
+        - location
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        contentPaths:
+          type: array
+          items:
+            type: string
+          description: "パージ対象のコンテンツパス配列。パスの先頭はスラッシュ (/) にする必要があります。全コンテンツをパージする場合は \"/*\" を指定します。"
+      additionalProperties: false
+      description: キャッシュパージAPIで受信するリクエストボディを表します。
+    CreatedByType:
+      type: object
+      additionalProperties: false
+    DataLakePerformance:
+      enum:
+        - 1
+        - 2
+      type: integer
+      description: "パフォーマンスを指定します。指定値とパフォーマンスの対応は次の通りです。\r\n- 1: Standard\r\n- 2: Premium"
+      format: int32
+    DataLakeRedundancy:
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+      type: integer
+      description: "冗長性を指定します。指定値と冗長性の対応は次の通りです。\r\n- 1: LRS（ローカル冗長ストレージ）\r\n- 2: GRS（geo冗長ストレージ）\r\n- 3: ZRS（ゾーン冗長ストレージ）\r\n- 4: GZRS（geoゾーン冗長ストレージ）"
+      format: int32
+    DatalakePostRequestBody:
+      required:
+        - location
+        - performance
+        - redundancy
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        performance:
+          $ref: '#/components/schemas/DataLakePerformance'
+        redundancy:
+          $ref: '#/components/schemas/DataLakeRedundancy'
+        accountType:
+          type: string
+          description: アカウントタイプ（パフォーマンスと冗長性の組み合わせ）
+          nullable: true
+          readOnly: true
+      additionalProperties: false
+      description: データレイク機能の作成APIで受信するリクエストボディ
+    DatawarehousePostRequestBody:
+      required:
+        - location
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+      additionalProperties: false
+    DdosRequestBody:
+      required:
+        - endpoint
+        - location
+        - profile
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        profile:
+          $ref: '#/components/schemas/FrontDoorProfile'
+        endpoint:
+          $ref: '#/components/schemas/FrontDoorEndpoint'
+      additionalProperties: false
+      description: セキュリティ機能 DDoSサービスの作成APIで受信するリクエストボディを表します。
+    DeploymentStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          description: デプロイメントの一意の識別子。
+          nullable: true
+        name:
+          type: string
+          description: デプロイメントの名前。
+          nullable: true
+        type:
+          type: string
+          description: デプロイメントのタイプ。
+          nullable: true
+        properties:
+          $ref: '#/components/schemas/DeploymentStatusProperties'
+      additionalProperties: false
+      description: デプロイメントステータスのレスポンスを表します。
+    DeploymentStatusProperties:
+      type: object
+      properties:
+        provisioningState:
+          type: string
+          description: リソースのプロビジョニング状態。
+          nullable: true
+        timestamp:
+          type: string
+          description: デプロイメントステータスのタイムスタンプ。
+          format: date-time
+      additionalProperties: false
+      description: デプロイメントステータスのプロパティを表します。
+    ErrorInfo:
+      type: object
+      properties:
+        code:
+          type: string
+          description: エラーコード
+          nullable: true
+        message:
+          type: string
+          description: エラーメッセージ
+          nullable: true
+      additionalProperties: false
+      description: エラー情報
+    ErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorInfo'
+          description: エラーリスト
+          nullable: true
+      additionalProperties: false
+      description: エラーレスポンス
+    EtlPostRequestBody:
+      required:
+        - location
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+      additionalProperties: false
+    FrontDoorEndpoint:
+      required:
+        - route
+      type: object
+      properties:
+        route:
+          $ref: '#/components/schemas/FrontDoorRoute'
+      additionalProperties: false
+      description: Front Doorのエンドポイント
+    FrontDoorOrigin:
+      required:
+        - hostHeader
+        - hostName
+      type: object
+      properties:
+        hostName:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: "配信元のホスト名を指定します。\r\nホスト名は、有効なドメイン名、IPv4、または IPv6 である必要があります。"
+        hostHeader:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: "配信元のホストヘッダーを指定します。\r\nホストヘッダーは、有効なドメイン名、IPv4、または IPv6 である必要があります。"
+      additionalProperties: false
+      description: 配信元
+    FrontDoorOriginGroup:
+      required:
+        - origin
+      type: object
+      properties:
+        origin:
+          $ref: '#/components/schemas/FrontDoorOrigin'
+      additionalProperties: false
+      description: 配信元グループ
+    FrontDoorProfile:
+      required:
+        - level
+      type: object
+      properties:
+        level:
+          $ref: '#/components/schemas/PricingLevel'
+        levelNameOfBicepParameter:
+          type: string
+          description: Azure Front Doorの価格レベルのBicepテンプレートパラメーター名を取得します。
+          nullable: true
+          readOnly: true
+      additionalProperties: false
+      description: Front Doorのプロファイル
+    FrontDoorRoute:
+      required:
+        - originGroup
+        - patterns
+      type: object
+      properties:
+        patterns:
+          type: array
+          items:
+            type: string
+          description: "Front Doorルートのパスパターンを指定します。\r\nパターンの先頭はスラッシュ (/) にする必要があります。アスタリスクは末尾のみで使用でき、アスタリスクの前はスラッシュ (/*) にする必要があります 。"
+        originGroup:
+          $ref: '#/components/schemas/FrontDoorOriginGroup'
+      additionalProperties: false
+      description: Front Doorルート
+    GetResourceResponse:
+      type: object
+      properties:
+        data:
+          description: データ
+          nullable: true
+        url:
+          type: string
+          description: 管理ポータルのURL
+          nullable: true
+        resourceGroup:
+          $ref: '#/components/schemas/AzureResourceGroupData'
+      additionalProperties: false
+      description: リソース個別取得APIのレスポンス
+    ListResourcesResponse:
+      type: object
+      properties:
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceGroupResource'
+          description: リソースグループ一覧
+          nullable: true
+      additionalProperties: false
+    NetworkRequestBody:
+      required:
+        - endpoint
+        - location
+        - profile
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        profile:
+          $ref: '#/components/schemas/FrontDoorProfile'
+        endpoint:
+          $ref: '#/components/schemas/FrontDoorEndpoint'
+      additionalProperties: false
+      description: ネットワークとCDNの作成APIで受信するリクエストボディを表します。
+    PostDeploymentResponse:
+      type: object
+      properties:
+        resourceGroupName:
+          type: string
+          description: リソースグループ名を取得します。
+          nullable: true
+        deploymentName:
+          type: string
+          description: デプロイメント名を取得します。
+          nullable: true
+      additionalProperties: false
+      description: デプロイメントが投稿された後に受け取るレスポンスを表します。
+    PostPurgeResponse:
+      type: object
+      properties:
+        resourceGroupName:
+          type: string
+          description: リソースグループ名を取得します。
+          nullable: true
+      additionalProperties: false
+      description: キャッシュパージ後に受け取るレスポンスを表します。
+    PricingLevel:
+      enum:
+        - 1
+        - 2
+      type: integer
+      description: "Front Doorリソースの価格レベルを指定します。指定値と価格レベルの対応は次の通りです。\r\n- 1: Standard\r\n- 2: Premium"
+      format: int32
+    QueryPostRequestBody:
+      required:
+        - location
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+      additionalProperties: false
+    ResourceGroupData:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ResourceIdentifier'
+        name:
+          type: string
+          nullable: true
+          readOnly: true
+        resourceType:
+          $ref: '#/components/schemas/ResourceType'
+        systemData:
+          $ref: '#/components/schemas/SystemData'
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+            nullable: true
+          nullable: true
+          readOnly: true
+        location:
+          $ref: '#/components/schemas/AzureLocation'
+        resourceGroupProvisioningState:
+          type: string
+          nullable: true
+          readOnly: true
+        managedBy:
+          type: string
+          nullable: true
+      additionalProperties: false
+    ResourceGroupResource:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ResourceIdentifier'
+        hasData:
+          type: boolean
+          readOnly: true
+        data:
+          $ref: '#/components/schemas/ResourceGroupData'
+      additionalProperties: false
+    ResourceIdentifier:
+      type: object
+      properties:
+        resourceType:
+          $ref: '#/components/schemas/ResourceType'
+        name:
+          type: string
+          nullable: true
+          readOnly: true
+        parent:
+          $ref: '#/components/schemas/ResourceIdentifier'
+        subscriptionId:
+          type: string
+          nullable: true
+          readOnly: true
+        provider:
+          type: string
+          nullable: true
+          readOnly: true
+        location:
+          $ref: '#/components/schemas/AzureLocation'
+        resourceGroupName:
+          type: string
+          nullable: true
+          readOnly: true
+      additionalProperties: false
+    ResourceType:
+      type: object
+      properties:
+        namespace:
+          type: string
+          nullable: true
+          readOnly: true
+        type:
+          type: string
+          nullable: true
+          readOnly: true
+      additionalProperties: false
+    SearchPostRequestBody:
+      required:
+        - location
+        - partitionCount
+        - replicaCount
+        - sku
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        sku:
+          $ref: '#/components/schemas/SearchSku'
+        skuString:
+          type: string
+          description: Azure AI SearchのSKUのBicepパラメータ用文字列
+          nullable: true
+          readOnly: true
+        replicaCount:
+          maximum: 12
+          minimum: 1
+          type: integer
+          description: "AI Searchのレプリカ数を指定します。\r\n選択したSKUに応じて、指定可能な値は次の通りです。\r\n- 1: 全SKUで指定可能\r\n- 2, 3: Free 以外のSKUで指定可能\r\n- 4 ～ 12: Free、Basic 以外のSKUで指定可能"
+          format: int32
+        partitionCount:
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 6
+            - 12
+          type: integer
+          description: "AI Searchのパーティション数を指定します。\r\n指定できる値は 1, 2, 3, 4, 6, 12 のいずれかです。\r\n選択したSKUに応じて、指定可能な値は次の通りです。\r\n- 1: 全SKUで指定可能\r\n- 2, 3: Free 以外のSKUで指定可能\r\n- 4, 6, 12: Free、Basic、Standard3HD 以外のSKUで指定可能\r\n\r\nまた、レプリカ数 × パーティション数は次の範囲にしてください。\r\n- 1: SKUにFreeを指定する場合\r\n- 1 ～ 9: SKUにBasicを指定する場合\r\n- 1 ～ 36: Free、Basic 以外のSKUを指定する場合"
+          format: int32
+      additionalProperties: false
+      description: 検索機能の作成APIで受信するリクエストボディ
+    SearchSku:
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+      type: integer
+      description: "AI SearchのSKUを指定します。\r\n指定値とSKUの対応は次の通りです。\r\n- 1: Free\r\n- 2: Basic\r\n- 3: Standard\r\n- 4: Standard2\r\n- 5: Standard3\r\n- 6: Standard3HD\r\n- 7: StorageOptimizedL1\r\n- 8: StorageOptimizedL2"
+      format: int32
+    ServerOsType:
+      enum:
+        - 1
+        - 2
+      type: integer
+      description: "サーバーのOSの種類を指定します。指定値とOSの種類の対応は次の通りです。\r\n- 1: Windows\r\n- 2: Linux"
+      format: int32
+    StreamingRequestBody:
+      required:
+        - location
+        - unitCount
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        unitCount:
+          minLength: 1
+          type: string
+          description: "Stream Analyticsのストリーミングユニット数を指定します。\r\n指定値と実際のユニット数の対応は次の通りです。\r\n- 3: 1/3ユニット\r\n- 7: 2/3ユニット\r\n- 10 ～ 660: 1 ～ 66ユニット（※）\r\n\r\n※ 10 以上を指定する場合は、作成したいユニット数 × 10 の値を指定してください。指定できるのは 10 の倍数のみです。11 など 10 の倍数でない値を指定した場合はエラーとなります。"
+      additionalProperties: false
+    SystemData:
+      type: object
+      properties:
+        createdBy:
+          type: string
+          nullable: true
+          readOnly: true
+        createdByType:
+          $ref: '#/components/schemas/CreatedByType'
+        createdOn:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        lastModifiedBy:
+          type: string
+          nullable: true
+          readOnly: true
+        lastModifiedByType:
+          $ref: '#/components/schemas/CreatedByType'
+        lastModifiedOn:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+      additionalProperties: false
+    VulnerabilityRequestBody:
+      required:
+        - location
+        - os
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        os:
+          $ref: '#/components/schemas/ServerOsType'
+      additionalProperties: false
+      description: セキュリティ機能 脆弱性診断サービスの作成APIで受信するリクエストボディを表します。
+    VulnerabilityResponseBody:
+      type: object
+      properties:
+        resourceGroupName:
+          type: string
+          description: リソースグループ名
+          nullable: true
+        installScript:
+          type: string
+          description: インストールスクリプト
+          nullable: true
+      additionalProperties: false
+      description: 脆弱性検出サービスリソース作成APIのレスポンス
+    WafRequestBody:
+      required:
+        - endpoint
+        - location
+        - profile
+      type: object
+      properties:
+        location:
+          minLength: 1
+          enum:
+            - japaneast
+          type: string
+          description: デプロイ先のリージョン
+          example: japaneast
+        profile:
+          $ref: '#/components/schemas/FrontDoorProfile'
+        endpoint:
+          $ref: '#/components/schemas/FrontDoorEndpoint'
+      additionalProperties: false
+      description: セキュリティ機能 WAFサービスの作成APIで受信するリクエストボディを表します。
+tags:
+  - name: AI
+  - name: CDN
+  - name: セキュリティ
+  - name: データ分析

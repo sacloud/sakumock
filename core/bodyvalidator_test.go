@@ -227,3 +227,53 @@ func TestWithNonEmpty(t *testing.T) {
 		mustPanic(t, map[string][]string{"POST /keys": {"Key.Count"}})
 	})
 }
+
+func TestWithNullable(t *testing.T) {
+	tags := &core.BodySchema{Type: "array", Items: &core.BodySchema{Type: "string"}}
+	schemas := map[string]*core.BodySchema{
+		"POST /items": {
+			Type: "object",
+			Properties: map[string]*core.BodySchema{
+				"Item": {Type: "object", Properties: map[string]*core.BodySchema{"Tags": tags}},
+			},
+		},
+	}
+	do := func(bv *core.BodyValidator, body string) int {
+		req := httptest.NewRequest(http.MethodPost, "/items", strings.NewReader(body))
+		rec := httptest.NewRecorder()
+		bv.Middleware("POST", "/items", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})(rec, req)
+		return rec.Code
+	}
+
+	if got := do(core.NewBodyValidator(schemas, testErrWriter), `{"Item": {"Tags": null}}`); got != http.StatusBadRequest {
+		t.Fatalf("null Tags without overlay: status = %d, want 400", got)
+	}
+	fix := core.SDKFix{Path: "Item.Tags", Source: "https://example.com/sdk/commit/1"}
+	bv := core.NewBodyValidator(schemas, testErrWriter,
+		core.WithNullable(map[string][]core.SDKFix{"POST /items": {fix}}))
+	if got := do(bv, `{"Item": {"Tags": null}}`); got != http.StatusOK {
+		t.Fatalf("null Tags with overlay: status = %d, want 200", got)
+	}
+	if got := do(bv, `{"Item": {"Tags": [1]}}`); got != http.StatusBadRequest {
+		t.Fatalf("non-string tag with overlay: status = %d, want 400", got)
+	}
+	if tags.Nullable {
+		t.Fatal("original schema became nullable")
+	}
+
+	panics := func(name string, fields map[string][]core.SDKFix, sch map[string]*core.BodySchema) {
+		t.Helper()
+		defer func() {
+			if recover() == nil {
+				t.Errorf("%s: expected panic", name)
+			}
+		}()
+		core.NewBodyValidator(sch, testErrWriter, core.WithNullable(fields))
+	}
+	panics("unknown path", map[string][]core.SDKFix{"POST /items": {{Path: "Item.Nope", Source: fix.Source}}}, schemas)
+	panics("no source", map[string][]core.SDKFix{"POST /items": {{Path: "Item.Tags"}}}, schemas)
+	tags.Nullable = true // the portal caught up
+	panics("already nullable", map[string][]core.SDKFix{"POST /items": {fix}}, schemas)
+}

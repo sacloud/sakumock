@@ -61,18 +61,25 @@ type resourceGroupResource struct {
 	ID      resourceIdentifier `json:"id"`
 	HasData bool               `json:"hasData"`
 	Data    resourceGroupData  `json:"data"`
-	URL     string             `json:"url"`
 }
 
 type listResourcesResponse struct {
 	Resources []resourceGroupResource `json:"resources"`
 }
 
+// azureResourceGroupData is the spec's AzureResourceGroupData: the resource
+// group a get response's Data was deployed into.
+type azureResourceGroupData struct {
+	Name     string `json:"name"`
+	Location string `json:"location"`
+}
+
 // getResourceResponse carries the deployed Azure resource in Data, whose
 // shape is free-form in the spec and differs per family (see resourcedata.go).
 type getResourceResponse struct {
-	Data any    `json:"data"`
-	URL  string `json:"url"`
+	Data          any                    `json:"data"`
+	URL           string                 `json:"url"`
+	ResourceGroup azureResourceGroupData `json:"resourceGroup"`
 }
 
 type deploymentStatusProperties struct {
@@ -183,7 +190,6 @@ func (s *Server) handleList(f family) http.HandlerFunc {
 				ID:      identifierOf(res),
 				HasData: true,
 				Data:    resourceGroupDataOf(res),
-				URL:     portalURL(res),
 			}
 		}
 		core.WriteJSON(w, http.StatusOK, listResourcesResponse{Resources: items})
@@ -240,6 +246,10 @@ func (s *Server) handleRead(f family) http.HandlerFunc {
 		core.WriteJSON(w, http.StatusOK, getResourceResponse{
 			Data: resourceData(res),
 			URL:  portalURL(res),
+			ResourceGroup: azureResourceGroupData{
+				Name:     res.ResourceGroupName,
+				Location: res.Location,
+			},
 		})
 	}
 }

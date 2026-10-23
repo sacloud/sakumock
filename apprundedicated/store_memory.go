@@ -112,8 +112,9 @@ func (s *MemoryStore) ReadCluster(id string) (*Cluster, bool) {
 	return c, ok
 }
 
-// UpdateCluster applies the given values to an existing cluster.
-func (s *MemoryStore) UpdateCluster(id string, servicePrincipalID string, letsEncryptEmail *string) error {
+// UpdateCluster applies the given values to an existing cluster. A nil ports
+// keeps the current ports.
+func (s *MemoryStore) UpdateCluster(id string, servicePrincipalID string, letsEncryptEmail *string, ports []ClusterPort) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -123,6 +124,9 @@ func (s *MemoryStore) UpdateCluster(id string, servicePrincipalID string, letsEn
 	}
 	c.ServicePrincipalID = servicePrincipalID
 	c.LetsEncryptEmail = letsEncryptEmail
+	if ports != nil {
+		c.Ports = ports
+	}
 	return nil
 }
 

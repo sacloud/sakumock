@@ -4,10 +4,14 @@ package terraform
 
 import (
 	"bufio"
+	"bytes"
+	"io"
+	"maps"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 	"testing"
@@ -106,26 +110,89 @@ func runEndToEnd(t *testing.T, flags, waitAddrs []string) {
 	env = append(env, readEnvFile(t, envFile)...)
 	env = append(env, "SAKURA_ZONE=tk1v") // tk1v is SAKURA Cloud's sandbox zone
 
-	// Run terraform directly in the fixture directory — generated files
-	// (.terraform/, state) are gitignored and this only runs in CI.
-	tfDir := filepath.Join(repoRoot, "test", "terraform")
+	// Terraform runs in staged copies of the fixture so files can be left
+	// out (knownSDKGaps) and no state lands in the source tree; the plugin
+	// cache spares re-downloading the provider for every copy.
+	fixture := filepath.Join(repoRoot, "test", "terraform")
+	pluginCache := filepath.Join(t.TempDir(), "plugins")
+	if err := os.MkdirAll(pluginCache, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	env = append(env, "TF_PLUGIN_CACHE_DIR="+pluginCache)
 
+	mainDir := stageFixture(t, fixture, func(name string) bool {
+		_, gap := knownSDKGaps[name]
+		return !gap
+	})
+	applyPlanDestroy(t, tfBin, mainDir, env)
+
+	for _, name := range slices.Sorted(maps.Keys(knownSDKGaps)) {
+		dir := stageFixture(t, fixture, func(n string) bool {
+			return filepath.Ext(n) != ".tf" || n == "main.tf" || n == name
+		})
+		expectSDKGap(t, tfBin, dir, env, name)
+	}
+}
+
+// knownSDKGaps lists fixture files whose resources fail only because the
+// provider's SDK cannot handle the portal-conformant mock behavior, each with
+// the sakumock issue tracking it and a marker of the expected error. They are
+// left out of the main run and applied on their own, where the failure must
+// still reproduce; once one applies cleanly, remove its entry. The files stay
+// in place, so `sakumock docs terraform` keeps showing them.
+var knownSDKGaps = map[string]struct{ issue, marker string }{
+	"addon.tf": {
+		issue:  "https://github.com/sacloud/sakumock/issues/220",
+		marker: `unexpected field "resourceGroup"`,
+	},
+}
+
+// stageFixture copies the fixture files accepted by include (state and Go
+// files are never copied) into a fresh directory and returns it.
+func stageFixture(t *testing.T, fixture string, include func(name string) bool) string {
+	t.Helper()
+	entries, err := os.ReadDir(fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	for _, e := range entries {
+		name := e.Name()
+		if !e.Type().IsRegular() || strings.Contains(name, ".tfstate") || filepath.Ext(name) == ".go" || !include(name) {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(fixture, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return dir
+}
+
+func terraform(tfBin, dir string, env []string, stdout io.Writer, args ...string) *exec.Cmd {
+	cmd := exec.Command(tfBin, args...)
+	cmd.Dir = dir
+	cmd.Env = env
+	cmd.Stdout, cmd.Stderr = stdout, stdout
+	return cmd
+}
+
+// applyPlanDestroy is the end-to-end cycle: apply, a plan that must show no
+// changes, then destroy.
+func applyPlanDestroy(t *testing.T, tfBin, dir string, env []string) {
+	t.Helper()
 	runTF := func(args ...string) {
 		t.Helper()
-		cmd := exec.Command(tfBin, args...)
-		cmd.Dir = tfDir
-		cmd.Env = env
-		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-		if err := cmd.Run(); err != nil {
+		if err := terraform(tfBin, dir, env, os.Stdout, args...).Run(); err != nil {
 			t.Fatalf("terraform %s: %v", strings.Join(args, " "), err)
 		}
 	}
 
 	t.Cleanup(func() {
-		cmd := exec.Command(tfBin, "destroy", "-auto-approve", "-no-color", "-input=false")
-		cmd.Dir = tfDir
-		cmd.Env = env
-		_ = cmd.Run()
+		_ = terraform(tfBin, dir, env, io.Discard, "destroy", "-auto-approve", "-no-color", "-input=false").Run()
 	})
 
 	runTF("init", "-no-color", "-input=false")
@@ -133,11 +200,7 @@ func runEndToEnd(t *testing.T, flags, waitAddrs []string) {
 
 	// A plan right after apply must show no changes (exit 0). Exit code 2 means
 	// a diff — a mock that did not round-trip a field the provider reads back.
-	plan := exec.Command(tfBin, "plan", "-detailed-exitcode", "-no-color", "-input=false")
-	plan.Dir = tfDir
-	plan.Env = env
-	plan.Stdout, plan.Stderr = os.Stdout, os.Stderr
-	if err := plan.Run(); err != nil {
+	if err := terraform(tfBin, dir, env, os.Stdout, "plan", "-detailed-exitcode", "-no-color", "-input=false").Run(); err != nil {
 		if ee, ok := err.(*exec.ExitError); ok && ee.ExitCode() == 2 {
 			t.Fatal("terraform plan after apply shows a diff: a mock is not round-tripping a field")
 		}
@@ -145,6 +208,32 @@ func runEndToEnd(t *testing.T, flags, waitAddrs []string) {
 	}
 
 	runTF("destroy", "-auto-approve", "-no-color", "-input=false")
+}
+
+// expectSDKGap applies a knownSDKGaps file on its own and checks that it still
+// fails with the expected error.
+func expectSDKGap(t *testing.T, tfBin, dir string, env []string, name string) {
+	t.Helper()
+	gap := knownSDKGaps[name]
+	if err := terraform(tfBin, dir, env, os.Stdout, "init", "-no-color", "-input=false").Run(); err != nil {
+		t.Fatalf("terraform init (%s): %v", name, err)
+	}
+	t.Cleanup(func() {
+		_ = terraform(tfBin, dir, env, io.Discard, "destroy", "-auto-approve", "-no-color", "-input=false").Run()
+	})
+
+	var out bytes.Buffer
+	err := terraform(tfBin, dir, env, io.MultiWriter(os.Stdout, &out), "apply", "-auto-approve", "-no-color", "-input=false").Run()
+	if err == nil {
+		t.Errorf("%s applies cleanly: the SDK gap (%s) is resolved; remove it from knownSDKGaps", name, gap.issue)
+		return
+	}
+	// Terraform wraps long error lines; compare with whitespace collapsed.
+	if !strings.Contains(strings.Join(strings.Fields(out.String()), " "), gap.marker) {
+		t.Errorf("%s failed, but not with the known SDK gap %q (%s): %v", name, gap.marker, gap.issue, err)
+		return
+	}
+	t.Logf("%s: known SDK gap (%s) still reproduces", name, gap.issue)
 }
 
 // freeAddrs returns n distinct currently-free loopback addresses. All

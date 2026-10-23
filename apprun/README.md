@@ -154,9 +154,8 @@ The following features are accepted by the control-plane API (stored and returne
 
 ## OpenAPI spec
 
-`openapi/openapi.yaml` is copied from the `github.com/sacloud/sacloud-sdk-go`
-module (`api/apprun/openapi`). Run `make openapi` to refresh it after
-upgrading the SDK dependency.
+`openapi/openapi.yaml` is the [portal spec](https://manual.sakura.ad.jp/api/cloud/portal/openapis/apprun-shared-api.yaml),
+stored as published. Run `make openapi` to refresh it.
 
 ## Mock-only endpoints
 

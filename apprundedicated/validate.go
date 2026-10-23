@@ -25,10 +25,23 @@ var validLBServiceClassPaths = map[string]bool{
 }
 
 func validateCreateCluster(req *createClusterReq) string {
-	if len(req.Ports) == 0 {
+	return validateClusterPorts(req.Ports)
+}
+
+// validateUpdateCluster checks ports only when the request carries them;
+// omitting ports keeps the cluster's current ones.
+func validateUpdateCluster(req *updateClusterReq) string {
+	if req.Ports == nil {
+		return ""
+	}
+	return validateClusterPorts(req.Ports)
+}
+
+func validateClusterPorts(ports []clusterPortJSON) string {
+	if len(ports) == 0 {
 		return "at least one port is required"
 	}
-	for _, p := range req.Ports {
+	for _, p := range ports {
 		if p.Port >= 5950 && p.Port <= 5959 {
 			return fmt.Sprintf("port %d is reserved (5950-5959)", p.Port)
 		}

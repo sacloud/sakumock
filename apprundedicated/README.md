@@ -64,7 +64,8 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 ## API endpoints
 
 Run `sakumock-apprundedicated --routes` for the full list. The server implements
-every control-plane path of the AppRun Dedicated OpenAPI spec:
+the control-plane paths of the AppRun Dedicated OpenAPI spec except those listed
+under [OpenAPI spec](#openapi-spec):
 
 | Group | Paths |
 |-------|-------|
@@ -109,6 +110,7 @@ The mock data plane runs plain Docker containers, whereas the real AppRun Dedica
 - **Worker nodes** — created instantly with "healthy" status; no real provisioning
 - **LB nodes** — created instantly with "healthy" status; no real provisioning
 - **Certificates** — PEM is stored and returned, but not used for TLS termination in the data plane
+- **Resources** — applications always report `enoughResources` as `{"cpu": true, "memory": true}`
 - **Container placement** — `GET /applications/{id}/containers` returns per-worker-node placement derived from the active version and ASG worker nodes (one container per node)
 
 ### Limitations
@@ -122,9 +124,12 @@ The following features are accepted by the control-plane API (stored and returne
 
 ## OpenAPI spec
 
-`openapi/openapi.json` is copied from the `github.com/sacloud/sacloud-sdk-go`
-module (`api/apprun-dedicated/openapi`). Run `make openapi` to refresh it after
-upgrading the SDK dependency.
+`openapi/openapi.yaml` is the SAKURA Cloud API portal spec
+(<https://manual.sakura.ad.jp/api/cloud/portal/openapis/apprun-dedicated-api.yaml>),
+stored as published. Run `make openapi` to refresh it.
+
+Not implemented yet: `GET /limits` and `GET`/`PATCH /clusters/{clusterID}/load_balancer`
+(skipped via `validate_mapping.json`).
 
 ## Mock-only endpoints
 

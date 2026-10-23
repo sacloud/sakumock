@@ -79,7 +79,7 @@
     {
       "id": "apprun-dedicated",
       "name": "AppRun dedicated",
-      "local": "apprundedicated/openapi/openapi.json",
+      "local": "apprundedicated/openapi/openapi.yaml",
       "source": "apprun-dedicated"
     },
     {

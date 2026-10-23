@@ -1,0 +1,6 @@
+{
+  "skipPaths": [
+    "/limits",
+    "/clusters/{clusterID}/load_balancer"
+  ]
+}

@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.14.0](https://github.com/sacloud/sakumock/compare/v0.13.0...v0.14.0) - 2026-10-24
+
+### 🚀 New Features
+- Add /_sakumock/health and sakumock healthcheck by @fujiwara in https://github.com/sacloud/sakumock/pull/216
+- Follow the portal OpenAPI specs in every service by @fujiwara in https://github.com/sacloud/sakumock/pull/221
+### Other Changes
+- Track OpenAPI drift from the SAKURA Cloud API portal by @fujiwara in https://github.com/sacloud/sakumock/pull/218
+- Fetch KMS, CloudHSM and SecretManager specs from the portal by @fujiwara in https://github.com/sacloud/sakumock/pull/219
+- Bump dependencies by @fujiwara in https://github.com/sacloud/sakumock/pull/222
+- Bump sacloud-sdk-go to v0.4.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/223
+
 ## [v0.13.0](https://github.com/sacloud/sakumock/compare/v0.12.0...v0.13.0) - 2026-10-06
 
 ### 🚀 New Features

@@ -1,6 +1,10 @@
 package simplenotification_test
 
 import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
 	sdk "github.com/sacloud/sacloud-sdk-go/api/simple-notification"
@@ -51,12 +55,10 @@ func TestDestinationAndGroupLifecycle(t *testing.T) {
 			Name:        "mail-dest",
 			Description: "a destination",
 			Icon:        v1.NilCommonServiceItemIcon{Null: true},
-			Settings: v1.CommonServiceItemSettings{
-				DestinationSettings: v1.DestinationSettings{
-					Type:  v1.DestinationSettingsType("email"),
-					Value: "ops@example.com",
-				},
-			},
+			Settings: v1.NewCommonServiceItemDestinationSettingsPostCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemDestinationSettings{
+				Type:  v1.CommonServiceItemDestinationSettingsTypeEmail,
+				Value: "ops@example.com",
+			}),
 			Tags: []string{},
 		},
 	})
@@ -82,11 +84,9 @@ func TestDestinationAndGroupLifecycle(t *testing.T) {
 			Name:        "alert-group",
 			Description: "a group",
 			Icon:        v1.NilCommonServiceItemIcon{Null: true},
-			Settings: v1.CommonServiceItemSettings{
-				GroupSettings: v1.GroupSettings{
-					Destinations: []string{destID},
-				},
-			},
+			Settings: v1.NewCommonServiceItemGroupSettingsPostCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemGroupSettings{
+				Destinations: []string{destID},
+			}),
 			Tags: []string{},
 		},
 	})
@@ -155,12 +155,10 @@ func TestItemStatusSourcesAndHistory(t *testing.T) {
 		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
 			Name: "status-dest",
 			Icon: v1.NilCommonServiceItemIcon{Null: true},
-			Settings: v1.CommonServiceItemSettings{
-				DestinationSettings: v1.DestinationSettings{
-					Type:  v1.DestinationSettingsType("email"),
-					Value: "ops@example.com",
-				},
-			},
+			Settings: v1.NewCommonServiceItemDestinationSettingsPostCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemDestinationSettings{
+				Type:  v1.CommonServiceItemDestinationSettingsTypeEmail,
+				Value: "ops@example.com",
+			}),
 			Tags: []string{},
 		},
 	})
@@ -179,19 +177,17 @@ func TestItemStatusSourcesAndHistory(t *testing.T) {
 	// History: a sent message appears with a per-destination status.
 	group, err := groupOp.Create(ctx, v1.PostCommonServiceItemRequest{
 		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
-			Name: "history-group",
-			Icon: v1.NilCommonServiceItemIcon{Null: true},
-			Settings: v1.CommonServiceItemSettings{
-				GroupSettings: v1.GroupSettings{Destinations: []string{destID}},
-			},
-			Tags: []string{},
+			Name:     "history-group",
+			Icon:     v1.NilCommonServiceItemIcon{Null: true},
+			Settings: v1.NewCommonServiceItemGroupSettingsPostCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemGroupSettings{Destinations: []string{destID}}),
+			Tags:     []string{},
 		},
 	})
 	if err != nil {
 		t.Fatalf("create group: %v", err)
 	}
 	groupID := group.CommonServiceItem.ID
-	if _, err := groupOp.SendMessage(ctx, groupID, v1.SendNotificationMessageRequest{Message: "hello history"}); err != nil {
+	if _, err := groupOp.SendMessage(ctx, groupID, v1.SendNotificationRequest{Message: "hello history"}); err != nil {
 		t.Fatalf("send message: %v", err)
 	}
 
@@ -232,12 +228,10 @@ func TestRoutingReorder(t *testing.T) {
 
 	group, err := groupOp.Create(ctx, v1.PostCommonServiceItemRequest{
 		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
-			Name: "target-group",
-			Icon: v1.NilCommonServiceItemIcon{Null: true},
-			Settings: v1.CommonServiceItemSettings{
-				GroupSettings: v1.GroupSettings{Destinations: []string{}},
-			},
-			Tags: []string{},
+			Name:     "target-group",
+			Icon:     v1.NilCommonServiceItemIcon{Null: true},
+			Settings: v1.NewCommonServiceItemGroupSettingsPostCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemGroupSettings{Destinations: []string{}}),
+			Tags:     []string{},
 		},
 	})
 	if err != nil {
@@ -250,14 +244,12 @@ func TestRoutingReorder(t *testing.T) {
 			CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
 				Name: name,
 				Icon: v1.NilCommonServiceItemIcon{Null: true},
-				Settings: v1.CommonServiceItemSettings{
-					RoutingSettings: v1.RoutingSettings{
-						SourceID:      "1",
-						MatchLabels:   []v1.RoutingSettingsMatchLabelsItem{},
-						TargetGroupID: group.CommonServiceItem.ID,
-						PriorityRank:  rank,
-					},
-				},
+				Settings: v1.NewCommonServiceItemRoutingSettingsPostCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemRoutingSettings{
+					SourceID:      "1",
+					MatchLabels:   []v1.CommonServiceItemRoutingSettingsMatchLabelsItem{},
+					TargetGroupID: group.CommonServiceItem.ID,
+					PriorityRank:  rank,
+				}),
 				Tags: []string{},
 			},
 		})
@@ -269,8 +261,8 @@ func TestRoutingReorder(t *testing.T) {
 	r1 := newRouting("routing-1", 1)
 	r2 := newRouting("routing-2", 2)
 
-	res, err := routingOp.Reorder(ctx, v1.PutCommonServiceItemRoutingReorderRequest{
-		Orders: []v1.PutCommonServiceItemRoutingReorderRequestOrdersItem{
+	res, err := routingOp.Reorder(ctx, v1.ReorderNotificationRoutingRequest{
+		Orders: []v1.ReorderNotificationRoutingRequestOrdersItem{
 			{RoutingID: r1, PriorityRank: 2},
 			{RoutingID: r2, PriorityRank: 1},
 		},
@@ -287,13 +279,13 @@ func TestRoutingReorder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read routing: %v", err)
 	}
-	if got.CommonServiceItem.Settings.RoutingSettings.PriorityRank != 2 {
-		t.Errorf("expected routing-1 rank 2, got %+v", got.CommonServiceItem.Settings.RoutingSettings)
+	if got.CommonServiceItem.Settings.CommonServiceItemRoutingSettings.PriorityRank != 2 {
+		t.Errorf("expected routing-1 rank 2, got %+v", got.CommonServiceItem.Settings.CommonServiceItemRoutingSettings)
 	}
 
 	// Duplicate ranks are rejected.
-	if _, err := routingOp.Reorder(ctx, v1.PutCommonServiceItemRoutingReorderRequest{
-		Orders: []v1.PutCommonServiceItemRoutingReorderRequestOrdersItem{
+	if _, err := routingOp.Reorder(ctx, v1.ReorderNotificationRoutingRequest{
+		Orders: []v1.ReorderNotificationRoutingRequestOrdersItem{
 			{RoutingID: r1, PriorityRank: 1},
 			{RoutingID: r2, PriorityRank: 1},
 		},
@@ -302,8 +294,8 @@ func TestRoutingReorder(t *testing.T) {
 	}
 
 	// Unknown routing IDs are rejected.
-	if _, err := routingOp.Reorder(ctx, v1.PutCommonServiceItemRoutingReorderRequest{
-		Orders: []v1.PutCommonServiceItemRoutingReorderRequestOrdersItem{
+	if _, err := routingOp.Reorder(ctx, v1.ReorderNotificationRoutingRequest{
+		Orders: []v1.ReorderNotificationRoutingRequestOrdersItem{
 			{RoutingID: "999999999999", PriorityRank: 3},
 		},
 	}); err == nil {
@@ -311,31 +303,40 @@ func TestRoutingReorder(t *testing.T) {
 	}
 }
 
-// TestNullTags covers the SDK sending Tags as null when none are set, which
-// the portal spec forbids but the SDK's published spec allows (see
-// bodyNullableFields).
+// TestNullTags covers clients sending Tags as null when none are set, which
+// the portal spec forbids but the Terraform provider does (see
+// bodyNullableFields). The Go SDK now rejects nil Tags itself, so the request
+// is sent as raw JSON.
 func TestNullTags(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
 	defer closeAndCheck(t, srv)
-	ctx := t.Context()
-	destOp := sdk.NewDestinationOp(newControlPlaneClient(t, srv.TestURL()))
 
-	dest, err := destOp.Create(ctx, v1.PostCommonServiceItemRequest{
-		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{
-			Name: "mail-dest",
-			Icon: v1.NilCommonServiceItemIcon{Null: true},
-			Settings: v1.CommonServiceItemSettings{
-				DestinationSettings: v1.DestinationSettings{
-					Type:  v1.DestinationSettingsType("email"),
-					Value: "ops@example.com",
-				},
-			},
-		},
-	})
+	body := `{"CommonServiceItem":{"Name":"mail-dest","Description":"","Tags":null,"Icon":null,` +
+		`"Provider":{"Class":"saknoticedestination"},"ServiceClass":"cloud/saknoticedestination/2",` +
+		`"Settings":{"Type":"email","Value":"ops@example.com"}}}`
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, srv.TestURL()+"/commonserviceitem", strings.NewReader(body))
 	if err != nil {
-		t.Fatalf("create destination with null Tags: %v", err)
+		t.Fatal(err)
 	}
-	if tags := dest.CommonServiceItem.Tags; tags == nil || len(tags) != 0 {
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("create destination with null Tags: status %d: %s", resp.StatusCode, b)
+	}
+	var got struct {
+		CommonServiceItem struct {
+			Tags []string `json:"Tags"`
+		} `json:"CommonServiceItem"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	if tags := got.CommonServiceItem.Tags; tags == nil || len(tags) != 0 {
 		t.Errorf("Tags = %#v, want an empty array", tags)
 	}
 }

@@ -117,7 +117,7 @@ func (f *forwarder) forwardToSimpleNotification(ctx context.Context, d Delivery)
 	}
 
 	op := simplenotificationsdk.NewGroupOp(f.snClient)
-	if _, err := op.SendMessage(ctx, params.GroupID, snv1.SendNotificationMessageRequest{
+	if _, err := op.SendMessage(ctx, params.GroupID, snv1.SendNotificationRequest{
 		Message: params.Message,
 	}); err != nil {
 		return fmt.Errorf("service link: simplenotification send failed: %w", err)

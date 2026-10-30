@@ -43,7 +43,7 @@ func TestSendMessage_Success(t *testing.T) {
 	ctx := t.Context()
 	groupOp := newTestGroupOp(t, srv.TestURL())
 
-	resp, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationMessageRequest{Message: "hello"})
+	resp, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationRequest{Message: "hello"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestSendMessage_Multiple(t *testing.T) {
 	groupOp := newTestGroupOp(t, srv.TestURL())
 
 	for _, m := range []string{"first", "second", "third"} {
-		if _, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationMessageRequest{Message: m}); err != nil {
+		if _, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationRequest{Message: m}); err != nil {
 			t.Fatal(err)
 		}
 	}

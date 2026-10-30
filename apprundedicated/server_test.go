@@ -2,12 +2,9 @@ package apprundedicated_test
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	sdk "github.com/sacloud/sacloud-sdk-go/api/apprun-dedicated"
 	v1 "github.com/sacloud/sacloud-sdk-go/api/apprun-dedicated/apis/v1"
 	"github.com/sacloud/sacloud-sdk-go/api/apprun-dedicated/apis/version"
@@ -45,11 +42,11 @@ func newTestClient(t *testing.T, serverURL string) *v1.Client {
 
 func createTestCluster(t *testing.T, ctx context.Context, client *v1.Client) v1.ClusterID {
 	t.Helper()
-	resp, err := client.CreateCluster(ctx, &v1.CreateCluster{
+	resp, err := client.CreateCluster(ctx, &v1.CreateClusterRequest{
 		Name:               "test-cluster",
 		ServicePrincipalID: "123456789012",
-		Ports: []v1.CreateLoadBalancerPort{
-			{Port: 443, Protocol: v1.CreateLoadBalancerPortProtocolHTTPS},
+		Ports: []v1.ClusterLoadBalancerPort{
+			{Port: 443, Protocol: v1.ClusterLoadBalancerPortProtocolHTTPS},
 		},
 	})
 	if err != nil {
@@ -66,9 +63,9 @@ func TestClusterLifecycle(t *testing.T) {
 
 	clusterID := createTestCluster(t, ctx, client)
 
-	getResp, err := client.GetCluster(ctx, v1.GetClusterParams{ClusterID: clusterID})
+	getResp, err := client.ReadCluster(ctx, v1.ReadClusterParams{ClusterID: clusterID})
 	if err != nil {
-		t.Fatalf("GetCluster: %v", err)
+		t.Fatalf("ReadCluster: %v", err)
 	}
 	if getResp.Cluster.GetName() != "test-cluster" {
 		t.Fatalf("expected name 'test-cluster', got %q", getResp.Cluster.GetName())
@@ -85,7 +82,7 @@ func TestClusterLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 cluster, got %d", len(listResp.Clusters))
 	}
 
-	err = client.UpdateCluster(ctx, &v1.UpdateCluster{
+	err = client.UpdateCluster(ctx, &v1.UpdateClusterRequest{
 		ServicePrincipalID: "999999999999",
 	}, v1.UpdateClusterParams{ClusterID: clusterID})
 	if err != nil {
@@ -114,7 +111,7 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 
 	clusterID := createTestCluster(t, ctx, client)
 
-	appResp, err := client.CreateApplication(ctx, &v1.CreateApplication{
+	appResp, err := client.CreateApplication(ctx, &v1.CreateApplicationRequest{
 		Name:      "test-app",
 		ClusterID: clusterID,
 	})
@@ -123,9 +120,9 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 	}
 	appID := appResp.Application.GetApplicationID()
 
-	getAppResp, err := client.GetApplication(ctx, v1.GetApplicationParams{ApplicationID: appID})
+	getAppResp, err := client.ReadApplication(ctx, v1.ReadApplicationParams{ApplicationID: appID})
 	if err != nil {
-		t.Fatalf("GetApplication: %v", err)
+		t.Fatalf("ReadApplication: %v", err)
 	}
 	if getAppResp.Application.GetName() != "test-app" {
 		t.Fatalf("expected name 'test-app', got %q", getAppResp.Application.GetName())
@@ -175,15 +172,15 @@ func TestApplicationVersionLifecycle(t *testing.T) {
 	}
 
 	// Update application (set active version)
-	err = client.UpdateApplication(ctx, &v1.UpdateApplication{
-		ActiveVersion: v1.NilInt32{Value: int32(versionNum), Null: false},
+	err = client.UpdateApplication(ctx, &v1.UpdateApplicationRequest{
+		ActiveVersion: v1.NilApplicationVersionNumber{Value: v1.ApplicationVersionNumber(versionNum)},
 	}, v1.UpdateApplicationParams{ApplicationID: appID})
 	if err != nil {
 		t.Fatalf("UpdateApplication: %v", err)
 	}
 
-	err = client.UpdateApplication(ctx, &v1.UpdateApplication{
-		ActiveVersion: v1.NilInt32{Null: true},
+	err = client.UpdateApplication(ctx, &v1.UpdateApplicationRequest{
+		ActiveVersion: v1.NilApplicationVersionNumber{Null: true},
 	}, v1.UpdateApplicationParams{ApplicationID: appID})
 	if err != nil {
 		t.Fatalf("UpdateApplication (deactivate): %v", err)
@@ -208,7 +205,7 @@ func TestCertificateLifecycle(t *testing.T) {
 
 	clusterID := createTestCluster(t, ctx, client)
 
-	createCertResp, err := client.CreateCertificate(ctx, &v1.CreateCertificate{
+	createCertResp, err := client.CreateCertificate(ctx, &v1.CreateCertificateRequest{
 		Name:           "test-cert",
 		CertificatePem: "-----BEGIN CERTIFICATE-----\nMIItest\n-----END CERTIFICATE-----",
 		PrivatekeyPem:  "-----BEGIN PRIVATE KEY-----\nMIItest\n-----END PRIVATE KEY-----",
@@ -218,15 +215,15 @@ func TestCertificateLifecycle(t *testing.T) {
 	}
 	certID := createCertResp.Certificate.GetCertificateID()
 
-	getCertResp, err := client.GetCertificate(ctx, v1.GetCertificateParams{ClusterID: clusterID, CertificateID: certID})
+	getCertResp, err := client.ReadCertificate(ctx, v1.ReadCertificateParams{ClusterID: clusterID, CertificateID: certID})
 	if err != nil {
-		t.Fatalf("GetCertificate: %v", err)
+		t.Fatalf("ReadCertificate: %v", err)
 	}
 	if getCertResp.Certificate.GetName() != "test-cert" {
 		t.Fatalf("expected name 'test-cert', got %q", getCertResp.Certificate.GetName())
 	}
 
-	err = client.UpdateCertificate(ctx, &v1.UpdateCertificate{
+	err = client.UpdateCertificate(ctx, &v1.UpdateCertificateRequest{
 		Name:           "updated-cert",
 		CertificatePem: "-----BEGIN CERTIFICATE-----\nMIIupdated\n-----END CERTIFICATE-----",
 		PrivatekeyPem:  "-----BEGIN PRIVATE KEY-----\nMIIupdated\n-----END PRIVATE KEY-----",
@@ -247,9 +244,9 @@ func TestServiceClasses(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 
-	lbResp, err := client.ListLbServiceClasses(ctx)
+	lbResp, err := client.ListLoadBalancerServiceClasses(ctx)
 	if err != nil {
-		t.Fatalf("ListLbServiceClasses: %v", err)
+		t.Fatalf("ListLoadBalancerServiceClasses: %v", err)
 	}
 	if len(lbResp.LbServiceClasses) == 0 {
 		t.Fatal("expected at least one LB service class")
@@ -265,7 +262,6 @@ func TestServiceClasses(t *testing.T) {
 }
 
 // TestUpdateClusterPorts covers the ports field of PUT /clusters/{clusterID}.
-// The SDK's UpdateCluster cannot send ports yet, so the request is raw HTTP.
 func TestUpdateClusterPorts(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
 	defer closeAndCheck(t, srv)
@@ -273,79 +269,69 @@ func TestUpdateClusterPorts(t *testing.T) {
 	client := newTestClient(t, srv.TestURL())
 	clusterID := createTestCluster(t, ctx, client)
 
-	put := func(body string) int {
+	update := func(ports []v1.ClusterLoadBalancerPort) error {
 		t.Helper()
-		req, err := http.NewRequestWithContext(ctx, http.MethodPut, srv.TestURL()+"/clusters/"+uuid.UUID(clusterID).String(), strings.NewReader(body))
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		resp.Body.Close()
-		return resp.StatusCode
+		return client.UpdateCluster(ctx, &v1.UpdateClusterRequest{
+			ServicePrincipalID: "123456789012",
+			Ports:              ports,
+		}, v1.UpdateClusterParams{ClusterID: clusterID})
 	}
-	ports := func() []v1.ReadLoadBalancerPort {
+	ports := func() []v1.ClusterLoadBalancerPort {
 		t.Helper()
-		resp, err := client.GetCluster(ctx, v1.GetClusterParams{ClusterID: clusterID})
+		resp, err := client.ReadCluster(ctx, v1.ReadClusterParams{ClusterID: clusterID})
 		if err != nil {
-			t.Fatalf("GetCluster: %v", err)
+			t.Fatalf("ReadCluster: %v", err)
 		}
 		return resp.Cluster.GetPorts()
 	}
 
-	if code := put(`{"servicePrincipalID":"123456789012","ports":[{"port":80,"protocol":"http"},{"port":8443,"protocol":"https"}]}`); code != http.StatusNoContent {
-		t.Fatalf("update with ports: status %d", code)
+	if err := update([]v1.ClusterLoadBalancerPort{
+		{Port: 80, Protocol: v1.ClusterLoadBalancerPortProtocolHTTP},
+		{Port: 8443, Protocol: v1.ClusterLoadBalancerPortProtocolHTTPS},
+	}); err != nil {
+		t.Fatalf("update with ports: %v", err)
 	}
 	if got := ports(); len(got) != 2 || got[0].GetPort() != 80 || got[1].GetPort() != 8443 {
 		t.Fatalf("unexpected ports after update: %+v", got)
 	}
 
-	if code := put(`{"servicePrincipalID":"123456789012"}`); code != http.StatusNoContent {
-		t.Fatalf("update without ports: status %d", code)
+	// A nil Ports is omitted from the request body.
+	if err := update(nil); err != nil {
+		t.Fatalf("update without ports: %v", err)
 	}
 	if got := ports(); len(got) != 2 {
 		t.Fatalf("omitting ports should keep them, got %+v", got)
 	}
 
-	if code := put(`{"servicePrincipalID":"123456789012","ports":[{"port":5955,"protocol":"tcp"}]}`); code != http.StatusBadRequest {
-		t.Fatalf("reserved port: expected 400, got %d", code)
+	err := update([]v1.ClusterLoadBalancerPort{{Port: 5955, Protocol: v1.ClusterLoadBalancerPortProtocolTCP}})
+	if err == nil {
+		t.Fatal("reserved port: expected error")
+	}
+	if !strings.Contains(err.Error(), "400") {
+		t.Fatalf("reserved port: expected 400, got %v", err)
 	}
 }
 
-// TestApplicationEnoughResources checks the enoughResources field, which the
-// SDK does not decode yet.
 func TestApplicationEnoughResources(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
 	defer closeAndCheck(t, srv)
 	ctx := context.Background()
 	client := newTestClient(t, srv.TestURL())
 	clusterID := createTestCluster(t, ctx, client)
-	appResp, err := client.CreateApplication(ctx, &v1.CreateApplication{Name: "test-app", ClusterID: clusterID})
+	appResp, err := client.CreateApplication(ctx, &v1.CreateApplicationRequest{Name: "test-app", ClusterID: clusterID})
 	if err != nil {
 		t.Fatalf("CreateApplication: %v", err)
 	}
 
-	resp, err := http.Get(srv.TestURL() + "/applications/" + uuid.UUID(appResp.Application.GetApplicationID()).String())
+	resp, err := client.ReadApplication(ctx, v1.ReadApplicationParams{ApplicationID: appResp.Application.GetApplicationID()})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("ReadApplication: %v", err)
 	}
-	defer resp.Body.Close()
-	var body struct {
-		Application struct {
-			EnoughResources struct {
-				CPU    *bool `json:"cpu"`
-				Memory *bool `json:"memory"`
-			} `json:"enoughResources"`
-		} `json:"application"`
+	er := resp.Application.GetEnoughResources()
+	if cpu, ok := er.CPU.Get(); !ok || !cpu {
+		t.Fatalf("expected enoughResources.cpu true, got %+v", er.CPU)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		t.Fatal(err)
-	}
-	er := body.Application.EnoughResources
-	if er.CPU == nil || !*er.CPU || er.Memory == nil || !*er.Memory {
-		t.Fatalf("expected enoughResources cpu/memory true, got %+v", er)
+	if mem, ok := er.Memory.Get(); !ok || !mem {
+		t.Fatalf("expected enoughResources.memory true, got %+v", er.Memory)
 	}
 }

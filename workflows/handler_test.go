@@ -81,7 +81,7 @@ func TestWorkflowLifecycle(t *testing.T) {
 		t.Errorf("expected Publish=true Logging=true, got %v %v", got.Publish, got.Logging)
 	}
 
-	list, err := workflowOp.List(ctx, v1.ListWorkflowParams{})
+	list, err := workflowOp.List(ctx, v1.ListWorkflowsParams{})
 	if err != nil {
 		t.Fatalf("list: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestWorkflowLifecycle(t *testing.T) {
 		t.Errorf("total = %d, want 1", list.Total)
 	}
 
-	updated, err := workflowOp.Update(ctx, id, v1.UpdateWorkflowReq{
+	updated, err := workflowOp.Update(ctx, id, v1.PatchWorkflowReq{
 		Name:        v1.NewOptString("updated-workflow"),
 		Description: v1.NewOptString("updated description"),
 	})
@@ -127,7 +127,7 @@ func TestRevisionLifecycle(t *testing.T) {
 	}
 	wfID := created.ID
 
-	revisions, err := revisionOp.List(ctx, v1.ListWorkflowRevisionsParams{ID: wfID})
+	revisions, err := revisionOp.List(ctx, v1.ListRevisionsParams{ID: wfID})
 	if err != nil {
 		t.Fatalf("list revisions: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestRevisionLifecycle(t *testing.T) {
 		t.Errorf("revision runbook mismatch")
 	}
 
-	rev2, err := revisionOp.Create(ctx, wfID, v1.CreateWorkflowRevisionReq{
+	rev2, err := revisionOp.Create(ctx, wfID, v1.CreateRevisionReq{
 		Runbook:       testRunbook,
 		RevisionAlias: v1.NewOptString("v2"),
 	})
@@ -157,7 +157,7 @@ func TestRevisionLifecycle(t *testing.T) {
 		t.Errorf("revision alias = %v, want v2", rev2.RevisionAlias)
 	}
 
-	updatedRev, err := revisionOp.UpdateAlias(ctx, wfID, 1, v1.UpdateWorkflowRevisionAliasReq{
+	updatedRev, err := revisionOp.UpdateAlias(ctx, wfID, 1, v1.UpdateRevisionAliasReq{
 		RevisionAlias: "v1",
 	})
 	if err != nil {
@@ -214,7 +214,7 @@ func TestExecutionLifecycle(t *testing.T) {
 		t.Errorf("execution id mismatch")
 	}
 
-	execList, err := executionOp.List(ctx, v1.ListExecutionParams{ID: wfID})
+	execList, err := executionOp.List(ctx, v1.ListExecutionsParams{ID: wfID})
 	if err != nil {
 		t.Fatalf("list executions: %v", err)
 	}
@@ -303,25 +303,25 @@ steps:
 		t.Fatalf("create execution: %v", err)
 	}
 
-	var gotExec *v1.GetExecutionOKExecution
+	var gotExec *v1.ReadExecutionOKExecution
 	for range 50 {
 		time.Sleep(10 * time.Millisecond)
 		gotExec, err = executionOp.Read(ctx, wfID, exec.ExecutionId)
 		if err != nil {
 			t.Fatalf("read execution: %v", err)
 		}
-		if gotExec.Status == v1.GetExecutionOKExecutionStatusSucceeded {
+		if gotExec.Status == v1.ReadExecutionOKExecutionStatusSucceeded {
 			break
 		}
 	}
-	if gotExec.Status != v1.GetExecutionOKExecutionStatusSucceeded {
+	if gotExec.Status != v1.ReadExecutionOKExecutionStatusSucceeded {
 		t.Fatalf("execution status = %q, want Succeeded", gotExec.Status)
 	}
 	if gotExec.Result != "42" {
 		t.Errorf("result = %q, want 42", gotExec.Result)
 	}
 
-	history, err := executionOp.ListHistory(ctx, v1.ListExecutionHistoryParams{
+	history, err := executionOp.ListHistory(ctx, v1.ListExecutionHistoriesParams{
 		ID:          wfID,
 		ExecutionId: exec.ExecutionId,
 	})

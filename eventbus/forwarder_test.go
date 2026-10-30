@@ -237,11 +237,9 @@ func createNotificationGroup(t *testing.T, baseURL, name string) string {
 		CommonServiceItem: snv1.PostCommonServiceItemRequestCommonServiceItem{
 			Name: name,
 			Icon: snv1.NilCommonServiceItemIcon{Null: true},
-			Settings: snv1.CommonServiceItemSettings{
-				GroupSettings: snv1.GroupSettings{
-					Destinations: []string{},
-				},
-			},
+			Settings: snv1.NewCommonServiceItemGroupSettingsPostCommonServiceItemRequestCommonServiceItemSettings(snv1.CommonServiceItemGroupSettings{
+				Destinations: []string{},
+			}),
 			Tags: []string{},
 		},
 	})

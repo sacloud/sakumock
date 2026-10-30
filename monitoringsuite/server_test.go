@@ -436,7 +436,7 @@ func TestNotificationTargetAndRouting(t *testing.T) {
 		t.Fatal("routing target mismatch")
 	}
 
-	routings, err := routingOp.List(ctx, pid, nil, nil)
+	routings, err := routingOp.List(ctx, pid, mssdk.NotificationRoutingsListParams{})
 	if err != nil {
 		t.Fatal(err)
 	}

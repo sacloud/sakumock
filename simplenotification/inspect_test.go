@@ -16,7 +16,7 @@ func TestInspectionClientMessages(t *testing.T) {
 	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
 	for _, m := range []string{"first", "second"} {
-		if _, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationMessageRequest{Message: m}); err != nil {
+		if _, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationRequest{Message: m}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -46,7 +46,7 @@ func TestInspectionClientClearMessages(t *testing.T) {
 	groupOp := newTestGroupOp(t, srv.TestURL())
 	ic := simplenotification.NewInspectionClient(srv.TestURL())
 
-	if _, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationMessageRequest{Message: "to-clear"}); err != nil {
+	if _, err := groupOp.SendMessage(ctx, "123456789012", v1.SendNotificationRequest{Message: "to-clear"}); err != nil {
 		t.Fatal(err)
 	}
 

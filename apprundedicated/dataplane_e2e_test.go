@@ -46,13 +46,13 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 	// Create infrastructure: cluster + ASG (which auto-creates worker nodes)
 	clusterID := createTestCluster(t, ctx, client)
 
-	_, err := client.CreateAutoScalingGroup(ctx, &v1.CreateAutoScalingGroup{
+	_, err := client.CreateAutoScalingGroup(ctx, &v1.CreateAutoScalingGroupRequest{
 		Name:                   "e2e-asg",
 		Zone:                   "is1a",
 		WorkerServiceClassPath: "cloud/apprun/dedicated/worker/1vcpu_2gb",
 		MinNodes:               1,
 		MaxNodes:               1,
-		NameServers:            []v1.IPv4{"210.188.224.10"},
+		NameServers:            []v1.Ipv4{"210.188.224.10"},
 		Interfaces: []v1.AutoScalingGroupNodeInterface{
 			{InterfaceIndex: 0, Upstream: "shared"},
 		},

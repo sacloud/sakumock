@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.14.0](https://github.com/sacloud/sakumock/compare/v0.13.0...v0.14.0) - 2026-10-30
+
+### 🚀 New Features
+- Add /_sakumock/health and sakumock healthcheck by @fujiwara in https://github.com/sacloud/sakumock/pull/216
+- Follow the portal OpenAPI specs in every service by @fujiwara in https://github.com/sacloud/sakumock/pull/221
+- Bump sacloud-sdk-go to v0.5.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/226
+### 📦 Dependency Updates
+- build(deps): Bump docker/login-action from 4.6.0 to 4.7.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/224
+- build(deps): Bump modernc.org/sqlite from 1.48.1 to 1.61.0 by @dependabot[bot] in https://github.com/sacloud/sakumock/pull/225
+### Other Changes
+- Track OpenAPI drift from the SAKURA Cloud API portal by @fujiwara in https://github.com/sacloud/sakumock/pull/218
+- Fetch KMS, CloudHSM and SecretManager specs from the portal by @fujiwara in https://github.com/sacloud/sakumock/pull/219
+- Bump dependencies by @fujiwara in https://github.com/sacloud/sakumock/pull/222
+- Bump sacloud-sdk-go to v0.4.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/223
+
 ## [v0.13.0](https://github.com/sacloud/sakumock/compare/v0.12.0...v0.13.0) - 2026-10-06
 
 ### 🚀 New Features

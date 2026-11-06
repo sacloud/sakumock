@@ -132,3 +132,22 @@ func TestConfigFileSuiteWideKeys(t *testing.T) {
 		t.Errorf("kms addr = %q, want 127.0.0.1:19081", all.Kms.Addr)
 	}
 }
+
+func TestConfigFileHyphenatedService(t *testing.T) {
+	path := writeFile(t, "sakumock.yaml", "security-control:\n  latency: 5s\n  automated-action-limit: 3\napprun-dedicated:\n  latency: 2s\napprun:\n  latency: 1s\n")
+
+	all := parseAll(t, "--config", path)
+	if all.SecurityControl.Latency != 5*time.Second {
+		t.Errorf("security-control latency = %v, want 5s", all.SecurityControl.Latency)
+	}
+	if all.SecurityControl.AutomatedActionLimit != 3 {
+		t.Errorf("security-control automated-action-limit = %d, want 3", all.SecurityControl.AutomatedActionLimit)
+	}
+	// A service whose name prefixes another's keeps its own group.
+	if all.ApprunDedicated.Latency != 2*time.Second {
+		t.Errorf("apprun-dedicated latency = %v, want 2s", all.ApprunDedicated.Latency)
+	}
+	if all.Apprun.Latency != time.Second {
+		t.Errorf("apprun latency = %v, want 1s", all.Apprun.Latency)
+	}
+}

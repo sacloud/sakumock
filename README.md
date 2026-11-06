@@ -27,6 +27,7 @@ Under `sakumock all` every control plane shares one listener (`127.0.0.1:18000` 
 | [cloudhsm](cloudhsm/) | `/cloudhsm` | 18092 | `github.com/sacloud/sakumock/cloudhsm` | CloudHSM control-plane API |
 | [seg](seg/) | `/seg` | 18093 | `github.com/sacloud/sakumock/seg` | Service Endpoint Gateway control-plane API |
 | [addon](addon/) | `/addon` | 18094 | `github.com/sacloud/sakumock/addon` | Add-on API (AI / CDN / security / data analytics resources) |
+| [securitycontrol](securitycontrol/) | `/security-control` | 18095 | `github.com/sacloud/sakumock/securitycontrol` | Security Control API (activation, evaluation rules, automated actions) |
 
 ## Quick Start
 
@@ -165,6 +166,7 @@ sakumock workflows &
 sakumock cloudhsm &
 sakumock seg &
 sakumock addon &
+sakumock security-control &
 ```
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.

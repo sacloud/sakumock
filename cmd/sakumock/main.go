@@ -19,6 +19,7 @@ import (
 	"github.com/sacloud/sakumock/monitoringsuite"
 	"github.com/sacloud/sakumock/objectstorage"
 	"github.com/sacloud/sakumock/secretmanager"
+	"github.com/sacloud/sakumock/securitycontrol"
 	"github.com/sacloud/sakumock/seg"
 	"github.com/sacloud/sakumock/simplemq"
 	"github.com/sacloud/sakumock/simplenotification"
@@ -46,6 +47,7 @@ type CLI struct {
 	Cloudhsm           cloudhsm.Command           `cmd:"" name:"cloudhsm" help:"CloudHSM mock server"`
 	Seg                seg.Command                `cmd:"" name:"seg" help:"Service Endpoint Gateway mock server"`
 	Addon              addon.Command              `cmd:"" name:"addon" help:"Add-on mock server"`
+	SecurityControl    securitycontrol.Command    `cmd:"" name:"security-control" help:"Security Control mock server"`
 
 	Version kong.VersionFlag `help:"Show version" short:"v"`
 }

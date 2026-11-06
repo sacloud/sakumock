@@ -54,14 +54,16 @@ func newConfigResolver(path string) (kong.Resolver, error) {
 
 // configResolver maps a flag to the config map. Service-prefixed flags such as
 // "kms-latency" are looked up as nested keys ("kms" -> "latency"), so the file
-// groups options per service. Splitting on the first "-" needs no service list,
-// so a new service is configurable without touching this resolver. Names that
-// do not match a nested group fall back to a top-level key.
+// groups options per service. Service names may contain "-" themselves
+// ("security-control-latency" -> "security-control" -> "latency"), so every
+// "-" is tried as the split point, longest group first; this needs no service
+// list, so a new service is configurable without touching this resolver.
+// Names that do not match a nested group fall back to a top-level key.
 func configResolver(values map[string]any) kong.ResolverFunc {
 	return func(_ *kong.Context, _ *kong.Path, flag *kong.Flag) (any, error) {
-		if group, option, ok := strings.Cut(flag.Name, "-"); ok {
-			if sub, ok := values[group].(map[string]any); ok {
-				if v, ok := sub[option]; ok {
+		for i := strings.LastIndex(flag.Name, "-"); i > 0; i = strings.LastIndex(flag.Name[:i], "-") {
+			if sub, ok := values[flag.Name[:i]].(map[string]any); ok {
+				if v, ok := sub[flag.Name[i+1:]]; ok {
 					return v, nil
 				}
 			}

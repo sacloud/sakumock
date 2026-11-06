@@ -452,8 +452,10 @@ func (c *compiler) compileDiscriminated(m map[string]any, loc string, seen []str
 			c.note("oneOf at %s has an inline branch with no discriminator value; left permissive", loc)
 			return nil
 		}
-		if !mapped[ref] {
-			refs[ref[strings.LastIndex(ref, "/")+1:]] = ref
+		// The implicit component-name value never overrides an explicit
+		// mapping entry that claims the same value.
+		if name := ref[strings.LastIndex(ref, "/")+1:]; !mapped[ref] && refs[name] == "" {
+			refs[name] = ref
 		}
 	}
 

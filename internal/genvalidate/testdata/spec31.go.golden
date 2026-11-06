@@ -11,6 +11,7 @@ import "github.com/sacloud/sakumock/core"
 var bodySchemas = map[string]*core.BodySchema{
 	// NOTE: oneOf at POST /events.inline has an inline branch with no discriminator value; left permissive
 	// NOTE: recursive $ref #/components/schemas/Matcher at POST /events.matcher<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/AndMatcher at POST /events.swapped<type=LeafMatcher>.matchers[]<type=and> left permissive
 	"POST /events": {
 		Type:     "object",
 		Required: []string{"payload"},
@@ -68,6 +69,41 @@ var bodySchemas = map[string]*core.BodySchema{
 			"source": {
 				Type:      "string",
 				MinLength: new(1),
+			},
+			"swapped": {
+				Discriminator: "type",
+				Variants: map[string]*core.BodySchema{
+					"LeafMatcher": {
+						Type:     "object",
+						Required: []string{"matchers", "type"},
+						Properties: map[string]*core.BodySchema{
+							"matchers": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Discriminator: "type",
+									Variants: map[string]*core.BodySchema{
+										"and": nil,
+										"leaf": {
+											Type:     "object",
+											Required: []string{"type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"type": {
+													Type: "string",
+												},
+												"value": {
+													Type: "string",
+												},
+											},
+										},
+									},
+								},
+							},
+							"type": {
+								Type: "string",
+							},
+						},
+					},
+				},
 			},
 			"trigger": {
 				Type:          "object",

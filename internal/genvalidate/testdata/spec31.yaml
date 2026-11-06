@@ -87,6 +87,14 @@ components:
             propertyName: kind
         matcher:
           $ref: '#/components/schemas/Matcher'
+        swapped:
+          oneOf:
+            - $ref: '#/components/schemas/LeafMatcher'
+            - $ref: '#/components/schemas/AndMatcher'
+          discriminator:
+            propertyName: type
+            mapping:
+              LeafMatcher: '#/components/schemas/AndMatcher'
         source:
           type: string
           minLength: 1

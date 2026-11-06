@@ -37,6 +37,10 @@
       "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/security-encryption-api.yaml"
     },
     {
+      "id": "security-control",
+      "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/security-control-api.yaml"
+    },
+    {
       "id": "seg",
       "url": "https://manual.sakura.ad.jp/api/cloud/portal/openapis/seg-api.yaml"
     },
@@ -129,6 +133,12 @@
       "source": "security-encryption",
       "skipPaths": true,
       "skipComponentSetChanges": true
+    },
+    {
+      "id": "securitycontrol",
+      "name": "Security Control",
+      "local": "securitycontrol/openapi/openapi.yaml",
+      "source": "security-control"
     },
     {
       "id": "seg",

@@ -31,7 +31,7 @@ func TestTerraformEndToEnd(t *testing.T) {
 // `sakumock all --per-service-ports`, each service on its own free port passed
 // via its prefixed --<service>-addr flag.
 func TestTerraformEndToEndPerServicePorts(t *testing.T) {
-	addrs := freeAddrs(t, 15)
+	addrs := freeAddrs(t, 16)
 	flags := []string{
 		"--per-service-ports",
 		"--simplemq-addr", addrs[0],
@@ -49,6 +49,7 @@ func TestTerraformEndToEndPerServicePorts(t *testing.T) {
 		"--cloudhsm-addr", addrs[12],
 		"--seg-addr", addrs[13],
 		"--addon-addr", addrs[14],
+		"--security-control-addr", addrs[15],
 	}
 	runEndToEnd(t, flags, addrs)
 }

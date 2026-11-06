@@ -274,6 +274,11 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 		s.Nullable = true
 		return s
 	}
+	if _, ok := m["discriminator"]; ok {
+		if _, ok := m["oneOf"]; ok {
+			return c.compileDiscriminated(m, loc, seen)
+		}
+	}
 	for _, kw := range []string{"oneOf", "anyOf", "not"} {
 		if _, ok := m[kw]; ok {
 			c.note("%s at %s left permissive", kw, loc)
@@ -411,6 +416,67 @@ func (c *compiler) compile(raw any, loc string, seen []string) *core.BodySchema 
 	return s
 }
 
+// compileDiscriminated compiles a oneOf with a discriminator into a schema
+// whose Variants map each discriminator value to its branch. Values come from
+// discriminator.mapping, and branches it does not cover take their component
+// name (the OpenAPI implicit mapping). The sibling keywords (typically
+// `type: object`) compile into the same schema. An inline branch, which has no
+// name to map from, leaves the whole oneOf permissive.
+func (c *compiler) compileDiscriminated(m map[string]any, loc string, seen []string) *core.BodySchema {
+	disc, _ := m["discriminator"].(map[string]any)
+	prop, _ := disc["propertyName"].(string)
+	alts, _ := m["oneOf"].([]any)
+	if prop == "" || len(alts) == 0 {
+		c.note("oneOf at %s left permissive", loc)
+		return nil
+	}
+	refs := map[string]string{} // discriminator value -> $ref
+	mapped := map[string]bool{}
+	if mapping, ok := disc["mapping"].(map[string]any); ok {
+		for value, target := range mapping {
+			ref, ok := target.(string)
+			if !ok {
+				continue
+			}
+			if !strings.HasPrefix(ref, "#") {
+				ref = "#/components/schemas/" + ref
+			}
+			refs[value] = ref
+			mapped[ref] = true
+		}
+	}
+	for _, alt := range alts {
+		am, _ := alt.(map[string]any)
+		ref, ok := am["$ref"].(string)
+		if !ok {
+			c.note("oneOf at %s has an inline branch with no discriminator value; left permissive", loc)
+			return nil
+		}
+		// The implicit component-name value never overrides an explicit
+		// mapping entry that claims the same value.
+		if name := ref[strings.LastIndex(ref, "/")+1:]; !mapped[ref] && refs[name] == "" {
+			refs[name] = ref
+		}
+	}
+
+	siblings := make(map[string]any, len(m))
+	for k, v := range m {
+		if k != "oneOf" && k != "discriminator" {
+			siblings[k] = v
+		}
+	}
+	s := c.compile(siblings, loc, seen)
+	if s == nil {
+		s = &core.BodySchema{}
+	}
+	s.Discriminator = prop
+	s.Variants = make(map[string]*core.BodySchema, len(refs))
+	for _, value := range slices.Sorted(maps.Keys(refs)) {
+		s.Variants[value] = c.compile(map[string]any{"$ref": refs[value]}, fmt.Sprintf("%s<%s=%s>", loc, prop, value), seen)
+	}
+	return s
+}
+
 // compileAllOf merges every allOf part plus the sibling keywords of the
 // enclosing schema (the common `{"allOf":[{"$ref":...}], "nullable": true}`
 // pattern) into one schema.
@@ -497,6 +563,12 @@ func (c *compiler) merge(a, b *core.BodySchema, loc string) *core.BodySchema {
 	out.ExclusiveMinimum = out.ExclusiveMinimum || b.ExclusiveMinimum
 	out.ExclusiveMaximum = out.ExclusiveMaximum || b.ExclusiveMaximum
 	switch {
+	case out.Discriminator == "":
+		out.Discriminator, out.Variants = b.Discriminator, b.Variants
+	case b.Discriminator != "":
+		c.note("multiple discriminated oneOfs in allOf at %s; keeping %q", loc, out.Discriminator)
+	}
+	switch {
 	case out.Enum == nil:
 		out.Enum = b.Enum
 	case b.Enum != nil:
@@ -573,7 +645,8 @@ func emptySchema(s *core.BodySchema) bool {
 		len(s.Required) == 0 && len(s.Properties) == 0 &&
 		s.Items == nil && s.MinItems == nil && s.MaxItems == nil &&
 		s.MinLength == nil && s.MaxLength == nil && s.Pattern == "" &&
-		s.Minimum == nil && s.Maximum == nil && len(s.Enum) == 0
+		s.Minimum == nil && s.Maximum == nil && len(s.Enum) == 0 &&
+		s.Discriminator == ""
 }
 
 func normalizeEnumValue(e any) any {

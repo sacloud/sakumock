@@ -9,14 +9,123 @@ import "github.com/sacloud/sakumock/core"
 // Entries for spec paths the mock does not serve are inert: the
 // core.BodyValidator lookup simply never hits them.
 var bodySchemas = map[string]*core.BodySchema{
-	// NOTE: oneOf at POST /events.payload left permissive
+	// NOTE: oneOf at POST /events.inline has an inline branch with no discriminator value; left permissive
+	// NOTE: recursive $ref #/components/schemas/Matcher at POST /events.matcher<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/AndMatcher at POST /events.swapped<type=LeafMatcher>.matchers[]<type=and> left permissive
 	"POST /events": {
 		Type:     "object",
 		Required: []string{"payload"},
 		Properties: map[string]*core.BodySchema{
+			"matcher": {
+				Discriminator: "type",
+				Variants: map[string]*core.BodySchema{
+					"and": {
+						Type:     "object",
+						Required: []string{"matchers", "type"},
+						Properties: map[string]*core.BodySchema{
+							"matchers": {
+								Type: "array",
+							},
+							"type": {
+								Type: "string",
+							},
+						},
+					},
+					"leaf": {
+						Type:     "object",
+						Required: []string{"type", "value"},
+						Properties: map[string]*core.BodySchema{
+							"type": {
+								Type: "string",
+							},
+							"value": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+			"payload": {
+				Discriminator: "kind",
+				Variants: map[string]*core.BodySchema{
+					"MessageEvent": {
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"kind": {
+								Type: "string",
+							},
+						},
+					},
+					"TimerEvent": {
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"kind": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
 			"source": {
 				Type:      "string",
 				MinLength: new(1),
+			},
+			"swapped": {
+				Discriminator: "type",
+				Variants: map[string]*core.BodySchema{
+					"LeafMatcher": {
+						Type:     "object",
+						Required: []string{"matchers", "type"},
+						Properties: map[string]*core.BodySchema{
+							"matchers": {
+								Type: "array",
+								Items: &core.BodySchema{
+									Discriminator: "type",
+									Variants: map[string]*core.BodySchema{
+										"and": nil,
+										"leaf": {
+											Type:     "object",
+											Required: []string{"type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"type": {
+													Type: "string",
+												},
+												"value": {
+													Type: "string",
+												},
+											},
+										},
+									},
+								},
+							},
+							"type": {
+								Type: "string",
+							},
+						},
+					},
+				},
+			},
+			"trigger": {
+				Type:          "object",
+				Discriminator: "kind",
+				Variants: map[string]*core.BodySchema{
+					"msg": {
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"kind": {
+								Type: "string",
+							},
+						},
+					},
+					"timer": {
+						Type: "object",
+						Properties: map[string]*core.BodySchema{
+							"kind": {
+								Type: "string",
+							},
+						},
+					},
+				},
 			},
 		},
 	},

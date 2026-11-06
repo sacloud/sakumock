@@ -18,11 +18,72 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at POST /automated_actions.action.allOf[0] left permissive
 	"POST /automated_actions": {
 		Type:     "object",
 		Required: []string{"action", "executionCondition", "isEnabled", "name"},
 		Properties: map[string]*core.BodySchema{
+			"action": {
+				Type:          "object",
+				Discriminator: "actionType",
+				Variants: map[string]*core.BodySchema{
+					"simpleNotification": {
+						Type:     "object",
+						Required: []string{"actionParameter", "actionType"},
+						Properties: map[string]*core.BodySchema{
+							"actionParameter": {
+								Type:     "object",
+								Required: []string{"notificationGroupId", "servicePrincipalId"},
+								Properties: map[string]*core.BodySchema{
+									"notificationGroupId": {
+										Type: "string",
+									},
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+							"actionType": {
+								Type: "string",
+								Enum: []any{"simpleNotification"},
+							},
+						},
+					},
+					"workflows": {
+						Type:     "object",
+						Required: []string{"actionParameter", "actionType"},
+						Properties: map[string]*core.BodySchema{
+							"actionParameter": {
+								Type:     "object",
+								Required: []string{"servicePrincipalId", "workflowId"},
+								Properties: map[string]*core.BodySchema{
+									"args": {
+										Type: "string",
+									},
+									"name": {
+										Type: "string",
+									},
+									"revisionAlias": {
+										Type: "string",
+									},
+									"revisionId": {
+										Type: "integer",
+									},
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"workflowId": {
+										Type: "string",
+									},
+								},
+							},
+							"actionType": {
+								Type: "string",
+								Enum: []any{"workflows"},
+							},
+						},
+					},
+				},
+			},
 			"description": {
 				Type: "string",
 			},
@@ -49,11 +110,72 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /automated_actions/{actionId}.action.allOf[0] left permissive
 	"PUT /automated_actions/{actionId}": {
 		Type:     "object",
 		Required: []string{"action", "executionCondition", "isEnabled", "name"},
 		Properties: map[string]*core.BodySchema{
+			"action": {
+				Type:          "object",
+				Discriminator: "actionType",
+				Variants: map[string]*core.BodySchema{
+					"simpleNotification": {
+						Type:     "object",
+						Required: []string{"actionParameter", "actionType"},
+						Properties: map[string]*core.BodySchema{
+							"actionParameter": {
+								Type:     "object",
+								Required: []string{"notificationGroupId", "servicePrincipalId"},
+								Properties: map[string]*core.BodySchema{
+									"notificationGroupId": {
+										Type: "string",
+									},
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+							"actionType": {
+								Type: "string",
+								Enum: []any{"simpleNotification"},
+							},
+						},
+					},
+					"workflows": {
+						Type:     "object",
+						Required: []string{"actionParameter", "actionType"},
+						Properties: map[string]*core.BodySchema{
+							"actionParameter": {
+								Type:     "object",
+								Required: []string{"servicePrincipalId", "workflowId"},
+								Properties: map[string]*core.BodySchema{
+									"args": {
+										Type: "string",
+									},
+									"name": {
+										Type: "string",
+									},
+									"revisionAlias": {
+										Type: "string",
+									},
+									"revisionId": {
+										Type: "integer",
+									},
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"workflowId": {
+										Type: "string",
+									},
+								},
+							},
+							"actionType": {
+								Type: "string",
+								Enum: []any{"workflows"},
+							},
+						},
+					},
+				},
+			},
 			"description": {
 				Type: "string",
 			},
@@ -68,13 +190,296 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /evaluation_rules/{evaluationRuleId}.rule left permissive
 	"PUT /evaluation_rules/{evaluationRuleId}": {
 		Type:     "object",
 		Required: []string{"isEnabled", "rule"},
 		Properties: map[string]*core.BodySchema{
 			"isEnabled": {
 				Type: "boolean",
+			},
+			"rule": {
+				Type:          "object",
+				Discriminator: "evaluationRuleId",
+				Variants: map[string]*core.BodySchema{
+					"addon-datalake-no-public-access": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"addon-datalake-no-public-access"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+					"addon-dwh-no-public-access": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"addon-dwh-no-public-access"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+					"addon-threat-detection-enabled": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"addon-threat-detection-enabled"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"zones": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+					"addon-threat-detections": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"addon-threat-detections"},
+							},
+						},
+					},
+					"addon-vulnerability-detections": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"addon-vulnerability-detections"},
+							},
+						},
+					},
+					"dba-encryption-enabled": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"dba-encryption-enabled"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"zones": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+					"dba-no-public-ip": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"dba-no-public-ip"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"zones": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+					"disk-encryption-enabled": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"disk-encryption-enabled"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"zones": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+					"elb-logging-enabled": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"elb-logging-enabled"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+					"iam-member-operation-detected": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"iam-member-operation-detected"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+					"nosql-encryption-enabled": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"nosql-encryption-enabled"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"zones": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+					"objectstorage-bucket-acl-changed": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"objectstorage-bucket-acl-changed"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+								},
+							},
+						},
+					},
+					"objectstorage-bucket-encryption-enabled": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"objectstorage-bucket-encryption-enabled"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"sites": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+					"server-no-public-ip": {
+						Type:     "object",
+						Required: []string{"evaluationRuleId"},
+						Properties: map[string]*core.BodySchema{
+							"evaluationRuleId": {
+								Type: "string",
+								Enum: []any{"server-no-public-ip"},
+							},
+							"parameter": {
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"servicePrincipalId": {
+										Type: "string",
+									},
+									"zones": {
+										Type: "array",
+										Items: &core.BodySchema{
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	},
@@ -259,7 +664,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /automated_actions response 200.items[].action.allOf[0] left permissive
 	"GET /automated_actions": {
 		200: {
 			Type:     "object",
@@ -271,6 +675,68 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 						Type:     "object",
 						Required: []string{"action", "automatedActionId", "createdAt", "executionCondition", "isEnabled", "name"},
 						Properties: map[string]*core.BodySchema{
+							"action": {
+								Type:          "object",
+								Discriminator: "actionType",
+								Variants: map[string]*core.BodySchema{
+									"simpleNotification": {
+										Type:     "object",
+										Required: []string{"actionParameter", "actionType"},
+										Properties: map[string]*core.BodySchema{
+											"actionParameter": {
+												Type:     "object",
+												Required: []string{"notificationGroupId", "servicePrincipalId"},
+												Properties: map[string]*core.BodySchema{
+													"notificationGroupId": {
+														Type: "string",
+													},
+													"servicePrincipalId": {
+														Type: "string",
+													},
+												},
+											},
+											"actionType": {
+												Type: "string",
+												Enum: []any{"simpleNotification"},
+											},
+										},
+									},
+									"workflows": {
+										Type:     "object",
+										Required: []string{"actionParameter", "actionType"},
+										Properties: map[string]*core.BodySchema{
+											"actionParameter": {
+												Type:     "object",
+												Required: []string{"servicePrincipalId", "workflowId"},
+												Properties: map[string]*core.BodySchema{
+													"args": {
+														Type: "string",
+													},
+													"name": {
+														Type: "string",
+													},
+													"revisionAlias": {
+														Type: "string",
+													},
+													"revisionId": {
+														Type: "integer",
+													},
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"workflowId": {
+														Type: "string",
+													},
+												},
+											},
+											"actionType": {
+												Type: "string",
+												Enum: []any{"workflows"},
+											},
+										},
+									},
+								},
+							},
 							"automatedActionId": {
 								Type: "string",
 							},
@@ -370,12 +836,73 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /automated_actions/{actionId} response 200.action.allOf[0] left permissive
 	"GET /automated_actions/{actionId}": {
 		200: {
 			Type:     "object",
 			Required: []string{"action", "automatedActionId", "createdAt", "executionCondition", "isEnabled", "name"},
 			Properties: map[string]*core.BodySchema{
+				"action": {
+					Type:          "object",
+					Discriminator: "actionType",
+					Variants: map[string]*core.BodySchema{
+						"simpleNotification": {
+							Type:     "object",
+							Required: []string{"actionParameter", "actionType"},
+							Properties: map[string]*core.BodySchema{
+								"actionParameter": {
+									Type:     "object",
+									Required: []string{"notificationGroupId", "servicePrincipalId"},
+									Properties: map[string]*core.BodySchema{
+										"notificationGroupId": {
+											Type: "string",
+										},
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+								"actionType": {
+									Type: "string",
+									Enum: []any{"simpleNotification"},
+								},
+							},
+						},
+						"workflows": {
+							Type:     "object",
+							Required: []string{"actionParameter", "actionType"},
+							Properties: map[string]*core.BodySchema{
+								"actionParameter": {
+									Type:     "object",
+									Required: []string{"servicePrincipalId", "workflowId"},
+									Properties: map[string]*core.BodySchema{
+										"args": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+										"revisionAlias": {
+											Type: "string",
+										},
+										"revisionId": {
+											Type: "integer",
+										},
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"workflowId": {
+											Type: "string",
+										},
+									},
+								},
+								"actionType": {
+									Type: "string",
+									Enum: []any{"workflows"},
+								},
+							},
+						},
+					},
+				},
 				"automatedActionId": {
 					Type: "string",
 				},
@@ -485,7 +1012,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /evaluation_rules response 200.items[].rule left permissive
 	"GET /evaluation_rules": {
 		200: {
 			Type:     "object",
@@ -508,6 +1034,290 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"isEnabled": {
 								Type: "boolean",
+							},
+							"rule": {
+								Type:          "object",
+								Discriminator: "evaluationRuleId",
+								Variants: map[string]*core.BodySchema{
+									"addon-datalake-no-public-access": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"addon-datalake-no-public-access"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+									"addon-dwh-no-public-access": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"addon-dwh-no-public-access"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+									"addon-threat-detection-enabled": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"addon-threat-detection-enabled"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"zones": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+									"addon-threat-detections": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"addon-threat-detections"},
+											},
+										},
+									},
+									"addon-vulnerability-detections": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"addon-vulnerability-detections"},
+											},
+										},
+									},
+									"dba-encryption-enabled": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"dba-encryption-enabled"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"zones": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+									"dba-no-public-ip": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"dba-no-public-ip"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"zones": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+									"disk-encryption-enabled": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"disk-encryption-enabled"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"zones": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+									"elb-logging-enabled": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"elb-logging-enabled"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+									"iam-member-operation-detected": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"iam-member-operation-detected"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+									"nosql-encryption-enabled": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"nosql-encryption-enabled"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"zones": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+									"objectstorage-bucket-acl-changed": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"objectstorage-bucket-acl-changed"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+									"objectstorage-bucket-encryption-enabled": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"objectstorage-bucket-encryption-enabled"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"sites": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+									"server-no-public-ip": {
+										Type:     "object",
+										Required: []string{"evaluationRuleId"},
+										Properties: map[string]*core.BodySchema{
+											"evaluationRuleId": {
+												Type: "string",
+												Enum: []any{"server-no-public-ip"},
+											},
+											"parameter": {
+												Type: "object",
+												Properties: map[string]*core.BodySchema{
+													"servicePrincipalId": {
+														Type: "string",
+													},
+													"zones": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -634,7 +1444,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /evaluation_rules/{evaluationRuleId} response 200.rule left permissive
 	"GET /evaluation_rules/{evaluationRuleId}": {
 		200: {
 			Type:     "object",
@@ -651,6 +1460,290 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"isEnabled": {
 					Type: "boolean",
+				},
+				"rule": {
+					Type:          "object",
+					Discriminator: "evaluationRuleId",
+					Variants: map[string]*core.BodySchema{
+						"addon-datalake-no-public-access": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-datalake-no-public-access"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"addon-dwh-no-public-access": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-dwh-no-public-access"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"addon-threat-detection-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-threat-detection-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"addon-threat-detections": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-threat-detections"},
+								},
+							},
+						},
+						"addon-vulnerability-detections": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-vulnerability-detections"},
+								},
+							},
+						},
+						"dba-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"dba-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"dba-no-public-ip": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"dba-no-public-ip"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"disk-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"disk-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"elb-logging-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"elb-logging-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"iam-member-operation-detected": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"iam-member-operation-detected"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"nosql-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"nosql-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"objectstorage-bucket-acl-changed": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"objectstorage-bucket-acl-changed"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"objectstorage-bucket-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"objectstorage-bucket-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"sites": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"server-no-public-ip": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"server-no-public-ip"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -870,12 +1963,73 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at POST /automated_actions response 201.action.allOf[0] left permissive
 	"POST /automated_actions": {
 		201: {
 			Type:     "object",
 			Required: []string{"action", "automatedActionId", "createdAt", "executionCondition", "isEnabled", "name"},
 			Properties: map[string]*core.BodySchema{
+				"action": {
+					Type:          "object",
+					Discriminator: "actionType",
+					Variants: map[string]*core.BodySchema{
+						"simpleNotification": {
+							Type:     "object",
+							Required: []string{"actionParameter", "actionType"},
+							Properties: map[string]*core.BodySchema{
+								"actionParameter": {
+									Type:     "object",
+									Required: []string{"notificationGroupId", "servicePrincipalId"},
+									Properties: map[string]*core.BodySchema{
+										"notificationGroupId": {
+											Type: "string",
+										},
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+								"actionType": {
+									Type: "string",
+									Enum: []any{"simpleNotification"},
+								},
+							},
+						},
+						"workflows": {
+							Type:     "object",
+							Required: []string{"actionParameter", "actionType"},
+							Properties: map[string]*core.BodySchema{
+								"actionParameter": {
+									Type:     "object",
+									Required: []string{"servicePrincipalId", "workflowId"},
+									Properties: map[string]*core.BodySchema{
+										"args": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+										"revisionAlias": {
+											Type: "string",
+										},
+										"revisionId": {
+											Type: "integer",
+										},
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"workflowId": {
+											Type: "string",
+										},
+									},
+								},
+								"actionType": {
+									Type: "string",
+									Enum: []any{"workflows"},
+								},
+							},
+						},
+					},
+				},
 				"automatedActionId": {
 					Type: "string",
 				},
@@ -1112,12 +2266,73 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /automated_actions/{actionId} response 200.action.allOf[0] left permissive
 	"PUT /automated_actions/{actionId}": {
 		200: {
 			Type:     "object",
 			Required: []string{"action", "automatedActionId", "createdAt", "executionCondition", "isEnabled", "name"},
 			Properties: map[string]*core.BodySchema{
+				"action": {
+					Type:          "object",
+					Discriminator: "actionType",
+					Variants: map[string]*core.BodySchema{
+						"simpleNotification": {
+							Type:     "object",
+							Required: []string{"actionParameter", "actionType"},
+							Properties: map[string]*core.BodySchema{
+								"actionParameter": {
+									Type:     "object",
+									Required: []string{"notificationGroupId", "servicePrincipalId"},
+									Properties: map[string]*core.BodySchema{
+										"notificationGroupId": {
+											Type: "string",
+										},
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+								"actionType": {
+									Type: "string",
+									Enum: []any{"simpleNotification"},
+								},
+							},
+						},
+						"workflows": {
+							Type:     "object",
+							Required: []string{"actionParameter", "actionType"},
+							Properties: map[string]*core.BodySchema{
+								"actionParameter": {
+									Type:     "object",
+									Required: []string{"servicePrincipalId", "workflowId"},
+									Properties: map[string]*core.BodySchema{
+										"args": {
+											Type: "string",
+										},
+										"name": {
+											Type: "string",
+										},
+										"revisionAlias": {
+											Type: "string",
+										},
+										"revisionId": {
+											Type: "integer",
+										},
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"workflowId": {
+											Type: "string",
+										},
+									},
+								},
+								"actionType": {
+									Type: "string",
+									Enum: []any{"workflows"},
+								},
+							},
+						},
+					},
+				},
 				"automatedActionId": {
 					Type: "string",
 				},
@@ -1249,7 +2464,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /evaluation_rules/{evaluationRuleId} response 200.rule left permissive
 	"PUT /evaluation_rules/{evaluationRuleId}": {
 		200: {
 			Type:     "object",
@@ -1266,6 +2480,290 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 				"isEnabled": {
 					Type: "boolean",
+				},
+				"rule": {
+					Type:          "object",
+					Discriminator: "evaluationRuleId",
+					Variants: map[string]*core.BodySchema{
+						"addon-datalake-no-public-access": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-datalake-no-public-access"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"addon-dwh-no-public-access": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-dwh-no-public-access"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"addon-threat-detection-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-threat-detection-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"addon-threat-detections": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-threat-detections"},
+								},
+							},
+						},
+						"addon-vulnerability-detections": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"addon-vulnerability-detections"},
+								},
+							},
+						},
+						"dba-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"dba-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"dba-no-public-ip": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"dba-no-public-ip"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"disk-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"disk-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"elb-logging-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"elb-logging-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"iam-member-operation-detected": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"iam-member-operation-detected"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"nosql-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"nosql-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"objectstorage-bucket-acl-changed": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"objectstorage-bucket-acl-changed"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+									},
+								},
+							},
+						},
+						"objectstorage-bucket-encryption-enabled": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"objectstorage-bucket-encryption-enabled"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"sites": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+						"server-no-public-ip": {
+							Type:     "object",
+							Required: []string{"evaluationRuleId"},
+							Properties: map[string]*core.BodySchema{
+								"evaluationRuleId": {
+									Type: "string",
+									Enum: []any{"server-no-public-ip"},
+								},
+								"parameter": {
+									Type: "object",
+									Properties: map[string]*core.BodySchema{
+										"servicePrincipalId": {
+											Type: "string",
+										},
+										"zones": {
+											Type: "array",
+											Items: &core.BodySchema{
+												Type: "string",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},

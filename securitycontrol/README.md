@@ -109,9 +109,9 @@ Errors are RFC 7807 problem details (`{"title", "status", "detail"}`) whose
 They are sent as `application/json`, which the spec allows beside
 `application/problem+json` and which the SDK decodes.
 
-The spec's discriminated unions (`action`, `rule`) are not validated beyond
-being present: the request-body validator generated from the spec leaves
-`oneOf` permissive.
+Request bodies are validated against the spec, including the discriminated
+unions: `action` by its `actionType` and `rule` by its `evaluationRuleId`
+(e.g. a `workflows` action without `workflowId` answers `400`).
 
 ## Mock-only endpoints
 

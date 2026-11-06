@@ -6,9 +6,11 @@
 //
 // Spec handling: OpenAPI 3.0 and 3.1 are accepted (`nullable: true`,
 // `type: ["T","null"]`, `type: 'null'`, and an anyOf/oneOf of a schema and
-// `{type: 'null'}`), local $refs are resolved and allOf is merged.
-// oneOf/anyOf/not, recursive refs, and non-RE2 patterns degrade the schema
-// to permissive with a `// NOTE:` in the output. A required name with no
+// `{type: 'null'}`), local $refs are resolved and allOf is merged. A oneOf
+// with a discriminator compiles to core.BodySchema Discriminator/Variants,
+// each value taken from discriminator.mapping or else the branch's component
+// name. Other oneOf/anyOf/not, recursive refs, and non-RE2 patterns degrade
+// the schema to permissive with a `// NOTE:` in the output. A required name with no
 // property definition beside it (a spec inconsistency that ogen-generated SDK
 // types also drop) is skipped with a NOTE. Spec paths the mock does not serve
 // yield inert entries; /_sakumock/ routes have none. -spec may be repeated

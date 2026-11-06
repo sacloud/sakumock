@@ -198,6 +198,25 @@ func writeSchema(b *strings.Builder, s *core.BodySchema, depth int) {
 		}
 		field("Enum", "[]any{"+strings.Join(values, ", ")+"}")
 	}
+	if s.Discriminator != "" {
+		field("Discriminator", strconv.Quote(s.Discriminator))
+		names := make([]string, 0, len(s.Variants))
+		for name := range s.Variants {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		fmt.Fprintf(b, "%sVariants: map[string]*core.BodySchema{\n", ind)
+		for _, name := range names {
+			if s.Variants[name] == nil {
+				fmt.Fprintf(b, "%s\t%q: nil,\n", ind, name)
+				continue
+			}
+			fmt.Fprintf(b, "%s\t%q: ", ind, name)
+			writeSchema(b, s.Variants[name], depth+2)
+			b.WriteString(",\n")
+		}
+		fmt.Fprintf(b, "%s},\n", ind)
+	}
 	b.WriteString(strings.Repeat("\t", depth) + "}")
 }
 

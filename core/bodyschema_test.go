@@ -97,3 +97,55 @@ func TestBodySchemaValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestBodySchemaDiscriminator(t *testing.T) {
+	action := &core.BodySchema{
+		Type:          "object",
+		Discriminator: "actionType",
+		Variants: map[string]*core.BodySchema{
+			"notify": {
+				Type:     "object",
+				Required: []string{"actionParameter", "actionType"},
+				Properties: map[string]*core.BodySchema{
+					"actionParameter": {
+						Type:     "object",
+						Required: []string{"groupId"},
+						Properties: map[string]*core.BodySchema{
+							"groupId": {Type: "string"},
+						},
+					},
+				},
+			},
+			"opaque": nil,
+		},
+	}
+	schema := &core.BodySchema{
+		Type:       "object",
+		Properties: map[string]*core.BodySchema{"action": action},
+	}
+
+	cases := []struct {
+		name string
+		body string
+		want string
+	}{
+		{"valid variant", `{"action": {"actionType": "notify", "actionParameter": {"groupId": "1"}}}`, ""},
+		{"nil variant is permissive", `{"action": {"actionType": "opaque", "x": 1}}`, ""},
+		{"not an object", `{"action": "notify"}`, "action must be an object"},
+		{"missing discriminator", `{"action": {}}`, "action.actionType is required"},
+		{"non-string discriminator", `{"action": {"actionType": 1}}`, "action.actionType must be a string"},
+		{"unknown variant", `{"action": {"actionType": "email"}}`, "action.actionType must be one of notify, opaque"},
+		{"variant constraint", `{"action": {"actionType": "notify", "actionParameter": {}}}`, "action.actionParameter.groupId is required"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := schema.Validate(decode(t, c.body)); got != c.want {
+				t.Errorf("Validate(%s) = %q, want %q", c.body, got, c.want)
+			}
+		})
+	}
+	nullable := &core.BodySchema{Discriminator: "kind", Nullable: true}
+	if got := nullable.Validate(nil); got != "" {
+		t.Errorf("nullable discriminated schema rejected null: %q", got)
+	}
+}

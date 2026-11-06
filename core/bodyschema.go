@@ -2,8 +2,10 @@ package core
 
 import (
 	"fmt"
+	"maps"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -38,6 +40,13 @@ type BodySchema struct {
 	ExclusiveMaximum bool
 
 	Enum []any
+
+	// Discriminator and Variants express a discriminated oneOf: the value
+	// must be an object whose Discriminator property is a string naming one
+	// of Variants, and it is then also validated against that variant (a nil
+	// variant accepts anything).
+	Discriminator string
+	Variants      map[string]*BodySchema
 }
 
 // patternCache keeps compiled patterns out of the schemas themselves, which
@@ -70,6 +79,34 @@ func (s *BodySchema) validate(path string, v any) string {
 	if s == nil {
 		return ""
 	}
+	if msg := s.validateBase(path, v); msg != "" || v == nil || s.Discriminator == "" {
+		return msg
+	}
+	return s.validateVariant(path, v)
+}
+
+func (s *BodySchema) validateVariant(path string, v any) string {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return fieldLabel(path) + " must be an object"
+	}
+	key := joinPath(path, s.Discriminator)
+	raw, ok := obj[s.Discriminator]
+	if !ok {
+		return key + " is required"
+	}
+	tag, ok := raw.(string)
+	if !ok {
+		return key + " must be a string"
+	}
+	variant, ok := s.Variants[tag]
+	if !ok {
+		return fmt.Sprintf("%s must be one of %s", key, strings.Join(slices.Sorted(maps.Keys(s.Variants)), ", "))
+	}
+	return variant.validate(path, v)
+}
+
+func (s *BodySchema) validateBase(path string, v any) string {
 	if v == nil {
 		if s.Nullable {
 			return ""

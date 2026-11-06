@@ -70,6 +70,31 @@ components:
             - $ref: '#/components/schemas/TimerEvent'
           discriminator:
             propertyName: kind
+        trigger:
+          type: object
+          oneOf:
+            - $ref: '#/components/schemas/MessageEvent'
+            - $ref: '#/components/schemas/TimerEvent'
+          discriminator:
+            propertyName: kind
+            mapping:
+              msg: '#/components/schemas/MessageEvent'
+              timer: TimerEvent
+        inline:
+          oneOf:
+            - type: object
+          discriminator:
+            propertyName: kind
+        matcher:
+          $ref: '#/components/schemas/Matcher'
+        swapped:
+          oneOf:
+            - $ref: '#/components/schemas/LeafMatcher'
+            - $ref: '#/components/schemas/AndMatcher'
+          discriminator:
+            propertyName: type
+            mapping:
+              LeafMatcher: '#/components/schemas/AndMatcher'
         source:
           type: string
           minLength: 1
@@ -89,4 +114,35 @@ components:
       type: object
       properties:
         kind:
+          type: string
+    Matcher:
+      oneOf:
+        - $ref: '#/components/schemas/AndMatcher'
+        - $ref: '#/components/schemas/LeafMatcher'
+      discriminator:
+        propertyName: type
+        mapping:
+          and: '#/components/schemas/AndMatcher'
+          leaf: '#/components/schemas/LeafMatcher'
+    AndMatcher:
+      type: object
+      required:
+        - type
+        - matchers
+      properties:
+        type:
+          type: string
+        matchers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Matcher'
+    LeafMatcher:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+        value:
           type: string

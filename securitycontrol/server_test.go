@@ -359,3 +359,46 @@ func TestErrorShape(t *testing.T) {
 		t.Fatalf("unexpected problem body: %s", body)
 	}
 }
+
+func TestDiscriminatedUnionValidation(t *testing.T) {
+	srv, _ := newServer(t, sc.Config{})
+	cases := []struct {
+		name, method, path, body, want string
+	}{
+		{"unknown actionType", "POST", "/automated_actions",
+			`{"name":"a","executionCondition":"true","isEnabled":true,"action":{"actionType":"email"}}`,
+			"action.actionType must be one of simpleNotification, workflows"},
+		{"workflows without workflowId", "POST", "/automated_actions",
+			`{"name":"a","executionCondition":"true","isEnabled":true,"action":{"actionType":"workflows","actionParameter":{"servicePrincipalId":"1"}}}`,
+			"action.actionParameter.workflowId is required"},
+		{"rule parameter of the wrong type", "PUT", "/evaluation_rules/server-no-public-ip",
+			`{"isEnabled":true,"rule":{"evaluationRuleId":"server-no-public-ip","parameter":{"zones":"is1a"}}}`,
+			"rule.parameter.zones must be an array"},
+		{"rule without evaluationRuleId", "PUT", "/evaluation_rules/server-no-public-ip",
+			`{"isEnabled":true,"rule":{}}`,
+			"rule.evaluationRuleId is required"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			req, err := http.NewRequestWithContext(t.Context(), c.method, srv.TestURL()+c.path, strings.NewReader(c.body))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+			var p struct {
+				Title string `json:"title"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&p); err != nil {
+				t.Fatal(err)
+			}
+			if resp.StatusCode != http.StatusBadRequest || p.Title != c.want {
+				t.Fatalf("got %d %q, want 400 %q", resp.StatusCode, p.Title, c.want)
+			}
+		})
+	}
+}

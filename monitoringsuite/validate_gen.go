@@ -9,7 +9,8 @@ import "github.com/sacloud/sakumock/core"
 // Entries for spec paths the mock does not serve are inert: the
 // core.BodyValidator lookup simply never hits them.
 var bodySchemas = map[string]*core.BodySchema{
-	// NOTE: oneOf at PATCH /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PATCH /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PATCH /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"PATCH /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
 		Type: "object",
 		Properties: map[string]*core.BodySchema{
@@ -40,6 +41,230 @@ var bodySchemas = map[string]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"matchers": {
 								Type: "array",
+								Items: &core.BodySchema{
+									Discriminator: "type",
+									Variants: map[string]*core.BodySchema{
+										"and": {
+											Type:     "object",
+											Required: []string{"matchers", "type"},
+											Properties: map[string]*core.BodySchema{
+												"matchers": {
+													Type: "array",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"and"},
+												},
+											},
+										},
+										"boolean": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"http_cache_lookup", "http_cache_hit"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"boolean"},
+												},
+												"value": {
+													Type: "boolean",
+												},
+											},
+										},
+										"enum": {
+											Type:     "object",
+											Required: []string{"field", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"severity"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"enum"},
+												},
+												"value": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+														Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+													},
+												},
+											},
+										},
+										"map-key-exists": {
+											Type:     "object",
+											Required: []string{"field", "key", "type"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-key-exists"},
+												},
+											},
+										},
+										"map-key-value-matcher": {
+											Type:     "object",
+											Required: []string{"field", "key", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-key-value-matcher"},
+												},
+												"value": {
+													Type: "string",
+												},
+											},
+										},
+										"map-value-number": {
+											Type:     "object",
+											Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-value-number"},
+												},
+												"value": {
+													Type: "number",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "number",
+													},
+												},
+											},
+										},
+										"map-value-string": {
+											Type:     "object",
+											Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-value-string"},
+												},
+												"value": {
+													Type: "string",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+													},
+												},
+											},
+										},
+										"number": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"number"},
+												},
+												"value": {
+													Type: "number",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "number",
+													},
+												},
+											},
+										},
+										"or": {
+											Type:     "object",
+											Required: []string{"matchers", "type"},
+											Properties: map[string]*core.BodySchema{
+												"matchers": {
+													Type: "array",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"or"},
+												},
+											},
+										},
+										"string": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"string"},
+												},
+												"value": {
+													Type: "string",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -306,7 +531,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at POST /alerts/projects/{projectResourceId}/log-measure-rules/.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at POST /alerts/projects/{projectResourceId}/log-measure-rules/.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at POST /alerts/projects/{projectResourceId}/log-measure-rules/.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"POST /alerts/projects/{project_resource_id}/log-measure-rules/": {
 		Type:     "object",
 		Required: []string{"log_storage_id", "metrics_storage_id", "rule"},
@@ -338,6 +564,230 @@ var bodySchemas = map[string]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"matchers": {
 								Type: "array",
+								Items: &core.BodySchema{
+									Discriminator: "type",
+									Variants: map[string]*core.BodySchema{
+										"and": {
+											Type:     "object",
+											Required: []string{"matchers", "type"},
+											Properties: map[string]*core.BodySchema{
+												"matchers": {
+													Type: "array",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"and"},
+												},
+											},
+										},
+										"boolean": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"http_cache_lookup", "http_cache_hit"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"boolean"},
+												},
+												"value": {
+													Type: "boolean",
+												},
+											},
+										},
+										"enum": {
+											Type:     "object",
+											Required: []string{"field", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"severity"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"enum"},
+												},
+												"value": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+														Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+													},
+												},
+											},
+										},
+										"map-key-exists": {
+											Type:     "object",
+											Required: []string{"field", "key", "type"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-key-exists"},
+												},
+											},
+										},
+										"map-key-value-matcher": {
+											Type:     "object",
+											Required: []string{"field", "key", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-key-value-matcher"},
+												},
+												"value": {
+													Type: "string",
+												},
+											},
+										},
+										"map-value-number": {
+											Type:     "object",
+											Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-value-number"},
+												},
+												"value": {
+													Type: "number",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "number",
+													},
+												},
+											},
+										},
+										"map-value-string": {
+											Type:     "object",
+											Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-value-string"},
+												},
+												"value": {
+													Type: "string",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+													},
+												},
+											},
+										},
+										"number": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"number"},
+												},
+												"value": {
+													Type: "number",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "number",
+													},
+												},
+											},
+										},
+										"or": {
+											Type:     "object",
+											Required: []string{"matchers", "type"},
+											Properties: map[string]*core.BodySchema{
+												"matchers": {
+													Type: "array",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"or"},
+												},
+											},
+										},
+										"string": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"string"},
+												},
+												"value": {
+													Type: "string",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -667,7 +1117,8 @@ var bodySchemas = map[string]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PUT /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PUT /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"PUT /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
 		Type:     "object",
 		Required: []string{"log_storage_id", "metrics_storage_id", "rule"},
@@ -699,6 +1150,230 @@ var bodySchemas = map[string]*core.BodySchema{
 						Properties: map[string]*core.BodySchema{
 							"matchers": {
 								Type: "array",
+								Items: &core.BodySchema{
+									Discriminator: "type",
+									Variants: map[string]*core.BodySchema{
+										"and": {
+											Type:     "object",
+											Required: []string{"matchers", "type"},
+											Properties: map[string]*core.BodySchema{
+												"matchers": {
+													Type: "array",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"and"},
+												},
+											},
+										},
+										"boolean": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"http_cache_lookup", "http_cache_hit"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"boolean"},
+												},
+												"value": {
+													Type: "boolean",
+												},
+											},
+										},
+										"enum": {
+											Type:     "object",
+											Required: []string{"field", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"severity"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"enum"},
+												},
+												"value": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+														Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+													},
+												},
+											},
+										},
+										"map-key-exists": {
+											Type:     "object",
+											Required: []string{"field", "key", "type"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-key-exists"},
+												},
+											},
+										},
+										"map-key-value-matcher": {
+											Type:     "object",
+											Required: []string{"field", "key", "type", "value"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-key-value-matcher"},
+												},
+												"value": {
+													Type: "string",
+												},
+											},
+										},
+										"map-value-number": {
+											Type:     "object",
+											Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-value-number"},
+												},
+												"value": {
+													Type: "number",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "number",
+													},
+												},
+											},
+										},
+										"map-value-string": {
+											Type:     "object",
+											Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+												},
+												"key": {
+													Type: "string",
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"map-value-string"},
+												},
+												"value": {
+													Type: "string",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+													},
+												},
+											},
+										},
+										"number": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"number"},
+												},
+												"value": {
+													Type: "number",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "number",
+													},
+												},
+											},
+										},
+										"or": {
+											Type:     "object",
+											Required: []string{"matchers", "type"},
+											Properties: map[string]*core.BodySchema{
+												"matchers": {
+													Type: "array",
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"or"},
+												},
+											},
+										},
+										"string": {
+											Type:     "object",
+											Required: []string{"field", "operator", "type", "value", "value_list"},
+											Properties: map[string]*core.BodySchema{
+												"field": {
+													Type: "string",
+													Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+												},
+												"operator": {
+													Type: "string",
+													Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+												},
+												"type": {
+													Type: "string",
+													Enum: []any{"string"},
+												},
+												"value": {
+													Type: "string",
+												},
+												"value_list": {
+													Type: "array",
+													Items: &core.BodySchema{
+														Type: "string",
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -1201,7 +1876,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /alerts/projects/{projectResourceId}/log-measure-rules/ response 200.results[].rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at GET /alerts/projects/{projectResourceId}/log-measure-rules/ response 200.results[].rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at GET /alerts/projects/{projectResourceId}/log-measure-rules/ response 200.results[].rule.query.matchers[]<type=or>.matchers[] left permissive
 	"GET /alerts/projects/{project_resource_id}/log-measure-rules/": {
 		200: {
 			Type:     "object",
@@ -1421,6 +2097,230 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										Properties: map[string]*core.BodySchema{
 											"matchers": {
 												Type: "array",
+												Items: &core.BodySchema{
+													Discriminator: "type",
+													Variants: map[string]*core.BodySchema{
+														"and": {
+															Type:     "object",
+															Required: []string{"matchers", "type"},
+															Properties: map[string]*core.BodySchema{
+																"matchers": {
+																	Type: "array",
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"and"},
+																},
+															},
+														},
+														"boolean": {
+															Type:     "object",
+															Required: []string{"field", "operator", "type", "value"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"http_cache_lookup", "http_cache_hit"},
+																},
+																"operator": {
+																	Type: "string",
+																	Enum: []any{"eq", "ne"},
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"boolean"},
+																},
+																"value": {
+																	Type: "boolean",
+																},
+															},
+														},
+														"enum": {
+															Type:     "object",
+															Required: []string{"field", "type", "value"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"severity"},
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"enum"},
+																},
+																"value": {
+																	Type: "array",
+																	Items: &core.BodySchema{
+																		Type: "string",
+																		Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+																	},
+																},
+															},
+														},
+														"map-key-exists": {
+															Type:     "object",
+															Required: []string{"field", "key", "type"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+																},
+																"key": {
+																	Type: "string",
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"map-key-exists"},
+																},
+															},
+														},
+														"map-key-value-matcher": {
+															Type:     "object",
+															Required: []string{"field", "key", "type", "value"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+																},
+																"key": {
+																	Type: "string",
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"map-key-value-matcher"},
+																},
+																"value": {
+																	Type: "string",
+																},
+															},
+														},
+														"map-value-number": {
+															Type:     "object",
+															Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+																},
+																"key": {
+																	Type: "string",
+																},
+																"operator": {
+																	Type: "string",
+																	Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"map-value-number"},
+																},
+																"value": {
+																	Type: "number",
+																},
+																"value_list": {
+																	Type: "array",
+																	Items: &core.BodySchema{
+																		Type: "number",
+																	},
+																},
+															},
+														},
+														"map-value-string": {
+															Type:     "object",
+															Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+																},
+																"key": {
+																	Type: "string",
+																},
+																"operator": {
+																	Type: "string",
+																	Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"map-value-string"},
+																},
+																"value": {
+																	Type: "string",
+																},
+																"value_list": {
+																	Type: "array",
+																	Items: &core.BodySchema{
+																		Type: "string",
+																	},
+																},
+															},
+														},
+														"number": {
+															Type:     "object",
+															Required: []string{"field", "operator", "type", "value", "value_list"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+																},
+																"operator": {
+																	Type: "string",
+																	Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"number"},
+																},
+																"value": {
+																	Type: "number",
+																},
+																"value_list": {
+																	Type: "array",
+																	Items: &core.BodySchema{
+																		Type: "number",
+																	},
+																},
+															},
+														},
+														"or": {
+															Type:     "object",
+															Required: []string{"matchers", "type"},
+															Properties: map[string]*core.BodySchema{
+																"matchers": {
+																	Type: "array",
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"or"},
+																},
+															},
+														},
+														"string": {
+															Type:     "object",
+															Required: []string{"field", "operator", "type", "value", "value_list"},
+															Properties: map[string]*core.BodySchema{
+																"field": {
+																	Type: "string",
+																	Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+																},
+																"operator": {
+																	Type: "string",
+																	Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+																},
+																"type": {
+																	Type: "string",
+																	Enum: []any{"string"},
+																},
+																"value": {
+																	Type: "string",
+																},
+																"value_list": {
+																	Type: "array",
+																	Items: &core.BodySchema{
+																		Type: "string",
+																	},
+																},
+															},
+														},
+													},
+												},
 											},
 										},
 									},
@@ -1445,7 +2345,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at GET /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at GET /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at GET /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"GET /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
 		200: {
 			Type:     "object",
@@ -1650,6 +2551,230 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"matchers": {
 									Type: "array",
+									Items: &core.BodySchema{
+										Discriminator: "type",
+										Variants: map[string]*core.BodySchema{
+											"and": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"and"},
+													},
+												},
+											},
+											"boolean": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_cache_lookup", "http_cache_hit"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"boolean"},
+													},
+													"value": {
+														Type: "boolean",
+													},
+												},
+											},
+											"enum": {
+												Type:     "object",
+												Required: []string{"field", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"severity"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"enum"},
+													},
+													"value": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+															Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+														},
+													},
+												},
+											},
+											"map-key-exists": {
+												Type:     "object",
+												Required: []string{"field", "key", "type"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-exists"},
+													},
+												},
+											},
+											"map-key-value-matcher": {
+												Type:     "object",
+												Required: []string{"field", "key", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-value-matcher"},
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+											"map-value-number": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"map-value-string": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+											"number": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"or": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"or"},
+													},
+												},
+											},
+											"string": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -4180,7 +5305,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PATCH /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PATCH /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PATCH /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"PATCH /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
 		200: {
 			Type:     "object",
@@ -4385,6 +5511,230 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"matchers": {
 									Type: "array",
+									Items: &core.BodySchema{
+										Discriminator: "type",
+										Variants: map[string]*core.BodySchema{
+											"and": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"and"},
+													},
+												},
+											},
+											"boolean": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_cache_lookup", "http_cache_hit"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"boolean"},
+													},
+													"value": {
+														Type: "boolean",
+													},
+												},
+											},
+											"enum": {
+												Type:     "object",
+												Required: []string{"field", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"severity"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"enum"},
+													},
+													"value": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+															Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+														},
+													},
+												},
+											},
+											"map-key-exists": {
+												Type:     "object",
+												Required: []string{"field", "key", "type"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-exists"},
+													},
+												},
+											},
+											"map-key-value-matcher": {
+												Type:     "object",
+												Required: []string{"field", "key", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-value-matcher"},
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+											"map-value-number": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"map-value-string": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+											"number": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"or": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"or"},
+													},
+												},
+											},
+											"string": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -5360,7 +6710,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at POST /alerts/projects/{projectResourceId}/log-measure-rules/ response 201.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at POST /alerts/projects/{projectResourceId}/log-measure-rules/ response 201.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at POST /alerts/projects/{projectResourceId}/log-measure-rules/ response 201.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"POST /alerts/projects/{project_resource_id}/log-measure-rules/": {
 		201: {
 			Type:     "object",
@@ -5565,6 +6916,230 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"matchers": {
 									Type: "array",
+									Items: &core.BodySchema{
+										Discriminator: "type",
+										Variants: map[string]*core.BodySchema{
+											"and": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"and"},
+													},
+												},
+											},
+											"boolean": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_cache_lookup", "http_cache_hit"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"boolean"},
+													},
+													"value": {
+														Type: "boolean",
+													},
+												},
+											},
+											"enum": {
+												Type:     "object",
+												Required: []string{"field", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"severity"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"enum"},
+													},
+													"value": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+															Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+														},
+													},
+												},
+											},
+											"map-key-exists": {
+												Type:     "object",
+												Required: []string{"field", "key", "type"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-exists"},
+													},
+												},
+											},
+											"map-key-value-matcher": {
+												Type:     "object",
+												Required: []string{"field", "key", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-value-matcher"},
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+											"map-value-number": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"map-value-string": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+											"number": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"or": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"or"},
+													},
+												},
+											},
+											"string": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -6669,7 +8244,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 	},
-	// NOTE: oneOf at PUT /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PUT /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[]<type=and>.matchers[] left permissive
+	// NOTE: recursive $ref #/components/schemas/FieldMatcher at PUT /alerts/projects/{projectResourceId}/log-measure-rules/{uid}/ response 200.rule.query.matchers[]<type=or>.matchers[] left permissive
 	"PUT /alerts/projects/{project_resource_id}/log-measure-rules/{uid}/": {
 		200: {
 			Type:     "object",
@@ -6874,6 +8450,230 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							Properties: map[string]*core.BodySchema{
 								"matchers": {
 									Type: "array",
+									Items: &core.BodySchema{
+										Discriminator: "type",
+										Variants: map[string]*core.BodySchema{
+											"and": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"and"},
+													},
+												},
+											},
+											"boolean": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_cache_lookup", "http_cache_hit"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"boolean"},
+													},
+													"value": {
+														Type: "boolean",
+													},
+												},
+											},
+											"enum": {
+												Type:     "object",
+												Required: []string{"field", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"severity"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"enum"},
+													},
+													"value": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+															Enum: []any{"DEFAULT", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL", "ALERT", "EMERGENCY"},
+														},
+													},
+												},
+											},
+											"map-key-exists": {
+												Type:     "object",
+												Required: []string{"field", "key", "type"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-exists"},
+													},
+												},
+											},
+											"map-key-value-matcher": {
+												Type:     "object",
+												Required: []string{"field", "key", "type", "value"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-key-value-matcher"},
+													},
+													"value": {
+														Type: "string",
+													},
+												},
+											},
+											"map-value-number": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"map-value-string": {
+												Type:     "object",
+												Required: []string{"field", "key", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"resource_labels", "labels", "resource_attributes", "attributes", "json_payload"},
+													},
+													"key": {
+														Type: "string",
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"map-value-string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+											"number": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"http_request_size", "http_status", "http_response_size", "http_remote_port", "http_latency_ns", "http_cache_fill_bytes", "sakuracloud_resource", "resource_dropped_attributes_count", "dropped_attributes_count", "span_duration_unix_nano"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"number"},
+													},
+													"value": {
+														Type: "number",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "number",
+														},
+													},
+												},
+											},
+											"or": {
+												Type:     "object",
+												Required: []string{"matchers", "type"},
+												Properties: map[string]*core.BodySchema{
+													"matchers": {
+														Type: "array",
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"or"},
+													},
+												},
+											},
+											"string": {
+												Type:     "object",
+												Required: []string{"field", "operator", "type", "value", "value_list"},
+												Properties: map[string]*core.BodySchema{
+													"field": {
+														Type: "string",
+														Enum: []any{"log_name", "insert_id", "resource_type", "http_request_method", "http_request_url", "http_user_agent", "http_remote_ip", "http_server_ip", "http_referer", "http_protocol", "http_schema", "http_user", "source_loc_file", "source_line", "source_function", "text_payload", "json_payload", "sakuracloud_publisher", "sakuracloud_variant", "sakuracloud_account", "trace_id", "span_id", "parent_span_id", "service_name", "service_instance_id", "service_namespace", "service_version", "deployment_environment_name", "span_name", "span_status_code_text"},
+													},
+													"operator": {
+														Type: "string",
+														Enum: []any{"eq", "ne", "gt", "lt", "gte", "lte", "multi-eq", "like", "ilike"},
+													},
+													"type": {
+														Type: "string",
+														Enum: []any{"string"},
+													},
+													"value": {
+														Type: "string",
+													},
+													"value_list": {
+														Type: "array",
+														Items: &core.BodySchema{
+															Type: "string",
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},

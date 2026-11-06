@@ -386,7 +386,8 @@ func decodePageToken(token string) (start, size int, err error) {
 	if err == nil {
 		_, err = fmt.Sscanf(string(b), "%d:%d", &start, &size)
 	}
-	if err != nil || start < 0 || size < 1 {
+	// Sscanf ignores trailing input, so only the canonical encoding is valid.
+	if err != nil || start < 0 || size < 1 || encodePageToken(start, size) != token {
 		return 0, 0, fmt.Errorf("invalid page token: %q", token)
 	}
 	return start, size, nil

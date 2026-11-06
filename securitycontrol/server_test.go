@@ -269,6 +269,7 @@ func TestAutomatedActionPagination(t *testing.T) {
 		"next and prev":      {Next: params.Next, Prev: params.Next},
 		"page_size mismatch": {PageSize: v1.NewOptInt(3), Next: params.Next},
 		"broken token":       {Next: v1.NewOptString("!!")},
+		"trailing garbage":   {Next: v1.NewOptString("MDo1MGp1bms")}, // "0:50junk"
 		"zero page_size":     {PageSize: v1.NewOptInt(0)},
 	} {
 		if _, err := op.List(ctx, p); statusOf(err) != "400" {

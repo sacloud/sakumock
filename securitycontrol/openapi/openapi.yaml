@@ -1,0 +1,1815 @@
+openapi: 3.1.0
+info:
+  title: Security Control API
+  version: 1.0.0
+  description: |-
+    さくらのクラウド セキュリティコントロール機能のAPI。
+
+    クラウド環境におけるセキュリティ上の問題を早期に発見して対応を支援する。
+externalDocs:
+  url: https://manual.sakura.ad.jp/cloud/controlpanel/eventlog/security-control.html
+tags:
+  - name: 有効化
+  - name: 評価ルール
+  - name: 自動アクション
+paths:
+  /activation:
+    post:
+      operationId: createActivation
+      summary: 現在のプロジェクトの有効化
+      description: |-
+        現在のプロジェクトでセキュリティコントロールを有効化します。
+        成功時は201を返し、リクエストが不正な場合は400を返します。
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOutput'
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '409':
+          description: |-
+            リクエストが現在のリソースの状態と競合した場合のエラー。
+
+            例えば、既に存在するリソースを再度作成しようとした場合などに返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Conflict'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conflict'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 有効化
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationCreateInput'
+    get:
+      operationId: readActivation
+      summary: 現在のプロジェクトの有効化状態の取得
+      description: |-
+        現在のプロジェクトの有効化状態を取得します。
+        成功時は200で有効化詳細を返し、プロジェクトがまだ一度も有効化されていない場合は404を返します。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOutput'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 有効化
+    put:
+      operationId: updateActivation
+      summary: 現在のプロジェクトの有効化状態の更新
+      description: |-
+        現在のプロジェクトの有効化状態を更新します。
+        成功時は200で更新後の有効化詳細を返し、リクエストが不正な場合は400を返します。
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOutput'
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 有効化
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationUpdateInput'
+  /automated_actions:
+    post:
+      operationId: createAutomatedAction
+      summary: 自動アクションの作成
+      description: 新しい自動アクションを作成します。
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomatedActionOutput'
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 自動アクション
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomatedActionInput'
+    get:
+      operationId: listAutomatedActions
+      summary: 自動アクション一覧の取得
+      description: |-
+        自動アクション一覧を取得します。
+
+        pageSizeの最大値は100。100を超える値は100として扱う。
+        pageSize未指定時は50。
+      parameters:
+        - name: page_size
+          in: query
+          required: false
+          description: |-
+            返却する要素の最大数。
+
+            サービス側でこの値より少なく返す場合がある。
+          schema:
+            type: integer
+          explode: false
+        - name: next
+          in: query
+          required: false
+          description: |-
+            このページトークンより後の要素を取得する。
+
+            このフィールドと `prev` は同時に指定できない。
+
+            ページネーション時、他のリクエストパラメータは元のリクエストと一致している必要がある。
+            無効な場合は400 Bad Requestとなる。
+          schema:
+            type: string
+          explode: false
+        - name: prev
+          in: query
+          required: false
+          description: |-
+            このページトークンより前の要素を取得する。
+
+            このフィールドと `next` は同時に指定できない。
+
+            ページネーション時、他のリクエストパラメータは元のリクエストと一致している必要がある。
+            無効な場合は400 Bad Requestとなる。
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AutomatedActionOutput'
+                  nextPageToken:
+                    type: string
+                    description: |-
+                      次ページ取得用のトークン。
+
+                      このフィールドが省略されている場合は次ページなし。
+                      次のページを取得するには、この値を次のリクエストの `next` に指定する。
+                  prevPageToken:
+                    type: string
+                    description: |-
+                      前ページ取得用のトークン。
+
+                      このフィールドが省略されている場合は前ページなし。
+                      前のページを取得するには、この値を次のリクエストの `prev` に指定する。
+                  totalSize:
+                    type: integer
+                    description: |-
+                      ページネーション対象リストの全アイテム数。
+
+                      この値は推定値である可能性がある。
+                required:
+                  - items
+                  - totalSize
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 自動アクション
+  /automated_actions/{actionId}:
+    get:
+      operationId: readAutomatedAction
+      summary: 自動アクション詳細の取得
+      description: 指定されたIDの自動アクション詳細を取得します。
+      parameters:
+        - name: actionId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutomatedActionID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomatedActionOutput'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 自動アクション
+    put:
+      operationId: updateAutomatedAction
+      summary: 自動アクションの更新
+      description: 指定されたIDの自動アクションを更新します。
+      parameters:
+        - name: actionId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutomatedActionID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomatedActionOutput'
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 自動アクション
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomatedActionInput'
+    delete:
+      operationId: deleteAutomatedAction
+      summary: 自動アクションの削除
+      description: 指定されたIDの自動アクションを削除します。
+      parameters:
+        - name: actionId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AutomatedActionID'
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 自動アクション
+  /evaluation_rules:
+    get:
+      operationId: listEvaluationRules
+      summary: 評価ルール一覧の取得
+      description: |-
+        プロジェクトの評価ルール一覧を取得します。
+
+        pageSizeの最大値は100。100を超える値は100として扱う。
+        pageSize未指定時は50。
+      parameters:
+        - name: page_size
+          in: query
+          required: false
+          description: |-
+            返却する要素の最大数。
+
+            サービス側でこの値より少なく返す場合がある。
+          schema:
+            type: integer
+          explode: false
+        - name: next
+          in: query
+          required: false
+          description: |-
+            このページトークンより後の要素を取得する。
+
+            このフィールドと `prev` は同時に指定できない。
+
+            ページネーション時、他のリクエストパラメータは元のリクエストと一致している必要がある。
+            無効な場合は400 Bad Requestとなる。
+          schema:
+            type: string
+          explode: false
+        - name: prev
+          in: query
+          required: false
+          description: |-
+            このページトークンより前の要素を取得する。
+
+            このフィールドと `next` は同時に指定できない。
+
+            ページネーション時、他のリクエストパラメータは元のリクエストと一致している必要がある。
+            無効な場合は400 Bad Requestとなる。
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EvaluationRule'
+                  nextPageToken:
+                    type: string
+                    description: |-
+                      次ページ取得用のトークン。
+
+                      このフィールドが省略されている場合は次ページなし。
+                      次のページを取得するには、この値を次のリクエストの `next` に指定する。
+                  prevPageToken:
+                    type: string
+                    description: |-
+                      前ページ取得用のトークン。
+
+                      このフィールドが省略されている場合は前ページなし。
+                      前のページを取得するには、この値を次のリクエストの `prev` に指定する。
+                  totalSize:
+                    type: integer
+                    description: |-
+                      ページネーション対象リストの全アイテム数。
+
+                      この値は推定値である可能性がある。
+                required:
+                  - items
+                  - totalSize
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 評価ルール
+  /evaluation_rules/{evaluationRuleId}:
+    get:
+      operationId: readEvaluationRule
+      summary: 評価ルール詳細の取得
+      description: 指定されたIDの評価ルール詳細を取得します。
+      parameters:
+        - name: evaluationRuleId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EvaluationRuleID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRule'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 評価ルール
+    put:
+      operationId: updateEvaluationRule
+      summary: 評価ルールの更新
+      description: 指定されたIDの評価ルールを更新します。
+      parameters:
+        - name: evaluationRuleId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EvaluationRuleID'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRule'
+        '400':
+          description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '401':
+          description: |-
+            認証が必要なリクエスト。
+            ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+        '403':
+          description: |-
+            サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+            ユーザーにリソースへのアクセス権限がない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden'
+        '404':
+          description: |-
+            リクエストされたリソースが見つからない場合のエラー。
+            リソースが存在しない、またはアクセスできない場合に返される。
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: |-
+            クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+            レートリミットに達した場合に返される。
+          headers:
+            Retry-After:
+              required: false
+              description: クライアントが再試行するまでにどれぐらい待つべきかを示す。
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/clientDelaySeconds'
+                  - $ref: '#/components/schemas/clientRetryDateTime'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        default:
+          description: An unexpected error response.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnexpectedError'
+      tags:
+        - 評価ルール
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluationRuleInput'
+security:
+  - BasicAuth: []
+components:
+  schemas:
+    ActionDefinition:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/ActionDefinitionSimpleNotification'
+        - $ref: '#/components/schemas/ActionDefinitionWorkflows'
+      discriminator:
+        propertyName: actionType
+        mapping:
+          simpleNotification: '#/components/schemas/ActionDefinitionSimpleNotification'
+          workflows: '#/components/schemas/ActionDefinitionWorkflows'
+    ActionDefinitionSimpleNotification:
+      type: object
+      required:
+        - actionType
+        - actionParameter
+      properties:
+        actionType:
+          type: string
+          enum:
+            - simpleNotification
+        actionParameter:
+          $ref: '#/components/schemas/SakuraSimpleNotification'
+    ActionDefinitionWorkflows:
+      type: object
+      required:
+        - actionType
+        - actionParameter
+      properties:
+        actionType:
+          type: string
+          enum:
+            - workflows
+        actionParameter:
+          $ref: '#/components/schemas/SakuraWorkflows'
+    ActivationCreateInput:
+      type: object
+      required:
+        - servicePrincipalId
+      properties:
+        servicePrincipalId:
+          type: string
+          description: プロジェクトに紐づくサービスプリンシパルID（評価対象リソースへのアクセス権限付与）。
+      description: 新規プロジェクトのセキュリティコントロール有効化時に使用するリクエストボディ。
+    ActivationOutput:
+      type: object
+      required:
+        - servicePrincipalId
+        - isActive
+        - automatedActionLimit
+      properties:
+        servicePrincipalId:
+          type: string
+          description: プロジェクトに紐づくサービスプリンシパルID（評価対象リソースへのアクセス権限付与）。
+        isActive:
+          type: boolean
+          description: 現在のプロジェクトで「セキュリティコントロール」が有効かどうか。
+        automatedActionLimit:
+          type: integer
+          description: 登録可能な自動アクションの最大数。
+          readOnly: true
+      description: |-
+        現在のプロジェクトにおける「セキュリティコントロール」有効化状態を返すレスポンスボディ。
+
+        基本情報に加えて、システム内部で定義された追加情報を含む。
+    ActivationUpdateInput:
+      type: object
+      required:
+        - servicePrincipalId
+        - isActive
+      properties:
+        servicePrincipalId:
+          type: string
+          description: プロジェクトに紐づくサービスプリンシパルID（評価対象リソースへのアクセス権限付与）。
+        isActive:
+          type: boolean
+          description: 現在のプロジェクトで「セキュリティコントロール」が有効かどうか。
+      description: 有効化状態更新時のリクエストボディ
+    AddonDatalakeNoPublicAccess:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - addon-datalake-no-public-access
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.EvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+    AddonDwhNoPublicAccess:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - addon-dwh-no-public-access
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.EvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+    AddonThreatDetectionEnabled:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - addon-threat-detection-enabled
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ZonedEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              zones:
+                - tk1a
+                - is1a
+                - is1b
+            - servicePrincipalId: '1'
+              zones: []
+    AddonThreatDetections:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - addon-threat-detections
+    AddonVulnerabilityDetections:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - addon-vulnerability-detections
+    AutomatedActionID:
+      type: string
+      description: 自動アクションの一意な識別子。
+    AutomatedActionInput:
+      type: object
+      required:
+        - name
+        - action
+        - executionCondition
+        - isEnabled
+      properties:
+        name:
+          type: string
+          description: 自動アクションの名称。
+        description:
+          type: string
+          description: 自動アクションの説明。
+        action:
+          allOf:
+            - $ref: '#/components/schemas/ActionDefinition'
+          description: アクションの定義（アクションタイプごとに異なる）。
+        executionCondition:
+          type: string
+          description: |-
+            どのような条件で自動アクションを実行するかの条件式。
+            この条件式を満たした場合にのみ、自動アクションが実行される。
+            CEL（Common Expression Language）形式で記述する。
+        isEnabled:
+          type: boolean
+          description: 自動アクションが有効かどうか。
+      description: 自動アクションを作成または更新する際に使用するリクエストボディ。
+    AutomatedActionOutput:
+      type: object
+      required:
+        - automatedActionId
+        - name
+        - action
+        - executionCondition
+        - isEnabled
+        - createdAt
+      properties:
+        automatedActionId:
+          allOf:
+            - $ref: '#/components/schemas/AutomatedActionID'
+          description: 自動アクションの一意な識別子。
+          readOnly: true
+        name:
+          type: string
+          description: 自動アクションの名称。
+        description:
+          type: string
+          description: 自動アクションの説明。
+        action:
+          allOf:
+            - $ref: '#/components/schemas/ActionDefinition'
+          description: アクションの定義（アクションタイプごとに異なる）。
+        executionCondition:
+          type: string
+          description: |-
+            どのような条件で自動アクションを実行するかの条件式。
+            この条件式を満たした場合にのみ、自動アクションが実行される。
+            CEL（Common Expression Language）形式で記述する。
+        isEnabled:
+          type: boolean
+          description: 自動アクションが有効かどうか。
+        createdAt:
+          type: string
+          format: date-time
+          description: 自動アクションの作成日時。
+          readOnly: true
+      description: |-
+        自動アクションの現在の状態を取得するためのレスポンスボディ。
+
+        基本情報に加えて、識別子や作成日時など、システムによって付与される情報を含む。
+    BadRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: number
+          enum:
+            - 400
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          enum:
+            - invalid
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: サーバーがリクエストのパラメータやペイロードを理解できなかった場合のエラー。
+    Conflict:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: number
+          enum:
+            - 409
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          enum:
+            - conflict
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: |-
+        リクエストが現在のリソースの状態と競合した場合のエラー。
+
+        例えば、既に存在するリソースを再度作成しようとした場合などに返される。
+    DbaEncryptionEnabled:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - dba-encryption-enabled
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ZonedEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              zones:
+                - tk1a
+                - is1a
+                - is1b
+            - servicePrincipalId: '1'
+              zones: []
+    DbaNoPublicIP:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - dba-no-public-ip
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ZonedEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              zones:
+                - tk1a
+                - is1a
+                - is1b
+            - servicePrincipalId: '1'
+              zones: []
+    DiskEncryptionEnabled:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - disk-encryption-enabled
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ZonedEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              zones:
+                - tk1a
+                - is1a
+                - is1b
+            - servicePrincipalId: '1'
+              zones: []
+    ELBLoggingEnabled:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - elb-logging-enabled
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.EvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+    EvaluationRule:
+      type: object
+      required:
+        - rule
+        - iamRolesRequired
+        - isEnabled
+      properties:
+        rule:
+          $ref: '#/components/schemas/EvaluationRuleUnion'
+        description:
+          type: string
+          description: 評価ルールの説明。
+          readOnly: true
+        iamRolesRequired:
+          type: array
+          items:
+            type: string
+          description: 評価ルールを適用するために必要なIAMロールの一覧。
+          readOnly: true
+        isEnabled:
+          type: boolean
+          description: ルールが有効かどうか。
+      description: プロジェクトに適用できるセキュリティ評価ルールを表す。
+    EvaluationRuleID:
+      type: string
+      enum:
+        - server-no-public-ip
+        - disk-encryption-enabled
+        - dba-encryption-enabled
+        - dba-no-public-ip
+        - objectstorage-bucket-acl-changed
+        - objectstorage-bucket-encryption-enabled
+        - addon-datalake-no-public-access
+        - addon-dwh-no-public-access
+        - addon-threat-detection-enabled
+        - elb-logging-enabled
+        - iam-member-operation-detected
+        - nosql-encryption-enabled
+        - addon-threat-detections
+        - addon-vulnerability-detections
+    EvaluationRuleInput:
+      type: object
+      required:
+        - rule
+        - isEnabled
+      properties:
+        rule:
+          $ref: '#/components/schemas/EvaluationRuleUnion'
+        isEnabled:
+          type: boolean
+          description: ルールが有効かどうか。
+      description: 評価ルールの更新に使用するリクエストボディ。
+    EvaluationRuleParameters.EvaluationTarget:
+      type: object
+      properties:
+        servicePrincipalId:
+          type: string
+          description: 評価対象リソースに対する読み取り権限を持つサービスプリンシパルのID。未指定の場合はセキュリティコントロール有効化時に設定されたサービスプリンシパルが使用される。
+      description: すべての評価ルールに共通する最小セットのパラメータ。
+    EvaluationRuleParameters.ObjectStorageEvaluationTarget:
+      type: object
+      properties:
+        servicePrincipalId:
+          type: string
+          description: 評価対象リソースに対する読み取り権限を持つサービスプリンシパルのID。未指定の場合はセキュリティコントロール有効化時に設定されたサービスプリンシパルが使用される。
+        sites:
+          type: array
+          items:
+            type: string
+          description: 評価対象のオブジェクトストレージ用サイトを指定。未指定または空配列の場合はすべてのサイトが対象となる。
+      description: |-
+        サービスプリンシパルIDと評価対象のオブジェクトストレージ用サイト配列を要求するパラメータ。
+        オブジェクトストレージに関連する評価ルールで使用される。
+        `sites == []` の場合は「全サイト対象」の意味。
+    EvaluationRuleParameters.ZonedEvaluationTarget:
+      type: object
+      properties:
+        servicePrincipalId:
+          type: string
+          description: 評価対象リソースに対する読み取り権限を持つサービスプリンシパルのID。未指定の場合はセキュリティコントロール有効化時に設定されたサービスプリンシパルが使用される。
+        zones:
+          type: array
+          items:
+            type: string
+          description: 評価対象ゾーンを指定。未指定または空配列の場合はすべてのゾーンが対象となる。
+      description: |-
+        サービスプリンシパルIDと評価対象ゾーン配列を要求するパラメータ。
+        `zones == []` の場合は「全ゾーン対象」の意味。
+    EvaluationRuleUnion:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/ServerNoPublicIP'
+        - $ref: '#/components/schemas/DiskEncryptionEnabled'
+        - $ref: '#/components/schemas/DbaEncryptionEnabled'
+        - $ref: '#/components/schemas/DbaNoPublicIP'
+        - $ref: '#/components/schemas/ObjectStorageBucketACLChanged'
+        - $ref: '#/components/schemas/ObjectStorageBucketEncryptionEnabled'
+        - $ref: '#/components/schemas/AddonDatalakeNoPublicAccess'
+        - $ref: '#/components/schemas/AddonDwhNoPublicAccess'
+        - $ref: '#/components/schemas/AddonThreatDetectionEnabled'
+        - $ref: '#/components/schemas/ELBLoggingEnabled'
+        - $ref: '#/components/schemas/IAMMemberOperationDetected'
+        - $ref: '#/components/schemas/NoSQLEncryptionEnabled'
+        - $ref: '#/components/schemas/AddonThreatDetections'
+        - $ref: '#/components/schemas/AddonVulnerabilityDetections'
+      discriminator:
+        propertyName: evaluationRuleId
+        mapping:
+          server-no-public-ip: '#/components/schemas/ServerNoPublicIP'
+          disk-encryption-enabled: '#/components/schemas/DiskEncryptionEnabled'
+          dba-encryption-enabled: '#/components/schemas/DbaEncryptionEnabled'
+          dba-no-public-ip: '#/components/schemas/DbaNoPublicIP'
+          objectstorage-bucket-acl-changed: '#/components/schemas/ObjectStorageBucketACLChanged'
+          objectstorage-bucket-encryption-enabled: '#/components/schemas/ObjectStorageBucketEncryptionEnabled'
+          addon-datalake-no-public-access: '#/components/schemas/AddonDatalakeNoPublicAccess'
+          addon-dwh-no-public-access: '#/components/schemas/AddonDwhNoPublicAccess'
+          addon-threat-detection-enabled: '#/components/schemas/AddonThreatDetectionEnabled'
+          elb-logging-enabled: '#/components/schemas/ELBLoggingEnabled'
+          iam-member-operation-detected: '#/components/schemas/IAMMemberOperationDetected'
+          nosql-encryption-enabled: '#/components/schemas/NoSQLEncryptionEnabled'
+          addon-threat-detections: '#/components/schemas/AddonThreatDetections'
+          addon-vulnerability-detections: '#/components/schemas/AddonVulnerabilityDetections'
+    Forbidden:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: number
+          enum:
+            - 403
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          enum:
+            - forbidden
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: |-
+        サーバーがリクエストを理解したが認可を拒否した場合のエラー。
+        ユーザーにリソースへのアクセス権限がない場合に返される。
+    IAMMemberOperationDetected:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - iam-member-operation-detected
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.EvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+    NoSQLEncryptionEnabled:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - nosql-encryption-enabled
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ZonedEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              zones:
+                - tk1a
+                - is1a
+                - is1b
+            - servicePrincipalId: '1'
+              zones: []
+    NotFound:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: number
+          enum:
+            - 404
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          enum:
+            - not_found
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: |-
+        リクエストされたリソースが見つからない場合のエラー。
+        リソースが存在しない、またはアクセスできない場合に返される。
+    ObjectStorageBucketACLChanged:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - objectstorage-bucket-acl-changed
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.EvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+    ObjectStorageBucketEncryptionEnabled:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - objectstorage-bucket-encryption-enabled
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ObjectStorageEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              sites:
+                - isk01
+                - tky01
+            - servicePrincipalId: '1'
+              sites: []
+    SakuraSimpleNotification:
+      type: object
+      required:
+        - servicePrincipalId
+        - notificationGroupId
+      properties:
+        servicePrincipalId:
+          type: string
+          description: |-
+            さくらのクラウドの作成・削除権限を持つサービスプリンシパルID。
+
+            このサービスプリンシパルには `作成・削除` ロールが付与されている必要がある。
+            付与されていない場合、自動アクションの実行に失敗する。
+        notificationGroupId:
+          type: string
+          description: 通知先グループID
+    SakuraWorkflows:
+      type: object
+      required:
+        - servicePrincipalId
+        - workflowId
+      properties:
+        servicePrincipalId:
+          type: string
+          description: |-
+            さくらのクラウドの作成・削除権限を持つサービスプリンシパルID。
+
+            このサービスプリンシパルには `ワークフロー` ロールが付与されている必要がある。
+            付与されていない場合、自動アクションの実行に失敗する。
+        workflowId:
+          type: string
+          description: ワークフローID
+        revisionId:
+          type: integer
+          description: |-
+            実行したいワークフローのリビジョンID。
+            指定しない場合は最新のリビジョンが使用される。
+        revisionAlias:
+          type: string
+          description: |-
+            実行したいリビジョンのエイリアス。
+            指定しない場合は最新のリビジョンが使用される。
+        args:
+          type: string
+          description: |-
+            実行時にワークフローへ渡す引数（JSON文字列）。
+            引数を要求するワークフローの場合は指定が必須。
+            例: `{\"server_id\": 12345}`
+        name:
+          type: string
+          description: ワークフロー実行名。
+    ServerNoPublicIP:
+      type: object
+      required:
+        - evaluationRuleId
+      properties:
+        evaluationRuleId:
+          type: string
+          enum:
+            - server-no-public-ip
+        parameter:
+          allOf:
+            - $ref: '#/components/schemas/EvaluationRuleParameters.ZonedEvaluationTarget'
+          examples:
+            - servicePrincipalId: '1'
+              zones:
+                - tk1a
+                - is1a
+                - is1b
+            - servicePrincipalId: '1'
+              zones: []
+    TooManyRequests:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: number
+          enum:
+            - 429
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          enum:
+            - too_many_requests
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: |-
+        クライアントが一定期間内に過剰なリクエストを送信した場合のエラー。
+
+        レートリミットに達した場合に返される。
+    Unauthorized:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: number
+          enum:
+            - 401
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          enum:
+            - authentication_failed
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: |-
+        認証が必要なリクエスト。
+        ユーザーが認証されていない、または認証トークンが無効な場合に返されるエラー。
+    UnexpectedError:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: 問題の種類を識別するURI参照。
+        title:
+          type: string
+          description: 問題の種類の簡潔な説明。本APIの運用規約により、このフィールドは常に設定される。
+        status:
+          type: integer
+          description: この問題のHTTPステータスコード。本APIの運用規約により、このフィールドは常に設定される。
+        detail:
+          type: string
+          description: この問題の詳細な説明。
+        instance:
+          type: string
+          format: uri-reference
+          description: この問題の発生を識別するURI参照。
+      description: |-
+        標準的な問題詳細に該当しない予期しないエラー用の汎用エラーモデル。
+        API処理中に発生する予期しないエラーを扱うために使用。
+    clientDelaySeconds:
+      type: integer
+      description: レスポンスを受信してから遅延する秒数を示す負でない 10 進数の整数。
+    clientRetryDateTime:
+      type: string
+      format: date-time
+      description: '再試行する日付。HTTP の日付形式の詳細については RFC 7231, セクション 7.1.1.2: Date を参照。'
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: Basic
+servers:
+  - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/securitycontrol/1.0/
+    description: さくらのクラウド セキュリティコントロール エンドポイント
+    variables: {}

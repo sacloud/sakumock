@@ -2,7 +2,7 @@ openapi: 3.0.3
 
 info:
   title: さくらのクラウドIAM API
-  version: 2.1.0
+  version: 2.1.1
   contact:
     name: SAKURA internet Inc.
   description: さくらのクラウドIAMのAPIドキュメントです
@@ -2251,12 +2251,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Http401Unauthorized"
-        "403":
-          description: アクセス権限がない
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Http403Forbidden"
         "429":
           description: APIリクエストのレートリミット超過
           content:

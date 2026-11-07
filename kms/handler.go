@@ -229,15 +229,6 @@ func (s *Server) handleUpdateKey(w http.ResponseWriter, r *http.Request) {
 	core.WriteJSON(w, http.StatusOK, wrappedKey{Key: keyRecordToResponse(k), IsOK: true})
 }
 
-func (s *Server) handleDeleteKey(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("resource_id")
-	if err := s.store.Delete(id); err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
 func (s *Server) handleRotateKey(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("resource_id")
 	k, err := s.store.Rotate(id)

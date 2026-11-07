@@ -107,18 +107,6 @@ func TestKeyLifecycle(t *testing.T) {
 		t.Fatalf("unexpected tags: %v", read.Tags)
 	}
 
-	if err := keyOp.Delete(ctx, keyID); err != nil {
-		t.Fatal(err)
-	}
-
-	keys, err = keyOp.List(ctx, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(keys) != 0 {
-		t.Fatalf("expected 0 keys after delete, got %d", len(keys))
-	}
-
 	// The handlers above must not have drifted from the OpenAPI spec.
 	if v := srv.SpecViolations(); len(v) != 0 {
 		t.Errorf("spec violations recorded: %+v", v)
@@ -137,15 +125,23 @@ func TestReadNotFound(t *testing.T) {
 	}
 }
 
-func TestDeleteNotFound(t *testing.T) {
+// TestDeleteKeyAbolished checks that the instant-delete API, removed from the
+// portal spec, is rejected and leaves the key in place.
+func TestDeleteKeyAbolished(t *testing.T) {
 	srv := kms.NewTestServer(kms.Config{})
 	defer srv.Close()
 	ctx := t.Context()
 	keyOp := newTestKeyOp(t, srv.TestURL())
 
-	err := keyOp.Delete(ctx, "999999999999")
-	if err == nil {
-		t.Fatal("expected error for non-existent key")
+	created, err := keyOp.Create(ctx, kmssdk.CreateParams{Name: "abolished-delete"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := keyOp.Delete(ctx, created.ID); err == nil {
+		t.Fatal("expected the instant-delete API to be rejected")
+	}
+	if _, err := keyOp.Read(ctx, created.ID); err != nil {
+		t.Fatalf("key must survive the rejected delete: %v", err)
 	}
 }
 

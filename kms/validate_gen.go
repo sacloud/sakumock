@@ -144,9 +144,6 @@ var bodySchemas = map[string]*core.BodySchema{
 // status is declared but its body carries no checkable constraints; a
 // status absent from a route's map is not declared in the spec at all.
 var responseSchemas = map[string]map[int]*core.BodySchema{
-	"DELETE /kms/keys/{resource_id}": {
-		204: nil,
-	},
 	"GET /kms/keys": {
 		200: {
 			Type:     "object",

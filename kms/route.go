@@ -26,7 +26,6 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("POST", "/kms/keys", "Create a new key", s.handleCreateKey),
 		route("GET", "/kms/keys/{resource_id}", "Get a key", s.handleReadKey),
 		route("PUT", "/kms/keys/{resource_id}", "Update a key", s.handleUpdateKey),
-		route("DELETE", "/kms/keys/{resource_id}", "Delete a key", s.handleDeleteKey),
 		route("POST", "/kms/keys/{resource_id}/rotate", "Rotate a key", s.handleRotateKey),
 		route("POST", "/kms/keys/{resource_id}/status", "Change key status", s.handleChangeStatus),
 		route("POST", "/kms/keys/{resource_id}/schedule-destruction", "Schedule key destruction", s.handleScheduleDestruction),

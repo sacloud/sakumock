@@ -4891,24 +4891,6 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 				},
 			},
 		},
-		403: {
-			Type:     "object",
-			Required: []string{"detail", "status", "title", "type"},
-			Properties: map[string]*core.BodySchema{
-				"detail": {
-					Type: "string",
-				},
-				"status": {
-					Type: "integer",
-				},
-				"title": {
-					Type: "string",
-				},
-				"type": {
-					Type: "string",
-				},
-			},
-		},
 		429: {
 			Type:     "object",
 			Required: []string{"detail", "status", "title", "type"},

@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "KMS/SecretManager/CloudHSM API",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "さくらのクラウド KMS / SecretManager / CloudHSM API"
   },
   "servers": [
@@ -162,28 +162,6 @@
               }
             },
             "description": ""
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteKey",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "resource_id",
-            "schema": {
-              "type": "string",
-              "title": "リソースID"
-            },
-            "required": true
-          }
-        ],
-        "tags": [
-          "kms-key"
-        ],
-        "responses": {
-          "204": {
-            "description": "No response body"
           }
         }
       }

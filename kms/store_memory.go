@@ -169,20 +169,6 @@ func (s *MemoryStore) Update(id, name, description string, tags []string) (KeyRe
 	return *k, nil
 }
 
-// Delete removes the key and its key material.
-func (s *MemoryStore) Delete(id string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if _, ok := s.keys[id]; !ok {
-		return fmt.Errorf("key %q not found", id)
-	}
-	delete(s.keys, id)
-	delete(s.keyMaterial, id)
-	s.logger.Debug("key deleted", "id", id)
-	return nil
-}
-
 // Rotate adds a version of the key's material and makes it the latest. For a
 // key that is not active it returns the unchanged key with an error.
 func (s *MemoryStore) Rotate(id string) (KeyRecord, error) {

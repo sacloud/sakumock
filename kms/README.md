@@ -79,7 +79,6 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 | POST | `/kms/keys` | Create a new key |
 | GET | `/kms/keys/{resource_id}` | Get a key |
 | PUT | `/kms/keys/{resource_id}` | Update a key |
-| DELETE | `/kms/keys/{resource_id}` | Delete a key |
 | POST | `/kms/keys/{resource_id}/rotate` | Rotate a key |
 | POST | `/kms/keys/{resource_id}/status` | Change key status |
 | POST | `/kms/keys/{resource_id}/schedule-destruction` | Schedule key destruction |
@@ -87,6 +86,7 @@ fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 | POST | `/kms/keys/{resource_id}/decrypt` | Decrypt data |
 
 - `GET /kms/keys` returns keys oldest first and honors the optional `From` (0-based start index, default `0`) and `Count` (page size; `0` or absent returns all) query parameters; the response's `Total` is the number of keys before paging.
+- There is no `DELETE /kms/keys/{resource_id}`: the portal removed the instant-delete API (abolished on 2026-11-19), so keys are deleted only by scheduling their destruction.
 - `POST /kms/keys/{resource_id}/schedule-destruction` sets the key to `pending_destruction` with `DeletionScheduledAfter` = now + `PendingDays` (7–90, default 7). The key is never actually destroyed; changing its status back via `/status` clears the schedule.
 - A key created with `PlainKey` is reported with `KeyOrigin: imported`, but the mock still generates its own key material (use [`--key`](#fixed-keys) for fixed material).
 - Rotating a key that is not `active` returns `403 Forbidden`.

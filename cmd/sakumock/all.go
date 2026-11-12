@@ -66,7 +66,7 @@ type serviceConfigs struct {
 	// core.MountPath. PerServicePorts switches to a listener per service on its
 	// --<service>-addr instead. Data planes keep their own listeners either way.
 	Addr            string `name:"addr" placeholder:"ADDR" default:"127.0.0.1:18000" env:"SAKUMOCK_ADDR" help:"Listen address shared by every service's control plane, each under /<service> (e.g. /kms)"`
-	PerServicePorts bool   `name:"per-service-ports" env:"SAKUMOCK_PER_SERVICE_PORTS" help:"Serve each service's control plane on its own --<service>-addr instead of under --addr"`
+	PerServicePorts bool   `name:"per-service-ports" env:"SAKUMOCK_PER_SERVICE_PORTS" help:"Deprecated (use the single --addr listener): serve each service's control plane on its own --<service>-addr instead of under --addr"`
 }
 
 func (c *serviceConfigs) configs() []core.ServiceConfig {

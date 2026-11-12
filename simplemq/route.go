@@ -2,6 +2,7 @@ package simplemq
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/sacloud/sakumock/core"
 )
@@ -44,6 +45,19 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		cp("PUT", "/commonserviceitem/{id}/simplemq/rotate-apikey", "Rotate the API key for a queue", s.handleRotateAPIKey),
 		cp("DELETE", "/commonserviceitem/{id}/simplemq/messages", "Clear all messages from a queue", s.handleClearMessages),
 	}
+	// Unimplemented operations answer in the envelope of their plane.
+	var dpKeys, cpKeys []string
+	for _, key := range unimplementedRoutes {
+		if _, path, _ := strings.Cut(key, " "); strings.HasPrefix(path, "/commonserviceitem") {
+			cpKeys = append(cpKeys, key)
+		} else {
+			dpKeys = append(dpKeys, key)
+		}
+	}
+	table = append(table, core.UnimplementedRoutes(dpKeys, writeError)...)
+	table = append(table, core.UnimplementedRoutes(cpKeys, func(w http.ResponseWriter, status int, message string) {
+		core.WriteStandardError(w, status, "", message)
+	})...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

@@ -57,6 +57,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/cloudhsm/licenses/{license_resource_id}/documents", "List documents of a CloudHSM software license", s.handleListDocuments),
 		route("POST", "/cloudhsm/licenses/{license_resource_id}/documents/{id}/download", "Get the download URL of a license document", s.handleDownloadDocument),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

@@ -34,6 +34,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", "/appliance/{applianceID}/power", "Power off a Service Endpoint Gateway", s.handlePowerOff),
 		route("PUT", "/appliance/{applianceID}/reset", "Reset a Service Endpoint Gateway's power status", s.handleReset),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

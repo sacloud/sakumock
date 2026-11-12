@@ -2348,3 +2348,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 		},
 	},
 }
+
+// unimplementedRoutes lists the "METHOD /path" route keys of the spec
+// operations the mock does not implement (the mapping's skipPaths); they
+// are registered via core.UnimplementedRoutes and answer 501.
+var unimplementedRoutes []string

@@ -14,7 +14,8 @@ type Route struct {
 	Path        string
 	Description string
 	// Kind is a free-form group label used by PrintRoutes ("api" for SAKURA Cloud-compatible
-	// endpoints, "inspection" for sakumock-only helpers).
+	// endpoints, "inspection" for sakumock-only helpers, UnimplementedKind for spec
+	// operations the mock answers with 501).
 	Kind string
 }
 
@@ -36,8 +37,8 @@ func RoutesOf(table []RegisteredRoute) []Route {
 
 // PrintRoutes writes a human-readable route summary to w, grouped by Kind.
 func PrintRoutes(w io.Writer, routes []Route) error {
-	groups := []string{"api", "inspection"}
-	seen := map[string]bool{"api": true, "inspection": true}
+	groups := []string{"api", UnimplementedKind, "inspection"}
+	seen := map[string]bool{"api": true, UnimplementedKind: true, "inspection": true}
 	for _, r := range routes {
 		if !seen[r.Kind] {
 			seen[r.Kind] = true
@@ -81,6 +82,8 @@ func titleFor(kind string) string {
 		return "API:"
 	case "inspection":
 		return "Inspection:"
+	case UnimplementedKind:
+		return "Not implemented:"
 	default:
 		return kind + ":"
 	}

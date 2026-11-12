@@ -66,6 +66,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		api("GET", "/{site}/v2/buckets/{name}/plan", "Get a bucket's plan and contract", s.handleGetBucketPlan),
 		api("PUT", "/{site}/v2/buckets/{name}/plan", "Change a bucket's plan", s.handlePutBucketPlan),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

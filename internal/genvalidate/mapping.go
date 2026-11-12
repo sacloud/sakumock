@@ -20,8 +20,12 @@ type Mapping struct {
 	PathRewrites map[string]string `json:"pathRewrites"`
 	// Routes overrides individual operations: "METHOD /spec/path" -> mock
 	// route key. It wins over Prefix/PathRewrites.
-	Routes    map[string]string `json:"routes"`
-	SkipPaths []string          `json:"skipPaths"`
+	Routes map[string]string `json:"routes"`
+	// SkipPaths lists spec paths the mock does not implement. Their operations
+	// get no validation entries and are emitted in unimplementedRoutes instead
+	// (served as 501 Not Implemented); an entry matching no spec path is an
+	// error, so a stale one is noticed when the spec changes.
+	SkipPaths []string `json:"skipPaths"`
 }
 
 func LoadMapping(path string) (*Mapping, error) {
@@ -36,19 +40,20 @@ func LoadMapping(path string) (*Mapping, error) {
 	return &m, nil
 }
 
-func routeKey(method, path string, m *Mapping) (string, bool) {
+// routeKey maps a spec operation to its mock route key. skip reports that the
+// path is in SkipPaths; the key is still returned so the operation can be
+// registered as unimplemented.
+func routeKey(method, path string, m *Mapping) (key string, skip bool) {
 	if m == nil {
 		return method + " " + path, false
 	}
-	if slices.Contains(m.SkipPaths, path) {
-		return "", true
-	}
+	skip = slices.Contains(m.SkipPaths, path)
 	if override, ok := m.Routes[method+" "+path]; ok {
-		return override, false
+		return override, skip
 	}
 	mapped := m.Prefix + path
 	for from, to := range m.PathRewrites {
 		mapped = strings.ReplaceAll(mapped, from, to)
 	}
-	return method + " " + mapped, false
+	return method + " " + mapped, skip
 }

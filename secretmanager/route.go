@@ -33,6 +33,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("DELETE", base+"/secrets", "Delete a secret", s.handleDeleteSecret),
 		route("POST", base+"/secrets/unveil", "Reveal a secret value", s.handleUnveil),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

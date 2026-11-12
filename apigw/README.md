@@ -113,7 +113,7 @@ Authentication (the service's `authentication` field) is enforced before proxyin
 - **Route `hosts`** entries must be the service's `routeHost` or a registered domain's `domainName`, per the spec.
 - **Referential integrity**: deleting a service with routes, a domain referenced by a route's `hosts`, a certificate referenced by a domain, or a subscription bound to a service is refused (400); deleting an OIDC configuration referenced by a service is refused (409). Deleting a group cascades out of user memberships and route authorizations.
 - **Secrets are echoed**: credential values (`password`, `secret`, OIDC `clientSecret`, object storage keys) are returned by GET endpoints because the SDK's generated client requires those fields on decode. Do not put real secrets into the mock.
-- **Certificates**: `expiredAt` is derived by parsing the uploaded PEM; the PEM material itself is never returned (writeOnly in the spec). ACME certificate issuance (`POST /certificates/acme`, `POST /certificates/{certificateId}/acme/renew`, `.../acme/reissue`) is not implemented.
+- **Certificates**: `expiredAt` is derived by parsing the uploaded PEM; the PEM material itself is never returned (writeOnly in the spec). ACME certificate issuance (`POST /certificates/acme`, `POST /certificates/{certificateId}/acme/renew`, `.../acme/reissue`) is not implemented and answers 501.
 
 ## Mock-only endpoints
 

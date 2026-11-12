@@ -42,6 +42,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 				"Get the deployment status of "+a+" resource", s.handleStatus(f)))
 		}
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

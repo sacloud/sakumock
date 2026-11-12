@@ -189,6 +189,10 @@ sakumock docs --all > sakumock-docs.md     # everything concatenated (llms-full.
 
 Each service also accepts `--docs` (`sakumock kms --docs`, `sakumock-kms --docs`) to print its own README, next to `--routes` for its endpoint table.
 
+## Unimplemented Operations
+
+An operation present in a service's OpenAPI spec but not implemented by the mock answers **501 Not Implemented** in that service's error envelope (message `<METHOD> <path> is not implemented by sakumock`), so a client can tell a mock gap from a wrong path. Paths outside the spec still answer 404, and an unsupported method on an implemented path 405. `--routes` lists these operations under `Not implemented:`.
+
 ## Latency
 
 To test client timeouts, every service can delay its responses with `--latency DURATION` (e.g. `500ms`, `2s`). It applies to the control-plane API (and to same-port data planes such as simplemq messages); the mock-only `/_sakumock/` inspection endpoints are never delayed.

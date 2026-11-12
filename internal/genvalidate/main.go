@@ -17,7 +17,10 @@
 // to feed several specs into one table (simplemq: queue + message).
 //
 // -mapping bridges spec paths to mock route paths when they differ; see
-// Mapping for the prefix / pathRewrites / routes / skipPaths keys.
+// Mapping for the prefix / pathRewrites / routes / skipPaths keys. The
+// operations under skipPaths are emitted as unimplementedRoutes (always
+// declared, empty without a mapping), which the service registers to answer
+// 501; a skipPaths entry matching no spec path fails generation.
 //
 // -responses additionally emits responseSchemas (route key -> declared
 // status -> schema) compiled with response semantics: required writeOnly

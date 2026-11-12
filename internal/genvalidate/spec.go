@@ -38,6 +38,10 @@ type responseOp struct {
 // httpMethods lists the OpenAPI operation keys that can carry a request body.
 var httpMethods = []string{"post", "put", "patch", "delete", "get"}
 
+// operationMethods lists every OpenAPI operation key, so an unimplemented path
+// registers a 501 for each operation it declares.
+var operationMethods = []string{"get", "put", "post", "delete", "options", "head", "patch", "trace"}
+
 // loadSpec decodes a JSON or YAML OpenAPI document into a generic map.
 // JSON is a subset of YAML, so yaml.v3 handles both.
 func loadSpec(path string) (map[string]any, error) {
@@ -101,6 +105,30 @@ func collectOperations(doc map[string]any, mapping *Mapping, warn io.Writer) ([]
 	}
 	sort.Slice(ops, func(i, j int) bool { return ops[i].key < ops[j].key })
 	return ops, nil
+}
+
+// collectUnimplemented returns the route keys of the operations under the
+// mapping's SkipPaths, and the skip paths found in this document.
+func collectUnimplemented(doc map[string]any, mapping *Mapping) (keys []string, found []string) {
+	if mapping == nil {
+		return nil, nil
+	}
+	paths, _ := doc["paths"].(map[string]any)
+	for _, path := range mapping.SkipPaths {
+		item, ok := paths[path].(map[string]any)
+		if !ok {
+			continue
+		}
+		found = append(found, path)
+		for _, method := range operationMethods {
+			if _, ok := item[method].(map[string]any); !ok {
+				continue
+			}
+			key, _ := routeKey(strings.ToUpper(method), path, mapping)
+			keys = append(keys, key)
+		}
+	}
+	return keys, found
 }
 
 // collectResponses walks one spec document and compiles the response-body

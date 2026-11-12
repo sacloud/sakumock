@@ -101,7 +101,7 @@ Opt-in (`sakumock all --enable-service-link`), `sakumock all`-only: services for
 
 ### UUID generation
 
-Use `github.com/google/uuid` (`uuid.NewString()` for v4, `uuid.NewV7()` when time-ordered); never hand-roll with `crypto/rand` + `fmt.Sprintf`.
+Use `github.com/google/uuid` (`uuid.NewString()` for v4, `uuid.NewV7()` when time-ordered); never hand-roll with `crypto/rand` + `fmt.Sprintf`. The switch to the standard `uuid` package (Go 1.27+) is planned for when Go 1.26 support is dropped; see `docs/std-uuid-migration.md`.
 
 ### Go version policy
 

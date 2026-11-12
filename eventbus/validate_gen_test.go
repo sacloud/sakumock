@@ -1,6 +1,10 @@
 package eventbus
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sacloud/sakumock/core"
+)
 
 // TestBodySchemasMatchRoutes verifies every generated bodySchemas key
 // corresponds to a registered route, catching drift between the OpenAPI spec
@@ -20,6 +24,23 @@ func TestBodySchemasMatchRoutes(t *testing.T) {
 	for key := range responseSchemas {
 		if !routes[key] {
 			t.Errorf("responseSchemas key %q has no matching route", key)
+		}
+	}
+}
+
+// TestUnimplementedRoutesRegistered verifies every generated
+// unimplementedRoutes key is registered as a 501 route and never shadows an
+// implemented one (a path implemented but left in skipPaths).
+func TestUnimplementedRoutesRegistered(t *testing.T) {
+	s := &Server{}
+	kinds := map[string][]string{}
+	for _, r := range s.routeTable() {
+		key := r.Method + " " + r.Path
+		kinds[key] = append(kinds[key], r.Kind)
+	}
+	for _, key := range unimplementedRoutes {
+		if got := kinds[key]; len(got) != 1 || got[0] != core.UnimplementedKind {
+			t.Errorf("unimplementedRoutes key %q registered as %v, want only %q", key, got, core.UnimplementedKind)
 		}
 	}
 }

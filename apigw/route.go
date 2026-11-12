@@ -80,6 +80,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("PUT", "/oidc/{oidcId}", "Update an OIDC configuration", s.handleUpdateOidc),
 		route("DELETE", "/oidc/{oidcId}", "Delete an OIDC configuration", s.handleDeleteOidc),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

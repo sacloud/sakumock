@@ -34,6 +34,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/evaluation_rules/{evaluationRuleId}", "Get an evaluation rule", s.handleReadEvaluationRule),
 		route("PUT", "/evaluation_rules/{evaluationRuleId}", "Update an evaluation rule", s.handleUpdateEvaluationRule),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

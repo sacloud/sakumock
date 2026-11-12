@@ -66,6 +66,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("GET", "/service_classes/lb", "List LB service classes", s.handleListLBServiceClasses),
 		route("GET", "/service_classes/worker", "List worker service classes", s.handleListWorkerServiceClasses),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

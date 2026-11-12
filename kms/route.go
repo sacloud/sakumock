@@ -32,6 +32,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("POST", "/kms/keys/{resource_id}/encrypt", "Encrypt data with a key", s.handleEncrypt),
 		route("POST", "/kms/keys/{resource_id}/decrypt", "Decrypt data with a key", s.handleDecrypt),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

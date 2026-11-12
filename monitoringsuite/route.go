@@ -142,6 +142,7 @@ func (s *Server) routeTable() []core.RegisteredRoute {
 		route("POST", "/management/provisioning/initialize/", "Initialize provisioning", s.handleInitializeProvisioning),
 		route("GET", "/management/provisioning/state/", "Get provisioning state", s.handleGetProvisioning),
 	}
+	table = append(table, core.UnimplementedRoutes(unimplementedRoutes, writeError)...)
 	return append(table, core.InspectionRoutes(s.respValidator)...)
 }
 

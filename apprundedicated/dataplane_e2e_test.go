@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -69,6 +70,11 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 		"scalingMode": "manual",
 		"fixedScale":  1,
 		"image":       "nginx:latest",
+		"env": []map[string]any{
+			{"key": "FOO", "value": "bar", "secret": false},
+			// A user variable named like a reserved one is overridden by the platform.
+			{"key": apprundedicated.EnvApplicationID, "value": "user-defined", "secret": false},
+		},
 		"exposedPorts": []map[string]any{
 			{
 				"targetPort": 80,
@@ -147,11 +153,63 @@ func TestDataPlaneEndToEnd(t *testing.T) {
 	}
 	t.Logf("nginx responded with %d", resp.StatusCode)
 
+	checkReservedEnv(t, ctx, client, appID)
+
 	del := exec.Command("apprun-dedicated-cli", "delete", "--force", "--wait-timeout=60s")
 	del.Env = env
 	del.Stdout, del.Stderr = os.Stdout, os.Stderr
 	if err := del.Run(); err != nil {
 		t.Fatalf("apprun-dedicated-cli delete failed: %v", err)
+	}
+}
+
+// checkReservedEnv verifies the container received the reserved environment
+// variables and that their IDs match what the control-plane API reports.
+func checkReservedEnv(t *testing.T, ctx context.Context, client *v1.Client, appID string) {
+	t.Helper()
+	out, err := exec.Command("docker", "exec", "sakumock-apprundedicated-"+appID, "env").Output()
+	if err != nil {
+		t.Fatalf("docker exec env: %v", err)
+	}
+	got := map[string]string{}
+	for line := range strings.Lines(string(out)) {
+		if k, v, ok := strings.Cut(strings.TrimSpace(line), "="); ok {
+			got[k] = v
+		}
+	}
+
+	nodes, err := client.ListApplicationContainers(ctx, v1.ListApplicationContainersParams{
+		ApplicationID: v1.ApplicationID(uuid.MustParse(appID)),
+	})
+	if err != nil {
+		t.Fatalf("ListApplicationContainers: %v", err)
+	}
+	var nodeID, containerID string
+	for _, n := range nodes.Nodes {
+		for _, c := range n.ContainersStats.Value.Containers {
+			if c.ID == got[apprundedicated.EnvContainerID] {
+				nodeID, containerID = uuid.UUID(n.NodeID).String(), c.ID
+			}
+		}
+	}
+	if containerID == "" {
+		t.Errorf("container ID %q not reported by ListApplicationContainers", got[apprundedicated.EnvContainerID])
+	}
+
+	want := map[string]string{
+		"FOO":                                 "bar",
+		apprundedicated.EnvApplicationID:      appID,
+		apprundedicated.EnvApplicationVersion: "1",
+		apprundedicated.EnvNodeID:             nodeID,
+	}
+	for k, v := range want {
+		if got[k] != v {
+			t.Errorf("%s = %q, want %q", k, got[k], v)
+		}
+	}
+	id, err := uuid.Parse(got[apprundedicated.EnvContainerID])
+	if err != nil || id.Version() != 7 {
+		t.Errorf("%s = %q, want a UUID v7", apprundedicated.EnvContainerID, got[apprundedicated.EnvContainerID])
 	}
 }
 

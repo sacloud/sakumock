@@ -31,6 +31,7 @@ type DockerManager struct {
 type containerInfo struct {
 	containerID string
 	hostPort    string
+	ref         ContainerRef
 }
 
 // NewDockerManager returns a manager with no containers started.
@@ -47,8 +48,9 @@ func NewDockerManager(logger *slog.Logger) *DockerManager {
 }
 
 // StartContainer runs the application's image and publishes containerPort on a
-// free host port.
-func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []core.EnvVar, cmd []string) error {
+// free host port. ref is the AppRun-level identity of the container, reported
+// by the control-plane API while the container runs.
+func (dm *DockerManager) StartContainer(appID, image string, containerPort string, env []core.EnvVar, cmd []string, ref ContainerRef) error {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 
@@ -83,6 +85,7 @@ func (dm *DockerManager) StartContainer(appID, image string, containerPort strin
 	dm.containers[appID] = &containerInfo{
 		containerID: containerID,
 		hostPort:    hostPort,
+		ref:         ref,
 	}
 
 	if !inspectRunning(containerID) {
@@ -126,12 +129,16 @@ func (dm *DockerManager) GetContainerPort(appID string) (string, bool) {
 	return info.hostPort, true
 }
 
-// IsRunning reports whether the application has a container running.
-func (dm *DockerManager) IsRunning(appID string) bool {
+// Container returns the AppRun-level identity of the application's running
+// container.
+func (dm *DockerManager) Container(appID string) (ContainerRef, bool) {
 	dm.mu.RLock()
 	defer dm.mu.RUnlock()
-	_, ok := dm.containers[appID]
-	return ok
+	info, ok := dm.containers[appID]
+	if !ok {
+		return ContainerRef{}, false
+	}
+	return info.ref, true
 }
 
 // Close stops every container the manager started.

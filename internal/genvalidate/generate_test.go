@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -113,5 +114,20 @@ func TestGenerateStaleSkipPath(t *testing.T) {
 	_, err := Generate([]string{"testdata/spec30.json"}, "fixture", "bodySchemas", m, false, os.Stderr)
 	if err == nil || !strings.Contains(err.Error(), "/no-such-path") {
 		t.Fatalf("expected stale skipPaths error, got %v", err)
+	}
+}
+
+func TestCollectUnimplementedAllMethods(t *testing.T) {
+	doc := map[string]any{"paths": map[string]any{
+		"/x": map[string]any{
+			"get": map[string]any{}, "head": map[string]any{}, "options": map[string]any{},
+			"trace": map[string]any{}, "parameters": []any{},
+		},
+	}}
+	keys, found := collectUnimplemented(doc, &Mapping{Prefix: "/p", SkipPaths: []string{"/x"}})
+	slices.Sort(keys)
+	want := []string{"GET /p/x", "HEAD /p/x", "OPTIONS /p/x", "TRACE /p/x"}
+	if !slices.Equal(keys, want) || !slices.Equal(found, []string{"/x"}) {
+		t.Errorf("collectUnimplemented = %v, %v; want %v, [/x]", keys, found, want)
 	}
 }

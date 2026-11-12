@@ -38,6 +38,10 @@ type responseOp struct {
 // httpMethods lists the OpenAPI operation keys that can carry a request body.
 var httpMethods = []string{"post", "put", "patch", "delete", "get"}
 
+// operationMethods lists every OpenAPI operation key, so an unimplemented path
+// registers a 501 for each operation it declares.
+var operationMethods = []string{"get", "put", "post", "delete", "options", "head", "patch", "trace"}
+
 // loadSpec decodes a JSON or YAML OpenAPI document into a generic map.
 // JSON is a subset of YAML, so yaml.v3 handles both.
 func loadSpec(path string) (map[string]any, error) {
@@ -116,7 +120,7 @@ func collectUnimplemented(doc map[string]any, mapping *Mapping) (keys []string, 
 			continue
 		}
 		found = append(found, path)
-		for _, method := range httpMethods {
+		for _, method := range operationMethods {
 			if _, ok := item[method].(map[string]any); !ok {
 				continue
 			}

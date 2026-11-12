@@ -99,6 +99,17 @@ http://<app-id>.localhost:28089
 
 This works in browsers and with `curl` (which resolves `*.localhost` to `127.0.0.1`).
 
+**Reserved environment variables:** like the real service ([manual](https://manual.sakura.ad.jp/cloud/apprun-dedicated/glossary.html#apprun-dedicated-glossary-env-vars)), the container receives the version's `env` plus:
+
+| Variable | Value |
+|---|---|
+| `APPRUN_DEDICATED_APPLICATION_ID` | Application ID |
+| `APPRUN_DEDICATED_APPLICATION_VERSION` | Active version number (e.g. `1`) |
+| `APPRUN_DEDICATED_CONTAINER_ID` | Container ID (UUID v7), the same ID `GET /applications/{id}/containers` reports on the container's node |
+| `APPRUN_DEDICATED_NODE_ID` | ID of the worker node the container is placed on: the cluster's first worker node, or a random UUID v7 when the cluster has none |
+
+A user-defined variable with one of these names is overridden by the reserved value.
+
 **Container naming:** containers are named `sakumock-apprundedicated-<app-id>`. All tracked containers are cleaned up when the server shuts down.
 
 ### Differences from the real AppRun Dedicated
@@ -111,7 +122,7 @@ The mock data plane runs plain Docker containers, whereas the real AppRun Dedica
 - **LB nodes** — created instantly with "healthy" status; no real provisioning
 - **Certificates** — PEM is stored and returned, but not used for TLS termination in the data plane
 - **Resources** — applications always report `enoughResources` as `{"cpu": true, "memory": true}`
-- **Container placement** — `GET /applications/{id}/containers` returns per-worker-node placement derived from the active version and ASG worker nodes (one container per node)
+- **Container placement** — `GET /applications/{id}/containers` returns per-worker-node placement derived from the active version and ASG worker nodes (one container per node) with a fresh random ID on each call, except the running data-plane container, which keeps the ID passed in `APPRUN_DEDICATED_CONTAINER_ID`
 
 ### Limitations
 

@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -575,14 +574,15 @@ func (s *Server) runningContainersForNode(wn *WorkerNode) []runContainerJSON {
 		if !ok {
 			continue
 		}
+		containerID, running := s.containerIDOn(app.ApplicationID, wn.WorkerNodeID)
 		state := "running"
 		status := "Running"
-		if s.docker != nil && !s.docker.IsRunning(app.ApplicationID) {
+		if !running {
 			state = "exited"
 			status = "Exited"
 		}
 		containers = append(containers, runContainerJSON{
-			ContainerID:        uuid.NewString(),
+			ContainerID:        containerID,
 			Name:               app.Name,
 			State:              state,
 			Status:             status,
@@ -890,15 +890,12 @@ func (s *Server) handleUpdateApplication(w http.ResponseWriter, r *http.Request)
 				if len(v.ExposedPorts) > 0 {
 					port = strconv.Itoa(int(v.ExposedPorts[0].TargetPort))
 				}
-				var env []core.EnvVar
-				for _, e := range v.Env {
-					val := ""
-					if e.Value != nil {
-						val = *e.Value
-					}
-					env = append(env, core.EnvVar{Key: e.Key, Value: val})
+				var clusterID string
+				if app, ok := s.store.ReadApplication(id); ok {
+					clusterID = app.ClusterID
 				}
-				if err := s.docker.StartContainer(id, v.Image, port, env, v.Cmd); err != nil {
+				ref := newContainerRef(s.placementNodeID(clusterID))
+				if err := s.docker.StartContainer(id, v.Image, port, containerEnv(id, v, ref), v.Cmd, ref); err != nil {
 					s.logger.Error("container start failed", "app_id", id, "error", err)
 				} else {
 					scheme := "http"
@@ -951,9 +948,10 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 			for _, wn := range wns {
 				node := containerPlacementJSON{NodeID: wn.WorkerNodeID}
 				if v != nil {
+					containerID, running := s.containerIDOn(app.ApplicationID, wn.WorkerNodeID)
 					state := "running"
 					status := "Running"
-					if s.docker != nil && !s.docker.IsRunning(app.ApplicationID) {
+					if !running {
 						state = "exited"
 						status = "Exited"
 					}
@@ -962,7 +960,7 @@ func (s *Server) handleGetApplicationContainers(w http.ResponseWriter, r *http.R
 						CollectedAtSec: now,
 						Containers: []containerSummaryJSON{
 							{
-								ID:                 uuid.NewString(),
+								ID:                 containerID,
 								Image:              v.Image,
 								State:              state,
 								Status:             status,

@@ -128,8 +128,8 @@ The following features are accepted by the control-plane API (stored and returne
 (<https://manual.sakura.ad.jp/api/cloud/portal/openapis/apprun-dedicated-api.yaml>),
 stored as published. Run `make openapi` to refresh it.
 
-Not implemented yet: `GET /limits` and `GET`/`PATCH /clusters/{clusterID}/load_balancer`
-(skipped via `validate_mapping.json`).
+Not implemented yet (answer 501): `GET /limits` and `GET`/`PATCH /clusters/{clusterID}/load_balancer`
+(listed in `skipPaths` of `validate_mapping.json`).
 
 ## Mock-only endpoints
 

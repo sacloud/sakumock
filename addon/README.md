@@ -85,7 +85,7 @@ Every family is served under its own path prefix with the same five operations (
 
 Run `sakumock addon --routes` for the fully expanded table.
 
-Not implemented yet: `POST /cdn/{resourceGroupName}/purge` (CDN cache purge).
+Not implemented yet (answers 501): `POST /cdn/{resourceGroupName}/purge` (CDN cache purge).
 
 ## Mock behavior
 

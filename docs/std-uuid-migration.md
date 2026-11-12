@@ -18,7 +18,17 @@ support is dropped.
       | `uuid.Must(uuid.NewV7())`, `uuid.NewV7()` | `uuid.NewV7()` (no error) |
       | `uuid.Parse`, `uuid.MustParse` | same |
       | `id.Version()` (tests) | not provided; check `id[6]>>4 == 7` or drop the check |
-      | `uuid.NewSHA1(uuid.NameSpaceURL, ...)` (`apigw/store_memory.go`, deterministic plan IDs) | no v5 in std; hard-code the plan IDs or derive them some other way, keeping the current values so existing IDs stay stable |
+      | `uuid.NewSHA1(uuid.NameSpaceURL, ...)` (apigw only, see below) | no v5 in std; hard-code the current values |
+
+- [ ] apigw plan IDs. `seedPlans()` in `apigw/store_memory.go` is the only v5
+      user. It needs IDs that stay the same across restarts, but nothing needs
+      them to be v5. Replace the `uuid.NewSHA1` call with the current values as
+      literals, so existing IDs do not change:
+
+      | Plan | ID |
+      |---|---|
+      | トライアル | `5878785c-2f94-5539-80af-e293470d6435` |
+      | エンタープライズ | `38cf207e-56dc-5907-a2e6-96e7df545864` |
 
 - [ ] Handle the SDK types. The SDK-generated types (`v1.ApplicationID`,
       `v1.WorkerNodeID`, apigw IDs, ...) are defined on `github.com/google/uuid`.

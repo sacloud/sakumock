@@ -103,6 +103,30 @@ func collectOperations(doc map[string]any, mapping *Mapping, warn io.Writer) ([]
 	return ops, nil
 }
 
+// collectUnimplemented returns the route keys of the operations under the
+// mapping's SkipPaths, and the skip paths found in this document.
+func collectUnimplemented(doc map[string]any, mapping *Mapping) (keys []string, found []string) {
+	if mapping == nil {
+		return nil, nil
+	}
+	paths, _ := doc["paths"].(map[string]any)
+	for _, path := range mapping.SkipPaths {
+		item, ok := paths[path].(map[string]any)
+		if !ok {
+			continue
+		}
+		found = append(found, path)
+		for _, method := range httpMethods {
+			if _, ok := item[method].(map[string]any); !ok {
+				continue
+			}
+			key, _ := routeKey(strings.ToUpper(method), path, mapping)
+			keys = append(keys, key)
+		}
+	}
+	return keys, found
+}
+
 // collectResponses walks one spec document and compiles the response-body
 // schema of every status each operation declares. Statuses without an
 // application/json body (e.g. 204, or non-JSON content) are recorded with a

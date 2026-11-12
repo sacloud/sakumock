@@ -1,6 +1,6 @@
 # sakumock
 
-**Status: Alpha (under active development).** APIs, behavior, and module layout may change without notice. Not recommended for production use.
+**Status: Beta.** Ready for day-to-day development and CI use. Flags, behavior, and the Go API may still change before 1.0; changes are recorded in the [CHANGELOG](CHANGELOG.md). Not intended for production use.
 
 A local mock server suite for SAKURA Cloud APIs, inspired by [LocalStack](https://github.com/localstack/localstack). Run SAKURA Cloud services locally for development and testing without connecting to the real API.
 
@@ -8,7 +8,7 @@ A local mock server suite for SAKURA Cloud APIs, inspired by [LocalStack](https:
 
 Every service is available as a subcommand of the single `sakumock` binary (e.g. `sakumock simplemq`), and as a Go library for spinning up in-process test servers. See each service's README for details.
 
-Under `sakumock all` every control plane shares one listener (`127.0.0.1:18000` by default) and is served under its **Path** (e.g. `http://127.0.0.1:18000/kms`). A service run on its own (`sakumock kms`) or under `sakumock all --per-service-ports` listens on its **Standalone Port** instead, at the root path.
+Under `sakumock all` every control plane shares one listener (`127.0.0.1:18000` by default) and is served under its **Path** (e.g. `http://127.0.0.1:18000/kms`). This single-port layout is the recommended way to run more than one service. A service run on its own (`sakumock kms`) listens on its **Standalone Port** instead, at the root path (as does every service under the deprecated `sakumock all --per-service-ports`).
 
 | Service | Path | Standalone Port | Module | Description |
 |---|---|---|---|---|
@@ -92,7 +92,7 @@ sakumock env --export > .envrc   # or: source <(sakumock env --export)
 
 By default the endpoints point at `sakumock all`'s listen address (`--addr`, with
 each service's path). Pass `sakumock env` the same flags you pass `sakumock all`
-(`--addr`, `--per-service-ports`, `--config`, ...) and the endpoints match. When the client
+(`--addr`, `--config`, ...) and the endpoints match. When the client
 reaches sakumock over the network — most importantly from a container — pass
 `--host` to substitute the host the client actually uses (the port is kept):
 
@@ -128,7 +128,7 @@ kms:
 sakumock all --config sakumock.yaml
 ```
 
-Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Suite-wide flags are top-level keys (`addr`, `per-service-ports`, `listen-host`, ...). Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
+Each per-service flag maps to a key by stripping the service prefix: `--simplemq-message-expire` becomes `message-expire` under `simplemq:`, `--kms-latency` becomes `latency` under `kms:`. Suite-wide flags are top-level keys (`addr`, `listen-host`, ...). Precedence, highest first: command-line flag, then config file, then environment variable, then the flag's default.
 
 ### Environment Variables
 
@@ -138,7 +138,10 @@ Every per-service setting also has an environment variable, which is the most co
 KMS_LATENCY=200ms SIMPLEMQ_RATE_LIMIT=10 sakumock all
 ```
 
-### Per-Service Ports
+### Per-Service Ports (Deprecated)
+
+> [!WARNING]
+> `--per-service-ports` is deprecated and may be removed in a future release. Use the single shared listener (the default) and point clients at it with `sakumock env`.
 
 Pass `--per-service-ports` (or `SAKUMOCK_PER_SERVICE_PORTS=true`) to serve each control plane on its own port at the root path instead — the **Standalone Port** in the [service table](#services), changed with the prefixed `--<service>-addr` flag (e.g. `--kms-addr`). Pass the flag to `sakumock env` as well so the endpoints match:
 
@@ -149,25 +152,13 @@ sakumock env --per-service-ports > sakumock.env
 
 ### Run a Single Service
 
-You can also run any service on its own as a subcommand (same flags, without the service prefix). Each listens on its **Standalone Port** at the root path, e.g. `SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081`:
+When you need just one service, run it on its own as a subcommand (same flags, without the service prefix). It listens on its **Standalone Port** at the root path, e.g. `SAKURA_ENDPOINTS_KMS=http://127.0.0.1:18081`:
 
 ```bash
-sakumock simplemq &
-sakumock secretmanager &
-sakumock kms &
-sakumock simplenotification &
-sakumock monitoringsuite &
-sakumock eventbus &
-sakumock objectstorage &
-sakumock iam &
-sakumock apprun &
-sakumock apprun-dedicated &
-sakumock workflows &
-sakumock cloudhsm &
-sakumock seg &
-sakumock addon &
-sakumock security-control &
+sakumock kms
 ```
+
+To use several services, run `sakumock all` rather than one subcommand per service: the single listener needs one port, and `sakumock env` derives every endpoint from it.
 
 Run `sakumock --help` to list services, and `sakumock <service> --help` for its flags.
 

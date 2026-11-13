@@ -1,8 +1,10 @@
 package core_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -118,7 +120,7 @@ func TestStateFileSkipsUnchangedWrite(t *testing.T) {
 	if err := f.Save(); err != nil {
 		t.Fatal(err)
 	}
-	if got, _ := os.ReadFile(f.Path()); string(got) != `{"n":2}` {
+	if got, _ := os.ReadFile(f.Path()); !strings.Contains(string(got), `"n": 2`) {
 		t.Errorf("changed state not written: %q", got)
 	}
 }
@@ -151,26 +153,87 @@ func TestStateFileSaveAfter(t *testing.T) {
 	if err := f.Save(); err == nil {
 		t.Error("Save with a failing snapshot succeeded, want error")
 	}
-	if got, _ := os.ReadFile(f.Path()); string(got) != `{"n":0}` {
+	if got, _ := os.ReadFile(f.Path()); !strings.Contains(string(got), `"n": 0`) {
 		t.Errorf("state file changed by a failed save: %q", got)
 	}
 }
 
 func TestStateFileCorrupt(t *testing.T) {
+	for name, content := range map[string]string{
+		"syntax error":     "{not json",
+		"not a state file": `{"n":1}`,
+		"unrestorable":     `{"version":"x","state":{"n":"not a number"}}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			path := filepath.Join(dir, "svc.json")
+			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			_, err := core.OpenState(dir, "svc", &counterStore{}, nil)
+			if err == nil {
+				t.Fatal("OpenState with a corrupt file succeeded, want error")
+			}
+			if !strings.Contains(err.Error(), path) {
+				t.Errorf("error does not name the state file: %v", err)
+			}
+			// The unreadable file is kept for the user to inspect.
+			if got, _ := os.ReadFile(path); string(got) != content {
+				t.Errorf("corrupt state file was modified: %q", got)
+			}
+		})
+	}
+}
+
+// A state saved by another sakumock version is restored with a warning, and
+// the file takes the running version at the next change.
+func TestStateFileOtherVersion(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "svc.json")
-	if err := os.WriteFile(path, []byte("{not json"), 0o600); err != nil {
+	restore := core.SetStateVersion("0.0.1")
+	old, err := core.OpenState(dir, "svc", &counterStore{N: 7}, nil)
+	if err != nil {
 		t.Fatal(err)
 	}
-	_, err := core.OpenState(dir, "svc", &counterStore{}, nil)
-	if err == nil {
-		t.Fatal("OpenState with a corrupt file succeeded, want error")
+	if err := old.Save(); err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), path) {
-		t.Errorf("error does not name the state file: %v", err)
+	restore()
+
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&logs, nil))
+	store := &counterStore{}
+	f, err := core.OpenState(dir, "svc", store, logger)
+	if err != nil {
+		t.Fatalf("OpenState of another version's state: %v", err)
 	}
-	// The unreadable file is kept for the user to inspect.
-	if got, _ := os.ReadFile(path); string(got) != "{not json" {
-		t.Errorf("corrupt state file was modified: %q", got)
+	if store.N != 7 {
+		t.Errorf("restored N = %d, want 7", store.N)
+	}
+	if out := logs.String(); !strings.Contains(out, "level=WARN") || !strings.Contains(out, "saved_by=0.0.1") {
+		t.Errorf("no warning naming the saving version:\n%s", out)
+	}
+
+	// Unchanged state is not rewritten just to bump the version.
+	if err := f.Save(); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := os.ReadFile(f.Path()); !strings.Contains(string(got), `"version": "0.0.1"`) {
+		t.Errorf("unchanged state was rewritten: %s", got)
+	}
+	store.N = 8
+	if err := f.Save(); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := os.ReadFile(f.Path()); strings.Contains(string(got), "0.0.1") {
+		t.Errorf("changed state still carries the old version: %s", got)
+	}
+
+	// The same version restores silently.
+	logs.Reset()
+	if _, err := core.OpenState(dir, "svc", &counterStore{}, logger); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(logs.String(), "level=WARN") {
+		t.Errorf("warning for a state of the running version:\n%s", logs.String())
 	}
 }

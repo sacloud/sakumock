@@ -2,6 +2,7 @@ package eventbus
 
 import (
 	"encoding/json"
+	"github.com/sacloud/sakumock/core"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,12 +39,11 @@ func TestAutonomousFiringSavesState(t *testing.T) {
 	srv.dataPlane.now = func() time.Time { return start.Add(time.Second) }
 	srv.dataPlane.autoTick(t.Context())
 
-	saved, err := os.ReadFile(filepath.Join(dir, "eventbus.json"))
-	if err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "eventbus.json")); err != nil {
 		t.Fatalf("state not saved after an autonomous firing: %v", err)
 	}
 	restored := NewMemoryStore(nil)
-	if err := restored.Restore(saved); err != nil {
+	if _, err := core.OpenState(dir, "eventbus", restored, nil); err != nil {
 		t.Fatal(err)
 	}
 	got, ok := restored.GetItem(schedule.ID)

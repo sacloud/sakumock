@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -10,7 +11,20 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/sacloud/sakumock"
 )
+
+// stateVersion is the version recorded in every state file. It is a variable
+// only so tests can stand in for another release.
+var stateVersion = sakumock.Version
+
+// stateEnvelope is the content of a state file: the store's snapshot and the
+// sakumock version that wrote it.
+type stateEnvelope struct {
+	Version string          `json:"version"`
+	State   json.RawMessage `json:"state"`
+}
 
 // Snapshotter is implemented by a store whose whole state can be written out
 // and read back, so it survives a restart of the mock (see StateFile).
@@ -28,20 +42,25 @@ type Snapshotter interface {
 // --state-dir flag), so a restarted mock comes back with the resources it had.
 // A nil *StateFile is valid and does nothing, which is what OpenState returns
 // when persistence is not configured.
+//
+// The state is a convenience for local work, not a storage format: nothing
+// keeps it compatible across sakumock versions. The file records the version
+// that wrote it only so a restore by another version can say so.
 type StateFile struct {
 	path   string
 	store  Snapshotter
 	logger *slog.Logger
 
 	mu   sync.Mutex
-	last []byte // the snapshot currently on disk
+	last []byte // the snapshot currently on disk, compacted
 }
 
 // OpenState restores store from <dir>/<service>.json when that file exists and
 // returns the StateFile that keeps it up to date. An empty dir disables
 // persistence and returns nil. A state file that cannot be read or restored is
 // an error rather than a silent fresh start, because the next save would
-// overwrite it.
+// overwrite it. One saved by another sakumock version is restored as it is,
+// with a warning: it usually works, and when it does not the user knows why.
 func OpenState(dir, service string, store Snapshotter, logger *slog.Logger) (*StateFile, error) {
 	if dir == "" {
 		return nil, nil
@@ -64,12 +83,36 @@ func OpenState(dir, service string, store Snapshotter, logger *slog.Logger) (*St
 	if err != nil {
 		return nil, fmt.Errorf("state file: %w", err)
 	}
-	if err := store.Restore(data); err != nil {
+	var env stateEnvelope
+	if err := json.Unmarshal(data, &env); err != nil {
 		return nil, fmt.Errorf("state file %s: %w (remove it to start empty)", f.path, err)
 	}
-	f.last = data
+	if len(env.State) == 0 {
+		return nil, fmt.Errorf("state file %s: not a sakumock state file (remove it to start empty)", f.path)
+	}
+	if err := store.Restore(env.State); err != nil {
+		if env.Version != stateVersion {
+			return nil, fmt.Errorf("state file %s was saved by sakumock %q and cannot be restored by %s: %w (remove it to start empty)", f.path, env.Version, stateVersion, err)
+		}
+		return nil, fmt.Errorf("state file %s: %w (remove it to start empty)", f.path, err)
+	}
+	if env.Version != stateVersion {
+		logger.Warn("state was saved by a different sakumock version; remove the file if anything misbehaves",
+			"path", f.path, "saved_by", env.Version, "running", stateVersion)
+	}
+	f.last = compactJSON(env.State)
 	logger.Info("state restored", "path", f.path)
 	return f, nil
+}
+
+// compactJSON strips insignificant whitespace, so a snapshot compares equal to
+// itself however the file indented it. Invalid JSON is returned unchanged.
+func compactJSON(data []byte) []byte {
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, data); err != nil {
+		return data
+	}
+	return buf.Bytes()
 }
 
 // Path is the file the state is saved to, or "" when persistence is disabled.
@@ -90,17 +133,22 @@ func (f *StateFile) Save() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	data, err := f.store.Snapshot()
+	snapshot, err := f.store.Snapshot()
 	if err != nil {
 		return fmt.Errorf("snapshot state: %w", err)
 	}
-	if bytes.Equal(data, f.last) {
+	compact := compactJSON(snapshot)
+	if bytes.Equal(compact, f.last) {
 		return nil
 	}
-	if err := writeFileAtomic(f.path, data); err != nil {
+	data, err := json.MarshalIndent(stateEnvelope{Version: stateVersion, State: snapshot}, "", "  ")
+	if err != nil {
 		return fmt.Errorf("save state: %w", err)
 	}
-	f.last = data
+	if err := writeFileAtomic(f.path, append(data, '\n')); err != nil {
+		return fmt.Errorf("save state: %w", err)
+	}
+	f.last = compact
 	f.logger.Debug("state saved", "path", f.path, "bytes", len(data))
 	return nil
 }

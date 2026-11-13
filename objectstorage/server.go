@@ -1,9 +1,11 @@
 package objectstorage
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"time"
 
 	"github.com/sacloud/sakumock/core"
@@ -23,7 +25,7 @@ type Config struct {
 	// directory; see dataplane.go. It is off by default and never bundled.
 	EnableDataPlane bool   `help:"Serve the S3-compatible data plane via an external versitygw process (requires versitygw on PATH; startup fails if it is missing)" env:"OBJECT_STORAGE_ENABLE_DATA_PLANE" default:"false"`
 	DataPlaneAddr   string `help:"Listen address for the S3 data plane (versitygw)" env:"OBJECT_STORAGE_DATA_PLANE_ADDR" default:"127.0.0.1:28086"`
-	DataPlaneDir    string `help:"Backend directory for the S3 data plane; empty uses a temporary directory removed on shutdown" env:"OBJECT_STORAGE_DATA_PLANE_DIR"`
+	DataPlaneDir    string `help:"Backend directory for the S3 data plane; empty uses <state-dir>/objectstorage-data when --state-dir is set, otherwise a temporary directory removed on shutdown" env:"OBJECT_STORAGE_DATA_PLANE_DIR"`
 	DataPlaneRegion string `help:"Region the S3 data plane signs/validates requests for" env:"OBJECT_STORAGE_DATA_PLANE_REGION" default:"jp-north-1"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
@@ -39,6 +41,26 @@ type Config struct {
 	// means plain HTTP. Set from --tls-cert/--tls-key (cli.go) or injected by the
 	// unified binary via NewServer (ServerOptions.TLS).
 	tls core.TLSFiles
+
+	// stateDir, when non-empty, is the directory the buckets, accounts and
+	// permissions are persisted in (--state-dir), set by cli.go or injected by
+	// the unified binary. It also hosts the data plane's backend directory
+	// unless DataPlaneDir is set (see dataPlaneDir).
+	stateDir string
+}
+
+// dataPlaneStateSubdir is the data plane's backend directory inside the state
+// directory, next to objectstorage.json.
+const dataPlaneStateSubdir = "objectstorage-data"
+
+// dataPlaneDir returns the data plane's backend directory: DataPlaneDir when
+// set, else a subdirectory of the state directory so objects survive a restart
+// together with the buckets holding them, else "" (a temporary directory).
+func (c Config) dataPlaneDir() string {
+	if c.DataPlaneDir != "" || c.stateDir == "" {
+		return c.DataPlaneDir
+	}
+	return filepath.Join(c.stateDir, dataPlaneStateSubdir)
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -80,6 +102,7 @@ func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
 	c.tls = opts.TLS
+	c.stateDir = opts.StateDir
 	return NewHandler(c)
 }
 
@@ -93,9 +116,12 @@ var (
 // is not reimplemented but can be served by an external versitygw process this
 // Server starts and manages when Config.EnableDataPlane is set (see dataplane.go).
 type Server struct {
-	httpServer  *httptest.Server
-	mux         *http.ServeMux
-	store       *MemoryStore
+	httpServer *httptest.Server
+	mux        *http.ServeMux
+	store      *MemoryStore
+	// state saves the store to --state-dir after every request that may have
+	// changed it; nil when persistence is not configured.
+	state       *core.StateFile
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
 	fault       *core.FaultInjector
@@ -141,6 +167,10 @@ func NewHandler(cfg Config) (*Server, error) {
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
 	}
+	s.state, err = core.OpenState(cfg.stateDir, cfg.Name(), s.store, logger)
+	if err != nil {
+		return nil, err
+	}
 	s.mux = s.buildMux()
 	if cfg.EnableDataPlane {
 		dp, err := startDataPlane(cfg, logger)
@@ -149,8 +179,37 @@ func NewHandler(cfg Config) (*Server, error) {
 			return nil, err
 		}
 		s.dataPlane = dp
+		if err := s.syncDataPlane(); err != nil {
+			dp.Close()
+			s.store.Close()
+			return nil, err
+		}
 	}
 	return s, nil
+}
+
+// syncDataPlane mirrors the buckets and access keys restored from the state
+// file into the freshly started data plane, through the same calls the
+// handlers make on create, so both planes agree after a restart. Bucket
+// directories already in a persistent backend directory are kept with their
+// objects; missing ones are created empty.
+func (s *Server) syncDataPlane() error {
+	buckets := s.store.ListBuckets("")
+	for _, b := range buckets {
+		if err := s.dataPlane.createBucket(b.Name); err != nil {
+			return fmt.Errorf("restore bucket %q: %w", b.Name, err)
+		}
+	}
+	keys := s.store.accessKeys()
+	for _, k := range keys {
+		if err := s.dataPlane.createUser(k.ID, k.Secret); err != nil {
+			return fmt.Errorf("restore access key %q: %w", k.ID, err)
+		}
+	}
+	if len(buckets) > 0 || len(keys) > 0 {
+		s.logger.Info("data plane (S3) synced with restored state", "buckets", len(buckets), "access_keys", len(keys))
+	}
+	return nil
 }
 
 // NewTestServer builds the mock server and starts it on a local httptest
@@ -179,10 +238,14 @@ func (s *Server) SpecViolations() []core.SpecViolation {
 	return s.respValidator.Violations()
 }
 
-// Close stops the test server and releases the store.
+// Close stops the test server, saves the state when --state-dir is set, stops
+// the data plane, and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()
+	}
+	if err := s.state.Save(); err != nil {
+		s.logger.Error("failed to save state", "path", s.state.Path(), "error", err)
 	}
 	s.dataPlane.Close()
 	s.store.Close()

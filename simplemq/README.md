@@ -26,6 +26,7 @@ sakumock-simplemq
 | `--visibility-timeout` | `SIMPLEMQ_VISIBILITY_TIMEOUT` | `30s` | Visibility timeout |
 | `--message-expire` | `SIMPLEMQ_MESSAGE_EXPIRE` | `96h` | Message expire time (default: 4 days) |
 | `--database` | `SIMPLEMQ_DATABASE` | (empty) | SQLite database path for persistent storage |
+| `--state-dir` | `SIMPLEMQ_STATE_DIR` | (none) | Directory to persist queues and messages in, so they survive a restart (see [Persistent State](../README.md#persistent-state)). SimpleMQ keeps them in a SQLite database there (`simplemq.db`) rather than a JSON file; ignored when `--database` is set |
 | `--latency` | `SIMPLEMQ_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `SIMPLEMQ_RATE_LIMIT` | `0` | Per-queue HTTP rate limit (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SIMPLEMQ_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
@@ -76,7 +77,7 @@ A queue created via the control plane uses the visibility timeout and expiration
 on it (`updateQueue`). For data plane requests to a queue that was never created via
 the control plane, the queue is created automatically on first access using the
 server's default settings. When using in-memory storage (default), all data is lost
-when the server stops. Use `--database` for persistent storage.
+when the server stops. Use `--database` or `--state-dir` for persistent storage.
 
 ## Use as a library
 
@@ -153,6 +154,10 @@ The real-world flow against a strict server is:
 
 - **Memory** (default): Fast, data lost on restart.
 - **SQLite** (`--database` option): Persistent, WAL mode, pure Go (no CGO required).
+  `--state-dir DIR` selects this backend too, with the database at `DIR/simplemq.db`
+  (next to it SQLite keeps its `-wal` and `-shm` files); an explicit `--database` wins.
+  Unlike the other services, no `simplemq.json` is written: every send is committed
+  to the database instead of rewriting a snapshot.
 
 ## Mock-only endpoints
 

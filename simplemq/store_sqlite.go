@@ -79,27 +79,35 @@ func NewSQLiteStore(path string, visibilityTimeout, messageExpiration time.Durat
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
-	var maxID int64
-	if err := db.QueryRow(`SELECT COALESCE(MAX(CAST(id AS INTEGER)), 0) FROM queues`).Scan(&maxID); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("failed to get max queue id: %w", err)
-	}
-	// Resume from the highest persisted ID, but never below the base so a
-	// fresh database starts at a realistic 12-digit value.
-	ids := core.NewIDGenerator(core.DefaultIDBase())
-	ids.Observe(strconv.FormatInt(maxID, 10))
-
 	s := &SQLiteStore{
 		db:                db,
 		visibilityTimeout: visibilityTimeout,
 		messageExpiration: messageExpiration,
-		ids:               ids,
 		done:              make(chan struct{}),
 		logger:            logger,
+	}
+	// Resume from the highest persisted ID, but never below the base so a
+	// fresh database starts at a realistic 12-digit value.
+	if err := s.useIDGenerator(core.NewIDGenerator(core.DefaultIDBase())); err != nil {
+		db.Close()
+		return nil, err
 	}
 	s.logger.Info("sqlite store opened", "path", path)
 	go s.compactLoop()
 	return s, nil
+}
+
+// useIDGenerator makes the store allocate queue IDs from ids, advanced past
+// the highest persisted queue ID so a reloaded queue's ID is never handed out
+// again. It must be called before the store serves requests.
+func (s *SQLiteStore) useIDGenerator(ids *core.IDGenerator) error {
+	var maxID int64
+	if err := s.db.QueryRow(`SELECT COALESCE(MAX(CAST(id AS INTEGER)), 0) FROM queues`).Scan(&maxID); err != nil {
+		return fmt.Errorf("failed to get max queue id: %w", err)
+	}
+	ids.Observe(strconv.FormatInt(maxID, 10))
+	s.ids = ids
+	return nil
 }
 
 func (s *SQLiteStore) allocateID() string {

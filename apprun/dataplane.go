@@ -113,6 +113,16 @@ func (dm *DockerManager) StopContainer(appID string) {
 	delete(dm.containers, appID)
 }
 
+// RemoveStaleContainer removes a container left under the application's name
+// by a previous process that was killed before it could clean up, which would
+// otherwise make the next StartContainer fail on the name.
+func (dm *DockerManager) RemoveStaleContainer(appID string) {
+	name := "sakumock-apprun-" + appID
+	if out, err := exec.Command("docker", "rm", "-f", name).CombinedOutput(); err != nil {
+		dm.logger.Debug("no stale container removed", "name", name, "error", err, "output", string(out))
+	}
+}
+
 // GetContainerPort returns the host port the application's container is
 // published on.
 func (dm *DockerManager) GetContainerPort(appID string) (string, bool) {

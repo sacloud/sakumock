@@ -884,31 +884,7 @@ func (s *Server) handleUpdateApplication(w http.ResponseWriter, r *http.Request)
 
 	if s.docker != nil {
 		if req.ActiveVersion != nil {
-			v, ok := s.store.ReadVersion(id, *req.ActiveVersion)
-			if ok && v.Image != "" {
-				port := "8080"
-				if len(v.ExposedPorts) > 0 {
-					port = strconv.Itoa(int(v.ExposedPorts[0].TargetPort))
-				}
-				var clusterID string
-				if app, ok := s.store.ReadApplication(id); ok {
-					clusterID = app.ClusterID
-				}
-				ref := newContainerRef(s.placementNodeID(clusterID))
-				if err := s.docker.StartContainer(id, v.Image, port, containerEnv(id, v, ref), v.Cmd, ref); err != nil {
-					s.logger.Error("container start failed", "app_id", id, "error", err)
-				} else {
-					scheme := "http"
-					if s.tlsEnabled {
-						scheme = "https"
-					}
-					s.logger.Info("container started",
-						"app_id", id,
-						"image", v.Image,
-						"url", scheme+"://"+id+".localhost:"+portOf(s.dataPlaneAddr),
-					)
-				}
-			}
+			s.startContainer(id, *req.ActiveVersion)
 		} else {
 			s.docker.StopContainer(id)
 		}
@@ -916,6 +892,48 @@ func (s *Server) handleUpdateApplication(w http.ResponseWriter, r *http.Request)
 
 	s.logger.Debug("application updated", "id", id, "activeVersion", req.ActiveVersion)
 	writeNoContent(w)
+}
+
+// startContainer (re)starts the application's data-plane container from the
+// given version, replacing the one it may already have. A failure is logged
+// and shows as an exited container in the API.
+func (s *Server) startContainer(id string, version int32) {
+	v, ok := s.store.ReadVersion(id, version)
+	if !ok || v.Image == "" {
+		return
+	}
+	port := "8080"
+	if len(v.ExposedPorts) > 0 {
+		port = strconv.Itoa(int(v.ExposedPorts[0].TargetPort))
+	}
+	var clusterID string
+	if app, ok := s.store.ReadApplication(id); ok {
+		clusterID = app.ClusterID
+	}
+	ref := newContainerRef(s.placementNodeID(clusterID))
+	if err := s.docker.StartContainer(id, v.Image, port, containerEnv(id, v, ref), v.Cmd, ref); err != nil {
+		s.logger.Error("container start failed", "app_id", id, "error", err)
+		return
+	}
+	scheme := "http"
+	if s.tlsEnabled {
+		scheme = "https"
+	}
+	s.logger.Info("container started",
+		"app_id", id,
+		"image", v.Image,
+		"url", scheme+"://"+id+".localhost:"+portOf(s.dataPlaneAddr),
+	)
+}
+
+// restoreContainers brings the data plane to what the restored state says:
+// containers do not survive a restart of the mock, so every application with
+// an active version gets a new one, started as on activation.
+func (s *Server) restoreContainers() {
+	for _, app := range s.store.activeApplications() {
+		s.docker.RemoveStaleContainer(app.ApplicationID)
+		s.startContainer(app.ApplicationID, *app.ActiveVersion)
+	}
 }
 
 func (s *Server) handleDeleteApplication(w http.ResponseWriter, r *http.Request) {
@@ -1483,5 +1501,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	core.APILatency(r, s.latency)
 	rw := core.NewResponseRecorder(w)
 	s.mux.ServeHTTP(rw, r)
+	s.state.SaveAfter(r)
 	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }

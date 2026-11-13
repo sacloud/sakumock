@@ -3,21 +3,25 @@ package apprun
 import "time"
 
 // Application is an AppRun application: the deployable unit, addressed by its
-// public URL.
+// public URL. The json tags (here and on the other record types) are the form
+// in the state file (--state-dir), not in API responses.
 type Application struct {
-	ID                     string
-	Name                   string
-	TimeoutSeconds         int
-	Port                   int
-	MinScale               int
-	MaxScale               int
-	ScaleTargetConcurrency int
-	Components             []Component
-	Status                 string
-	PublicURL              string
-	ResourceID             string
-	CreatedAt              time.Time
-	UpdatedAt              time.Time
+	ID                     string      `json:"id"`
+	Name                   string      `json:"name"`
+	TimeoutSeconds         int         `json:"timeout_seconds"`
+	Port                   int         `json:"port"`
+	MinScale               int         `json:"min_scale"`
+	MaxScale               int         `json:"max_scale"`
+	ScaleTargetConcurrency int         `json:"scale_target_concurrency"`
+	Components             []Component `json:"components"`
+	// Status follows the application's container and PublicURL the data plane
+	// address, so neither is saved: both are set again when the state is
+	// restored.
+	Status     string    `json:"-"`
+	PublicURL  string    `json:"-"`
+	ResourceID string    `json:"resource_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 
 	// seq records the creation order. CreatedAt is truncated to the second
 	// (as the real API reports it), so resources created within the same
@@ -27,15 +31,15 @@ type Application struct {
 
 // Component is one container of an application.
 type Component struct {
-	Name         string
-	MaxCPU       string
-	MaxMemory    string
-	DeploySource DeploySource
-	Env          []EnvVar
+	Name         string       `json:"name"`
+	MaxCPU       string       `json:"max_cpu"`
+	MaxMemory    string       `json:"max_memory"`
+	DeploySource DeploySource `json:"deploy_source"`
+	Env          []EnvVar     `json:"env"`
 	// Secret holds the environment variables marked as secret. They reach the
 	// container like Env, but the API reports only their keys.
-	Secret []EnvVar
-	Probe  *Probe
+	Secret []EnvVar `json:"secret"`
+	Probe  *Probe   `json:"probe"`
 }
 
 // containerEnv returns the environment the container is started with: plain
@@ -49,53 +53,53 @@ func (c Component) containerEnv() []EnvVar {
 
 // DeploySource is where a component's image comes from.
 type DeploySource struct {
-	ContainerRegistry *ContainerRegistry
+	ContainerRegistry *ContainerRegistry `json:"container_registry"`
 }
 
 // ContainerRegistry is the registry a component's image is pulled from.
 type ContainerRegistry struct {
-	Image    string
-	Server   string
-	Username string
+	Image    string `json:"image"`
+	Server   string `json:"server"`
+	Username string `json:"username"`
 }
 
 // EnvVar is an environment variable (plain or secret) passed to a component.
 type EnvVar struct {
-	Key   string
-	Value string
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
 
 // Probe is a component's health check.
 type Probe struct {
-	HTTPGet *HTTPGetProbe
+	HTTPGet *HTTPGetProbe `json:"http_get"`
 }
 
 // HTTPGetProbe is a health check performed with an HTTP GET.
 type HTTPGetProbe struct {
-	Path    string
-	Port    int
-	Headers []Header
+	Path    string   `json:"path"`
+	Port    int      `json:"port"`
+	Headers []Header `json:"headers"`
 }
 
 // Header is one HTTP header sent by an HTTPGetProbe.
 type Header struct {
-	Name  string
-	Value string
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 // Version is an immutable snapshot of an application, created on every update.
 type Version struct {
-	ID                     string
-	AppID                  string
-	Name                   string
-	Status                 string
-	TimeoutSeconds         int
-	Port                   int
-	MinScale               int
-	MaxScale               int
-	ScaleTargetConcurrency int
-	Components             []Component
-	CreatedAt              time.Time
+	ID                     string      `json:"id"`
+	AppID                  string      `json:"app_id"`
+	Name                   string      `json:"name"`
+	Status                 string      `json:"status"`
+	TimeoutSeconds         int         `json:"timeout_seconds"`
+	Port                   int         `json:"port"`
+	MinScale               int         `json:"min_scale"`
+	MaxScale               int         `json:"max_scale"`
+	ScaleTargetConcurrency int         `json:"scale_target_concurrency"`
+	Components             []Component `json:"components"`
+	CreatedAt              time.Time   `json:"created_at"`
 
 	// seq records the creation order; see Application.seq.
 	seq int
@@ -103,21 +107,21 @@ type Version struct {
 
 // TrafficItem assigns a share of an application's traffic to one version.
 type TrafficItem struct {
-	VersionName     string
-	IsLatestVersion bool
-	Percent         int
+	VersionName     string `json:"version_name"`
+	IsLatestVersion bool   `json:"is_latest_version"`
+	Percent         int    `json:"percent"`
 }
 
 // PacketFilter restricts which clients may reach an application.
 type PacketFilter struct {
-	IsEnabled bool
-	Settings  []PacketFilterSetting
+	IsEnabled bool                  `json:"is_enabled"`
+	Settings  []PacketFilterSetting `json:"settings"`
 }
 
 // PacketFilterSetting is one allow rule of a PacketFilter.
 type PacketFilterSetting struct {
-	FromIP             string
-	FromIPPrefixLength int
+	FromIP             string `json:"from_ip"`
+	FromIPPrefixLength int    `json:"from_ip_prefix_length"`
 }
 
 // ListParams carries the paging and sorting options of the list endpoints.

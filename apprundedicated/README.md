@@ -26,6 +26,7 @@ sakumock-apprundedicated
 | `--latency` | `APPRUN_DEDICATED_LATENCY` | `0` | Artificial latency added to every control-plane API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `APPRUN_DEDICATED_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `APPRUN_DEDICATED_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `APPRUN_DEDICATED_STATE_DIR` | (none) | Directory to persist clusters, applications, versions, auto scaling groups, load balancers, their nodes, worker nodes and certificates in (`apprun-dedicated.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). The file holds secret environment values, registry passwords and certificate private keys in plain text, readable by the owner only. Containers are restarted, not kept: see [Restart with `--state-dir`](#restart-with---state-dir) |
 | `--fault` | `APPRUN_DEDICATED_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `APPRUN_DEDICATED_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `APPRUN_DEDICATED_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, all listeners (control plane and data plane) serve HTTPS instead of plain HTTP |
@@ -111,6 +112,12 @@ This works in browsers and with `curl` (which resolves `*.localhost` to `127.0.0
 A user-defined variable with one of these names is overridden by the reserved value.
 
 **Container naming:** containers are named `sakumock-apprundedicated-<app-id>`. All tracked containers are cleaned up when the server shuts down.
+
+### Restart with `--state-dir`
+
+Containers are not part of the persisted state: they are removed on shutdown, and only the control-plane records are saved. At the next start with `--enable-data-plane`, sakumock starts a new container for every restored application that has an active version, exactly as when the version was activated, before it accepts requests (so startup takes as long as those `docker run`s). A container left behind by a process that was killed is removed first. The new container gets a new host port and a new `APPRUN_DEDICATED_CONTAINER_ID`, as a restarted container would; the application keeps its ID, so its URL is unchanged as long as `--data-plane-addr` is. A container that cannot be restarted is reported as `exited` by `GET /applications/{id}/containers`.
+
+Restarted without `--enable-data-plane`, the records are restored and no container runs, as for any version activated without the data plane.
 
 ### Differences from the real AppRun Dedicated
 

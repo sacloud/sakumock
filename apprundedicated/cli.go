@@ -13,9 +13,10 @@ import (
 // Command is the CLI command for the AppRun Dedicated mock server.
 type Command struct {
 	Config
-	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"APPRUN_DEDICATED_TLS_"`
-	Routes bool          `help:"List supported HTTP routes and exit"`
-	Docs   bool          `help:"Print this service's documentation (README) and exit"`
+	TLS      core.TLSFiles `embed:"" prefix:"tls-" envprefix:"APPRUN_DEDICATED_TLS_"`
+	StateDir string        `help:"Directory to persist clusters, applications, versions, auto scaling groups, load balancers and certificates in (apprun-dedicated.json), so they survive a restart; empty keeps them in memory only" placeholder:"DIR" env:"APPRUN_DEDICATED_STATE_DIR"`
+	Routes   bool          `help:"List supported HTTP routes and exit"`
+	Docs     bool          `help:"Print this service's documentation (README) and exit"`
 }
 
 // Run starts the mock server and serves until ctx is canceled, or prints the
@@ -48,6 +49,7 @@ func (c *Command) Run(ctx context.Context) error {
 	defer shutdownTracing()
 
 	c.Config.tls = c.TLS
+	c.Config.stateDir = c.StateDir
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -61,6 +63,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"fault", core.FaultHint(c.Fault),
 		"data_plane", c.EnableDataPlane,
+		"state_dir", c.StateDir,
 		"debug", c.Debug,
 	)
 	if c.EnableDataPlane {

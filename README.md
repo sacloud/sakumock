@@ -233,9 +233,13 @@ Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SA
 
 ## Persistent State
 
-Services keep their resources in memory, so a restarted mock comes back empty. Pass `--state-dir DIR` (or `SAKUMOCK_STATE_DIR`) to save each supporting service's state to `DIR/<service>.json` and load it at the next start. The file is rewritten after every request that changes the state, so a killed process loses nothing; delete it to start that service empty. A state file that cannot be loaded is a startup error rather than a silent fresh start. Standalone subcommands of supporting services accept the same `--state-dir` (env `<SERVICE>_STATE_DIR`) and use the same file, so `sakumock kms` and `sakumock all` can share a directory (not at the same time).
+Services keep their resources in memory, so a restarted mock comes back empty. Pass `--state-dir DIR` (or `SAKUMOCK_STATE_DIR`) to save every service's state under `DIR` and load it at the next start — useful while developing against the mock, e.g. to keep a Terraform state valid across restarts. Without the flag nothing is written, which is what tests and CI want.
 
-Currently supported by: [kms](kms/README.md#persistent-state) and [secretmanager](secretmanager/README.md#options). Other services ignore the flag and stay in memory. (SimpleMQ has its own `--simplemq-database` for persistent queues and messages.)
+- Each service saves `DIR/<service>.json`, rewritten after every request that changes its state, so a killed process loses nothing. The files are plain JSON, readable by the owner only since they hold secrets (key material, secret values, credentials) in plain text.
+- Delete a service's file to start that service empty, or the whole directory to start over. A file that cannot be loaded is a startup error rather than a silent fresh start.
+- What has no substance to restore is brought back to a consistent state instead: AppRun containers are started again, a Workflows execution that was running is recorded as canceled, EventBus schedules resume from the restart (boundaries missed while stopped are not fired). Each service's README says what it does not persist (e.g. delivery logs, login sessions, ingested telemetry).
+- Two services use more than the JSON file: SimpleMQ keeps queues and messages in `DIR/simplemq.db` (its SQLite store; an explicit `--simplemq-database` wins), and the object storage data plane keeps objects in `DIR/objectstorage-data` unless `--objectstorage-data-plane-dir` is set.
+- Standalone subcommands accept the same `--state-dir` (env `<SERVICE>_STATE_DIR`) and use the same files, so `sakumock kms` and `sakumock all` can share a directory (not at the same time).
 
 ## Service Link
 

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/sacloud/sakumock/core"
@@ -164,6 +165,7 @@ func TestStateFileCorrupt(t *testing.T) {
 	for name, content := range map[string]string{
 		"syntax error":     "{not json",
 		"not a state file": `{"n":1}`,
+		"null state":       `{"version":"x","state":null}`,
 		"unrestorable":     `{"version":"x","state":{"n":"not a number"}}`,
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -237,5 +239,49 @@ func TestStateFileOtherVersion(t *testing.T) {
 	}
 	if strings.Contains(logs.String(), "level=WARN") {
 		t.Errorf("warning for a state of the running version:\n%s", logs.String())
+	}
+}
+
+// Serve handles requests that may change the state one at a time and saves
+// after each, so a snapshot never sees a record half-updated by a handler.
+func TestStateFileServe(t *testing.T) {
+	store := &counterStore{}
+	f, err := core.OpenState(t.TempDir(), "svc", store, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Unsynchronized on purpose: the race detector fails this test unless
+	// Serve serializes the handlers and the snapshots.
+	next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { store.N++ })
+
+	const requests = 50
+	var wg sync.WaitGroup
+	for range requests {
+		wg.Go(func() {
+			f.Serve(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", nil), next)
+		})
+	}
+	wg.Wait()
+
+	restored := &counterStore{}
+	if _, err := core.OpenState(filepath.Dir(f.Path()), "svc", restored, nil); err != nil {
+		t.Fatal(err)
+	}
+	if restored.N != requests {
+		t.Errorf("restored N = %d, want %d", restored.N, requests)
+	}
+
+	// Safe methods and a nil StateFile just run the handler.
+	before := store.snapshots
+	f.Serve(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/", nil), http.NotFoundHandler())
+	if store.snapshots != before {
+		t.Error("a GET took a snapshot")
+	}
+	var none *core.StateFile
+	called := false
+	none.Serve(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", nil),
+		http.HandlerFunc(func(http.ResponseWriter, *http.Request) { called = true }))
+	if !called {
+		t.Error("a nil StateFile did not run the handler")
 	}
 }

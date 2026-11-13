@@ -87,7 +87,7 @@ func OpenState(dir, service string, store Snapshotter, logger *slog.Logger) (*St
 	if err := json.Unmarshal(data, &env); err != nil {
 		return nil, fmt.Errorf("state file %s: %w (remove it to start empty)", f.path, err)
 	}
-	if len(env.State) == 0 {
+	if len(env.State) == 0 || bytes.Equal(bytes.TrimSpace(env.State), []byte("null")) {
 		return nil, fmt.Errorf("state file %s: not a sakumock state file (remove it to start empty)", f.path)
 	}
 	if err := store.Restore(env.State); err != nil {
@@ -132,7 +132,10 @@ func (f *StateFile) Save() error {
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	return f.saveLocked()
+}
 
+func (f *StateFile) saveLocked() error {
 	snapshot, err := f.store.Snapshot()
 	if err != nil {
 		return fmt.Errorf("snapshot state: %w", err)
@@ -158,16 +161,38 @@ func (f *StateFile) Save() error {
 // and a failure is logged rather than returned since the response is already
 // written.
 func (f *StateFile) SaveAfter(r *http.Request) {
-	if f == nil {
-		return
-	}
-	switch r.Method {
-	case http.MethodGet, http.MethodHead, http.MethodOptions:
+	if f == nil || isSafeMethod(r.Method) {
 		return
 	}
 	if err := f.Save(); err != nil {
 		f.logger.Error("failed to save state", "path", f.path, "error", err)
 	}
+}
+
+// Serve runs next for r and saves the state afterwards, like SaveAfter, but
+// holds the lock snapshots are taken under while a request that may change the
+// state is being handled. Such requests are thereby handled one at a time and
+// never overlap a snapshot. It is for services whose handlers change stored
+// records in place, outside the store's own locks; next must not call Save.
+func (f *StateFile) Serve(w http.ResponseWriter, r *http.Request, next http.Handler) {
+	if f == nil || isSafeMethod(r.Method) {
+		next.ServeHTTP(w, r)
+		return
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	next.ServeHTTP(w, r)
+	if err := f.saveLocked(); err != nil {
+		f.logger.Error("failed to save state", "path", f.path, "error", err)
+	}
+}
+
+func isSafeMethod(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		return true
+	}
+	return false
 }
 
 // writeFileAtomic writes data to a temporary file next to path and renames it

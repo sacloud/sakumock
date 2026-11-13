@@ -69,14 +69,44 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 
 ### Persistent state (`--state-dir`)
 
-Opt-in, supported by every service: the store stays in memory and is saved as a whole to `<dir>/<Name()>.json`; no storage engine, no change to the `Store` interface. Without the flag nothing is written and behavior is unchanged. `core.StateFile` wraps the snapshot with the sakumock version that wrote it and warns when another version restores it; nothing keeps state compatible across versions, so never write migrations.
+**Purpose and limits**
 
-- The store implements `core.Snapshotter` in `store_snapshot.go`: `Snapshot()` marshals a named snapshot struct (json tags, deterministic output) under the store lock; `Restore()` validates what would otherwise break at request time, replaces the state as a whole, and `Observe`s every restored ID on the `IDGenerator`. Persist every map, slice and counter — a forgotten one silently disappears on restart; config-derived values and seeded static content (plans, built-in roles) are not state. When a record's API-shaped json tags drop fields, use a dedicated snapshot struct instead of changing the API shape (apigw). `json.MarshalIndent` re-indents embedded `json.RawMessage`: compact it in `Restore`, or store it as a string where its bytes are hashed (eventbus).
-- `NewHandler` calls `core.OpenState(cfg.stateDir, cfg.Name(), store, logger)` after the ID generator is injected and before startup presets (restored state wins over flags); a file that fails to restore is returned as an error. `Server.ServeHTTP` ends with `s.state.SaveAfter(r)` and `Close` calls `s.state.Save()`. A nil `*core.StateFile` is a no-op, so nothing is guarded. State changed outside a control-plane request (a scheduler firing, an execution finishing) calls `Save` itself.
-- The directory is per suite like TLS: `Command.StateDir` (`env:"<SERVICE>_STATE_DIR"`) is copied to the unexported `Config.stateDir` by `cli.go`, and the unified binary injects its `--state-dir` via `core.ServerOptions.StateDir`.
-- State with no restorable substance is reconciled at startup, never saved as if it were still alive: the store's `Restore` fixes the records (workflows cancels interrupted executions), the server restarts what it owns after `OpenState` (apprun/apprundedicated `restoreContainers`, objectstorage `syncDataPlane`).
-- Exceptions to the JSON file: simplemq reuses its SQLite store as `<dir>/simplemq.db` (rewriting every message per request would be too slow), and the objectstorage data plane defaults its backend directory to `<dir>/objectstorage-data`.
-- Tests: saving, restoring, skipping unchanged writes, and broken files are covered once in `core/state_test.go` — do not repeat them per service. A service adds one `state_test.go` round trip through `coretest.StateRestart(t, Config{}, populate, verify)` (SDK client, every kind of resource the store holds), which also catches a missing `SaveAfter` and a lossy `Restore`; add more only for behavior of its own (startup presets, `Restore` validation, reconciliation).
+- It exists so a mock restarted during local work does not come back empty (a Terraform state stays valid, IDs in config files stay valid). It is a convenience, not a storage format.
+- Opt-in. Without the flag nothing is written; tests, CI, and library use stay memory-only.
+- No compatibility across sakumock versions and no migrations: persisting within one version is all that is promised. `core.StateFile` records the version that wrote each file and warns when another version restores it. A state file that cannot be restored is a startup error telling the user to delete it — never a silent fresh start (the next save would overwrite the file), and never a best-effort partial load.
+- Every service supports it, and a new service must: with partial support a restart leaves resources pointing at ones that are gone (a vault whose KMS key vanished).
+- One directory per suite, like TLS — not a per-service option.
+
+**Design**
+
+- No storage engine. The store stays in memory and is saved as a whole to `<dir>/<Name()>.json`; the `Store` interface does not change. Do not introduce a database for persistence. The one exception is simplemq, whose existing SQLite store is reused as `<dir>/simplemq.db` because rewriting every message per request would be too slow — a store that grows with traffic takes that route, not debouncing.
+- Saved synchronously after every non-safe request, so a killed process loses nothing. State changed outside a request (a scheduler firing, an execution finishing) saves itself; `Close` saves too.
+- Restored state wins over startup flags and presets (a `--key` whose ID is already restored is left alone), so a restart never undoes what happened to a resource.
+- The file is plain, indented JSON, owner-readable only: it holds secrets (key material, secret values, credentials) in plain text. Say so in the service README.
+
+**What is state**
+
+- Persist everything the control plane created: every map, slice and counter of the store. A forgotten one silently disappears on restart.
+- Not state: config-derived values (limits, timeouts), seeded static content (plans, built-in roles, publishers — the code stays their single source, so a restore cannot duplicate them), runtime caches and login sessions, inspection logs kept outside the store, ingested telemetry. List what is not persisted in the service README.
+- json tags added to record types for the state file never reach API responses (those go through their own types), but a value computed by marshaling a record changes with them (seg's `SettingsHash`). That is acceptable across sakumock versions, like any other opaque generated value (apigw plan IDs); it must stay stable within a version and across a restart.
+
+**What cannot be restored**
+
+Records come back; goroutines, containers and external processes do not. Bring the two back into agreement at startup instead of saving something as if it were still alive:
+
+- Restart what the mock owns: apprun/apprundedicated start the containers of restored applications again (synchronously, so an application reported healthy is served), objectstorage registers restored buckets and access keys with versitygw.
+- End what cannot resume, using the API's existing vocabulary: a workflows execution that was running is restored as `Canceled`.
+- Do not catch up on missed time: eventbus schedules resume from the restart.
+- Only when the data plane is enabled; without it, restoring the records is all there is to do.
+
+**Implementation**
+
+- The store implements `core.Snapshotter` in `store_snapshot.go`: `Snapshot()` marshals a named snapshot struct (json tags, deterministic output) under the store lock; `Restore()` validates what would otherwise break at request time, replaces the state as a whole or not at all, and `Observe`s every restored ID on the `IDGenerator`. When a record's API-shaped json tags drop fields, use a dedicated snapshot struct instead of changing the API shape (apigw). `json.MarshalIndent` re-indents embedded `json.RawMessage`: compact it in `Restore`, or store it as a string where its bytes are hashed (eventbus).
+- `NewHandler` calls `core.OpenState(cfg.stateDir, cfg.Name(), store, logger)` after the ID generator is injected and before startup presets. `Server.ServeHTTP` ends with `s.state.SaveAfter(r)` and `Close` calls `s.state.Save()`. A nil `*core.StateFile` is a no-op, so nothing is guarded.
+- `Command.StateDir` (`env:"<SERVICE>_STATE_DIR"`) is copied to the unexported `Config.stateDir` by `cli.go`; the unified binary injects its `--state-dir` via `core.ServerOptions.StateDir`.
+- The store's `Restore` fixes records; the server restarts what it owns after `OpenState` (`restoreContainers`, `syncDataPlane`).
+- A data plane with its own on-disk data defaults it to a subdirectory of the state dir (`<dir>/objectstorage-data`) unless set explicitly; images do not pin such a directory.
+- Tests: saving, restoring, skipping unchanged writes, broken files, and the version warning are covered once in `core/state_test.go` — do not repeat them per service. A service adds one `state_test.go` round trip through `coretest.StateRestart(t, Config{}, populate, verify)` (SDK client, every kind of resource the store holds), which also catches a missing `SaveAfter` and a lossy `Restore`; add more only for behavior of its own (startup presets, `Restore` validation, reconciliation).
 
 ### Latency
 

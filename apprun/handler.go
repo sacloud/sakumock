@@ -485,14 +485,7 @@ func (s *Server) handlePostApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.docker != nil && len(app.Components) > 0 {
-		c := app.Components[0]
-		if c.DeploySource.ContainerRegistry != nil {
-			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.containerEnv()); err != nil {
-				s.logger.Error("container start failed", "app_id", app.ID, "error", err)
-			}
-		}
-	}
+	s.startContainer(app)
 
 	app, _ = s.store.ReadApplication(app.ID)
 	core.WriteJSON(w, http.StatusCreated, appToJSON(app))
@@ -572,18 +565,37 @@ func (s *Server) handlePatchApplication(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	if s.docker != nil && len(app.Components) > 0 {
-		c := app.Components[0]
-		if c.DeploySource.ContainerRegistry != nil {
-			s.docker.StopContainer(app.ID)
-			if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.containerEnv()); err != nil {
-				s.logger.Error("container start failed", "app_id", app.ID, "error", err)
-			}
-		}
-	}
+	s.startContainer(app)
 
 	app, _ = s.store.ReadApplication(id)
 	core.WriteJSON(w, http.StatusOK, appToPatchJSON(app))
+}
+
+// startContainer (re)starts the container of the application's first
+// component when the data plane is enabled, replacing the one it may already
+// have. A failure is logged and shows as the application's "UnHealthy" status.
+func (s *Server) startContainer(app *Application) {
+	if s.docker == nil || len(app.Components) == 0 {
+		return
+	}
+	c := app.Components[0]
+	if c.DeploySource.ContainerRegistry == nil {
+		return
+	}
+	s.docker.StopContainer(app.ID)
+	if err := s.docker.StartContainer(app.ID, c.DeploySource.ContainerRegistry.Image, strconv.Itoa(app.Port), c.containerEnv()); err != nil {
+		s.logger.Error("container start failed", "app_id", app.ID, "error", err)
+	}
+}
+
+// restoreContainers brings the data plane to what the restored state says:
+// containers do not survive a restart of the mock, so every application gets
+// a new one, started as on creation.
+func (s *Server) restoreContainers() {
+	for _, app := range s.store.applicationsByCreation() {
+		s.docker.RemoveStaleContainer(app.ID)
+		s.startContainer(app)
+	}
 }
 
 func (s *Server) handleDeleteApplication(w http.ResponseWriter, r *http.Request) {
@@ -1028,5 +1040,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	core.APILatency(r, s.latency)
 	rw := core.NewResponseRecorder(w)
 	s.mux.ServeHTTP(rw, r)
+	s.state.SaveAfter(r)
 	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }

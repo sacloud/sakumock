@@ -27,6 +27,7 @@ sakumock-securitycontrol
 | `--latency` | `SECURITY_CONTROL_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `SECURITY_CONTROL_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SECURITY_CONTROL_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `SECURITY_CONTROL_STATE_DIR` | (none) | Directory to persist the activation, automated actions and evaluation rules in (`security-control.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). `--automated-action-limit` is not saved: restored actions beyond a lowered limit are kept, and creating more is refused until the count drops below it |
 | `--fault` | `SECURITY_CONTROL_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--automated-action-limit` | `SECURITY_CONTROL_AUTOMATED_ACTION_LIMIT` | `10` | Maximum number of automated actions, reported as the activation's `automatedActionLimit` |
 | `--debug` | `SECURITY_CONTROL_DEBUG` | `false` | Enable debug mode |

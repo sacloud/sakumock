@@ -25,6 +25,7 @@ sakumock-secretmanager
 | `--latency` | `SECRETMANAGER_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `SECRETMANAGER_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SECRETMANAGER_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `SECRETMANAGER_STATE_DIR` | (none) | Directory to persist vaults and secrets in (`secretmanager.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). The file holds the secret values in plain text, readable by the owner only |
 | `--fault` | `SECRETMANAGER_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `SECRETMANAGER_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `SECRETMANAGER_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |

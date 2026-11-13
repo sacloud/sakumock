@@ -23,9 +23,9 @@ COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 # Enable every service's data plane by default, each bound on all interfaces so
 # the published ports are reachable from the host. PATH must include versitygw
 # and docker so sakumock can locate them (Object Storage S3 data plane; AppRun /
-# AppRun Dedicated Docker data planes). Object Storage objects live under
-# /home/nonroot/data (writable by the distroless nonroot uid, so sakumock creates
-# it at startup); mount a volume there to persist them.
+# AppRun Dedicated Docker data planes). Object Storage objects live in a
+# temporary directory removed on shutdown; to keep them, and every service's
+# state, set SAKUMOCK_STATE_DIR to a mounted volume (see README).
 #
 # AppRun data planes require the host Docker socket to be mounted into the
 # container (-v /var/run/docker.sock:/var/run/docker.sock) and --network host so
@@ -39,7 +39,6 @@ ENV PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     TMPDIR=/home/nonroot \
     OBJECT_STORAGE_ENABLE_DATA_PLANE=true \
     OBJECT_STORAGE_DATA_PLANE_ADDR=0.0.0.0:28086 \
-    OBJECT_STORAGE_DATA_PLANE_DIR=/home/nonroot/data \
     MONITORINGSUITE_ENABLE_DATA_PLANE=true \
     MONITORINGSUITE_DATA_PLANE_ADDR=0.0.0.0:28084 \
     APPRUN_ENABLE_DATA_PLANE=true \

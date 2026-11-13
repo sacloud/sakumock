@@ -18,9 +18,16 @@ type executor struct {
 	logger           *slog.Logger
 	executionTimeout time.Duration
 	allowLocalNet    bool
+	// onFinished, when set, runs after an execution reached a terminal status:
+	// that happens outside of any HTTP request, so the server saves its state
+	// here.
+	onFinished func()
 
 	mu      sync.Mutex
 	running map[string]context.CancelFunc
+	// closed is set by shutdown: no execution starts after it.
+	closed bool
+	wg     sync.WaitGroup
 }
 
 func newExecutor(store *MemoryStore, logger *slog.Logger) *executor {
@@ -64,14 +71,21 @@ func (e *executor) newRunner(workflowID, executionID string) *runbook.Runner {
 	return r
 }
 
+// submit runs the execution in a goroutine. After shutdown it does nothing:
+// the execution stays Queued.
 func (e *executor) submit(ctx context.Context, workflowID, executionID string, rb *runbook.Runbook, argsJSON string) {
-	execCtx, cancel := context.WithTimeout(ctx, e.executionTimeout)
-
 	e.mu.Lock()
+	if e.closed {
+		e.mu.Unlock()
+		return
+	}
+	execCtx, cancel := context.WithTimeout(ctx, e.executionTimeout)
 	e.running[executionID] = cancel
+	e.wg.Add(1)
 	e.mu.Unlock()
 
 	go func() {
+		defer e.wg.Done()
 		defer func() {
 			e.mu.Lock()
 			delete(e.running, executionID)
@@ -113,12 +127,18 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			if execCtx.Err() != nil {
 				status = "Canceled"
 			}
+			reason := result.Err.Error()
+			if status == "Canceled" && e.isClosed() {
+				reason = interruptedMessage
+			}
 			update := ExecutionStatusUpdate{
 				Status: status,
-				Error:  result.Err.Error(),
+				Error:  reason,
 			}
 			if status == "Failed" {
 				update.FailedAt = &finished
+			} else {
+				update.CanceledAt = &finished
 			}
 			if err := e.store.UpdateExecutionStatus(workflowID, executionID, update); err != nil {
 				e.logger.Error("update execution status", "error", err)
@@ -127,8 +147,9 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 				"workflow_id", workflowID,
 				"execution_id", executionID,
 				"status", status,
-				"error", result.Err.Error(),
+				"error", reason,
 			)
+			e.finished()
 			return
 		}
 
@@ -149,7 +170,20 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			"execution_id", executionID,
 			"status", "Succeeded",
 		)
+		e.finished()
 	}()
+}
+
+func (e *executor) finished() {
+	if e.onFinished != nil {
+		e.onFinished()
+	}
+}
+
+func (e *executor) isClosed() bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.closed
 }
 
 func (e *executor) cancel(executionID string) bool {
@@ -164,11 +198,16 @@ func (e *executor) cancel(executionID string) bool {
 	return true
 }
 
+// shutdown cancels the running executions and waits until each has recorded
+// its final status, so the state saved at Close holds no execution that is
+// still changing.
 func (e *executor) shutdown() {
 	e.mu.Lock()
-	defer e.mu.Unlock()
-
+	e.closed = true
 	for _, cancel := range e.running {
 		cancel()
 	}
+	e.mu.Unlock()
+
+	e.wg.Wait()
 }

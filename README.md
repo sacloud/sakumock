@@ -231,6 +231,17 @@ An injected status is returned in the service's own error envelope with a `fault
 
 Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SAKUMOCK_TLS_KEY`) to serve **every** listener over HTTPS — all control planes and data planes share the one cert (they run on the same host, only the port differs). TLS is enabled only when both files are set; otherwise everything stays plain HTTP. The object storage data plane is served by versitygw, which is handed the same cert/key (`--cert`/`--key`) so it terminates TLS itself. Standalone subcommands accept the same `--tls-cert`/`--tls-key` (env `<SERVICE>_TLS_CERT` / `<SERVICE>_TLS_KEY`). `sakumock env` emits `https://` endpoints when TLS is set; with a self-signed cert the client must be told to trust it.
 
+## Persistent State
+
+Services keep their resources in memory, so a restarted mock comes back empty. Pass `--state-dir DIR` (or `SAKUMOCK_STATE_DIR`) to save every service's state under `DIR` and load it at the next start — useful while developing against the mock, e.g. to keep a Terraform state valid across restarts. Without the flag nothing is written, which is what tests and CI want.
+
+- Each service saves `DIR/<service>.json` (`{"version": ..., "state": ...}`), rewritten after every request that changes its state, so a killed process loses nothing. The files are plain JSON, readable by the owner only (on Unix) since they hold secrets (key material, secret values, credentials) in plain text.
+- Delete a service's file to start that service empty, or the whole directory to start over. A file that cannot be loaded is a startup error rather than a silent fresh start.
+- The state is a convenience for local work, not a storage format: it is not kept compatible across sakumock versions. Each file records the version that wrote it; a state saved by another version is loaded with a warning, and when it is rejected or the mock misbehaves, delete it. (`simplemq.db` and the object storage data carry no such record.)
+- What has no substance to restore is brought back to a consistent state instead: AppRun containers are started again, a Workflows execution that was running is recorded as canceled, EventBus schedules resume from the restart (boundaries missed while stopped are not fired). Each service's README says what it does not persist (e.g. delivery logs, login sessions, ingested telemetry).
+- Two services use more than the JSON file: SimpleMQ keeps queues and messages in `DIR/simplemq.db` (its SQLite store; an explicit `--simplemq-database` wins), and the object storage data plane keeps objects in `DIR/objectstorage-data` unless `--objectstorage-data-plane-dir` is set.
+- Standalone subcommands accept the same `--state-dir` (env `<SERVICE>_STATE_DIR`) and use the same files, so `sakumock kms` and `sakumock all` can share a directory (not at the same time).
+
 ## Service Link
 
 Pass `--enable-service-link` (or `SAKUMOCK_ENABLE_SERVICE_LINK=true`) to let services forward requests to each other, just as the real SAKURA Cloud platform does. Currently EventBus forwards fired jobs to their destination service:
@@ -363,7 +374,16 @@ docker run --rm \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 
-Objects are stored under `/home/nonroot/data`; mount a volume there to persist them. The image runs as a non-root user (uid 65532), so prefer a **named volume** (`-v sakumock-data:/home/nonroot/data`, which inherits the right ownership) — a bind-mounted host directory must be writable by uid 65532 or the data plane fails to start.
+Objects, like every service's state, are gone when the container stops. To keep them, mount a volume and point [`--state-dir`](#persistent-state) at it (objects go to its `objectstorage-data` subdirectory):
+
+```bash
+docker run --rm \
+  -v sakumock-home:/home/nonroot -e SAKUMOCK_STATE_DIR=/home/nonroot/state \
+  -p 18000:18000 -p 28086:28086 \
+  ghcr.io/sacloud/sakumock:latest-dataplane
+```
+
+The image runs as a non-root user (uid 65532). A **named volume** mounted at `/home/nonroot` itself inherits that ownership; one mounted at a path the image does not have (e.g. `/home/nonroot/state`) is created root-owned and startup fails, as it does with a bind-mounted host directory that uid 65532 cannot write.
 
 ### AppRun Data Planes
 

@@ -52,6 +52,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rw := core.NewResponseRecorder(w)
 	s.mux.ServeHTTP(rw, r)
 	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
+	s.state.SaveAfter(r)
 }
 
 func (s *Server) handleSendMessage(w http.ResponseWriter, r *http.Request) {

@@ -30,9 +30,21 @@ sakumock-apigw
 | `--enable-data-plane` | `APIGW_ENABLE_DATA_PLANE` | `false` | Enable the gateway data plane: a separate listener routing requests by Host header to the configured upstreams |
 | `--data-plane-addr` | `APIGW_DATA_PLANE_ADDR` | `127.0.0.1:28091` | Data plane listen address (control-plane port + 10000) |
 | `--data-plane-latency` | `APIGW_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
+| `--state-dir` | `APIGW_STATE_DIR` | (none) | Directory to persist the gateway configuration in (`apigw.json`), so it survives a restart (see [Persistent State](../README.md#persistent-state) and [below](#persistent-state)). The file holds credentials and certificate keys in plain text, readable by the owner only |
 | `--debug` | `APIGW_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `APIGW_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `APIGW_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
+
+### Persistent state
+
+With `--state-dir`, everything configured through the control plane is saved to `apigw.json` and restored at the next start: subscriptions, services (CORS and object storage settings included), routes with their authorization and request/response transformations, users with their credentials and group memberships, groups, domains, certificates (PEM material included) and OIDC configurations. Resource IDs and the auto-issued `routeHost` of each service are kept, so clients and data plane URLs stay valid across a restart.
+
+Not persisted:
+
+- The plan catalog. It is fixed and seeded at every start with the same IDs, so restored subscriptions keep their plan.
+- Data plane runtime state: OIDC login sessions and pending logins (users sign in again after a restart), and the caches of upstream transports, OIDC providers and S3 clients, which are rebuilt on demand from the restored configuration.
+
+The data plane only reads the configuration, so the state file changes on control-plane requests only.
 
 ## Use with sacloud-sdk-go
 

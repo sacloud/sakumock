@@ -26,13 +26,14 @@ sakumock-objectstorage
 | `--latency` | `OBJECT_STORAGE_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `OBJECT_STORAGE_RATE_LIMIT` | `0` | HTTP rate limit on the API endpoints (requests per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `OBJECT_STORAGE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `OBJECT_STORAGE_STATE_DIR` | (none) | Directory to persist buckets, accounts and permissions in (`objectstorage.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). The file holds the access key secrets in plain text, readable by the owner only. With the data plane it also keeps the objects (see [Data plane and `--state-dir`](#data-plane-and---state-dir)) |
 | `--fault` | `OBJECT_STORAGE_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `OBJECT_STORAGE_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `OBJECT_STORAGE_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, both the control plane and the data plane (versitygw, via `--cert`/`--key`) serve HTTPS instead of plain HTTP |
 | `--tls-key` | `OBJECT_STORAGE_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
 | `--enable-data-plane` | `OBJECT_STORAGE_ENABLE_DATA_PLANE` | `false` | Serve the S3-compatible data plane via an external versitygw process |
 | `--data-plane-addr` | `OBJECT_STORAGE_DATA_PLANE_ADDR` | `127.0.0.1:28086` | Listen address for the S3 data plane (control-plane port + 10000) |
-| `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses a temp dir removed on shutdown |
+| `--data-plane-dir` | `OBJECT_STORAGE_DATA_PLANE_DIR` | (temp dir) | Backend directory; empty uses `<state-dir>/objectstorage-data` when `--state-dir` is set, otherwise a temp dir removed on shutdown |
 | `--data-plane-region` | `OBJECT_STORAGE_DATA_PLANE_REGION` | `jp-north-1` | Region the S3 data plane signs/validates requests for |
 
 The data plane's root credentials are fixed development defaults (access key `sakumock`, secret key `sakumocksecret`) — not configurable, like the dummy SAKURA credentials. Access keys issued through the control plane also authenticate on the data plane (see [Data plane (S3)](#data-plane-s3)).
@@ -129,6 +130,18 @@ The integration is **loose**:
 - **Bucket existence is mirrored**: creating/deleting a bucket through the control plane creates/removes a directory in the versitygw backend, which versitygw exposes as an S3 bucket. Objects themselves live only in versitygw. If the backend directory cannot be created (e.g. the bucket name is not a valid directory name on the local filesystem, such as a Windows reserved device name), bucket creation fails with `500` and is rolled back rather than leaving a control-plane bucket the data plane cannot serve.
 - **Control-plane access keys authenticate S3 requests**: account keys and permission keys issued through the control plane (`POST /{site}/v2/account/keys`, `POST /{site}/v2/permissions/{id}/keys`) are mirrored into versitygw's internal IAM service, so the "issue a key, then use it against S3" flow works end to end. Deleting a key (or the account/permission owning it) revokes it immediately. A fixed root credential (access key `sakumock`, secret key `sakumocksecret`) always works alongside the issued keys. **Permissions are not enforced**: every issued key is registered with versitygw's `admin` role, so a permission key scoped to one bucket can still access all buckets — the mock authenticates keys but does not restrict them.
 - **On Windows**, where the filesystem lacks the xattr support of versitygw's default metadata store, sakumock passes `--sidecar` automatically: metadata is kept in a `meta-<dirname>` directory next to the backend dir.
+
+### Data plane and `--state-dir`
+
+With `--state-dir`, the control plane and the data plane agree after a restart:
+
+- **Objects are kept**: unless `--data-plane-dir` is set, the backend directory is `<state-dir>/objectstorage-data` instead of a temp dir, so the objects survive together with the buckets holding them. An explicit `--data-plane-dir` is used as is; persisting it is then up to you.
+- **Restored buckets exist on the data plane**: at startup every restored bucket is mirrored into the backend again. A bucket whose directory is still there keeps its objects; one whose directory is gone (e.g. a non-persistent `--data-plane-dir`) comes back empty.
+- **Restored access keys authenticate again**: versitygw's IAM database is never persisted; the restored account and permission keys are registered again at startup, so the control-plane state file stays the only source of keys and a key deleted before the restart stays revoked.
+
+To start empty, remove `objectstorage.json` **and** the backend directory: a bucket directory left behind without its control-plane record is still served by versitygw as an S3 bucket.
+
+Without `--state-dir`, a persistent `--data-plane-dir` keeps the directories but the control plane starts empty, as before.
 
 When the data plane is enabled, the startup log and `sakumock env` emit the `AWS_*` variables an aws-cli / aws-sdk client needs (`AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`). Load them and use any S3 client without passing `--endpoint-url`:
 

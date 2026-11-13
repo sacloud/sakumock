@@ -25,6 +25,11 @@ type Config struct {
 	idGen  *core.IDGenerator
 	logger *slog.Logger
 	tls    core.TLSFiles
+
+	// stateDir, when non-empty, is the directory the gateway configuration is
+	// persisted in (--state-dir), set by cli.go or injected by the unified
+	// binary.
+	stateDir string
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -47,6 +52,7 @@ func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
 	c.tls = opts.TLS
+	c.stateDir = opts.StateDir
 	return NewHandler(c)
 }
 
@@ -58,9 +64,12 @@ var (
 // Server is the API Gateway mock server. It is an http.Handler, so it can be mounted
 // directly or started on a local listener with NewTestServer.
 type Server struct {
-	httpServer  *httptest.Server
-	mux         *http.ServeMux
-	store       *MemoryStore
+	httpServer *httptest.Server
+	mux        *http.ServeMux
+	store      *MemoryStore
+	// state saves the store to --state-dir after every request that may have
+	// changed it; nil when persistence is not configured.
+	state       *core.StateFile
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
 	fault       *core.FaultInjector
@@ -103,6 +112,12 @@ func NewHandler(cfg Config) (*Server, error) {
 	}
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
+	}
+	// Restore before the data plane starts, so it serves the restored routes
+	// from its first request.
+	s.state, err = core.OpenState(cfg.stateDir, cfg.Name(), s.store, logger)
+	if err != nil {
+		return nil, err
 	}
 	s.mux = s.buildMux()
 
@@ -151,13 +166,17 @@ func (s *Server) DataPlaneAddr() string {
 	return s.dp.Addr()
 }
 
-// Close stops the test server and releases the store.
+// Close stops the test server and the data plane, saves the state when
+// --state-dir is set, and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()
 	}
 	if s.dp != nil {
 		s.dp.Close()
+	}
+	if err := s.state.Save(); err != nil {
+		s.logger.Error("failed to save state", "path", s.state.Path(), "error", err)
 	}
 	s.store.Close()
 }

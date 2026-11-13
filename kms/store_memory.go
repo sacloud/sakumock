@@ -61,7 +61,8 @@ func (s *MemoryStore) rotateKeyMaterial(id string, version int) {
 
 // Preset registers a key with a fixed ID and version-1 key material, already
 // rotated to the given version (>= 1), as configured by --key, so
-// encrypt/decrypt results survive a restart. Versions 2..version are derived
+// encrypt/decrypt results survive a restart. A key with that ID restored from
+// the state file is left as it is. Versions 2..version are derived
 // by the rotation chain. The ID is reserved on the ID generator, so generated
 // IDs never collide with it and, under the unified binary, another service
 // presetting the same ID fails at startup.
@@ -74,6 +75,10 @@ func (s *MemoryStore) Preset(id string, material []byte, version int) error {
 
 	if err := s.ids.Reserve(id, "kms"); err != nil {
 		return err
+	}
+	if _, ok := s.keys[id]; ok {
+		s.logger.Info("preset key already in the restored state, keeping it", "id", id)
+		return nil
 	}
 	now := time.Now()
 	s.keys[id] = &KeyRecord{

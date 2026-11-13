@@ -15,9 +15,10 @@ import (
 // as a subcommand of the unified sakumock binary.
 type Command struct {
 	Config
-	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"OBJECT_STORAGE_TLS_"`
-	Routes bool          `help:"List supported HTTP routes and exit"`
-	Docs   bool          `help:"Print this service's documentation (README) and exit"`
+	TLS      core.TLSFiles `embed:"" prefix:"tls-" envprefix:"OBJECT_STORAGE_TLS_"`
+	StateDir string        `help:"Directory to persist buckets, accounts and permissions in (objectstorage.json), so they survive a restart; with the data plane it also holds the objects (objectstorage-data) unless --data-plane-dir is set; empty keeps them in memory only" placeholder:"DIR" env:"OBJECT_STORAGE_STATE_DIR"`
+	Routes   bool          `help:"List supported HTTP routes and exit"`
+	Docs     bool          `help:"Print this service's documentation (README) and exit"`
 }
 
 // Run starts the mock server and serves until ctx is canceled, or prints the
@@ -53,6 +54,7 @@ func (c *Command) Run(ctx context.Context) error {
 	// common TLS files into Config first (standalone path; the unified binary
 	// injects them via ServerOptions instead).
 	c.Config.tls = c.TLS
+	c.Config.stateDir = c.StateDir
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -65,6 +67,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"latency", c.Latency,
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"fault", core.FaultHint(c.Fault),
+		"state_dir", c.StateDir,
 		"debug", c.Debug,
 	)
 	slog.Info("to use with sacloud-sdk-go",

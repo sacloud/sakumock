@@ -6,70 +6,70 @@ import "time"
 // across the federation, so the store keys them by name; ClusterID records the
 // site (cluster) the bucket belongs to, which is how per-site listing filters.
 type Bucket struct {
-	Name             string
-	ClusterID        string
-	ResourceID       string
-	PlanType         string // "standard" or "archive"
-	ServiceClassPath string
-	CreatedAt        time.Time
-	Encryption       *Encryption
-	Replication      *Replication
+	Name             string       `json:"name"`
+	ClusterID        string       `json:"cluster_id"`
+	ResourceID       string       `json:"resource_id"`
+	PlanType         string       `json:"plan_type"` // "standard" or "archive"
+	ServiceClassPath string       `json:"service_class_path"`
+	CreatedAt        time.Time    `json:"created_at"`
+	Encryption       *Encryption  `json:"encryption,omitempty"`
+	Replication      *Replication `json:"replication,omitempty"`
 }
 
 // Encryption is a bucket's server-side encryption configuration.
 type Encryption struct {
-	KMSKeyID     string
-	ConfiguredAt time.Time
+	KMSKeyID     string    `json:"kms_key_id"`
+	ConfiguredAt time.Time `json:"configured_at"`
 }
 
 // Replication is a bucket's replication configuration.
 type Replication struct {
-	DestBucket   string
-	ConfigStatus string // "creating" or "created"
-	CreatedAt    time.Time
+	DestBucket   string    `json:"dest_bucket"`
+	ConfigStatus string    `json:"config_status"` // "creating" or "created"
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 // Account is the per-site root account. The real API creates it automatically
 // when the control panel first accesses a site; the mock creates it on demand.
 type Account struct {
-	ResourceID string
-	Code       string
-	CreatedAt  time.Time
-	Keys       []AccountKey
+	ResourceID string       `json:"resource_id"`
+	Code       string       `json:"code"`
+	CreatedAt  time.Time    `json:"created_at"`
+	Keys       []AccountKey `json:"keys"`
 }
 
 // AccountKey is a root-user access key. Secret is only returned when the key is
 // created; subsequent reads return it empty, mirroring the real API.
 type AccountKey struct {
-	ID        string
-	Secret    string
-	CreatedAt time.Time
+	ID        string    `json:"id"`
+	Secret    string    `json:"secret"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Permission is a per-site permission (a scoped IAM-like principal) with its own
 // bucket controls and access keys.
 type Permission struct {
-	ID             int64
-	DisplayName    string
-	BucketControls []BucketControl
-	CreatedAt      time.Time
-	Keys           []PermissionKey
+	ID             int64           `json:"id"`
+	DisplayName    string          `json:"display_name"`
+	BucketControls []BucketControl `json:"bucket_controls"`
+	CreatedAt      time.Time       `json:"created_at"`
+	Keys           []PermissionKey `json:"keys"`
 }
 
 // BucketControl grants a permission read and/or write access to one bucket.
 type BucketControl struct {
-	BucketName string
-	CanRead    bool
-	CanWrite   bool
-	CreatedAt  time.Time
+	BucketName string    `json:"bucket_name"`
+	CanRead    bool      `json:"can_read"`
+	CanWrite   bool      `json:"can_write"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // PermissionKey is an access key issued for a permission. As with AccountKey,
 // Secret is only present on creation.
 type PermissionKey struct {
-	ID        string
-	Secret    string
-	CreatedAt time.Time
+	ID        string    `json:"id"`
+	Secret    string    `json:"secret"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Store is the interface for object storage control-plane storage backends.

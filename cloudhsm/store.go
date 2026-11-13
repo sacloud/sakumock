@@ -2,59 +2,61 @@ package cloudhsm
 
 import "time"
 
-// CloudHSMRecord represents a CloudHSM partition stored in the backend.
+// CloudHSMRecord represents a CloudHSM partition stored in the backend. The
+// json tags of the record types are their form in the state file
+// (--state-dir), not in API responses.
 type CloudHSMRecord struct {
-	ID                 string
-	Name               string
-	Description        string
-	Availability       string // "precreate", "available", "discontinued"
-	Tags               []string
-	IPv4NetworkAddress string
-	IPv4PrefixLength   int
-	IPv4Address        string
-	CreatedAt          time.Time
-	ModifiedAt         time.Time
+	ID                 string    `json:"id"`
+	Name               string    `json:"name"`
+	Description        string    `json:"description"`
+	Availability       string    `json:"availability"` // "precreate", "available", "discontinued"
+	Tags               []string  `json:"tags"`
+	IPv4NetworkAddress string    `json:"ipv4_network_address"`
+	IPv4PrefixLength   int       `json:"ipv4_prefix_length"`
+	IPv4Address        string    `json:"ipv4_address"`
+	CreatedAt          time.Time `json:"created_at"`
+	ModifiedAt         time.Time `json:"modified_at"`
 }
 
 // ClientRecord represents a client certificate registered against a CloudHSM.
 type ClientRecord struct {
-	ID           string
-	CloudHSMID   string
-	Name         string
-	Availability string
-	Certificate  string
-	CreatedAt    time.Time
-	ModifiedAt   time.Time
+	ID           string    `json:"id"`
+	CloudHSMID   string    `json:"cloudhsm_id"`
+	Name         string    `json:"name"`
+	Availability string    `json:"availability"`
+	Certificate  string    `json:"certificate"`
+	CreatedAt    time.Time `json:"created_at"`
+	ModifiedAt   time.Time `json:"modified_at"`
 }
 
 // PeerRecord represents an IPsec peer registered against a CloudHSM.
 type PeerRecord struct {
-	ID          string
-	CloudHSMID  string
-	SecretKey   string
-	Enabled     bool
-	Description string
+	ID          string `json:"id"`
+	CloudHSMID  string `json:"cloudhsm_id"`
+	SecretKey   string `json:"secret_key"`
+	Enabled     bool   `json:"enabled"`
+	Description string `json:"description"`
 }
 
 // LicenseRecord represents a CloudHSM software license, a top-level resource
 // independent of any specific CloudHSM partition.
 type LicenseRecord struct {
-	ID          string
-	Name        string
-	Description string
-	Tags        []string
-	CreatedAt   time.Time
-	ModifiedAt  time.Time
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Tags        []string  `json:"tags"`
+	CreatedAt   time.Time `json:"created_at"`
+	ModifiedAt  time.Time `json:"modified_at"`
 }
 
 // DocumentRecord represents a downloadable document attached to a software
 // license.
 type DocumentRecord struct {
-	ID         string
-	LicenseID  string
-	Name       string
-	CreatedAt  time.Time
-	ModifiedAt time.Time
+	ID         string    `json:"id"`
+	LicenseID  string    `json:"license_id"`
+	Name       string    `json:"name"`
+	CreatedAt  time.Time `json:"created_at"`
+	ModifiedAt time.Time `json:"modified_at"`
 }
 
 // Store is the storage backend for CloudHSM partitions, their clients and

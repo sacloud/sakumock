@@ -2,19 +2,20 @@ package kms
 
 import "time"
 
-// KeyRecord represents a KMS key stored in the backend.
+// KeyRecord represents a KMS key stored in the backend. The json tags are its
+// form in the state file (--state-dir), not in API responses.
 type KeyRecord struct {
-	ID            string
-	Name          string
-	Description   string
-	KeyOrigin     string // "generated" or "imported"
-	Status        string // "active", "restricted", "suspended", "pending_destruction"
-	LatestVersion int
-	Tags          []string
-	CreatedAt     time.Time
-	ModifiedAt    time.Time
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	KeyOrigin     string    `json:"key_origin"` // "generated" or "imported"
+	Status        string    `json:"status"`     // "active", "restricted", "suspended", "pending_destruction"
+	LatestVersion int       `json:"latest_version"`
+	Tags          []string  `json:"tags"`
+	CreatedAt     time.Time `json:"created_at"`
+	ModifiedAt    time.Time `json:"modified_at"`
 	// DeletionScheduledAfter is set while Status is "pending_destruction".
-	DeletionScheduledAfter *time.Time
+	DeletionScheduledAfter *time.Time `json:"deletion_scheduled_after,omitempty"`
 }
 
 // Store is the storage backend for KMS keys and their key material.

@@ -30,6 +30,7 @@ sakumock-workflows
 | `--enable-data-plane` | `WORKFLOWS_ENABLE_DATA_PLANE` | `false` | Enable the Runbook execution engine: executions actually run instead of completing immediately |
 | `--execution-timeout` | `WORKFLOWS_EXECUTION_TIMEOUT` | `10m` | Maximum execution time per runbook run (data plane only; real API allows up to 1 year) |
 | `--allow-local-net` | `WORKFLOWS_ALLOW_LOCAL_NET` | `true` | Allow HTTP calls to localhost and private networks; set `false` to simulate real API URL blocking |
+| `--state-dir` | `WORKFLOWS_STATE_DIR` | (none) | Directory to persist workflows, revisions, executions with their history, and the subscription in (`workflows.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state) and [below](#persistent-state)) |
 | `--debug` | `WORKFLOWS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `WORKFLOWS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `WORKFLOWS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
@@ -61,6 +62,17 @@ srv := workflows.NewTestServer(workflows.Config{})
 defer srv.Close()
 fmt.Println(srv.TestURL()) // http://127.0.0.1:<random-port>
 ```
+
+## Persistent state
+
+With `--state-dir DIR` (see [Persistent State](../README.md#persistent-state)), workflows, their revisions, executions with their history, and the subscription are saved to `DIR/workflows.json` and restored at the next start. The file is rewritten after every request that changes the state and whenever an execution finishes, so a finished execution is kept even if the process is killed right after.
+
+**A running execution does not survive a restart.** With `--enable-data-plane`, an execution runs inside the mock process and its progress (the step it reached, its variables) is not restorable, so it is never resumed or re-run:
+
+- On a normal shutdown, executions still running are canceled before the state is saved.
+- After a kill, executions saved as `Queued`, `Running` or `Canceling` are ended when the state is loaded.
+
+Either way the execution comes back as `Canceled`, with `Error` set to `execution interrupted: sakumock was restarted` and a closing `workflowDidCanceled` history entry; the history is kept up to the interruption after a graceful stop, and up to the last save (the last request or finished execution) after a kill. Start a new execution to run the runbook again.
 
 ## Expression evaluator safety limits
 
@@ -127,7 +139,7 @@ The real Workflows API enforces these limits. The mock enforces most of them (ex
 | Expression length | 512 characters | 512 characters | Yes |
 | Step name length | 31 characters | 31 characters | Yes |
 | Execution memory | 512 KB | — | No |
-| Execution history retention | 90 days | In-memory (lost on restart) | No |
+| Execution history retention | 90 days | Kept until deleted; lost on restart unless `--state-dir` is set | No |
 
 ## Notes on workflow fields
 

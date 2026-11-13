@@ -15,9 +15,10 @@ import (
 // subcommand of the unified sakumock binary.
 type Command struct {
 	Config
-	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"APPRUN_TLS_"`
-	Routes bool          `help:"List supported HTTP routes and exit"`
-	Docs   bool          `help:"Print this service's documentation (README) and exit"`
+	TLS      core.TLSFiles `embed:"" prefix:"tls-" envprefix:"APPRUN_TLS_"`
+	StateDir string        `help:"Directory to persist applications, versions, traffic and packet filters in (apprun.json), so they survive a restart; empty keeps them in memory only" placeholder:"DIR" env:"APPRUN_STATE_DIR"`
+	Routes   bool          `help:"List supported HTTP routes and exit"`
+	Docs     bool          `help:"Print this service's documentation (README) and exit"`
 }
 
 // Run starts the mock server and serves until ctx is canceled, or prints the
@@ -50,6 +51,7 @@ func (c *Command) Run(ctx context.Context) error {
 	defer shutdownTracing()
 
 	c.Config.tls = c.TLS
+	c.Config.stateDir = c.StateDir
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -63,6 +65,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"fault", core.FaultHint(c.Fault),
 		"data_plane", c.EnableDataPlane,
+		"state_dir", c.StateDir,
 		"debug", c.Debug,
 	)
 	if c.EnableDataPlane {

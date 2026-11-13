@@ -25,6 +25,11 @@ type Config struct {
 	// logger, when non-nil, is the base logger injected by the unified binary
 	// via NewServer; nil means the server falls back to slog.Default().
 	logger *slog.Logger
+
+	// stateDir, when non-empty, is the directory the vaults and secrets are
+	// persisted in (--state-dir), set by cli.go or injected by the unified
+	// binary.
+	stateDir string
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -46,6 +51,7 @@ func (c Config) ListenAddr() string { return c.Addr }
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
+	c.stateDir = opts.StateDir
 	return NewHandler(c)
 }
 
@@ -57,9 +63,12 @@ var (
 // Server is the SecretManager mock server. It is an http.Handler, so it can be mounted
 // directly or started on a local listener with NewTestServer.
 type Server struct {
-	httpServer  *httptest.Server
-	mux         *http.ServeMux
-	store       Store
+	httpServer *httptest.Server
+	mux        *http.ServeMux
+	store      Store
+	// state saves the store to --state-dir after every request that may have
+	// changed it; nil when persistence is not configured.
+	state       *core.StateFile
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
 	fault       *core.FaultInjector
@@ -104,6 +113,12 @@ func NewHandler(cfg Config) (*Server, error) {
 			ms.ids = cfg.idGen
 		}
 	}
+	if snap, ok := s.store.(core.Snapshotter); ok {
+		s.state, err = core.OpenState(cfg.stateDir, cfg.Name(), snap, logger)
+		if err != nil {
+			return nil, err
+		}
+	}
 	s.mux = s.buildMux()
 	return s, nil
 }
@@ -134,10 +149,14 @@ func (s *Server) SpecViolations() []core.SpecViolation {
 	return s.respValidator.Violations()
 }
 
-// Close stops the test server and releases the store.
+// Close stops the test server, saves the state when --state-dir is set, and
+// releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()
+	}
+	if err := s.state.Save(); err != nil {
+		s.logger.Error("failed to save state", "path", s.state.Path(), "error", err)
 	}
 	s.store.Close()
 }

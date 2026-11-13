@@ -46,6 +46,10 @@ type ServerOptions struct {
 	// to configure SDK clients, so the forwarding service never hard-codes
 	// another service's endpoint env var name.
 	ServiceLinkEnv []EnvVar
+	// StateDir, when non-empty, is the directory a service persists its store
+	// in (see StateFile), one <service>.json per service. The unified binary
+	// passes its --state-dir to every service; empty keeps state in memory only.
+	StateDir string
 }
 
 // ServiceConfig is the common interface every service's Config satisfies. It

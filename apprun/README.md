@@ -26,6 +26,7 @@ sakumock-apprun
 | `--latency` | `APPRUN_LATENCY` | `0` | Artificial latency added to every control-plane API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `APPRUN_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `APPRUN_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `APPRUN_STATE_DIR` | (none) | Directory to persist the user, applications, versions, traffic and packet filters in (`apprun.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). The file holds secret values in plain text, readable by the owner only. Containers are restarted, not kept: see [Restart with `--state-dir`](#restart-with---state-dir) |
 | `--fault` | `APPRUN_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `APPRUN_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `APPRUN_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, all listeners (control plane and data plane) serve HTTPS instead of plain HTTP |
@@ -112,6 +113,12 @@ http://<app-id>.localhost:28088
 This works in browsers and with `curl` (which resolves `*.localhost` to `127.0.0.1`).
 
 **Container naming:** containers are named `sakumock-apprun-<app-id>`. All tracked containers are cleaned up when the server shuts down.
+
+### Restart with `--state-dir`
+
+Containers are not part of the persisted state: they are removed on shutdown, and only the application records are saved. At the next start with `--enable-data-plane`, sakumock starts a new container for every restored application, exactly as on creation, before it accepts requests (so startup takes as long as those `docker run`s). A container left behind by a process that was killed is removed first. The container gets a new host port, but the application keeps its ID, so its URL is unchanged as long as `--data-plane-addr` is.
+
+An application's status and public URL are not saved either. The status is `Healthy` after a restart, or `UnHealthy` when the container could not be restarted; the public URL follows the current `--data-plane-addr`. Restarted without `--enable-data-plane`, the records are restored and no container runs, as for any application created without the data plane.
 
 ### Differences from the real AppRun
 

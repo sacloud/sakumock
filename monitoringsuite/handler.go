@@ -20,7 +20,9 @@ func (s *Server) buildMux() *http.ServeMux {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	core.APILatency(r, s.latency)
 	rw := core.NewResponseRecorder(w)
-	s.mux.ServeHTTP(rw, r)
+	// Handlers update stored records in place, so requests that change the
+	// state must not overlap a snapshot: Serve runs them one at a time.
+	s.state.Serve(rw, r, s.mux)
 	s.logger.Info("request", core.RequestLogArgs(r, rw)...)
 }
 

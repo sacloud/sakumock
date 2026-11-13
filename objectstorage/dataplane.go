@@ -68,7 +68,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		return nil, fmt.Errorf("data plane enabled but %s not found in PATH; install it (https://github.com/versity/versitygw) or omit --enable-data-plane", versitygwBinary)
 	}
 
-	dir := cfg.DataPlaneDir
+	dir := cfg.dataPlaneDir()
 	tempDir := false
 	if dir == "" {
 		dir, err = os.MkdirTemp("", "sakumock-objectstorage-")
@@ -81,9 +81,10 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 	}
 
 	// The IAM dir is always a fresh temp dir, even when the backend dir is
-	// user-configured and persistent: the control-plane key store is in-memory
-	// and resets with the process, so persisting users.json would leave stale
-	// keys authenticating after a restart.
+	// persistent: the control-plane store is the only source of access keys.
+	// Without --state-dir it resets with the process, so a persisted users.json
+	// would leave stale keys authenticating after a restart; with it, the
+	// restored keys are registered again at startup (Server.syncDataPlane).
 	iamDir, err := os.MkdirTemp("", "sakumock-objectstorage-iam-")
 	if err != nil {
 		if tempDir {

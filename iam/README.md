@@ -24,10 +24,19 @@ sakumock-iam
 | `--latency` | `IAM_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `IAM_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `IAM_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `IAM_STATE_DIR` | (none) | Directory to persist the store in (`iam.json`), so it survives a restart (see [Persistent State](../README.md#persistent-state)). The file holds passwords, API key secrets and SCIM tokens in plain text, readable by the owner only |
 | `--fault` | `IAM_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `IAM_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `IAM_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `IAM_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
+
+### Persistent state
+
+With `--state-dir DIR` (or `sakumock all --state-dir DIR`) the whole store is saved to `DIR/iam.json` after every request that changes it and loaded at the next start (see [Persistent State](../README.md#persistent-state)).
+
+- Persisted: users with their trusted devices and security keys, groups and memberships, projects, folders, service principals and their keys, API keys, SSO profiles, SCIM configurations, the organization (name, password policy, auth conditions), the organization/project/folder IAM policies, the organization ID policy, and the service policy (status and rules). IDs, timestamps and list order are kept, and a resource created after a restart never reuses a restored ID.
+- The saved organization settings replace the defaults a fresh mock starts with; they are not merged with them.
+- Not persisted: the IAM and ID roles, which are built into the mock and the same after every start, and the access tokens issued by `POST /service-principals/oauth2/token`, which the mock does not keep.
 
 ## Use with sacloud-sdk-go
 

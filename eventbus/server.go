@@ -31,6 +31,11 @@ type Config struct {
 	// serviceLinkEnv is the aggregated client env vars for cross-service
 	// forwarding. Injected by the unified binary when service linking is enabled.
 	serviceLinkEnv []core.EnvVar
+
+	// stateDir, when non-empty, is the directory the service items are
+	// persisted in (--state-dir), set by cli.go or injected by the unified
+	// binary.
+	stateDir string
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -61,6 +66,7 @@ func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
 	c.serviceLinkEnv = opts.ServiceLinkEnv
+	c.stateDir = opts.StateDir
 	return NewHandler(c)
 }
 
@@ -77,9 +83,13 @@ var (
 // simplenotification) over HTTP is a separate layer (see forwarder.go), active
 // only when service linking is enabled.
 type Server struct {
-	httpServer  *httptest.Server
-	mux         *http.ServeMux
-	store       *MemoryStore
+	httpServer *httptest.Server
+	mux        *http.ServeMux
+	store      *MemoryStore
+	// state saves the store to --state-dir after every request that may have
+	// changed it and after every autonomous firing; nil when persistence is
+	// not configured.
+	state       *core.StateFile
 	dataPlane   *dataPlane
 	latency     time.Duration
 	rateLimiter *core.RateLimiter
@@ -123,7 +133,14 @@ func NewHandler(cfg Config) (*Server, error) {
 	if cfg.idGen != nil {
 		s.store.ids = cfg.idGen
 	}
+	s.state, err = core.OpenState(cfg.stateDir, cfg.Name(), s.store, logger)
+	if err != nil {
+		return nil, err
+	}
+	// The scheduler reads the schedules from the store on every tick, so the
+	// restored ones fire again without being registered anywhere.
 	s.dataPlane = newDataPlane(s.store, logger, nil)
+	s.dataPlane.onFired = s.saveState
 	if len(cfg.serviceLinkEnv) > 0 {
 		s.dataPlane.forwarder = newForwarder(cfg.serviceLinkEnv, logger)
 	}
@@ -179,7 +196,8 @@ func (s *Server) Secret(id string) (json.RawMessage, bool) {
 	return it.Secret, true
 }
 
-// Close stops the test server and releases the store.
+// Close stops the test server and the scheduler, saves the state when
+// --state-dir is set, and releases the store.
 func (s *Server) Close() {
 	if s.httpServer != nil {
 		s.httpServer.Close()
@@ -187,7 +205,16 @@ func (s *Server) Close() {
 	if s.dataPlane != nil {
 		s.dataPlane.close()
 	}
+	s.saveState()
 	s.store.Close()
+}
+
+// saveState writes the store to --state-dir outside of a request: after the
+// scheduler fired on its own, and at Close.
+func (s *Server) saveState() {
+	if err := s.state.Save(); err != nil {
+		s.logger.Error("failed to save state", "path", s.state.Path(), "error", err)
+	}
 }
 
 // Deliveries returns the firings the data plane has recorded so far, oldest

@@ -1,9 +1,12 @@
 package simplemq
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/sacloud/sakumock/core"
@@ -24,14 +27,33 @@ type Config struct {
 	Debug             bool          `help:"Enable debug mode" env:"SIMPLEMQ_DEBUG" default:"false"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
-	// binary via NewServer; nil means the store creates its own. Only the
-	// in-memory store honors it; the SQLite store keeps its own (it resumes IDs
-	// from persisted data).
+	// binary via NewServer; nil means the store creates its own. The SQLite
+	// store advances it past the queue IDs it has persisted.
 	idGen *core.IDGenerator
 
 	// logger, when non-nil, is the base logger injected by the unified binary
 	// via NewServer; nil means the server falls back to slog.Default().
 	logger *slog.Logger
+
+	// stateDir, when non-empty, is the directory the queues and messages are
+	// persisted in (--state-dir), set by cli.go or injected by the unified
+	// binary. It selects the SQLite store at <stateDir>/simplemq.db unless
+	// Database names a file.
+	stateDir string
+}
+
+// stateDatabaseFile is the SQLite database --state-dir keeps the store in.
+// SimpleMQ persists through its SQLite backend rather than a JSON snapshot,
+// which would rewrite every message on every send.
+const stateDatabaseFile = "simplemq.db"
+
+// databasePath returns the SQLite database the store uses: Database when set,
+// else the file under stateDir, else "" for the in-memory store.
+func (c Config) databasePath() string {
+	if c.Database != "" || c.stateDir == "" {
+		return c.Database
+	}
+	return filepath.Join(c.stateDir, stateDatabaseFile)
 }
 
 // ClientEnv returns the environment variables a client (the SAKURA Cloud SDK or
@@ -57,6 +79,7 @@ func (c Config) ListenAddr() string { return c.Addr }
 func (c Config) NewServer(opts core.ServerOptions) (core.Server, error) {
 	c.idGen = opts.IDGen
 	c.logger = opts.Logger
+	c.stateDir = opts.StateDir
 	return NewHandler(c)
 }
 
@@ -113,7 +136,15 @@ func NewHandler(cfg Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.Database, logger)
+	if cfg.Database == "" && cfg.stateDir != "" {
+		if err := os.MkdirAll(cfg.stateDir, 0o755); err != nil {
+			return nil, fmt.Errorf("state dir: %w", err)
+		}
+		if err := makePrivateFile(cfg.databasePath()); err != nil {
+			return nil, fmt.Errorf("state database: %w", err)
+		}
+	}
+	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.databasePath(), logger)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +170,14 @@ func NewHandler(cfg Config) (*Server, error) {
 		respValidator: core.NewResponseValidator(responseSchemas, logger),
 	}
 	if cfg.idGen != nil {
-		if ms, ok := s.store.(*MemoryStore); ok {
-			ms.ids = cfg.idGen
+		switch st := s.store.(type) {
+		case *MemoryStore:
+			st.ids = cfg.idGen
+		case *SQLiteStore:
+			if err := st.useIDGenerator(cfg.idGen); err != nil {
+				st.Close()
+				return nil, err
+			}
 		}
 	}
 	s.mux = s.buildMux()
@@ -179,4 +216,19 @@ func (s *Server) Close() {
 		s.httpServer.Close()
 	}
 	s.store.Close()
+}
+
+// makePrivateFile creates path, or restricts it when it exists, so only the
+// owner can read it: the database holds message contents and queue API keys,
+// like the other services' state files. SQLite creates its -wal and -shm files
+// with the mode of the database.
+func makePrivateFile(path string) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Chmod(path, 0o600)
 }

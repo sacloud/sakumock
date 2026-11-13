@@ -2,15 +2,17 @@ package secretmanager
 
 import "time"
 
-// Vault is a SecretManager vault: the control-plane resource that holds secrets.
+// Vault is a SecretManager vault: the control-plane resource that holds
+// secrets. The json tags are its form in the state file (--state-dir), not in
+// API responses.
 type Vault struct {
-	ID          string
-	Name        string
-	Description string
-	KmsKeyID    string
-	Tags        []string
-	CreatedAt   time.Time
-	ModifiedAt  time.Time
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	KmsKeyID    string    `json:"kms_key_id"`
+	Tags        []string  `json:"tags"`
+	CreatedAt   time.Time `json:"created_at"`
+	ModifiedAt  time.Time `json:"modified_at"`
 }
 
 // SecretMeta is the metadata List reports for a secret; only Unveil returns

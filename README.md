@@ -237,6 +237,7 @@ Services keep their resources in memory, so a restarted mock comes back empty. P
 
 - Each service saves `DIR/<service>.json`, rewritten after every request that changes its state, so a killed process loses nothing. The files are plain JSON, readable by the owner only since they hold secrets (key material, secret values, credentials) in plain text.
 - Delete a service's file to start that service empty, or the whole directory to start over. A file that cannot be loaded is a startup error rather than a silent fresh start.
+- The state is a convenience for local work, not a storage format: it is not kept compatible across sakumock versions. When a newer version rejects a state file, delete it.
 - What has no substance to restore is brought back to a consistent state instead: AppRun containers are started again, a Workflows execution that was running is recorded as canceled, EventBus schedules resume from the restart (boundaries missed while stopped are not fired). Each service's README says what it does not persist (e.g. delivery logs, login sessions, ingested telemetry).
 - Two services use more than the JSON file: SimpleMQ keeps queues and messages in `DIR/simplemq.db` (its SQLite store; an explicit `--simplemq-database` wins), and the object storage data plane keeps objects in `DIR/objectstorage-data` unless `--objectstorage-data-plane-dir` is set.
 - Standalone subcommands accept the same `--state-dir` (env `<SERVICE>_STATE_DIR`) and use the same files, so `sakumock kms` and `sakumock all` can share a directory (not at the same time).
@@ -373,7 +374,16 @@ docker run --rm \
   ghcr.io/sacloud/sakumock:latest-dataplane
 ```
 
-Objects are stored under `/home/nonroot/data`; mount a volume there to persist them. The image runs as a non-root user (uid 65532), so prefer a **named volume** (`-v sakumock-data:/home/nonroot/data`, which inherits the right ownership) — a bind-mounted host directory must be writable by uid 65532 or the data plane fails to start.
+Objects, like every service's state, are gone when the container stops. To keep them, mount a volume and point [`--state-dir`](#persistent-state) at it (objects go to its `objectstorage-data` subdirectory):
+
+```bash
+docker run --rm \
+  -v sakumock-home:/home/nonroot -e SAKUMOCK_STATE_DIR=/home/nonroot/state \
+  -p 18000:18000 -p 28086:28086 \
+  ghcr.io/sacloud/sakumock:latest-dataplane
+```
+
+The image runs as a non-root user (uid 65532). A **named volume** mounted at `/home/nonroot` itself inherits that ownership; one mounted at a path the image does not have (e.g. `/home/nonroot/state`) is created root-owned and startup fails, as it does with a bind-mounted host directory that uid 65532 cannot write.
 
 ### AppRun Data Planes
 

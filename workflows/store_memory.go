@@ -19,8 +19,11 @@ type MemoryStore struct {
 	executions   map[string][]*ExecutionRecord // keyed by workflow ID
 	histories    map[string][]HistoryRecord    // keyed by execution ID
 	subscription *SubscriptionRecord
-	ids          *core.IDGenerator
-	logger       *slog.Logger
+	// interrupted is how many executions the last Restore had to end because
+	// the process running them was gone.
+	interrupted int
+	ids         *core.IDGenerator
+	logger      *slog.Logger
 }
 
 // NewMemoryStore returns an empty MemoryStore.

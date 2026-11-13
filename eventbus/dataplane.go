@@ -65,9 +65,10 @@ type dataPlane struct {
 	logger    *slog.Logger
 	now       func() time.Time
 	forwarder *forwarder
-	// onFired, when set, runs after an autonomous tick fired something: such a
-	// firing updates the Status of stored items outside of any HTTP request,
-	// so the server saves its state here.
+	// onFired, when set, runs after each firing has recorded its Status on the
+	// stored item. The autonomous scheduler fires outside of any HTTP request
+	// and a later delivery of the same tick can take seconds, so the server
+	// saves its state here.
 	onFired func()
 
 	mu         sync.Mutex
@@ -243,6 +244,9 @@ func (dp *dataPlane) fire(ctx context.Context, source ServiceItem, pcID string, 
 		Message:   statusMessage(d),
 		UpdatedAt: firedAt,
 	})
+	if dp.onFired != nil {
+		dp.onFired()
+	}
 	if d.Error != "" {
 		dp.logger.Warn("firing failed", "source", source.ID, "class", source.ProviderClass, "error", d.Error)
 	} else {
@@ -312,9 +316,7 @@ func (dp *dataPlane) run() {
 
 // autoTick is one evaluation by the autonomous scheduler.
 func (dp *dataPlane) autoTick(ctx context.Context) {
-	if fired := dp.tick(ctx, dp.now()); len(fired) > 0 && dp.onFired != nil {
-		dp.onFired()
-	}
+	dp.tick(ctx, dp.now())
 }
 
 func (dp *dataPlane) close() {

@@ -26,6 +26,7 @@ sakumock-seg
 | `--latency` | `SEG_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `SEG_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `SEG_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `SEG_STATE_DIR` | (none) | Directory to persist appliances in (`seg.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)) |
 | `--fault` | `SEG_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `SEG_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `SEG_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |

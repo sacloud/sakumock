@@ -39,12 +39,18 @@ func NewMemoryStore(logger *slog.Logger, actionLimit int) *MemoryStore {
 		logger:      logger,
 	}
 	for _, r := range ruleCatalog {
-		rule, _ := json.Marshal(struct {
-			EvaluationRuleID string `json:"evaluationRuleId"`
-		}{r.ID})
-		s.rules[r.ID] = &EvaluationRule{ID: r.ID, Rule: rule}
+		s.rules[r.ID] = defaultRule(r.ID)
 	}
 	return s
+}
+
+// defaultRule returns a catalog rule as every project starts with it:
+// disabled and without parameter.
+func defaultRule(id string) *EvaluationRule {
+	rule, _ := json.Marshal(struct {
+		EvaluationRuleID string `json:"evaluationRuleId"`
+	}{id})
+	return &EvaluationRule{ID: id, Rule: rule}
 }
 
 // CreateActivation activates security control for the project.

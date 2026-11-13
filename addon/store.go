@@ -32,22 +32,23 @@ var errNotFound = errors.New("resource not found")
 // Resource is one add-on resource group. The real API deploys an Azure
 // resource group per request and identifies it by the generated
 // resourceGroupName; the deployment that created it is identified separately
-// by deploymentName, which is what the status endpoint reports on.
+// by deploymentName, which is what the status endpoint reports on. The json
+// tags are its form in the state file (--state-dir), not in API responses.
 type Resource struct {
-	Kind              Kind
-	ResourceGroupName string
-	DeploymentName    string
-	Location          string
+	Kind              Kind   `json:"kind"`
+	ResourceGroupName string `json:"resource_group_name"`
+	DeploymentName    string `json:"deployment_name"`
+	Location          string `json:"location"`
 	// Parameters is the create request body verbatim. The real API returns
 	// the deployed Azure resource here; the mock echoes what it was given so
 	// a test can assert on what its client sent.
-	Parameters json.RawMessage
-	CreatedAt  time.Time
+	Parameters json.RawMessage `json:"parameters"`
+	CreatedAt  time.Time       `json:"created_at"`
 	// ReadyAt is when provisioning completes. Until then the resource is
 	// invisible to list/get (the real API 404s a resource group whose
 	// deployment is still running) while the status endpoint reports
 	// "Running". With no --provisioning-delay it equals CreatedAt.
-	ReadyAt time.Time
+	ReadyAt time.Time `json:"ready_at"`
 }
 
 // Provisioned reports whether the resource's deployment has completed as of

@@ -24,6 +24,7 @@ sakumock-cloudhsm
 | `--latency` | `CLOUDHSM_LATENCY` | `0` | Artificial latency added to every API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `CLOUDHSM_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `CLOUDHSM_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `CLOUDHSM_STATE_DIR` | (none) | Directory to persist CloudHSMs, clients, peers and licenses in (`cloudhsm.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). The file holds the peer secret keys in plain text, readable by the owner only |
 | `--fault` | `CLOUDHSM_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `CLOUDHSM_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `CLOUDHSM_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |

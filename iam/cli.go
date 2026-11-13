@@ -15,9 +15,10 @@ import (
 // subcommand of the unified sakumock binary.
 type Command struct {
 	Config
-	TLS    core.TLSFiles `embed:"" prefix:"tls-" envprefix:"IAM_TLS_"`
-	Routes bool          `help:"List supported HTTP routes and exit"`
-	Docs   bool          `help:"Print this service's documentation (README) and exit"`
+	TLS      core.TLSFiles `embed:"" prefix:"tls-" envprefix:"IAM_TLS_"`
+	StateDir string        `help:"Directory to persist the store in (iam.json), so it survives a restart; empty keeps it in memory only" placeholder:"DIR" env:"IAM_STATE_DIR"`
+	Routes   bool          `help:"List supported HTTP routes and exit"`
+	Docs     bool          `help:"Print this service's documentation (README) and exit"`
 }
 
 // Run starts the mock server and serves until ctx is canceled, or prints the
@@ -49,6 +50,7 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 	defer shutdownTracing()
 
+	c.Config.stateDir = c.StateDir
 	h, err := NewHandler(c.Config)
 	if err != nil {
 		return err
@@ -61,6 +63,7 @@ func (c *Command) Run(ctx context.Context) error {
 		"latency", c.Latency,
 		"rate_limit", core.RateLimitHint(c.RateLimit, c.RateLimitWindow, ""),
 		"fault", core.FaultHint(c.Fault),
+		"state_dir", c.StateDir,
 		"debug", c.Debug,
 	)
 	slog.Info("to use with sacloud-sdk-go",

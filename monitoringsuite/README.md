@@ -26,6 +26,7 @@ sakumock-monitoringsuite
 | `--latency` | `MONITORINGSUITE_LATENCY` | `0` | Artificial latency added to every control-plane API response (e.g. `500ms`, `2s`) |
 | `--rate-limit` | `MONITORINGSUITE_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `MONITORINGSUITE_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
+| `--state-dir` | `MONITORINGSUITE_STATE_DIR` | (none) | Directory to persist the control-plane resources in (`monitoringsuite.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). Received telemetry is not persisted. The file holds the access-key secrets and tokens in plain text, readable by the owner only |
 | `--fault` | `MONITORINGSUITE_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `MONITORINGSUITE_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `MONITORINGSUITE_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, all listeners (control plane and data plane) serve HTTPS instead of plain HTTP |
@@ -82,6 +83,14 @@ every control-plane path of the monitoring-suite OpenAPI spec, grouped as:
 | Trace storages | `/traces/storages/` (+ keys, stats, set-expire) |
 | Publishers | `/publishers/` (read-only) |
 | Management | `/management/limits/`, `/management/provisioning/` |
+
+## Persistent state
+
+With `--state-dir DIR` (or `sakumock all --state-dir DIR`) the control-plane state is saved to `DIR/monitoringsuite.json` after every request that changes it and loaded at the next start (see [Persistent State](../README.md#persistent-state)).
+
+- Persisted: alert and dashboard projects, log/metrics/trace storages and their access keys (secrets and tokens included), alert rules, log-measure rules, notification targets and routings, log and metrics routings, and the provisioning state. IDs, UIDs, timestamps and list order are kept, and a resource created after a restart never reuses a restored ID.
+- Not persisted: telemetry received by the [data plane](#data-plane-telemetry-ingest). The mock validates and acknowledges it without storing it, so there is nothing to restore; `--data-plane-dump-dir` remains the way to keep payloads.
+- The publishers are built into the mock, not state: they are the same after every start and are not read from the file.
 
 ## Data plane (telemetry ingest)
 

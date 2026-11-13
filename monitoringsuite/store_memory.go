@@ -98,8 +98,8 @@ type MemoryStore struct {
 // ProvisioningExist tracks whether the system/user storages have been
 // provisioned for a telemetry kind.
 type ProvisioningExist struct {
-	SystemExist bool
-	UserExist   bool
+	SystemExist bool `json:"system_exist"`
+	UserExist   bool `json:"user_exist"`
 }
 
 // NewMemoryStore creates an empty store seeded with the read-only publishers.

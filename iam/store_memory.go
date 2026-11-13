@@ -95,8 +95,8 @@ type MemoryStore struct {
 }
 
 type organizationState struct {
-	ID   int
-	Name string
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 type passwordPolicyState struct {

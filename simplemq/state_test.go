@@ -4,6 +4,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/sacloud/sacloud-sdk-go/api/simplemq/apis/v1/message"
@@ -120,5 +121,33 @@ func TestStateDirYieldsToDatabase(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "simplemq.db")); !os.IsNotExist(err) {
 		t.Errorf("state dir database exists although --database was set (stat error: %v)", err)
+	}
+}
+
+// The database under --state-dir holds message contents and queue API keys, so
+// like the other services' state files only the owner may read it.
+func TestStateDatabaseIsPrivate(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("no group/other permission bits on Windows")
+	}
+	dir := t.TempDir()
+	runWithState(t, simplemq.Config{}, core.ServerOptions{StateDir: dir}, func(url string) {
+		createQueue(t, t.Context(), newTestQueueClient(t, url), "private")
+	})
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("no database in the state dir")
+	}
+	for _, e := range entries {
+		info, err := e.Info()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if perm := info.Mode().Perm(); perm&0o077 != 0 {
+			t.Errorf("%s mode = %o, want no group/other access", e.Name(), perm)
+		}
 	}
 }

@@ -140,6 +140,9 @@ func NewHandler(cfg Config) (*Server, error) {
 		if err := os.MkdirAll(cfg.stateDir, 0o755); err != nil {
 			return nil, fmt.Errorf("state dir: %w", err)
 		}
+		if err := makePrivateFile(cfg.databasePath()); err != nil {
+			return nil, fmt.Errorf("state database: %w", err)
+		}
 	}
 	store, err := NewStore(cfg.VisibilityTimeout, cfg.MessageExpire, cfg.databasePath(), logger)
 	if err != nil {
@@ -213,4 +216,19 @@ func (s *Server) Close() {
 		s.httpServer.Close()
 	}
 	s.store.Close()
+}
+
+// makePrivateFile creates path, or restricts it when it exists, so only the
+// owner can read it: the database holds message contents and queue API keys,
+// like the other services' state files. SQLite creates its -wal and -shm files
+// with the mode of the database.
+func makePrivateFile(path string) error {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Chmod(path, 0o600)
 }

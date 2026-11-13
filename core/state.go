@@ -171,8 +171,8 @@ func (f *StateFile) SaveAfter(r *http.Request) {
 }
 
 // writeFileAtomic writes data to a temporary file next to path and renames it
-// over path. The file is private to the user (0600): a state file can hold
-// secrets such as key material.
+// over path. The file is private to the user (0600, where the OS has such
+// permissions): a state file can hold secrets such as key material.
 func writeFileAtomic(path string, data []byte) error {
 	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -75,7 +76,8 @@ func TestStateFileSaveAndRestore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if perm := info.Mode().Perm(); perm&0o077 != 0 {
+	// Windows has no group/other permission bits to check.
+	if perm := info.Mode().Perm(); runtime.GOOS != "windows" && perm&0o077 != 0 {
 		t.Errorf("state file mode = %o, want no group/other access", perm)
 	}
 	entries, err := os.ReadDir(dir)

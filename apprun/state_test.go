@@ -165,12 +165,15 @@ func TestStateRestoredIDsAreNotReused(t *testing.T) {
 // With the data plane enabled, a restored application is served again: its
 // container is restarted, whether the previous process removed its containers
 // on shutdown or was killed and left them behind.
-func TestStateRestartsContainers(t *testing.T) {
+func TestDataPlaneEndToEndStateRestart(t *testing.T) {
+	// Same prerequisites as TestDataPlaneEndToEnd, so both run in the data-plane
+	// e2e job only: the plain test job's runners have a Docker that cannot run
+	// the test image (Windows containers) or has not pulled it.
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("docker not found in PATH; skipping data plane state test")
 	}
-	if err := exec.Command("docker", "info").Run(); err != nil {
-		t.Skipf("docker daemon not usable (%v); skipping data plane state test", err)
+	if _, err := exec.LookPath("apprun-cli"); err != nil {
+		t.Skip("apprun-cli not found in PATH; skipping data plane state test")
 	}
 
 	for _, tt := range []struct {

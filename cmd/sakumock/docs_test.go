@@ -259,7 +259,7 @@ func TestDocsSearch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("--search: %v", err)
 	}
-	if !strings.Contains(out, "kms:33:fixed-keys: ### Fixed keys\n") || !strings.Contains(out, "kms:27:options: ") {
+	if !strings.Contains(out, "kms:34:fixed-keys: ### Fixed keys\n") || !strings.Contains(out, "kms:27:options: ") {
 		t.Errorf("--search output:\n%s", out)
 	}
 	for line := range strings.SplitSeq(strings.TrimSpace(out), "\n") {

@@ -67,6 +67,16 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 - Data planes started inside `NewHandler` get the files through the unexported `Config.tls` field (set by `cli.go`, injected by the unified binary via `core.ServerOptions.TLS`). An external data plane is handed the files (objectstorage passes `--cert`/`--key` to versitygw).
 - `ClientEnv()` stays `http://`; `core.WithTLSScheme` upgrades the scheme at the edges (startup log, `sakumock env`).
 
+### Persistent state (`--state-dir`)
+
+Opt-in, being rolled out per service (kms first): the store stays in memory and is saved as a whole to `<dir>/<Name()>.json`; no storage engine, no change to the `Store` interface.
+
+- The store implements `core.Snapshotter` in `store_snapshot.go`: `Snapshot()` marshals a named snapshot struct (json tags, deterministic output) under the store lock; `Restore()` validates, replaces the maps, and `Observe`s every restored ID on the `IDGenerator`.
+- `NewHandler` calls `core.OpenState(cfg.stateDir, cfg.Name(), store, logger)` after the ID generator is injected and before startup presets (restored state wins over flags); a file that fails to restore is returned as an error. `Server.ServeHTTP` ends with `s.state.SaveAfter(r)` and `Close` calls `s.state.Save()`. A nil `*core.StateFile` is a no-op, so nothing is guarded.
+- The directory is per suite like TLS: `Command.StateDir` (`env:"<SERVICE>_STATE_DIR"`) is copied to the unexported `Config.stateDir` by `cli.go`, and the unified binary injects its `--state-dir` via `core.ServerOptions.StateDir`. When adding a service, also list it in the `--state-dir` help in `cmd/sakumock/all.go` and in the root README.
+- Tests: saving, restoring, skipping unchanged writes, and broken files are covered once in `core/state_test.go` — do not repeat them per service. A service adds one `state_test.go` round trip through `coretest.StateRestart(t, Config{}, populate, verify)` (SDK client, every kind of resource the store holds), which also catches a missing `SaveAfter` and a lossy `Restore`; add more only for behavior of its own (startup presets, `Restore` validation).
+- State with no restorable substance (running containers, in-flight executions, timers) must be reconciled in `Restore`, not saved as if it were still alive.
+
 ### Latency
 
 - `--latency` (`Config.Latency`) is applied at the top of `Server.ServeHTTP` with `core.APILatency(r, s.latency)`, which exempts `/_sakumock/` paths. Same-port data planes are covered by it.

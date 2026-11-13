@@ -83,6 +83,7 @@ type AllCmd struct {
 	Config            configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
 	Debug             bool           `help:"Enable debug logging for all services"`
 	ListenHost        string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
+	StateDir          string         `name:"state-dir" placeholder:"DIR" env:"SAKUMOCK_STATE_DIR" help:"Directory to persist service state in (one <service>.json each), so resources survive a restart; empty keeps state in memory only. Currently supported by: kms"`
 	EnableServiceLink bool           `name:"enable-service-link" help:"Enable cross-service forwarding over HTTP (e.g. EventBus fires to SimpleMQ)" env:"SAKUMOCK_ENABLE_SERVICE_LINK" default:"false"`
 }
 
@@ -141,9 +142,10 @@ func (c *AllCmd) serviceLinkEnv() []core.EnvVar {
 // already created so no store is leaked.
 func (c *AllCmd) build() ([]serviceInstance, error) {
 	opts := core.ServerOptions{
-		IDGen:  core.NewIDGenerator(core.DefaultIDBase()),
-		Logger: slog.Default(),
-		TLS:    c.TLS,
+		IDGen:    core.NewIDGenerator(core.DefaultIDBase()),
+		Logger:   slog.Default(),
+		TLS:      c.TLS,
+		StateDir: c.StateDir,
 	}
 	if c.EnableServiceLink {
 		opts.ServiceLinkEnv = c.serviceLinkEnv()
@@ -191,7 +193,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 		}
 	}()
 
-	slog.Info("sakumock all starting", "version", sakumock.Version, "service_link", c.EnableServiceLink)
+	slog.Info("sakumock all starting", "version", sakumock.Version, "service_link", c.EnableServiceLink, "state_dir", c.StateDir)
 	if !c.PerServicePorts {
 		return c.serveMounted(ctx, instances)
 	}

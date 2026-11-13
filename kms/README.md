@@ -25,6 +25,7 @@ sakumock-kms
 | `--rate-limit` | `KMS_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `KMS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--key` | `KMS_KEY` | (none) | Pre-create a key with a fixed ID and key material: `ID=SECRET[@N]`, repeatable (see [Fixed keys](#fixed-keys)) |
+| `--state-dir` | `KMS_STATE_DIR` | (none) | Directory to persist keys in (`kms.json`), so they survive a restart (see [Persistent state](#persistent-state)) |
 | `--fault` | `KMS_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--debug` | `KMS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `KMS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
@@ -45,6 +46,19 @@ sakumock all --kms-key 123456789012=my-dev-secret
 - The flag is a map: repeat it (`--key A=... --key B=...`) or separate entries with `;` (`--key A=...;B=...`). The `KMS_KEY` environment variable takes the same `ID=SECRET[;ID=SECRET]` form. In a `sakumock all --config` file it is a mapping: `kms: {key: {"123456789012": "my-dev-secret"}}`.
 - Preset keys behave like any other key (listed, rotatable, deletable).
 - Rotation is deterministic: version N+1's material is the SHA-256 digest of version N's 32 raw bytes (for every key, preset or generated). So once version 1 is fixed by `SECRET`, every rotated version is fixed too. To reproduce a key that was rotated before a restart, append the latest version as `@N` (`--key 123456789012=my-dev-secret@3`): the key starts at `LatestVersion` 3 with versions 1–3 available, so ciphertexts made under any of them decrypt (each ciphertext starts with the version it was encrypted under, so decryption uses that version directly). Read the key's `LatestVersion` from the API to know which `N` to pass. Without `@N` the key starts at version 1 and cannot decrypt ciphertexts made under later versions.
+
+### Persistent state
+
+By default keys live in memory and are gone when the mock stops. With `--state-dir DIR` (or `sakumock all --state-dir DIR`) the keys and their key material are saved to `DIR/kms.json` and loaded at the next start, so IDs, rotations, statuses and ciphertexts all survive a restart:
+
+```bash
+sakumock kms --state-dir ./.sakumock
+```
+
+- The file is rewritten after every request that changes a key, so nothing is lost when the process is killed. Delete it to start empty.
+- It contains the key material; it is created readable by the owner only.
+- A file that cannot be loaded is a startup error, never silently replaced.
+- A `--key` whose ID is already in the saved state is left as restored (its rotations and edits are kept); `--key` only creates the key when it is missing.
 
 ## Use with sacloud-sdk-go
 

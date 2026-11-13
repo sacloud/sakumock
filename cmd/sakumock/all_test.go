@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -190,4 +192,45 @@ func TestAllServiceLinkEnv(t *testing.T) {
 			}
 		})
 	}
+}
+
+// --state-dir reaches the services through core.ServerOptions: a resource
+// created in one run is still there in the next.
+func TestAllStateDir(t *testing.T) {
+	dir := t.TempDir()
+	run := func(do func(h http.Handler)) {
+		t.Helper()
+		c := newTestAllCmd()
+		c.StateDir = dir
+		services, err := c.build()
+		if err != nil {
+			t.Fatalf("build: %v", err)
+		}
+		defer func() {
+			for _, s := range services {
+				s.server.Close()
+			}
+		}()
+		do(mountHandler(services))
+	}
+
+	run(func(h http.Handler) {
+		req := httptest.NewRequest(http.MethodPost, "/kms/kms/keys", strings.NewReader(`{"Key":{"Name":"persisted","KeyOrigin":"generated"}}`))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("create key: %d %s", rec.Code, rec.Body)
+		}
+	})
+	if _, err := os.Stat(filepath.Join(dir, "kms.json")); err != nil {
+		t.Fatalf("kms state file: %v", err)
+	}
+	run(func(h http.Handler) {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/kms/kms/keys", nil))
+		if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"persisted"`) {
+			t.Errorf("list keys after restart: %d %s", rec.Code, rec.Body)
+		}
+	})
 }

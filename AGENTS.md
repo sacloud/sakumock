@@ -69,7 +69,7 @@ Endpoints that do not exist in the real API (inspect state, reset, inject an eve
 
 ### Persistent state (`--state-dir`)
 
-Opt-in, being rolled out per service (kms first): the store stays in memory and is saved as a whole to `<dir>/<Name()>.json`; no storage engine, no change to the `Store` interface.
+Opt-in, being rolled out per service (kms and secretmanager so far): the store stays in memory and is saved as a whole to `<dir>/<Name()>.json`; no storage engine, no change to the `Store` interface.
 
 - The store implements `core.Snapshotter` in `store_snapshot.go`: `Snapshot()` marshals a named snapshot struct (json tags, deterministic output) under the store lock; `Restore()` validates, replaces the maps, and `Observe`s every restored ID on the `IDGenerator`.
 - `NewHandler` calls `core.OpenState(cfg.stateDir, cfg.Name(), store, logger)` after the ID generator is injected and before startup presets (restored state wins over flags); a file that fails to restore is returned as an error. `Server.ServeHTTP` ends with `s.state.SaveAfter(r)` and `Close` calls `s.state.Save()`. A nil `*core.StateFile` is a no-op, so nothing is guarded.

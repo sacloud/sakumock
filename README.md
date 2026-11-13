@@ -235,7 +235,7 @@ Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SA
 
 Services keep their resources in memory, so a restarted mock comes back empty. Pass `--state-dir DIR` (or `SAKUMOCK_STATE_DIR`) to save each supporting service's state to `DIR/<service>.json` and load it at the next start. The file is rewritten after every request that changes the state, so a killed process loses nothing; delete it to start that service empty. A state file that cannot be loaded is a startup error rather than a silent fresh start. Standalone subcommands of supporting services accept the same `--state-dir` (env `<SERVICE>_STATE_DIR`) and use the same file, so `sakumock kms` and `sakumock all` can share a directory (not at the same time).
 
-Currently supported by: [kms](kms/README.md#persistent-state). Other services ignore the flag and stay in memory. (SimpleMQ has its own `--simplemq-database` for persistent queues and messages.)
+Currently supported by: [kms](kms/README.md#persistent-state) and [secretmanager](secretmanager/README.md#options). Other services ignore the flag and stay in memory. (SimpleMQ has its own `--simplemq-database` for persistent queues and messages.)
 
 ## Service Link
 

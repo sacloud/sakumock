@@ -72,7 +72,7 @@ With `--state-dir DIR` (see [Persistent State](../README.md#persistent-state)), 
 - On a normal shutdown, executions still running are canceled before the state is saved.
 - After a kill, executions saved as `Queued`, `Running` or `Canceling` are ended when the state is loaded.
 
-Either way the execution comes back as `Canceled`, with `Error` set to `execution interrupted: sakumock was restarted` and a closing `workflowDidCanceled` history entry; the history recorded up to the interruption is kept. Start a new execution to run the runbook again.
+Either way the execution comes back as `Canceled`, with `Error` set to `execution interrupted: sakumock was restarted` and a closing `workflowDidCanceled` history entry; the history is kept up to the interruption after a graceful stop, and up to the last save (the last request or finished execution) after a kill. Start a new execution to run the runbook again.
 
 ## Expression evaluator safety limits
 
@@ -139,7 +139,7 @@ The real Workflows API enforces these limits. The mock enforces most of them (ex
 | Expression length | 512 characters | 512 characters | Yes |
 | Step name length | 31 characters | 31 characters | Yes |
 | Execution memory | 512 KB | — | No |
-| Execution history retention | 90 days | In-memory (lost on restart) | No |
+| Execution history retention | 90 days | Kept until deleted; lost on restart unless `--state-dir` is set | No |
 
 ## Notes on workflow fields
 

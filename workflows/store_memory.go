@@ -423,6 +423,9 @@ func (s *MemoryStore) UpdateExecutionStatus(workflowID, executionID string, upda
 			if update.FailedAt != nil {
 				e.FailedAt = update.FailedAt
 			}
+			if update.CanceledAt != nil && e.CanceledAt == nil {
+				e.CanceledAt = update.CanceledAt
+			}
 			e.UpdatedAt = time.Now()
 			return nil
 		}
@@ -477,7 +480,22 @@ func (s *MemoryStore) AppendHistory(workflowID, executionID string, record Histo
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// A canceled execution can be deleted while its runner is still winding
+	// down; an entry arriving after that would outlive its execution.
+	if !s.hasExecution(workflowID, executionID) {
+		return
+	}
 	s.histories[executionID] = append(s.histories[executionID], record)
+}
+
+// hasExecution reports whether the execution exists. The caller holds s.mu.
+func (s *MemoryStore) hasExecution(workflowID, executionID string) bool {
+	for _, e := range s.executions[workflowID] {
+		if e.ExecutionID == executionID {
+			return true
+		}
+	}
+	return false
 }
 
 // ListExecutionHistory returns the execution's history, oldest first.

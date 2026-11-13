@@ -99,6 +99,9 @@ type ExecutionStatusUpdate struct {
 	RunAt       *time.Time
 	SucceededAt *time.Time
 	FailedAt    *time.Time
+	// CanceledAt is ignored for an execution that already has one (canceled
+	// through the API before its runner stopped).
+	CanceledAt *time.Time
 }
 
 // ExecutionInput is what an execution is started with.

@@ -137,6 +137,8 @@ func (e *executor) submit(ctx context.Context, workflowID, executionID string, r
 			}
 			if status == "Failed" {
 				update.FailedAt = &finished
+			} else {
+				update.CanceledAt = &finished
 			}
 			if err := e.store.UpdateExecutionStatus(workflowID, executionID, update); err != nil {
 				e.logger.Error("update execution status", "error", err)

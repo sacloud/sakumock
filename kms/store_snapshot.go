@@ -40,8 +40,15 @@ func (s *MemoryStore) Restore(data []byte) error {
 		if k == nil || k.ID != id {
 			return fmt.Errorf("key %q: record is missing or has a different id", id)
 		}
-		if len(snap.KeyMaterial[id][k.LatestVersion]) != keyMaterialSize {
-			return fmt.Errorf("key %q: no %d-byte key material for latest version %d", id, keyMaterialSize, k.LatestVersion)
+		// Every version is kept: a ciphertext is decrypted with the version it
+		// was encrypted under, and each version derives from the one before.
+		if k.LatestVersion < 1 {
+			return fmt.Errorf("key %q: latest version %d, want at least 1", id, k.LatestVersion)
+		}
+		for v := 1; v <= k.LatestVersion; v++ {
+			if len(snap.KeyMaterial[id][v]) != keyMaterialSize {
+				return fmt.Errorf("key %q: no %d-byte key material for version %d", id, keyMaterialSize, v)
+			}
 		}
 		if k.Tags == nil {
 			k.Tags = []string{}

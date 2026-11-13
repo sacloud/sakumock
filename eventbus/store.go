@@ -31,11 +31,12 @@ type ServiceItem struct {
 	ModifiedAt time.Time
 }
 
-// ItemStatus is the outcome of a schedule's or trigger's last firing.
+// ItemStatus is the outcome of a schedule's or trigger's last firing. The json
+// tags are its form in the state file (--state-dir), not in API responses.
 type ItemStatus struct {
-	Success   bool
-	Message   string
-	UpdatedAt time.Time
+	Success   bool      `json:"success"`
+	Message   string    `json:"message"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Store is the storage backend for EventBus control-plane items.

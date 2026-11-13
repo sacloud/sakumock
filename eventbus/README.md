@@ -28,6 +28,7 @@ sakumock-eventbus
 | `--rate-limit-window` | `EVENTBUS_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--fault` | `EVENTBUS_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--enable-data-plane` | `EVENTBUS_ENABLE_DATA_PLANE` | `false` | Run the autonomous scheduler that fires schedules on the wall clock. The `/_sakumock` firing endpoints work regardless of this flag |
+| `--state-dir` | `EVENTBUS_STATE_DIR` | (none) | Directory to persist process configurations, schedules and triggers in (`eventbus.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state) and [below](#persistent-state)). The file holds the process configuration secrets in plain text, readable by the owner only |
 | `--debug` | `EVENTBUS_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `EVENTBUS_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |
 | `--tls-key` | `EVENTBUS_TLS_KEY` | (none) | TLS key file (see `--tls-cert`) |
@@ -130,6 +131,16 @@ EventBus has two kinds of event source, and both resolve to the same action — 
   A trigger fires when `Source` matches exactly, `Type` is among the trigger's `Types` (when set), and every `Condition` (`eq`/`in` over `Attributes`) holds. `Data` is the passthrough payload (the API reserves the `data` key from conditions) and is not used for matching.
 
 Each firing is recorded as a **delivery** — the resolved `Destination` and `Parameters` of the process configuration — and the schedule's or trigger's `Status` is updated. Recorded deliveries are returned by `GET /_sakumock/deliveries` and, in library use, by `Server.Deliveries()`, so a test can assert what fired without a live destination. A firing whose process configuration is missing is recorded with an `Error` and a failed `Status`.
+
+## Persistent state
+
+With `--state-dir DIR` (see [Persistent State](../README.md#persistent-state)), every process configuration, schedule and trigger is saved to `DIR/eventbus.json` and restored at the next start, including the write-only secrets of process configurations and each schedule's or trigger's `Status` (its last firing). The file is rewritten after every request that changes the state and after every firing by the autonomous scheduler.
+
+What a restart does not keep:
+
+- **The delivery log** (`GET /_sakumock/deliveries`) starts empty: it is a record of what this process fired, not a resource.
+- **Boundaries that passed while the mock was down are not fired afterwards.** The scheduler evaluates the window since the previous tick, and that baseline restarts at startup, so a restored schedule resumes with its first boundary after the restart. Restored schedules and triggers need no re-registration: they fire as before.
+- A firing in progress at shutdown is not retried.
 
 ## Service Link
 

@@ -65,6 +65,10 @@ type dataPlane struct {
 	logger    *slog.Logger
 	now       func() time.Time
 	forwarder *forwarder
+	// onFired, when set, runs after an autonomous tick fired something: such a
+	// firing updates the Status of stored items outside of any HTTP request,
+	// so the server saves its state here.
+	onFired func()
 
 	mu         sync.Mutex
 	deliveries []Delivery
@@ -301,8 +305,15 @@ func (dp *dataPlane) run() {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			dp.tick(ctx, dp.now())
+			dp.autoTick(ctx)
 		}
+	}
+}
+
+// autoTick is one evaluation by the autonomous scheduler.
+func (dp *dataPlane) autoTick(ctx context.Context) {
+	if fired := dp.tick(ctx, dp.now()); len(fired) > 0 && dp.onFired != nil {
+		dp.onFired()
 	}
 }
 

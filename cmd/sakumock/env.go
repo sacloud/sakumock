@@ -23,6 +23,8 @@ type EnvCmd struct {
 	Output string         `name:"output" short:"o" type:"path" placeholder:"PATH" help:"Write the dotenv to this file instead of stdout. Use it where shell redirection is unavailable, e.g. a compose oneshot on the (shell-less) container image."`
 	Export bool           `help:"Prefix every line with 'export ' so the output can be sourced directly (e.g. with direnv or a plain shell)."`
 	Config configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file (same format as 'all --config')"`
+
+	ProfileDir string `name:"profile-dir" type:"path" placeholder:"DIR" help:"Write the endpoints and dummy credentials as an SDK profile under this directory (DIR/sakumock/config.json) and print only SAKURA_PROFILE and SAKURA_PROFILE_DIR in the dotenv, instead of one variable per service."`
 }
 
 func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
@@ -61,6 +63,8 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 
 // Run renders the client env to --output, or to stdout when it is unset. Logs
 // go to stderr (slog default), so the stdout dotenv stays clean for redirection.
+// With --profile-dir the endpoints and credentials go to an SDK profile and the
+// dotenv only selects it.
 func (c *EnvCmd) Run(_ context.Context) error {
 	if err := c.TLS.Validate(); err != nil {
 		return err
@@ -68,6 +72,11 @@ func (c *EnvCmd) Run(_ context.Context) error {
 	vars, err := c.clientEnv()
 	if err != nil {
 		return err
+	}
+	if c.ProfileDir != "" {
+		if vars, err = core.WriteClientProfile(c.ProfileDir, vars); err != nil {
+			return err
+		}
 	}
 	if c.Output != "" {
 		return core.WriteEnvFile(c.Output, vars, c.Export)

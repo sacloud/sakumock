@@ -122,11 +122,7 @@ data plane) stay in the dotenv. `SAKURA_PROFILE_DIR` is the directory as
 path the client sees instead.
 
 The directory is separate from your real profiles (`~/.usacloud`), so those
-stay out of reach of the client. The `sacloud/sakura` Terraform provider up to
-v3.14.4 does not pass `SAKURA_PROFILE_DIR` on to its service clients
-([terraform-provider-sakura#389](https://github.com/sacloud/terraform-provider-sakura/pull/389));
-with those versions use `--profile-dir ~/.usacloud`, which adds a `sakumock`
-profile next to your own.
+stay out of reach of the client.
 
 ## Configuration
 

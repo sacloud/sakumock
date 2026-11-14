@@ -102,6 +102,28 @@ sakumock env --host localhost > sakumock.env
 
 Run `sakumock env` to see the full list of variables, or `sakumock all --help` for each flag's environment variable.
 
+#### SDK profile instead of per-service variables
+
+The dotenv carries one `SAKURA_ENDPOINTS_*` variable per service. Pass
+`--profile-dir DIR` to write them, with the dummy credentials, as an SDK
+[profile](https://github.com/sacloud/guide/tree/main/profile) instead
+(`DIR/sakumock/config.json`); the dotenv then only selects that profile, however
+many services there are:
+
+```console
+$ sakumock env --profile-dir ./.sakumock
+SAKURA_PROFILE=sakumock
+SAKURA_PROFILE_DIR=/path/to/.sakumock
+```
+
+Variables a profile cannot hold (e.g. the `AWS_*` ones of the object storage
+data plane) stay in the dotenv. `SAKURA_PROFILE_DIR` is the directory as
+`sakumock env` sees it; when it runs in a container, set the variable to the
+path the client sees instead.
+
+The directory is separate from your real profiles (`~/.usacloud`), so those
+stay out of reach of the client.
+
 ## Configuration
 
 `sakumock all` accepts per-service flags, a config file, and environment variables.

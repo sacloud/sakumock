@@ -1,8 +1,13 @@
 package main
 
 import (
+	"maps"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/sacloud/sacloud-sdk-go/common/saclient"
 )
 
 func newTestEnvCmd() *EnvCmd {
@@ -168,5 +173,69 @@ func TestAllBindAddr(t *testing.T) {
 	c.ListenHost = "0.0.0.0"
 	if got := c.bindAddr("127.0.0.1:18081"); got != "0.0.0.0:18081" {
 		t.Errorf("--listen-host 0.0.0.0: got %q, want 0.0.0.0:18081", got)
+	}
+}
+
+// The SDK must resolve the same endpoints from the profile --profile-dir writes
+// as from the per-service variables it replaces.
+func TestEnvCmdProfileDir(t *testing.T) {
+	c := newTestEnvCmd()
+	c.Objectstorage.EnableDataPlane = true
+	c.ProfileDir = t.TempDir()
+	c.Output = filepath.Join(t.TempDir(), "sakumock.env")
+	if err := c.Run(t.Context()); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	dotenv, err := os.ReadFile(c.Output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var env []string
+	for line := range strings.SplitSeq(string(dotenv), "\n") {
+		if line != "" && !strings.HasPrefix(line, "#") {
+			env = append(env, line)
+		}
+	}
+	rendered := strings.Join(env, "\n")
+	for _, want := range []string{
+		"SAKURA_PROFILE=sakumock",
+		"SAKURA_PROFILE_DIR=" + c.ProfileDir,
+		"AWS_ACCESS_KEY_ID=sakumock", // not expressible in a profile, so it stays
+	} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("env missing %q\n%s", want, rendered)
+		}
+	}
+	for _, unwanted := range []string{"SAKURA_ENDPOINTS_", "SAKURA_ACCESS_TOKEN"} {
+		if strings.Contains(rendered, unwanted) {
+			t.Errorf("%s* should be in the profile, not the env\n%s", unwanted, rendered)
+		}
+	}
+
+	var sa saclient.Client
+	if err := sa.SetEnviron(env); err != nil {
+		t.Fatal(err)
+	}
+	got, err := sa.EndpointConfig()
+	if err != nil {
+		t.Fatalf("EndpointConfig: %v", err)
+	}
+	vars, err := c.clientEnv()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want saclient.Client
+	if err := want.SetEnviron(envLines(vars)); err != nil {
+		t.Fatal(err)
+	}
+	wantCfg, err := want.EndpointConfig()
+	if err != nil {
+		t.Fatalf("EndpointConfig: %v", err)
+	}
+	if len(wantCfg.Endpoints) == 0 {
+		t.Fatal("no endpoints resolved from the per-service variables")
+	}
+	if !maps.Equal(got.Endpoints, wantCfg.Endpoints) {
+		t.Errorf("endpoints from the profile = %v\nwant %v", got.Endpoints, wantCfg.Endpoints)
 	}
 }

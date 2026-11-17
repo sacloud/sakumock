@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ type HealthcheckCmd struct {
 	URL      string        `help:"Health endpoint URL" default:"http://127.0.0.1:18000/_sakumock/health" env:"SAKUMOCK_HEALTHCHECK_URL"`
 	Timeout  time.Duration `help:"Request timeout" default:"3s"`
 	Insecure bool          `help:"Skip TLS certificate verification (for a self-signed --tls-cert)"`
+	CACert   string        `name:"ca-cert" type:"path" placeholder:"PATH" help:"Trust the CA certificate(s) in this PEM file in addition to the system roots (for --tls-auto: the --tls-ca-out file, or ca.pem in --tls-ca-dir)"`
 }
 
 func (c *HealthcheckCmd) Run(ctx context.Context) error {
@@ -27,9 +29,25 @@ func (c *HealthcheckCmd) Run(ctx context.Context) error {
 		return err
 	}
 	client := http.DefaultClient
-	if c.Insecure {
+	switch {
+	case c.Insecure:
 		tr := http.DefaultTransport.(*http.Transport).Clone()
 		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		client = &http.Client{Transport: tr}
+	case c.CACert != "":
+		pool, err := x509.SystemCertPool()
+		if err != nil {
+			pool = x509.NewCertPool()
+		}
+		pem, err := os.ReadFile(c.CACert)
+		if err != nil {
+			return err
+		}
+		if !pool.AppendCertsFromPEM(pem) {
+			return fmt.Errorf("%s: no certificate found", c.CACert)
+		}
+		tr := http.DefaultTransport.(*http.Transport).Clone()
+		tr.TLSClientConfig = &tls.Config{RootCAs: pool}
 		client = &http.Client{Transport: tr}
 	}
 	resp, err := client.Do(req)

@@ -19,6 +19,7 @@ type clientProfile struct {
 	AccessToken       string            `json:"AccessToken"`
 	AccessTokenSecret string            `json:"AccessTokenSecret"`
 	Endpoints         map[string]string `json:"Endpoints"`
+	CACertPEMPath     string            `json:"CACertPEMPath,omitempty"`
 }
 
 // WriteClientProfile writes vars as the SDK profile ClientProfileName under
@@ -43,6 +44,8 @@ func WriteClientProfile(dir string, vars []EnvVar) ([]EnvVar, error) {
 			profile.AccessToken = v.Value
 		case "SAKURA_ACCESS_TOKEN_SECRET":
 			profile.AccessTokenSecret = v.Value
+		case CACertPathEnv:
+			profile.CACertPEMPath = v.Value
 		default:
 			env = append(env, v)
 		}

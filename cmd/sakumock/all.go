@@ -100,6 +100,7 @@ type AllCmd struct {
 	Config            configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
 	Debug             bool           `help:"Enable debug logging for all services"`
 	ListenHost        string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
+	ProfileDir        string         `name:"profile-dir" type:"path" placeholder:"DIR" help:"With --tls-auto: the SDK profile directory given to 'sakumock env --profile-dir'; the generated CA is kept in its tls subdirectory unless --tls-ca-dir is set"`
 	StateDir          string         `name:"state-dir" placeholder:"DIR" env:"SAKUMOCK_STATE_DIR" help:"Directory to persist every service's state in (one file per service), so resources survive a restart; empty keeps state in memory only"`
 	EnableServiceLink bool           `name:"enable-service-link" help:"Enable cross-service forwarding over HTTP (e.g. EventBus fires to SimpleMQ)" env:"SAKUMOCK_ENABLE_SERVICE_LINK" default:"false"`
 }
@@ -191,6 +192,7 @@ func (c *AllCmd) debug() bool {
 // Run starts every mock service and serves until ctx is canceled. If one
 // service fails (e.g. its port is in use), the rest are shut down too.
 func (c *AllCmd) Run(ctx context.Context) error {
+	c.TLSAuto = c.TLSAuto.WithProfileDir(c.ProfileDir)
 	if err := c.validateTLS(); err != nil {
 		return err
 	}

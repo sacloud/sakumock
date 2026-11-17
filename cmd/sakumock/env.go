@@ -24,7 +24,7 @@ type EnvCmd struct {
 	Export bool           `help:"Prefix every line with 'export ' so the output can be sourced directly (e.g. with direnv or a plain shell)."`
 	Config configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file (same format as 'all --config')"`
 
-	ProfileDir string `name:"profile-dir" type:"path" placeholder:"DIR" help:"Write the endpoints and dummy credentials as an SDK profile under this directory (DIR/sakumock/config.json) and print only SAKURA_PROFILE and SAKURA_PROFILE_DIR in the dotenv, instead of one variable per service."`
+	ProfileDir string `name:"profile-dir" type:"path" placeholder:"DIR" help:"Write the endpoints and dummy credentials as an SDK profile under this directory (DIR/sakumock/config.json) and print only SAKURA_PROFILE and SAKURA_PROFILE_DIR in the dotenv, instead of one variable per service. With --tls-auto the CA is read from its tls subdirectory unless --tls-ca-dir is set."`
 }
 
 func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
@@ -68,6 +68,7 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 // With --profile-dir the endpoints and credentials go to an SDK profile and the
 // dotenv only selects it.
 func (c *EnvCmd) Run(_ context.Context) error {
+	c.TLSAuto = c.TLSAuto.WithProfileDir(c.ProfileDir)
 	if err := c.validateTLS(); err != nil {
 		return err
 	}

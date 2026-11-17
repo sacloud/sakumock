@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	kmssdk "github.com/sacloud/sacloud-sdk-go/api/kms"
@@ -96,6 +99,51 @@ func TestTLSAutoClientEnv(t *testing.T) {
 			t.Error("SDK call succeeded without trusting the generated CA")
 		}
 	})
+}
+
+// With --profile-dir alone, `sakumock env` points the profile at the CA kept
+// under that directory, where `sakumock all` given the same flag keeps it.
+func TestTLSAutoProfileDir(t *testing.T) {
+	profileDir := t.TempDir()
+	all := newTestAllCmd()
+	all.TLSAuto = core.TLSAuto{Auto: true}.WithProfileDir(profileDir)
+	if err := all.validateTLS(); err != nil {
+		t.Fatalf("all: %v", err)
+	}
+	_, cleanup, err := all.TLSAuto.Generate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+
+	env := newTestEnvCmd()
+	env.TLSAuto.Auto = true
+	env.ProfileDir = profileDir
+	env.Output = filepath.Join(t.TempDir(), "sakumock.env")
+	if err := env.Run(t.Context()); err != nil {
+		t.Fatalf("env: %v", err)
+	}
+	dotenv, err := os.ReadFile(env.Output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(dotenv), core.CACertPathEnv) {
+		t.Errorf("%s should be in the profile, not the env\n%s", core.CACertPathEnv, dotenv)
+	}
+	profile, err := os.ReadFile(filepath.Join(profileDir, core.ClientProfileName, "config.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got struct{ CACertPEMPath string }
+	if err := json.Unmarshal(profile, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.CACertPEMPath != all.TLSAuto.CACertPath() {
+		t.Errorf("profile CACertPEMPath = %q, want the CA of sakumock all %q", got.CACertPEMPath, all.TLSAuto.CACertPath())
+	}
+	if _, err := os.Stat(got.CACertPEMPath); err != nil {
+		t.Errorf("the CA the profile names does not exist: %v", err)
+	}
 }
 
 // Forwarding SDK clients of service link trust the generated CA too.

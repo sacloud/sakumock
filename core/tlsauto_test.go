@@ -49,6 +49,15 @@ func TestTLSAutoCACertPath(t *testing.T) {
 	if got := (TLSAuto{Auto: true, CADir: "d", CAOut: "o.pem"}).CACertPath(); got != "o.pem" {
 		t.Errorf("ca out wins: CACertPath() = %q", got)
 	}
+	if got, want := (TLSAuto{Auto: true}).WithProfileDir("p").CACertPath(), filepath.Join("p", "tls", "ca.pem"); got != want {
+		t.Errorf("profile dir: CACertPath() = %q, want %q", got, want)
+	}
+	if got, want := (TLSAuto{Auto: true, CADir: "d"}).WithProfileDir("p").CACertPath(), filepath.Join("d", "ca.pem"); got != want {
+		t.Errorf("explicit ca dir wins: CACertPath() = %q, want %q", got, want)
+	}
+	if got := (TLSAuto{}).WithProfileDir("p"); got.CADir != "" {
+		t.Errorf("off: WithProfileDir set CADir = %q", got.CADir)
+	}
 }
 
 // The generated pair verifies against the CA for every requested name, and the

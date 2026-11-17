@@ -23,6 +23,11 @@ import (
 const CACertPathEnv = "SAKURA_CA_CERT_PATH"
 
 const (
+	// profileCADir is the subdirectory of an SDK profile directory the CA is
+	// kept in by default. Holding no profile file, it is not listed as a
+	// profile.
+	profileCADir = "tls"
+
 	caCertFile = "ca.pem"
 	caKeyFile  = "ca-key.pem"
 
@@ -37,10 +42,20 @@ const (
 // It is embedded next to TLSFiles with the same kong prefix/envprefix, which
 // yields --tls-auto, --tls-san, --tls-ca-dir and --tls-ca-out.
 type TLSAuto struct {
-	Auto  bool     `name:"auto" env:"AUTO" help:"Serve HTTPS with a generated certificate signed by a generated CA, instead of --tls-cert/--tls-key. Needs --tls-ca-dir or --tls-ca-out, which is where clients read the CA certificate they trust."`
+	Auto  bool     `name:"auto" env:"AUTO" help:"Serve HTTPS with a generated certificate signed by a generated CA, instead of --tls-cert/--tls-key. Needs --profile-dir, --tls-ca-dir or --tls-ca-out, which is where clients read the CA certificate they trust."`
 	SAN   []string `name:"san" env:"SAN" placeholder:"NAME" help:"Extra host name or IP address the generated certificate is valid for, besides localhost, *.localhost, 127.0.0.1 and ::1 (e.g. the compose service name). Repeatable."`
-	CADir string   `name:"ca-dir" env:"CA_DIR" type:"path" placeholder:"DIR" help:"Directory keeping the generated CA (ca.pem and its key ca-key.pem), so a restart keeps the CA clients already trust; unset regenerates the CA on every start."`
+	CADir string   `name:"ca-dir" env:"CA_DIR" type:"path" placeholder:"DIR" help:"Directory keeping the generated CA (ca.pem and its key ca-key.pem), so a restart keeps the CA clients already trust. Defaults to the tls subdirectory of --profile-dir; without either, the CA is regenerated on every start."`
 	CAOut string   `name:"ca-out" env:"CA_OUT" type:"path" placeholder:"PATH" help:"Write the CA certificate (public, no key) to this file, e.g. in a volume shared with clients."`
+}
+
+// WithProfileDir returns a with the CA directory defaulted to the tls
+// subdirectory of the SDK profile directory dir, so a profile user names one
+// directory only. An explicit --tls-ca-dir is kept.
+func (a TLSAuto) WithProfileDir(dir string) TLSAuto {
+	if a.Auto && a.CADir == "" && dir != "" {
+		a.CADir = filepath.Join(dir, profileCADir)
+	}
+	return a
 }
 
 // Validate reports an error when the options contradict each other or name no
@@ -56,7 +71,7 @@ func (a TLSAuto) Validate(files TLSFiles) error {
 		return errors.New("--tls-auto cannot be combined with --tls-cert/--tls-key")
 	}
 	if a.CACertPath() == "" {
-		return errors.New("--tls-auto needs --tls-ca-dir or --tls-ca-out: clients read the CA certificate to trust from there")
+		return errors.New("--tls-auto needs --profile-dir, --tls-ca-dir or --tls-ca-out: clients read the CA certificate to trust from there")
 	}
 	return nil
 }

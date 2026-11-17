@@ -44,15 +44,12 @@ func TestStateSurvivesRestart(t *testing.T) {
 						t.Errorf("restored resource group = %q, want %q", name, want.resourceGroup)
 					}
 
-					var data []byte
 					read, err := ops.read(ctx, want.resourceGroup)
-					if expectSDKGap(t, "get-resource-group", err) {
-						data = rawResourceData(t, url+ops.path+"/"+want.resourceGroup)
-					} else {
-						data = read.Data
+					if err != nil {
+						t.Fatal(err)
 					}
 					for path, value := range ops.data {
-						if got := at(t, data, path); got != value {
+						if got := at(t, read.Data, path); got != value {
 							t.Errorf("restored data.%s = %v, want %v", path, got, value)
 						}
 					}

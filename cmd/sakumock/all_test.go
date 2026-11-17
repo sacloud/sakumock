@@ -253,8 +253,25 @@ func TestAllProfileDir(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				// The CA is under each command's own directory.
-				return strings.ReplaceAll(string(data), dir, "DIR")
+				// The CA is under each command's own directory: compare its
+				// path relative to that (the JSON escapes Windows paths, so
+				// the directory cannot be replaced in the text).
+				var profile map[string]any
+				if err := json.Unmarshal(data, &profile); err != nil {
+					t.Fatal(err)
+				}
+				if ca, ok := profile["CACertPEMPath"].(string); ok {
+					rel, err := filepath.Rel(dir, ca)
+					if err != nil {
+						t.Fatal(err)
+					}
+					profile["CACertPEMPath"] = filepath.ToSlash(rel)
+				}
+				out, err := json.MarshalIndent(profile, "", "  ")
+				if err != nil {
+					t.Fatal(err)
+				}
+				return string(out)
 			}
 
 			all := newTestAllCmd()
@@ -280,8 +297,8 @@ func TestAllProfileDir(t *testing.T) {
 			if scheme := map[bool]string{false: `"http://`, true: `"https://`}[tt.auto]; !strings.Contains(got, scheme) {
 				t.Errorf("profile endpoints are not %s...\n%s", scheme, got)
 			}
-			if tt.auto != strings.Contains(got, "CACertPEMPath") {
-				t.Errorf("CACertPEMPath in the profile = %v, want %v\n%s", !tt.auto, tt.auto, got)
+			if tt.auto != strings.Contains(got, `"CACertPEMPath": "tls/ca.pem"`) {
+				t.Errorf("CACertPEMPath tls/ca.pem in the profile = %v, want %v\n%s", !tt.auto, tt.auto, got)
 			}
 		})
 	}

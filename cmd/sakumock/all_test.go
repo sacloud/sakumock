@@ -234,3 +234,78 @@ func TestAllStateDir(t *testing.T) {
 		}
 	})
 }
+
+// `sakumock all --profile-dir` writes the profile `sakumock env --profile-dir`
+// writes for the same flags, so the client needs no second command.
+func TestAllProfileDir(t *testing.T) {
+	tests := []struct {
+		name string
+		auto bool
+	}{
+		{"plain", false},
+		{"tls-auto", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			read := func(dir string) string {
+				t.Helper()
+				data, err := os.ReadFile(filepath.Join(dir, core.ClientProfileName, "config.json"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				// The CA is under each command's own directory: compare its
+				// path relative to that (the JSON escapes Windows paths, so
+				// the directory cannot be replaced in the text).
+				var profile map[string]any
+				if err := json.Unmarshal(data, &profile); err != nil {
+					t.Fatal(err)
+				}
+				if ca, ok := profile["CACertPEMPath"].(string); ok {
+					rel, err := filepath.Rel(dir, ca)
+					if err != nil {
+						t.Fatal(err)
+					}
+					profile["CACertPEMPath"] = filepath.ToSlash(rel)
+				}
+				out, err := json.MarshalIndent(profile, "", "  ")
+				if err != nil {
+					t.Fatal(err)
+				}
+				return string(out)
+			}
+
+			all := newTestAllCmd()
+			all.ProfileDir = t.TempDir()
+			all.TLSAuto.Auto = tt.auto
+			all.TLSAuto = all.TLSAuto.WithProfileDir(all.ProfileDir)
+			if err := all.writeProfile(); err != nil {
+				t.Fatalf("writeProfile: %v", err)
+			}
+
+			env := newTestEnvCmd()
+			env.ProfileDir = t.TempDir()
+			env.TLSAuto.Auto = tt.auto
+			env.Output = filepath.Join(t.TempDir(), "sakumock.env")
+			if err := env.Run(t.Context()); err != nil {
+				t.Fatalf("env: %v", err)
+			}
+
+			got, want := read(all.ProfileDir), read(env.ProfileDir)
+			if got != want {
+				t.Errorf("profile of all:\n%s\nprofile of env:\n%s", got, want)
+			}
+			if scheme := map[bool]string{false: `"http://`, true: `"https://`}[tt.auto]; !strings.Contains(got, scheme) {
+				t.Errorf("profile endpoints are not %s...\n%s", scheme, got)
+			}
+			if tt.auto != strings.Contains(got, `"CACertPEMPath": "tls/ca.pem"`) {
+				t.Errorf("CACertPEMPath tls/ca.pem in the profile = %v, want %v\n%s", !tt.auto, tt.auto, got)
+			}
+		})
+	}
+}
+
+func TestAllNoProfileDir(t *testing.T) {
+	if err := newTestAllCmd().writeProfile(); err != nil {
+		t.Errorf("writeProfile without --profile-dir: %v", err)
+	}
+}

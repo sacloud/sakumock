@@ -100,7 +100,7 @@ type AllCmd struct {
 	Config            configFileFlag `name:"config" placeholder:"PATH" help:"Load service options from a YAML or JSON file, nested per service (e.g. 'kms: {latency: 5s}'); CLI flags override it"`
 	Debug             bool           `help:"Enable debug logging for all services"`
 	ListenHost        string         `name:"listen-host" placeholder:"HOST" help:"Bind every service to this host instead of each service's configured address (e.g. 0.0.0.0 to accept connections from outside a container). The port is kept."`
-	ProfileDir        string         `name:"profile-dir" type:"path" placeholder:"DIR" help:"With --tls-auto: the SDK profile directory given to 'sakumock env --profile-dir'; the generated CA is kept in its tls subdirectory unless --tls-ca-dir is set"`
+	ProfileDir        string         `name:"profile-dir" type:"path" placeholder:"DIR" help:"Write the endpoints and dummy credentials as an SDK profile under this directory (DIR/sakumock/config.json) at startup, as 'sakumock env --profile-dir' does. With --tls-auto the generated CA is kept in its tls subdirectory unless --tls-ca-dir is set."`
 	StateDir          string         `name:"state-dir" placeholder:"DIR" env:"SAKUMOCK_STATE_DIR" help:"Directory to persist every service's state in (one file per service), so resources survive a restart; empty keeps state in memory only"`
 	EnableServiceLink bool           `name:"enable-service-link" help:"Enable cross-service forwarding over HTTP (e.g. EventBus fires to SimpleMQ)" env:"SAKUMOCK_ENABLE_SERVICE_LINK" default:"false"`
 }
@@ -243,6 +243,10 @@ func (c *AllCmd) Run(ctx context.Context) error {
 		}
 	}()
 
+	if err := c.writeProfile(); err != nil {
+		return err
+	}
+
 	slog.Info("sakumock all starting", "version", sakumock.Version, "service_link", c.EnableServiceLink, "state_dir", c.StateDir)
 	if !c.PerServicePorts {
 		return c.serveMounted(ctx, instances)
@@ -272,6 +276,26 @@ func (c *AllCmd) Run(ctx context.Context) error {
 	wg.Wait()
 
 	return errors.Join(errs...)
+}
+
+// writeProfile writes the SDK profile of --profile-dir, the one `sakumock env
+// --profile-dir` writes for the same flags, and logs what selects it. It is in
+// place before any listener starts, so a healthy sakumock implies a client can
+// load it.
+func (c *AllCmd) writeProfile() error {
+	if c.ProfileDir == "" {
+		return nil
+	}
+	vars, err := c.clientEnv("")
+	if err != nil {
+		return err
+	}
+	env, err := core.WriteClientProfile(c.ProfileDir, vars)
+	if err != nil {
+		return fmt.Errorf("write SDK profile: %w", err)
+	}
+	slog.Info("wrote SDK profile; set these in your SDK / Terraform client", core.LogArgs(env)...)
+	return nil
 }
 
 // serveMounted serves every control plane on c.Addr, each under its

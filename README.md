@@ -121,6 +121,12 @@ data plane) stay in the dotenv. `SAKURA_PROFILE_DIR` is the directory as
 `sakumock env` sees it; when it runs in a container, set the variable to the
 path the client sees instead.
 
+`sakumock all --profile-dir DIR` writes the same profile itself at startup,
+before it starts listening, so a client on the same host needs no `sakumock
+env` run — only the two variables above, which the startup log shows. Use
+`sakumock env --profile-dir` when the client reaches sakumock under another
+host name (`--host`) or needs the dotenv file.
+
 The directory is separate from your real profiles (`~/.usacloud`), so those
 stay out of reach of the client.
 
@@ -265,13 +271,11 @@ sakumock env --tls-auto --tls-ca-dir ~/.sakumock/tls > sakumock.env
 # SAKURA_CA_CERT_PATH=/home/you/.sakumock/tls/ca.pem
 ```
 
-With an [SDK profile](#sdk-profile-instead-of-per-service-variables), `--profile-dir` is the only directory to name: the CA is kept in its `tls` subdirectory, and the profile points at it.
+With an [SDK profile](#sdk-profile-instead-of-per-service-variables), `--profile-dir` is the only directory to name: the CA is kept in its `tls` subdirectory, and the profile `sakumock all` writes points at it.
 
 ```bash
 sakumock all --tls-auto --profile-dir ./.sakumock
-sakumock env --tls-auto --profile-dir ./.sakumock > sakumock.env
-# SAKURA_PROFILE=sakumock
-# SAKURA_PROFILE_DIR=/path/to/.sakumock
+export SAKURA_PROFILE=sakumock SAKURA_PROFILE_DIR=$PWD/.sakumock
 ```
 
 | Flag | Env | Description |

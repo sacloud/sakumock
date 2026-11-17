@@ -28,6 +28,13 @@ type EnvCmd struct {
 }
 
 func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
+	return c.serviceConfigs.clientEnv(c.Host)
+}
+
+// clientEnv returns what a client sets to reach the suite: every service's
+// endpoint, the dummy credentials and, with a generated certificate, the CA
+// to trust. A non-empty host replaces the host of every endpoint URL.
+func (c *serviceConfigs) clientEnv(host string) ([]core.EnvVar, error) {
 	var vars []core.EnvVar
 	for _, cfg := range c.configs() {
 		env := cfg.ClientEnv()
@@ -38,8 +45,8 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 			}
 		}
 		for _, e := range env {
-			if c.Host != "" {
-				val, err := withHost(e.Value, c.Host)
+			if host != "" {
+				val, err := withHost(e.Value, host)
 				if err != nil {
 					return nil, fmt.Errorf("%s: %w", e.Key, err)
 				}

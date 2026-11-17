@@ -141,12 +141,7 @@ func runEndToEnd(t *testing.T, flags, waitAddrs []string) {
 // left out of the main run and applied on their own, where the failure must
 // still reproduce; once one applies cleanly, remove its entry. The files stay
 // in place, so `sakumock docs terraform` keeps showing them.
-var knownSDKGaps = map[string]struct{ issue, marker string }{
-	"addon.tf": {
-		issue:  "https://github.com/sacloud/sakumock/issues/220",
-		marker: `unexpected field "resourceGroup"`,
-	},
-}
+var knownSDKGaps = map[string]struct{ issue, marker string }{}
 
 // stageFixture copies the fixture files accepted by include (state and Go
 // files are never copied) into a fresh directory and returns it.

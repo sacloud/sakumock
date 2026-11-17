@@ -305,13 +305,11 @@ func TestFamilyLifecycle(t *testing.T) {
 				t.Fatalf("unexpected resource group name in list: %q", name)
 			}
 
-			var data []byte
 			read, err := ops.read(ctx, rg)
-			if expectSDKGap(t, "get-resource-group", err) {
-				data = rawResourceData(t, srv.TestURL()+ops.path+"/"+rg)
-			} else {
-				data = read.Data
+			if err != nil {
+				t.Fatal(err)
 			}
+			data := read.Data
 			if got := at(t, data, "name"); got != rg {
 				t.Fatalf("unexpected resource name in data: %v", got)
 			}
@@ -461,8 +459,8 @@ func TestProvisioningDelay(t *testing.T) {
 
 	time.Sleep(150 * time.Millisecond)
 
-	if _, err := ai.Read(ctx, rg); expectSDKGap(t, "get-resource-group", err) {
-		rawResourceData(t, srv.TestURL()+"/ai/"+rg)
+	if _, err := ai.Read(ctx, rg); err != nil {
+		t.Fatal(err)
 	}
 	status, err = ai.Status(ctx, rg, deployment)
 	if err != nil {

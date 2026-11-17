@@ -137,8 +137,18 @@ func TestDeleteKeyAbolished(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := keyOp.Delete(ctx, created.ID); err == nil {
-		t.Fatal("expected the instant-delete API to be rejected")
+	// The SDK no longer has the operation, so send the request directly.
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, srv.TestURL()+"/kms/keys/"+created.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("instant-delete API: status = %d, want %d", res.StatusCode, http.StatusMethodNotAllowed)
 	}
 	if _, err := keyOp.Read(ctx, created.ID); err != nil {
 		t.Fatalf("key must survive the rejected delete: %v", err)

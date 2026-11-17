@@ -281,7 +281,7 @@ sakumock env --tls-auto --profile-dir ./.sakumock > sakumock.env
 | `--tls-ca-out PATH` | `SAKUMOCK_TLS_CA_OUT` | Write the CA certificate (public, no key) to this file, e.g. in a volume shared with clients |
 | `--tls-san NAME` | `SAKUMOCK_TLS_SAN` | Extra host name or IP address the certificate is valid for (repeatable) |
 
-- The certificate covers `localhost`, `*.localhost`, `127.0.0.1`, `::1`, the `--listen-host` and every `--tls-san`. A client reaching sakumock by another name (`sakumock env --host NAME`, e.g. the compose service name) needs that name as a `--tls-san`.
+- The certificate covers `localhost`, `*.localhost`, `127.0.0.1`, `::1`, the `--listen-host`, the hosts of the listen addresses (`--addr`, `--<service>-addr`) and every `--tls-san`. A client reaching sakumock by another name (`sakumock env --host NAME`, e.g. the compose service name) needs that name as a `--tls-san`.
 - `SAKURA_CA_CERT_PATH` is the `--tls-ca-out` path when set, otherwise `ca.pem` in `--tls-ca-dir`. Give `sakumock env` the path **as the client sees it**. With `--profile-dir` it goes into the profile instead of the dotenv.
 - The CA carries Name Constraints permitting only those names, so a client that keeps `SAKURA_CA_CERT_PATH` set cannot be served a certificate for any other host by it. Adding a name the kept CA does not permit generates a new CA.
 - The CA key is what signs certificates: where clients mount a directory (containers), keep `--tls-ca-dir` to sakumock and share only the `--tls-ca-out` file with them. The server certificate is regenerated on every start and never leaves a temporary directory.

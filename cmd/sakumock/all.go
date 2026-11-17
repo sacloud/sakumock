@@ -121,6 +121,23 @@ func (c *AllCmd) bindAddr(listenAddr string) string {
 	return net.JoinHostPort(c.ListenHost, port)
 }
 
+// listenHosts returns the hosts the control planes are reached at, for the
+// generated certificate to cover: --listen-host and the host of every
+// configured listen address.
+func (c *AllCmd) listenHosts() []string {
+	hosts := []string{c.ListenHost}
+	addrs := []string{c.Addr}
+	for _, cfg := range c.configs() {
+		addrs = append(addrs, cfg.ListenAddr())
+	}
+	for _, addr := range addrs {
+		if host, _, err := net.SplitHostPort(addr); err == nil {
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
+}
+
 // serviceLinkEnv collects every service's ClientEnv (with --listen-host and
 // TLS scheme applied) plus dummy credentials into one slice. Services that
 // support cross-service forwarding pass these to saclient.Client.SetEnviron
@@ -201,7 +218,7 @@ func (c *AllCmd) Run(ctx context.Context) error {
 	if c.TLSAuto.Auto {
 		// The CA certificate is in place before any listener starts, so a
 		// healthy sakumock implies clients can read it.
-		files, cleanup, err := c.TLSAuto.Generate(c.ListenHost)
+		files, cleanup, err := c.TLSAuto.Generate(c.listenHosts()...)
 		if err != nil {
 			return fmt.Errorf("generate TLS certificate: %w", err)
 		}

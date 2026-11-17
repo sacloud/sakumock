@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestTLSAutoClientEnv(t *testing.T) {
 
 	all := newTestAllCmd()
 	all.TLSAuto = auto
-	files, cleanup, err := all.TLSAuto.Generate(all.ListenHost)
+	files, cleanup, err := all.TLSAuto.Generate(all.listenHosts()...)
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
@@ -143,6 +144,21 @@ func TestTLSAutoProfileDir(t *testing.T) {
 	}
 	if _, err := os.Stat(got.CACertPEMPath); err != nil {
 		t.Errorf("the CA the profile names does not exist: %v", err)
+	}
+}
+
+// The certificate covers the hosts of the configured listen addresses, not
+// only the defaults.
+func TestTLSAutoListenHosts(t *testing.T) {
+	c := newTestAllCmd()
+	c.Addr = "192.0.2.1:18000"
+	c.Kms.Addr = "192.0.2.2:18081"
+	c.ListenHost = "sakumock.test"
+	hosts := c.listenHosts()
+	for _, want := range []string{"192.0.2.1", "192.0.2.2", "sakumock.test"} {
+		if !slices.Contains(hosts, want) {
+			t.Errorf("listenHosts() = %v, missing %q", hosts, want)
+		}
 	}
 }
 

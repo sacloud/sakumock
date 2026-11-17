@@ -177,10 +177,56 @@ func TestTLSAutoKeepsCA(t *testing.T) {
 		t.Error("the CA changed across a restart with the same names")
 	}
 
+	// A subdomain of a permitted domain needs no new CA.
+	a.SAN = []string{"App.Localhost"}
+	generate()
+	if !bytes.Equal(first, readCA()) {
+		t.Error("the CA changed although it already permits the added name")
+	}
+
 	a.SAN = []string{"sakumock"}
 	generate()
 	if bytes.Equal(first, readCA()) {
 		t.Error("the CA was kept although it does not permit the added name")
+	}
+}
+
+// A CA replacement interrupted between its two files leaves a key that does
+// not belong to the certificate; the next start replaces the pair.
+func TestTLSAutoMismatchedCA(t *testing.T) {
+	a, other := TLSAuto{Auto: true, CADir: t.TempDir()}, TLSAuto{Auto: true, CADir: t.TempDir()}
+	for _, x := range []TLSAuto{a, other} {
+		_, cleanup, err := x.Generate()
+		if err != nil {
+			t.Fatal(err)
+		}
+		cleanup()
+	}
+	key, err := os.ReadFile(filepath.Join(other.CADir, "ca-key.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(a.CADir, "ca-key.pem"), key, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	files, cleanup, err := a.Generate()
+	if err != nil {
+		t.Fatalf("Generate with a mismatched CA pair: %v", err)
+	}
+	defer cleanup()
+	pair, err := tls.LoadX509KeyPair(files.CertFile, files.KeyFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	caPEM, err := os.ReadFile(a.CACertPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	roots := x509.NewCertPool()
+	roots.AppendCertsFromPEM(caPEM)
+	if _, err := pair.Leaf.Verify(x509.VerifyOptions{Roots: roots, DNSName: "localhost"}); err != nil {
+		t.Errorf("certificate does not verify against the replaced CA: %v", err)
 	}
 }
 

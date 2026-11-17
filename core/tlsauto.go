@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"net"
 	"os"
@@ -173,8 +174,9 @@ type certAuthority struct {
 }
 
 // loadCA returns the CA kept in --tls-ca-dir, or nil when there is none or it
-// has to be replaced: it would expire before a certificate issued now, or its
-// Name Constraints do not permit every requested name.
+// has to be replaced: it would expire before a certificate issued now, its
+// Name Constraints do not permit every requested name, or its key and
+// certificate do not belong together.
 func (a TLSAuto) loadCA(names []string, ips []net.IP, now time.Time) (*certAuthority, error) {
 	if a.CADir == "" {
 		return nil, nil
@@ -200,7 +202,10 @@ func (a TLSAuto) loadCA(names []string, ips []net.IP, now time.Time) (*certAutho
 		return nil, fmt.Errorf("%s: %w (delete the directory's CA files to generate a new CA)", keyPath, err)
 	}
 	if !key.PublicKey.Equal(cert.PublicKey) {
-		return nil, fmt.Errorf("%s does not match %s (delete both to generate a new CA)", keyPath, certPath)
+		// A replacement interrupted between the two files: neither half is
+		// usable, so finish replacing it instead of failing every start.
+		slog.Warn("the kept CA key does not match its certificate; generating a new CA", "dir", a.CADir)
+		return nil, nil
 	}
 	if cert.NotAfter.Before(now.Add(leafValidity)) || !permits(cert, names, ips) {
 		return nil, nil
@@ -211,7 +216,7 @@ func (a TLSAuto) loadCA(names []string, ips []net.IP, now time.Time) (*certAutho
 // permits reports whether the CA's Name Constraints cover names and ips.
 func permits(ca *x509.Certificate, names []string, ips []net.IP) bool {
 	for _, n := range constraintDomains(names) {
-		if !slices.Contains(ca.PermittedDNSDomains, n) {
+		if !slices.ContainsFunc(ca.PermittedDNSDomains, func(d string) bool { return domainPermits(d, n) }) {
 			return false
 		}
 	}
@@ -221,6 +226,13 @@ func permits(ca *x509.Certificate, names []string, ips []net.IP) bool {
 		}
 	}
 	return true
+}
+
+// domainPermits reports whether the Name Constraints domain permits name: the
+// domain itself and its subdomains, compared case-insensitively.
+func domainPermits(domain, name string) bool {
+	domain, name = strings.ToLower(domain), strings.ToLower(name)
+	return name == domain || strings.HasSuffix(name, "."+domain)
 }
 
 // constraintDomains turns certificate names into Name Constraints domains: a
@@ -336,8 +348,25 @@ func newSerial() (*big.Int, error) {
 	return rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 127))
 }
 
+// writePEM replaces path as a whole, so an interrupted write never leaves a
+// truncated file behind.
 func writePEM(path, blockType string, der []byte, perm os.FileMode) error {
-	return os.WriteFile(path, pem.EncodeToMemory(&pem.Block{Type: blockType, Bytes: der}), perm)
+	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.Write(pem.EncodeToMemory(&pem.Block{Type: blockType, Bytes: der})); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(tmp.Name(), perm); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), path)
 }
 
 func readPEM(path, blockType string) ([]byte, error) {

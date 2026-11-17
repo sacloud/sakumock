@@ -253,6 +253,50 @@ An injected status is returned in the service's own error envelope with a `fault
 
 Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SAKUMOCK_TLS_KEY`) to serve **every** listener over HTTPS — all control planes and data planes share the one cert (they run on the same host, only the port differs). TLS is enabled only when both files are set; otherwise everything stays plain HTTP. The object storage data plane is served by versitygw, which is handed the same cert/key (`--cert`/`--key`) so it terminates TLS itself. Standalone subcommands accept the same `--tls-cert`/`--tls-key` (env `<SERVICE>_TLS_CERT` / `<SERVICE>_TLS_KEY`). `sakumock env` emits `https://` endpoints when TLS is set; with a self-signed cert the client must be told to trust it.
 
+### Generated certificate (`--tls-auto`)
+
+`sakumock all --tls-auto` generates the certificate itself: a private CA and a server certificate signed by it, so there is nothing to create by hand. The client trusts the CA through `SAKURA_CA_CERT_PATH`, which `sakumock env` emits when given the same flags. The SDK **adds** that CA to the system roots, so services that are not pointed at the mock still reach the real API. This needs sacloud-sdk-go v0.7.0 or later (a Terraform provider built on an older SDK ignores the variable and fails certificate verification).
+
+```bash
+sakumock all --tls-auto --tls-ca-dir ~/.sakumock/tls
+sakumock env --tls-auto --tls-ca-dir ~/.sakumock/tls > sakumock.env
+# SAKURA_ENDPOINTS_KMS=https://127.0.0.1:18000/kms
+# ...
+# SAKURA_CA_CERT_PATH=/home/you/.sakumock/tls/ca.pem
+```
+
+| Flag | Env | Description |
+|---|---|---|
+| `--tls-auto` | `SAKUMOCK_TLS_AUTO` | Serve HTTPS with a generated certificate instead of `--tls-cert`/`--tls-key`. Needs `--tls-ca-dir` or `--tls-ca-out` |
+| `--tls-ca-dir DIR` | `SAKUMOCK_TLS_CA_DIR` | Keep the CA here (`ca.pem` and its key `ca-key.pem`), so a restart keeps the CA clients already trust. Unset, the CA is regenerated on every start |
+| `--tls-ca-out PATH` | `SAKUMOCK_TLS_CA_OUT` | Write the CA certificate (public, no key) to this file, e.g. in a volume shared with clients |
+| `--tls-san NAME` | `SAKUMOCK_TLS_SAN` | Extra host name or IP address the certificate is valid for (repeatable) |
+
+- The certificate covers `localhost`, `*.localhost`, `127.0.0.1`, `::1`, the `--listen-host` and every `--tls-san`. A client reaching sakumock by another name (`sakumock env --host NAME`, e.g. the compose service name) needs that name as a `--tls-san`.
+- `SAKURA_CA_CERT_PATH` is the `--tls-ca-out` path when set, otherwise `ca.pem` in `--tls-ca-dir`. Give `sakumock env` the path **as the client sees it**. With `--profile-dir` it goes into the profile instead of the dotenv.
+- The CA carries Name Constraints permitting only those names, so a client that keeps `SAKURA_CA_CERT_PATH` set cannot be served a certificate for any other host by it. Adding a name the kept CA does not permit generates a new CA.
+- The CA key is what signs certificates: keep `--tls-ca-dir` to sakumock and share only the `--tls-ca-out` file with clients. The server certificate is regenerated on every start and never leaves a temporary directory.
+- Only the SAKURA Cloud SDK is configured this way. Other clients of a data plane (e.g. the AWS CLI against the object storage data plane) must be given the CA file through their own setting.
+- `--tls-auto` is an option of `sakumock all` and `sakumock env`; the standalone subcommands take `--tls-cert`/`--tls-key` only.
+
+In containers, write the CA certificate into the volume the client already mounts for the dotenv:
+
+```yaml
+services:
+  sakumock:
+    image: ghcr.io/sacloud/sakumock:latest
+    command: ["all", "--listen-host", "0.0.0.0", "--tls-auto", "--tls-san", "sakumock", "--tls-ca-out", "/env/ca.pem"]
+    volumes:
+      - sakumock-env:/env
+    healthcheck:
+      test: ["CMD", "/sakumock", "healthcheck", "--url", "https://127.0.0.1:18000/_sakumock/health", "--ca-cert", "/env/ca.pem"]
+  sakumock-env:
+    image: ghcr.io/sacloud/sakumock:latest
+    command: ["env", "--host", "sakumock", "--tls-auto", "--tls-ca-out", "/env/ca.pem", "--output", "/env/sakumock.env"]
+    volumes:
+      - sakumock-env:/env
+```
+
 ## Persistent State
 
 Services keep their resources in memory, so a restarted mock comes back empty. Pass `--state-dir DIR` (or `SAKUMOCK_STATE_DIR`) to save every service's state under `DIR` and load it at the next start — useful while developing against the mock, e.g. to keep a Terraform state valid across restarts. Without the flag nothing is written, which is what tests and CI want.
@@ -327,7 +371,7 @@ curl http://127.0.0.1:18000/_sakumock/health
 # {"status":"ok","services":["simplemq","kms",...]}
 ```
 
-The image has no shell or `curl`, so `sakumock healthcheck` probes the endpoint and exits non-zero unless it answers 200 — use it as a container health check (`--url` defaults to `http://127.0.0.1:18000/_sakumock/health`; add `--insecure` for a self-signed `--tls-cert`):
+The image has no shell or `curl`, so `sakumock healthcheck` probes the endpoint and exits non-zero unless it answers 200 — use it as a container health check (`--url` defaults to `http://127.0.0.1:18000/_sakumock/health`; add `--insecure` for a self-signed `--tls-cert`, or `--ca-cert PATH` to trust the CA of `--tls-auto`):
 
 ```yaml
 healthcheck:

@@ -62,11 +62,28 @@ type serviceConfigs struct {
 	// service, because every listener runs on the same host (only the port differs).
 	TLS core.TLSFiles `embed:"" prefix:"tls-" envprefix:"SAKUMOCK_TLS_"`
 
+	// TLSAuto generates that pair, signed by a CA clients are told to trust.
+	TLSAuto core.TLSAuto `embed:"" prefix:"tls-" envprefix:"SAKUMOCK_TLS_"`
+
 	// Addr is the one listener every control plane shares, each mounted under
 	// core.MountPath. PerServicePorts switches to a listener per service on its
 	// --<service>-addr instead. Data planes keep their own listeners either way.
 	Addr            string `name:"addr" placeholder:"ADDR" default:"127.0.0.1:18000" env:"SAKUMOCK_ADDR" help:"Listen address shared by every service's control plane, each under /<service> (e.g. /kms)"`
 	PerServicePorts bool   `name:"per-service-ports" env:"SAKUMOCK_PER_SERVICE_PORTS" help:"Deprecated (use the single --addr listener): serve each service's control plane on its own --<service>-addr instead of under --addr"`
+}
+
+// tlsEnabled reports whether the listeners serve HTTPS, with a given or a
+// generated certificate.
+func (c *serviceConfigs) tlsEnabled() bool {
+	return c.TLS.Enabled() || c.TLSAuto.Auto
+}
+
+// validateTLS rejects a half-configured or contradictory TLS setup.
+func (c *serviceConfigs) validateTLS() error {
+	if err := c.TLS.Validate(); err != nil {
+		return err
+	}
+	return c.TLSAuto.Validate(c.TLS)
 }
 
 func (c *serviceConfigs) configs() []core.ServiceConfig {
@@ -133,8 +150,10 @@ func (c *AllCmd) serviceLinkEnv() []core.EnvVar {
 			vars = append(vars, e)
 		}
 	}
-	vars = core.WithTLSScheme(vars, c.TLS.Enabled())
+	vars = core.WithTLSScheme(vars, c.tlsEnabled())
 	vars = append(vars, core.DummyCredentialEnv()...)
+	// The forwarding SDK clients must trust the generated CA as well.
+	vars = append(vars, c.TLSAuto.ClientEnv()...)
 	return vars
 }
 
@@ -172,10 +191,22 @@ func (c *AllCmd) debug() bool {
 // Run starts every mock service and serves until ctx is canceled. If one
 // service fails (e.g. its port is in use), the rest are shut down too.
 func (c *AllCmd) Run(ctx context.Context) error {
-	if err := c.TLS.Validate(); err != nil {
+	if err := c.validateTLS(); err != nil {
 		return err
 	}
 	core.SetupLogger(c.debug())
+
+	if c.TLSAuto.Auto {
+		// The CA certificate is in place before any listener starts, so a
+		// healthy sakumock implies clients can read it.
+		files, cleanup, err := c.TLSAuto.Generate(c.ListenHost)
+		if err != nil {
+			return fmt.Errorf("generate TLS certificate: %w", err)
+		}
+		defer cleanup()
+		c.TLS = files
+		slog.Info("generated TLS certificate", "ca_cert", c.TLSAuto.CACertPath())
+	}
 
 	shutdownTracing, err := core.SetupTracing(ctx)
 	if err != nil {

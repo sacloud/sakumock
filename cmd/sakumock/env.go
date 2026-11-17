@@ -58,7 +58,9 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 	// When TLS is enabled the listeners serve HTTPS, so upgrade endpoint URLs
 	// (control plane and data plane) accordingly; credentials/regions are left
 	// untouched by WithTLSScheme.
-	return core.WithTLSScheme(vars, c.TLS.Enabled()), nil
+	vars = core.WithTLSScheme(vars, c.tlsEnabled())
+	// With a generated certificate the client also needs the CA to trust.
+	return append(vars, c.TLSAuto.ClientEnv()...), nil
 }
 
 // Run renders the client env to --output, or to stdout when it is unset. Logs
@@ -66,7 +68,7 @@ func (c *EnvCmd) clientEnv() ([]core.EnvVar, error) {
 // With --profile-dir the endpoints and credentials go to an SDK profile and the
 // dotenv only selects it.
 func (c *EnvCmd) Run(_ context.Context) error {
-	if err := c.TLS.Validate(); err != nil {
+	if err := c.validateTLS(); err != nil {
 		return err
 	}
 	vars, err := c.clientEnv()

@@ -78,6 +78,37 @@ func TestDestinationAndGroupLifecycle(t *testing.T) {
 		t.Errorf("destination name = %q, want mail-dest", gotDest.CommonServiceItem.Name)
 	}
 
+	updated, err := destOp.Update(ctx, destID, v1.PutCommonServiceItemRequest{
+		CommonServiceItem: v1.PutCommonServiceItemRequestCommonServiceItem{
+			Name:        "mail-dest-renamed",
+			Description: "an updated destination",
+			Icon:        v1.NilCommonServiceItemIcon{Null: true},
+			Settings: v1.NewOptPutCommonServiceItemRequestCommonServiceItemSettings(
+				v1.NewCommonServiceItemDestinationSettingsPutCommonServiceItemRequestCommonServiceItemSettings(v1.CommonServiceItemDestinationSettings{
+					Type:  v1.CommonServiceItemDestinationSettingsTypeEmail,
+					Value: "oncall@example.com",
+				}),
+			),
+			Tags: []string{"updated"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("update destination: %v", err)
+	}
+	if got := updated.CommonServiceItem.Name; got != "mail-dest-renamed" {
+		t.Errorf("updated destination name = %q, want mail-dest-renamed", got)
+	}
+	gotDest, err = destOp.Read(ctx, destID)
+	if err != nil {
+		t.Fatalf("read updated destination: %v", err)
+	}
+	if ds, ok := gotDest.CommonServiceItem.Settings.GetCommonServiceItemDestinationSettings(); !ok || ds.Value != "oncall@example.com" {
+		t.Errorf("updated destination settings = %+v, want value oncall@example.com", gotDest.CommonServiceItem.Settings)
+	}
+	if tags := gotDest.CommonServiceItem.Tags; len(tags) != 1 || tags[0] != "updated" {
+		t.Errorf("updated destination tags = %v, want [updated]", tags)
+	}
+
 	// Create a group referencing the destination.
 	group, err := groupOp.Create(ctx, v1.PostCommonServiceItemRequest{
 		CommonServiceItem: v1.PostCommonServiceItemRequestCommonServiceItem{

@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.15.0](https://github.com/sacloud/sakumock/compare/v0.14.0...v0.15.0) - 2026-11-19
+
+### 🚀 New Features
+- Answer 501 for spec operations the mock does not implement by @fujiwara in https://github.com/sacloud/sakumock/pull/246
+- apprundedicated: provide reserved environment variables to data-plane containers by @fujiwara in https://github.com/sacloud/sakumock/pull/249
+- Persist service state across restarts with --state-dir by @fujiwara in https://github.com/sacloud/sakumock/pull/251
+- env: write the client settings as an SDK profile with --profile-dir by @fujiwara in https://github.com/sacloud/sakumock/pull/253
+- Serve HTTPS with a generated certificate (--tls-auto) by @fujiwara in https://github.com/sacloud/sakumock/pull/262
+- all: write the SDK profile at startup with --profile-dir by @fujiwara in https://github.com/sacloud/sakumock/pull/263
+### Other Changes
+- docs: move to beta and deprecate --per-service-ports by @fujiwara in https://github.com/sacloud/sakumock/pull/248
+- docs: add tasklist for migrating to the standard uuid package by @fujiwara in https://github.com/sacloud/sakumock/pull/250
+- build(deps): Combine pending Dependabot updates by @fujiwara in https://github.com/sacloud/sakumock/pull/252
+- deps: update sacloud-sdk-go to v0.7.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/261
+- test/terraform: bump sacloud/sakura to 3.15.2 by @fujiwara in https://github.com/sacloud/sakumock/pull/264
+- workflows: return Name and Count from /workflows/suggest by @fujiwara in https://github.com/sacloud/sakumock/pull/266
+- Fail the tests when a spec route is never answered successfully by @fujiwara in https://github.com/sacloud/sakumock/pull/268
+- apprundedicated: accept a cluster without ports by @fujiwara in https://github.com/sacloud/sakumock/pull/269
+
 ## [v0.14.0](https://github.com/sacloud/sakumock/compare/v0.13.0...v0.14.0) - 2026-11-07
 
 ### 🚀 New Features

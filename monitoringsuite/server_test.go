@@ -3,6 +3,7 @@ package monitoringsuite_test
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"testing"
 
 	mssdk "github.com/sacloud/sacloud-sdk-go/api/monitoring-suite"
@@ -54,6 +55,18 @@ func ridOf(t *testing.T, opt v1.NilInt64) string {
 	return fmt.Sprintf("%d", id)
 }
 
+func mustInt64(t *testing.T, s string) int64 {
+	t.Helper()
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return v
+}
+
+// The SDK's Update ops send PATCH for resources and PUT for access keys, so
+// the tests reach the other verb of each pair through the generated client.
+
 func TestAlertProjectLifecycle(t *testing.T) {
 	client, closeFn := newServer(t)
 	defer closeFn()
@@ -96,12 +109,32 @@ func TestAlertProjectLifecycle(t *testing.T) {
 		t.Fatalf("update failed: %s", optStr(updated.GetName()))
 	}
 
+	put, err := client.UpdateAlertProject(ctx, v1.NewOptAlertProjectRequest(v1.AlertProjectRequest{
+		Name:        v1.NewOptString("replaced"),
+		Description: v1.NewOptString("replaced desc"),
+	}), v1.UpdateAlertProjectParams{ResourceId: mustInt64(t, id)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(put.GetName()) != "replaced" || optStr(put.GetDescription()) != "replaced desc" {
+		t.Fatalf("put failed: %+v", put)
+	}
+
 	projects, err = op.List(ctx, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(projects) != 1 {
 		t.Fatalf("expected 1 project, got %d", len(projects))
+	}
+
+	// The mock records no alert history, so the list is always empty.
+	histories, err := op.ListHistories(ctx, mssdk.AlertsProjectsHistoriesListParams{ProjectID: id})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(histories) != 0 {
+		t.Fatalf("expected no histories, got %d", len(histories))
 	}
 
 	if err := op.Delete(ctx, id); err != nil {
@@ -127,6 +160,33 @@ func TestDashboardProjectLifecycle(t *testing.T) {
 	if _, err := op.Read(ctx, id); err != nil {
 		t.Fatal(err)
 	}
+
+	projects, err := op.List(ctx, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(projects) != 1 || optStr(projects[0].GetName()) != "dash" {
+		t.Fatalf("unexpected list: %+v", projects)
+	}
+
+	updated, err := op.Update(ctx, id, mssdk.DashboardProjectUpdateParams{Name: new("renamed")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(updated.GetName()) != "renamed" {
+		t.Fatalf("update failed: %s", optStr(updated.GetName()))
+	}
+	put, err := client.UpdateDashboardProject(ctx, v1.NewOptDashboardProjectRequest(v1.DashboardProjectRequest{
+		Name:        v1.NewOptString("replaced"),
+		Description: v1.NewOptString("replaced desc"),
+	}), v1.UpdateDashboardProjectParams{ResourceId: mustInt64(t, id)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(put.GetName()) != "replaced" || optStr(put.GetDescription()) != "replaced desc" {
+		t.Fatalf("put failed: %+v", put)
+	}
+
 	if err := op.Delete(ctx, id); err != nil {
 		t.Fatal(err)
 	}
@@ -148,6 +208,48 @@ func TestMetricsStorageLifecycleAndKeys(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	storages, err := op.List(ctx, mssdk.MetricsStorageListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(storages) != 1 || optStr(storages[0].GetName()) != "metrics" {
+		t.Fatalf("unexpected list: %+v", storages)
+	}
+
+	updated, err := op.Update(ctx, id, mssdk.MetricsStorageUpdateParams{Name: new("renamed")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(updated.GetName()) != "renamed" {
+		t.Fatalf("update failed: %s", optStr(updated.GetName()))
+	}
+	put, err := client.UpdateMetricStorage(ctx, v1.NewOptMetricsStorageRequest(v1.MetricsStorageRequest{
+		Name:        v1.NewOptString("replaced"),
+		Description: v1.NewOptString("replaced desc"),
+	}), v1.UpdateMetricStorageParams{ResourceId: mustInt64(t, id)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(put.GetName()) != "replaced" || optStr(put.GetDescription()) != "replaced desc" {
+		t.Fatalf("put failed: %+v", put)
+	}
+
+	// The mock holds no telemetry, so usage stats are always empty.
+	daily, err := op.ReadDailyStats(ctx, id, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(daily) != 0 {
+		t.Fatalf("expected no daily usage, got %d", len(daily))
+	}
+	monthly, err := op.ReadMonthlyStats(ctx, id, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(monthly) != 0 {
+		t.Fatalf("expected no monthly usage, got %d", len(monthly))
+	}
+
 	key, err := op.CreateKey(ctx, id, new("my key"))
 	if err != nil {
 		t.Fatal(err)
@@ -165,6 +267,22 @@ func TestMetricsStorageLifecycleAndKeys(t *testing.T) {
 	}
 	if read.GetUID() != key.GetUID() {
 		t.Fatal("key uid mismatch")
+	}
+	putKey, err := op.UpdateKey(ctx, id, key.GetUID(), new("put key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(putKey.GetDescription()) != "put key" {
+		t.Fatalf("key put failed: %s", optStr(putKey.GetDescription()))
+	}
+	patchedKey, err := client.PatchMetricStorageKey(ctx, v1.NewOptPatchedMetricsStorageAccessKeyRequest(v1.PatchedMetricsStorageAccessKeyRequest{
+		Description: v1.NewOptString("patched key"),
+	}), v1.PatchMetricStorageKeyParams{MetricsResourceId: mustInt64(t, id), UID: key.GetUID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(patchedKey.GetDescription()) != "patched key" {
+		t.Fatalf("key patch failed: %s", optStr(patchedKey.GetDescription()))
 	}
 	if err := op.DeleteKey(ctx, id, key.GetUID()); err != nil {
 		t.Fatal(err)
@@ -199,13 +317,74 @@ func TestLogStorageLifecycle(t *testing.T) {
 		t.Fatalf("expire day not applied: %d", expired.GetExpireDay())
 	}
 
-	if _, err := op.ReadDailyStats(ctx, id, nil, nil); err != nil {
+	storages, err := op.List(ctx, mssdk.LogsStoragesListParams{})
+	if err != nil {
 		t.Fatal(err)
+	}
+	if len(storages) != 1 || optStr(storages[0].GetName()) != "logs" {
+		t.Fatalf("unexpected list: %+v", storages)
+	}
+
+	updated, err := op.Update(ctx, id, mssdk.LogStorageUpdateParams{Name: new("renamed")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(updated.GetName()) != "renamed" {
+		t.Fatalf("update failed: %s", optStr(updated.GetName()))
+	}
+	put, err := client.UpdateLogStorage(ctx, v1.NewOptLogStorageRequest(v1.LogStorageRequest{
+		Name:        v1.NewOptString("replaced"),
+		Description: v1.NewOptString("replaced desc"),
+	}), v1.UpdateLogStorageParams{ResourceId: mustInt64(t, id)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(put.GetName()) != "replaced" || optStr(put.GetDescription()) != "replaced desc" {
+		t.Fatalf("put failed: %+v", put)
+	}
+
+	// The mock holds no telemetry, so usage stats are always empty.
+	daily, err := op.ReadDailyStats(ctx, id, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(daily) != 0 {
+		t.Fatalf("expected no daily usage, got %d", len(daily))
+	}
+	monthly, err := op.ReadMonthlyStats(ctx, id, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(monthly) != 0 {
+		t.Fatalf("expected no monthly usage, got %d", len(monthly))
 	}
 
 	key, err := op.CreateKey(ctx, id, nil)
 	if err != nil {
 		t.Fatal(err)
+	}
+	keys, err := op.ListKeys(ctx, id, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(keys) != 1 || keys[0].GetUID() != key.GetUID() {
+		t.Fatalf("unexpected key list: %+v", keys)
+	}
+	putKey, err := op.UpdateKey(ctx, id, key.GetUID(), new("put key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(putKey.GetDescription()) != "put key" {
+		t.Fatalf("key put failed: %s", optStr(putKey.GetDescription()))
+	}
+	patchedKey, err := client.PatchLogStorageKey(ctx, v1.NewOptPatchedLogStorageAccessKeyRequest(v1.PatchedLogStorageAccessKeyRequest{
+		Description: v1.NewOptString("patched key"),
+	}), v1.PatchLogStorageKeyParams{LogResourceId: mustInt64(t, id), UID: key.GetUID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(patchedKey.GetDescription()) != "patched key" {
+		t.Fatalf("key patch failed: %s", optStr(patchedKey.GetDescription()))
 	}
 	if err := op.DeleteKey(ctx, id, key.GetUID()); err != nil {
 		t.Fatal(err)
@@ -241,9 +420,75 @@ func TestTraceStorageLifecycle(t *testing.T) {
 	if expired.GetRetentionPeriodDays() != 14 {
 		t.Fatalf("retention not applied: %d", expired.GetRetentionPeriodDays())
 	}
+
+	storages, err := op.List(ctx, mssdk.TracesStorageListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(storages) != 1 || optStr(storages[0].GetName()) != "traces" {
+		t.Fatalf("unexpected list: %+v", storages)
+	}
+
+	updated, err := op.Update(ctx, id, mssdk.TracesStorageUpdateParams{Name: new("renamed")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(updated.GetName()) != "renamed" {
+		t.Fatalf("update failed: %s", optStr(updated.GetName()))
+	}
+	put, err := client.UpdateTraceStorage(ctx, v1.NewOptTraceStorageRequest(v1.TraceStorageRequest{
+		Name:        v1.NewOptString("replaced"),
+		Description: v1.NewOptString("replaced desc"),
+	}), v1.UpdateTraceStorageParams{ResourceId: created.GetResourceID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(put.GetName()) != "replaced" || optStr(put.GetDescription()) != "replaced desc" {
+		t.Fatalf("put failed: %+v", put)
+	}
+
+	// The mock holds no telemetry, so usage stats are always empty.
+	daily, err := op.ReadDailyStats(ctx, id, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(daily) != 0 {
+		t.Fatalf("expected no daily usage, got %d", len(daily))
+	}
+	monthly, err := op.ReadMonthlyStats(ctx, id, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(monthly) != 0 {
+		t.Fatalf("expected no monthly usage, got %d", len(monthly))
+	}
+
 	key, err := op.CreateKey(ctx, id, nil)
 	if err != nil {
 		t.Fatal(err)
+	}
+	keys, err := op.ListKeys(ctx, id, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(keys) != 1 || keys[0].GetUID() != key.GetUID() {
+		t.Fatalf("unexpected key list: %+v", keys)
+	}
+	putKey, err := op.UpdateKey(ctx, id, key.GetUID(), new("put key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(putKey.GetDescription()) != "put key" {
+		t.Fatalf("key put failed: %s", optStr(putKey.GetDescription()))
+	}
+	patchedKey, err := client.PatchTraceStorageKey(ctx, v1.NewOptPatchedTraceStorageAccessKeyRequest(v1.PatchedTraceStorageAccessKeyRequest{
+		Description: v1.NewOptString("patched key"),
+	}), v1.PatchTraceStorageKeyParams{TraceResourceId: created.GetResourceID(), UID: key.GetUID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(patchedKey.GetDescription()) != "patched key" {
+		t.Fatalf("key patch failed: %s", optStr(patchedKey.GetDescription()))
 	}
 	if err := op.DeleteKey(ctx, id, key.GetUID()); err != nil {
 		t.Fatal(err)
@@ -356,6 +601,29 @@ func TestLogRoutingLifecycle(t *testing.T) {
 		t.Fatalf("expected 1 routing, got %d", len(routings))
 	}
 
+	other, err := storageOp.Create(ctx, mssdk.LogStorageCreateParams{Name: "other-logs", IsSystem: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched, err := op.Update(ctx, uid, mssdk.LogsRoutingUpdateParams{LogStorageID: new(fmt.Sprintf("%d", other.GetID()))})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := patched.GetLogStorage(); got.GetID() != other.GetID() {
+		t.Fatalf("patch did not move the routing: storage %d", got.GetID())
+	}
+	put, err := client.UpdateLogRouting(ctx, &v1.LogRoutingRequest{
+		PublisherCode: code,
+		Variant:       variant,
+		LogStorageID:  v1.NewNilInt64(storage.GetID()),
+	}, v1.UpdateLogRoutingParams{UID: uid})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := put.GetLogStorage(); got.GetID() != storage.GetID() {
+		t.Fatalf("put did not move the routing back: storage %d", got.GetID())
+	}
+
 	if err := op.Delete(ctx, uid); err != nil {
 		t.Fatal(err)
 	}
@@ -396,7 +664,40 @@ func TestMetricsRoutingLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := op.Delete(ctx, created.GetUID()); err != nil {
+	uid := created.GetUID()
+
+	routings, err := op.List(ctx, mssdk.MetricsRoutingsListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(routings) != 1 || routings[0].GetUID() != uid {
+		t.Fatalf("unexpected list: %+v", routings)
+	}
+
+	other, err := storageOp.Create(ctx, mssdk.MetricsStorageCreateParams{Name: "other-metrics"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched, err := op.Update(ctx, uid, mssdk.MetricsRoutingUpdateParams{MetricsStorageID: new(fmt.Sprintf("%d", other.GetID()))})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := patched.GetMetricsStorage(); got.GetID() != other.GetID() {
+		t.Fatalf("patch did not move the routing: storage %d", got.GetID())
+	}
+	put, err := client.UpdateMetricRouting(ctx, &v1.MetricsRoutingRequest{
+		PublisherCode:    code,
+		Variant:          variant,
+		MetricsStorageID: v1.NewNilInt64(storage.GetID()),
+	}, v1.UpdateMetricRoutingParams{UID: uid})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := put.GetMetricsStorage(); got.GetID() != storage.GetID() {
+		t.Fatalf("put did not move the routing back: storage %d", got.GetID())
+	}
+
+	if err := op.Delete(ctx, uid); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -423,6 +724,33 @@ func TestNotificationTargetAndRouting(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	targets, err := targetOp.List(ctx, pid, mssdk.NotificationTargetsListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(targets) != 1 || targets[0].GetUID() != target.GetUID() {
+		t.Fatalf("unexpected target list: %+v", targets)
+	}
+	patchedTarget, err := targetOp.Update(ctx, pid, target.GetUID(), mssdk.NotificationTargetUpdateParams{Description: new("patched")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(patchedTarget.GetDescription()) != "patched" {
+		t.Fatalf("target patch failed: %s", optStr(patchedTarget.GetDescription()))
+	}
+	putTarget, err := client.UpdateAlertProjectNotificationTarget(ctx, &v1.NotificationTargetRequest{
+		ServiceType: v1.NotificationTargetRequestServiceTypeSAKURAEVENTBUS,
+		URL:         v1.NewOptString("https://example.com/eventbus"),
+		Description: v1.NewOptString("replaced"),
+	}, v1.UpdateAlertProjectNotificationTargetParams{ProjectResourceId: mustInt64(t, pid), UID: target.GetUID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if putTarget.GetServiceType() != v1.NotificationTargetServiceTypeSAKURAEVENTBUS ||
+		optStr(putTarget.GetURL()) != "https://example.com/eventbus" || optStr(putTarget.GetDescription()) != "replaced" {
+		t.Fatalf("target put failed: %+v", putTarget)
+	}
+
 	routingOp := mssdk.NewNotificationRoutingOp(client)
 	routing, err := routingOp.Create(ctx, pid, mssdk.NotificationRoutingCreateParams{
 		NotificationTargetUID: target.GetUID(),
@@ -444,6 +772,58 @@ func TestNotificationTargetAndRouting(t *testing.T) {
 		t.Fatalf("expected 1 routing, got %d", len(routings))
 	}
 
+	patchedRouting, err := routingOp.Update(ctx, pid, routing.GetUID(), mssdk.NotificationRoutingUpdateParams{
+		MatchLabels: []v1.MatchLabelsItem{{Name: "severity", Value: "warning"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if labels := patchedRouting.GetMatchLabels(); len(labels) != 1 || labels[0].Value != "warning" {
+		t.Fatalf("routing patch failed: %+v", labels)
+	}
+	putRouting, err := client.UpdateAlertProjectNotificationRouting(ctx, &v1.NotificationRoutingRequest{
+		NotificationTargetUID: target.GetUID(),
+		MatchLabels:           []v1.MatchLabelsItemRequest{{Name: "team", Value: "infra"}},
+		ResendIntervalMinutes: v1.NewOptInt(30),
+	}, v1.UpdateAlertProjectNotificationRoutingParams{ProjectResourceId: mustInt64(t, pid), UID: routing.GetUID()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if labels := putRouting.GetMatchLabels(); len(labels) != 1 || labels[0].Name != "team" || labels[0].Value != "infra" {
+		t.Fatalf("routing put failed: %+v", labels)
+	}
+	if got, _ := putRouting.GetResendIntervalMinutes().Get(); got != 30 {
+		t.Fatalf("routing put did not set resend_interval_minutes: %d", got)
+	}
+
+	second, err := routingOp.Create(ctx, pid, mssdk.NotificationRoutingCreateParams{
+		NotificationTargetUID: target.GetUID(),
+		MatchLabels:           []v1.MatchLabelsItem{{Name: "severity", Value: "info"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := routingOp.Reorder(ctx, pid, []v1.NotificationRoutingOrderRequest{
+		{NotificationRoutingUID: routing.GetUID(), Order: second.GetOrder()},
+		{NotificationRoutingUID: second.GetUID(), Order: routing.GetOrder()},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	routings, err = routingOp.List(ctx, pid, mssdk.NotificationRoutingsListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	orders := map[string]int{}
+	for _, rt := range routings {
+		orders[rt.GetUID().String()] = rt.GetOrder()
+	}
+	if orders[routing.GetUID().String()] != second.GetOrder() || orders[second.GetUID().String()] != routing.GetOrder() {
+		t.Fatalf("reorder not applied: %+v", orders)
+	}
+
+	if err := routingOp.Delete(ctx, pid, second.GetUID()); err != nil {
+		t.Fatal(err)
+	}
 	if err := routingOp.Delete(ctx, pid, routing.GetUID()); err != nil {
 		t.Fatal(err)
 	}
@@ -492,6 +872,14 @@ func TestAlertRuleLifecycle(t *testing.T) {
 	if len(rules) != 1 {
 		t.Fatalf("expected 1 rule, got %d", len(rules))
 	}
+	// The mock records no alert history, so the list is always empty.
+	histories, err := op.ListHistories(ctx, pid, uid, mssdk.AlertRuleListHistoriesParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(histories) != 0 {
+		t.Fatalf("expected no histories, got %d", len(histories))
+	}
 	if err := op.Delete(ctx, pid, uid); err != nil {
 		t.Fatal(err)
 	}
@@ -533,7 +921,49 @@ func TestLogMeasureRuleLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := op.Delete(ctx, pid, created.GetUID()); err != nil {
+	uid := created.GetUID()
+
+	rules, err := op.List(ctx, pid, mssdk.LogMeasureRulesListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rules) != 1 || rules[0].GetUID() != uid {
+		t.Fatalf("unexpected list: %+v", rules)
+	}
+
+	patched, err := op.Update(ctx, pid, uid, mssdk.LogMeasureRuleUpdateParams{Name: new("renamed")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(patched.GetName()) != "renamed" {
+		t.Fatalf("patch failed: %s", optStr(patched.GetName()))
+	}
+
+	otherMetrics, err := metricsOp.Create(ctx, mssdk.MetricsStorageCreateParams{Name: "other-metrics"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	put, err := client.UpdateAlertProjectLogMeasureRule(ctx, &v1.LogMeasureRuleRequest{
+		Name:             v1.NewOptString("replaced"),
+		Description:      v1.NewOptString("replaced desc"),
+		LogStorageID:     logStorage.GetResourceID(),
+		MetricsStorageID: otherMetrics.GetResourceID(),
+		Rule: v1.LogMeasureRuleModelRequest{
+			Version: v1.LogMeasureRuleVersionEnumV1,
+			Query:   v1.LogMeasureRuleV1{Matchers: []v1.FieldMatcher{}},
+		},
+	}, v1.UpdateAlertProjectLogMeasureRuleParams{ProjectResourceId: mustInt64(t, pid), UID: uid})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if optStr(put.GetName()) != "replaced" || optStr(put.GetDescription()) != "replaced desc" {
+		t.Fatalf("put failed: %+v", put)
+	}
+	if got := put.GetMetricsStorage(); got.GetID() != otherMetrics.GetID() {
+		t.Fatalf("put did not move the rule: metrics storage %d", got.GetID())
+	}
+
+	if err := op.Delete(ctx, pid, uid); err != nil {
 		t.Fatal(err)
 	}
 }

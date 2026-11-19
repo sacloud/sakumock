@@ -325,6 +325,41 @@ func TestAutoScalingGroupLifecycle(t *testing.T) {
 	}
 }
 
+// TestApplicationListAndContainers runs without the data plane, where the
+// containers of an active version are reported per worker node but not
+// started.
+func TestApplicationListAndContainers(t *testing.T) {
+	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	client := newTestClient(t, srv.TestURL())
+
+	clusterID := createTestCluster(t, ctx, client)
+	createTestASG(t, ctx, client, clusterID, "test-asg")
+	appResp, err := client.CreateApplication(ctx, &v1.CreateApplicationRequest{Name: "test-app", ClusterID: clusterID})
+	if err != nil {
+		t.Fatalf("CreateApplication: %v", err)
+	}
+	appID := appResp.Application.GetApplicationID()
+
+	apps, err := client.ListApplications(ctx, v1.ListApplicationsParams{})
+	if err != nil {
+		t.Fatalf("ListApplications: %v", err)
+	}
+	if len(apps.Applications) != 1 || apps.Applications[0].ApplicationID != appID {
+		t.Fatalf("applications = %+v, want only %s", apps.Applications, appID)
+	}
+
+	activateVersion(t, ctx, client, appID, createNginxVersion(t, ctx, client, appID))
+	placements, err := client.ListApplicationContainers(ctx, v1.ListApplicationContainersParams{ApplicationID: appID})
+	if err != nil {
+		t.Fatalf("ListApplicationContainers: %v", err)
+	}
+	if len(placements.Nodes) != 2 {
+		t.Fatalf("got placements on %d worker nodes, want 2", len(placements.Nodes))
+	}
+}
+
 func TestServiceClasses(t *testing.T) {
 	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
 	defer closeAndCheck(t, srv)

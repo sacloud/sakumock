@@ -1,6 +1,7 @@
 package workflows_test
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -395,5 +396,63 @@ func TestSubscription(t *testing.T) {
 
 	if err := subscriptionOp.Delete(ctx); err != nil {
 		t.Fatalf("delete subscription: %v", err)
+	}
+}
+
+func TestWorkflowSuggest(t *testing.T) {
+	srv := workflows.NewTestServer(workflows.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	workflowOp := wf.NewWorkflowOp(newClient(t, srv.TestURL()))
+
+	for _, name := range []string{"probe-b", "probe-a", "probe-b", "other"} {
+		if _, err := workflowOp.Create(ctx, v1.CreateWorkflowReq{
+			Name:    name,
+			Runbook: testRunbook,
+			Publish: true,
+			Logging: true,
+		}); err != nil {
+			t.Fatalf("create %s: %v", name, err)
+		}
+	}
+
+	tests := []struct {
+		name   string
+		params v1.ListSuggestionsParams
+		want   []v1.ListSuggestionsOKSuggestsItem
+	}{
+		{
+			name:   "names with their counts, by name",
+			params: v1.ListSuggestionsParams{Name: "probe"},
+			want:   []v1.ListSuggestionsOKSuggestsItem{{Name: "probe-a", Count: 1}, {Name: "probe-b", Count: 2}},
+		},
+		{
+			name: "by count descending",
+			params: v1.ListSuggestionsParams{
+				Name:   "probe",
+				SortBy: v1.NewOptListSuggestionsSortBy(v1.ListSuggestionsSortByCount),
+				Order:  v1.NewOptListSuggestionsOrder(v1.ListSuggestionsOrderDesc),
+			},
+			want: []v1.ListSuggestionsOKSuggestsItem{{Name: "probe-b", Count: 2}, {Name: "probe-a", Count: 1}},
+		},
+		{
+			name:   "no match",
+			params: v1.ListSuggestionsParams{Name: "nothing"},
+			want:   []v1.ListSuggestionsOKSuggestsItem{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := workflowOp.ListSuggest(ctx, tt.params)
+			if err != nil {
+				t.Fatalf("list suggest: %v", err)
+			}
+			if !slices.Equal(got.Suggests, tt.want) {
+				t.Errorf("Suggests = %+v, want %+v", got.Suggests, tt.want)
+			}
+			if got.Total != len(tt.want) || got.Count != len(tt.want) {
+				t.Errorf("Total = %d, Count = %d, want %d", got.Total, got.Count, len(tt.want))
+			}
+		})
 	}
 }

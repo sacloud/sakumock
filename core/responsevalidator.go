@@ -156,13 +156,17 @@ func (rv *ResponseValidator) Middleware(method, path string, next http.HandlerFu
 	if rv == nil {
 		return next
 	}
-	statuses, ok := rv.schemas[method+" "+path]
+	key := method + " " + path
+	statuses, ok := rv.schemas[key]
 	if !ok {
 		return next
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		capture := &responseCapture{ResponseWriter: w, status: http.StatusOK}
 		next(capture, r)
+		if capture.status < 400 {
+			markRouteAnswered(rv.schemas, key)
+		}
 		schema, declared := statuses[capture.status]
 		switch {
 		case !declared:

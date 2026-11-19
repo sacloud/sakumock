@@ -212,6 +212,14 @@ func TestServiceLifecycle(t *testing.T) {
 		t.Errorf("port = %d after switching to https, want 443", updated.Port.Value)
 	}
 
+	services, err := svcOp.List(ctx)
+	if err != nil {
+		t.Fatalf("list services: %v", err)
+	}
+	if len(services) != 1 || string(services[0].Name) != "renamed_service" {
+		t.Errorf("services = %+v, want only renamed_service", services)
+	}
+
 	if err := svcOp.Delete(ctx, svc.ID.Value); err != nil {
 		t.Fatalf("delete service: %v", err)
 	}
@@ -446,8 +454,41 @@ func TestUserGroupLifecycle(t *testing.T) {
 		t.Error("empty password should be rejected")
 	}
 
+	users, err := userOp.List(ctx)
+	if err != nil {
+		t.Fatalf("list users: %v", err)
+	}
+	if len(users) != 1 || string(users[0].Name) != "test_user" {
+		t.Errorf("users = %+v, want only test_user", users)
+	}
+	if err := userOp.Update(ctx, &v1.UserDetail{
+		Name:     "renamed_user",
+		CustomID: v1.NewOptString("custom-2"),
+	}, userID); err != nil {
+		t.Fatalf("update user: %v", err)
+	}
+	detail, err = userOp.Read(ctx, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(detail.Name) != "renamed_user" || detail.CustomID.Value != "custom-2" {
+		t.Errorf("user after update = %q / %q", detail.Name, detail.CustomID.Value)
+	}
+
+	groupID := uuid.MustParse(group.ID.Value.String())
+	if err := groupOp.Update(ctx, &v1.Group{Name: v1.NewOptName("renamed_group")}, groupID); err != nil {
+		t.Fatalf("update group: %v", err)
+	}
+	gotGroup, err := groupOp.Read(ctx, groupID)
+	if err != nil {
+		t.Fatalf("read group: %v", err)
+	}
+	if string(gotGroup.Name.Value) != "renamed_group" {
+		t.Errorf("group name after update = %q", gotGroup.Name.Value)
+	}
+
 	// Group delete cascades out of user membership.
-	if err := groupOp.Delete(ctx, uuid.MustParse(group.ID.Value.String())); err != nil {
+	if err := groupOp.Delete(ctx, groupID); err != nil {
 		t.Fatalf("delete group: %v", err)
 	}
 	detail, err = userOp.Read(ctx, userID)
@@ -516,6 +557,24 @@ func TestDomainCertificateLifecycle(t *testing.T) {
 	}
 	if domain.CertificateName.Value != "test_cert" {
 		t.Errorf("certificateName = %q", domain.CertificateName.Value)
+	}
+
+	// Renaming the certificate is visible through the domain using it.
+	if err := certOp.Update(ctx, &v1.Certificate{
+		Name: v1.NewOptName("renamed_cert"),
+		Rsa: v1.NewOptCertificateDetails(v1.CertificateDetails{
+			Cert: v1.NewOptString(certPEM),
+			Key:  v1.NewOptString(keyPEM),
+		}),
+	}, cert.ID.Value); err != nil {
+		t.Fatalf("update certificate: %v", err)
+	}
+	certs, err := certOp.List(ctx)
+	if err != nil {
+		t.Fatalf("list certificates: %v", err)
+	}
+	if len(certs) != 1 || string(certs[0].Name.Value) != "renamed_cert" {
+		t.Errorf("certificates = %+v, want only renamed_cert", certs)
 	}
 
 	// A certificate referenced by a domain refuses deletion.
@@ -590,6 +649,32 @@ func TestOidcLifecycle(t *testing.T) {
 	}
 	if _, ok := res.(*v1.AddOidcBadRequest); !ok {
 		t.Errorf("empty issuer response = %T, want AddOidcBadRequest", res)
+	}
+
+	updRes, err := client.UpdateOidc(ctx, &v1.Oidc{
+		Name:                  "renamed_oidc",
+		AuthenticationMethods: v1.AuthenticationMethods{v1.AuthenticationMethodsItemAccessToken},
+		Issuer:                "https://login.example.com",
+		ClientId:              "client-id",
+		ClientSecret:          "client-secret",
+		Scopes:                []string{"openid"},
+	}, v1.UpdateOidcParams{OidcId: oidcID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := updRes.(*v1.UpdateOidcNoContent); !ok {
+		t.Fatalf("update oidc response = %T, want UpdateOidcNoContent", updRes)
+	}
+	listRes, err := client.GetOidc(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	list, ok := listRes.(*v1.GetOidcOK)
+	if !ok {
+		t.Fatalf("list oidc response = %T", listRes)
+	}
+	if oidcs := list.Apigw.Oidcs; len(oidcs) != 1 || string(oidcs[0].Name) != "renamed_oidc" || oidcs[0].Issuer != "https://login.example.com" {
+		t.Errorf("oidcs = %+v, want only the renamed one", oidcs)
 	}
 
 	// Attach to a service, then deleting the OIDC config must conflict.

@@ -256,6 +256,17 @@ func TestPermissionCRUD(t *testing.T) {
 		t.Errorf("expected empty secret on read, got %q", readKey.Secret.Value)
 	}
 
+	keys, err := op.ListAccessKeys(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(keys) != 1 || keys[0].ID.Value != key.ID.Value {
+		t.Errorf("permission keys = %+v, want only %s", keys, key.ID.Value)
+	}
+	if len(keys) == 1 && keys[0].Secret.Value != "" {
+		t.Errorf("expected empty secret on list, got %q", keys[0].Secret.Value)
+	}
+
 	// The real API allows only one access key per permission
 	// (num_keys_per_permission quota); a second create is a conflict. Checked
 	// via a raw request: the SDK's Permissions.CreateAccessKey has no case

@@ -223,6 +223,14 @@ func TestCertificateLifecycle(t *testing.T) {
 		t.Fatalf("expected name 'test-cert', got %q", getCertResp.Certificate.GetName())
 	}
 
+	certs, err := client.ListCertificates(ctx, v1.ListCertificatesParams{ClusterID: clusterID, MaxItems: 10})
+	if err != nil {
+		t.Fatalf("ListCertificates: %v", err)
+	}
+	if len(certs.Certificates) != 1 || certs.Certificates[0].CertificateID != certID {
+		t.Fatalf("certificates = %+v, want only %s", certs.Certificates, certID)
+	}
+
 	err = client.UpdateCertificate(ctx, &v1.UpdateCertificateRequest{
 		Name:           "updated-cert",
 		CertificatePem: "-----BEGIN CERTIFICATE-----\nMIIupdated\n-----END CERTIFICATE-----",
@@ -235,6 +243,120 @@ func TestCertificateLifecycle(t *testing.T) {
 	err = client.DeleteCertificate(ctx, v1.DeleteCertificateParams{ClusterID: clusterID, CertificateID: certID})
 	if err != nil {
 		t.Fatalf("DeleteCertificate: %v", err)
+	}
+}
+
+func TestAutoScalingGroupLifecycle(t *testing.T) {
+	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	client := newTestClient(t, srv.TestURL())
+
+	clusterID := createTestCluster(t, ctx, client)
+	asgID := createTestASG(t, ctx, client, clusterID, "test-asg")
+
+	asg, err := client.ReadAutoScalingGroup(ctx, v1.ReadAutoScalingGroupParams{ClusterID: clusterID, AutoScalingGroupID: asgID})
+	if err != nil {
+		t.Fatalf("ReadAutoScalingGroup: %v", err)
+	}
+	if asg.AutoScalingGroup.GetName() != "test-asg" {
+		t.Errorf("auto scaling group name = %q, want test-asg", asg.AutoScalingGroup.GetName())
+	}
+
+	// The group starts with its minimum number of worker nodes.
+	workers, err := client.ListWorkerNodes(ctx, v1.ListWorkerNodesParams{ClusterID: clusterID, AutoScalingGroupID: asgID, MaxItems: 10})
+	if err != nil {
+		t.Fatalf("ListWorkerNodes: %v", err)
+	}
+	if len(workers.WorkerNodes) != 2 {
+		t.Fatalf("got %d worker nodes, want 2", len(workers.WorkerNodes))
+	}
+	workerID := workers.WorkerNodes[0].WorkerNodeID
+	worker, err := client.ReadWorkerNode(ctx, v1.ReadWorkerNodeParams{ClusterID: clusterID, AutoScalingGroupID: asgID, WorkerNodeID: workerID})
+	if err != nil {
+		t.Fatalf("ReadWorkerNode: %v", err)
+	}
+	if worker.WorkerNode.WorkerNodeID != workerID {
+		t.Errorf("worker node id = %s, want %s", worker.WorkerNode.WorkerNodeID, workerID)
+	}
+
+	created, err := client.CreateLoadBalancer(ctx, &v1.CreateLoadBalancerRequest{
+		Name:             "test-lb",
+		ServiceClassPath: "cloud/apprun/dedicated/lb/1vcpu_2gb",
+		NameServers:      []v1.Ipv4{"210.188.224.10"},
+		Interfaces:       []v1.LoadBalancerInterface{{InterfaceIndex: 0, Upstream: "shared"}},
+	}, v1.CreateLoadBalancerParams{ClusterID: clusterID, AutoScalingGroupID: asgID})
+	if err != nil {
+		t.Fatalf("CreateLoadBalancer: %v", err)
+	}
+	lbID := created.LoadBalancer.GetLoadBalancerID()
+
+	lbs, err := client.ListLoadBalancers(ctx, v1.ListLoadBalancersParams{ClusterID: clusterID, AutoScalingGroupID: asgID, MaxItems: 10})
+	if err != nil {
+		t.Fatalf("ListLoadBalancers: %v", err)
+	}
+	if len(lbs.LoadBalancers) != 1 || lbs.LoadBalancers[0].LoadBalancerID != lbID || lbs.LoadBalancers[0].Name != "test-lb" {
+		t.Errorf("load balancers = %+v, want only test-lb (%s)", lbs.LoadBalancers, lbID)
+	}
+
+	lbNodes, err := client.ListLoadBalancerNodes(ctx, v1.ListLoadBalancerNodesParams{ClusterID: clusterID, AutoScalingGroupID: asgID, LoadBalancerID: lbID, MaxItems: 10})
+	if err != nil {
+		t.Fatalf("ListLoadBalancerNodes: %v", err)
+	}
+	if len(lbNodes.LoadBalancerNodes) == 0 {
+		t.Fatal("load balancer has no node")
+	}
+	lbNodeID := lbNodes.LoadBalancerNodes[0].LoadBalancerNodeID
+	lbNode, err := client.ReadLoadBalancerNode(ctx, v1.ReadLoadBalancerNodeParams{
+		ClusterID: clusterID, AutoScalingGroupID: asgID, LoadBalancerID: lbID, LoadBalancerNodeID: lbNodeID,
+	})
+	if err != nil {
+		t.Fatalf("ReadLoadBalancerNode: %v", err)
+	}
+	if lbNode.LoadBalancerNode.LoadBalancerNodeID != lbNodeID {
+		t.Errorf("load balancer node id = %s, want %s", lbNode.LoadBalancerNode.LoadBalancerNodeID, lbNodeID)
+	}
+
+	if err := client.DeleteLoadBalancer(ctx, v1.DeleteLoadBalancerParams{ClusterID: clusterID, AutoScalingGroupID: asgID, LoadBalancerID: lbID}); err != nil {
+		t.Fatalf("DeleteLoadBalancer: %v", err)
+	}
+	if _, err := client.ReadLoadBalancer(ctx, v1.ReadLoadBalancerParams{ClusterID: clusterID, AutoScalingGroupID: asgID, LoadBalancerID: lbID}); err == nil {
+		t.Error("expected reading a deleted load balancer to fail")
+	}
+}
+
+// TestApplicationListAndContainers runs without the data plane, where the
+// containers of an active version are reported per worker node but not
+// started.
+func TestApplicationListAndContainers(t *testing.T) {
+	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	client := newTestClient(t, srv.TestURL())
+
+	clusterID := createTestCluster(t, ctx, client)
+	createTestASG(t, ctx, client, clusterID, "test-asg")
+	appResp, err := client.CreateApplication(ctx, &v1.CreateApplicationRequest{Name: "test-app", ClusterID: clusterID})
+	if err != nil {
+		t.Fatalf("CreateApplication: %v", err)
+	}
+	appID := appResp.Application.GetApplicationID()
+
+	apps, err := client.ListApplications(ctx, v1.ListApplicationsParams{})
+	if err != nil {
+		t.Fatalf("ListApplications: %v", err)
+	}
+	if len(apps.Applications) != 1 || apps.Applications[0].ApplicationID != appID {
+		t.Fatalf("applications = %+v, want only %s", apps.Applications, appID)
+	}
+
+	activateVersion(t, ctx, client, appID, createNginxVersion(t, ctx, client, appID))
+	placements, err := client.ListApplicationContainers(ctx, v1.ListApplicationContainersParams{ApplicationID: appID})
+	if err != nil {
+		t.Fatalf("ListApplicationContainers: %v", err)
+	}
+	if len(placements.Nodes) != 2 {
+		t.Fatalf("got placements on %d worker nodes, want 2", len(placements.Nodes))
 	}
 }
 

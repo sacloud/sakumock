@@ -106,4 +106,17 @@ func TestUpdateExecutionStatusCanceledAt(t *testing.T) {
 	if got, ok := store.GetExecution(w.ID, byAPI.ExecutionID); !ok || got.CanceledAt == nil || !got.CanceledAt.Equal(apiTime) {
 		t.Errorf("API-canceled execution = %+v, want the API's CanceledAt %v", got, apiTime)
 	}
+
+	// A runner that starts or finishes after the cancellation does not undo it.
+	for _, update := range []ExecutionStatusUpdate{
+		{Status: "Running", RunAt: &later},
+		{Status: "Succeeded", Result: "42", SucceededAt: &later},
+	} {
+		if err := store.UpdateExecutionStatus(w.ID, byAPI.ExecutionID, update); err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := store.GetExecution(w.ID, byAPI.ExecutionID); got.Status != "Canceled" || got.Result == "42" || got.SucceededAt != nil {
+			t.Errorf("after a late %s update = %+v, want it still Canceled", update.Status, got)
+		}
+	}
 }

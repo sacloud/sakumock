@@ -398,13 +398,18 @@ func (s *MemoryStore) ListExecutions(workflowID string) []*ExecutionRecord {
 	return result
 }
 
-// UpdateExecutionStatus records the execution's progress or outcome.
+// UpdateExecutionStatus records the execution's progress or outcome. A
+// canceled execution stays canceled: its runner may still report that it
+// started or finished after the cancellation was recorded.
 func (s *MemoryStore) UpdateExecutionStatus(workflowID, executionID string, update ExecutionStatusUpdate) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	for _, e := range s.executions[workflowID] {
 		if e.ExecutionID == executionID {
+			if e.Status == "Canceled" && update.Status != "Canceled" {
+				return nil
+			}
 			if update.Status != "" {
 				e.Status = update.Status
 			}

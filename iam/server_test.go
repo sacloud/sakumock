@@ -18,8 +18,10 @@ package iam_test
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	iamsdk "github.com/sacloud/sacloud-sdk-go/api/iam"
 	"github.com/sacloud/sacloud-sdk-go/api/iam/apis/auth"
@@ -197,6 +199,14 @@ func TestGroupLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
+	groups, err := groupOp.List(ctx, group.ListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(groups.Items, func(g v1.Group) bool { return g.ID == groupID && g.Name == "updated-group" }) {
+		t.Fatalf("updated group %d not in list: %+v", groupID, groups.Items)
+	}
+
 	members, err := groupOp.ReadMemberships(ctx, groupID)
 	if err != nil {
 		t.Fatal(err)
@@ -260,6 +270,29 @@ func TestProjectLifecycle(t *testing.T) {
 		t.Fatalf("unexpected update: %+v", updated)
 	}
 
+	projects, err := projectOp.List(ctx, project.ListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(projects.Items, func(p v1.Project) bool { return p.ID == projectID && p.Name == "updated-project" }) {
+		t.Fatalf("updated project %d not in list: %+v", projectID, projects.Items)
+	}
+
+	parent, err := folder.NewFolderOp(client).Create(ctx, folder.CreateParams{Name: "project-parent"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := projectOp.Move(ctx, []int{projectID}, &parent.ID); err != nil {
+		t.Fatal(err)
+	}
+	moved, err := projectOp.Read(ctx, projectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if moved.ParentFolderID.Value != parent.ID {
+		t.Fatalf("parent folder after move = %+v, want %d", moved.ParentFolderID, parent.ID)
+	}
+
 	if err := projectOp.Delete(ctx, projectID); err != nil {
 		t.Fatal(err)
 	}
@@ -297,6 +330,29 @@ func TestFolderLifecycle(t *testing.T) {
 	}
 	if updated.Name != "updated-folder" {
 		t.Fatalf("unexpected update: %+v", updated)
+	}
+
+	folders, err := folderOp.List(ctx, folder.ListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(folders.Items, func(f v1.Folder) bool { return f.ID == folderID && f.Name == "updated-folder" }) {
+		t.Fatalf("updated folder %d not in list: %+v", folderID, folders.Items)
+	}
+
+	parent, err := folderOp.Create(ctx, folder.CreateParams{Name: "parent-folder"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := folderOp.Move(ctx, []int{folderID}, &parent.ID); err != nil {
+		t.Fatal(err)
+	}
+	moved, err := folderOp.Read(ctx, folderID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if moved.ParentID.Value != parent.ID {
+		t.Fatalf("parent after move = %+v, want %d", moved.ParentID, parent.ID)
 	}
 
 	if err := folderOp.Delete(ctx, folderID); err != nil {
@@ -349,6 +405,23 @@ func TestServicePrincipalLifecycle(t *testing.T) {
 	}
 	if updated.Name != "updated-sp" {
 		t.Fatalf("unexpected update: %+v", updated)
+	}
+
+	sps, err := spOp.List(ctx, serviceprincipal.ListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(sps.Items, func(sp v1.ServicePrincipal) bool { return sp.ID == spID && sp.Name == "updated-sp" }) {
+		t.Fatalf("updated service principal %d not in list: %+v", spID, sps.Items)
+	}
+
+	// The mock issues a token for any assertion; it does not verify the JWT.
+	token, err := spOp.IssueToken(ctx, "header.payload.signature")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if token.AccessToken == "" || !token.TokenExpiredAt.After(time.Now()) {
+		t.Fatalf("unexpected token: %+v", token)
 	}
 
 	key, err := spOp.UploadKey(ctx, spID, "ssh-rsa AAAAB3NzaC1yc2EAAA...")
@@ -445,6 +518,14 @@ func TestProjectAPIKeyLifecycle(t *testing.T) {
 	}
 	if updated.Name != "updated-key" {
 		t.Fatalf("unexpected update: %+v", updated)
+	}
+
+	apiKeys, err := apiKeyOp.List(ctx, projectapikey.ListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(apiKeys.Items, func(k v1.ProjectApiKey) bool { return k.ID == keyID && k.Name == "updated-key" }) {
+		t.Fatalf("updated API key %d not in list: %+v", keyID, apiKeys.Items)
 	}
 
 	if err := apiKeyOp.Delete(ctx, keyID); err != nil {
@@ -695,6 +776,28 @@ func TestSSOProfileLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read: %+v", read)
 	}
 
+	updated, err := ssoOp.Update(ctx, ssoID, sso.UpdateParams{
+		Name:           "updated-sso",
+		Description:    "updated SSO profile",
+		IdpEntityID:    "https://idp.example.com/entity",
+		IdpLoginURL:    "https://idp.example.com/login2",
+		IdpLogoutURL:   "https://idp.example.com/logout",
+		IdpCertificate: "MIICpDCCAYwCCQD...",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Name != "updated-sso" || updated.IdpLoginURL != "https://idp.example.com/login2" {
+		t.Fatalf("unexpected update: %+v", updated)
+	}
+	profiles, err := ssoOp.List(ctx, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(profiles.Items, func(p v1.SSOProfile) bool { return p.ID == ssoID && p.Name == "updated-sso" }) {
+		t.Fatalf("updated SSO profile %d not in list: %+v", ssoID, profiles.Items)
+	}
+
 	linked, err := ssoOp.Link(ctx, ssoID)
 	if err != nil {
 		t.Fatal(err)
@@ -746,6 +849,14 @@ func TestScimLifecycle(t *testing.T) {
 	}
 	if updated.Name != "updated-scim" {
 		t.Fatalf("unexpected update: %+v", updated)
+	}
+
+	configs, err := scimOp.List(ctx, scim.ListParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(configs.Items, func(c v1.ScimConfigurationBase) bool { return c.ID == created.ID && c.Name == "updated-scim" }) {
+		t.Fatalf("updated SCIM configuration %s not in list: %+v", scimID, configs.Items)
 	}
 
 	tokenResp, err := scimOp.RegenerateToken(ctx, scimID)

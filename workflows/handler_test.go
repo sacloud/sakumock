@@ -456,3 +456,58 @@ func TestWorkflowSuggest(t *testing.T) {
 		})
 	}
 }
+
+func TestExecutionCancel(t *testing.T) {
+	runbookYAML := `
+meta:
+  description: cancel test
+steps:
+  wait:
+    call: sys.sleep
+    args:
+      seconds: 60
+  done:
+    return: ok
+`
+	srv := workflows.NewTestServer(workflows.Config{EnableDataPlane: true})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	client := newClient(t, srv.TestURL())
+	workflowOp := wf.NewWorkflowOp(client)
+	executionOp := wf.NewExecutionOp(client)
+
+	created, err := workflowOp.Create(ctx, v1.CreateWorkflowReq{
+		Name:    "cancel-test",
+		Runbook: runbookYAML,
+		Publish: true,
+		Logging: true,
+	})
+	if err != nil {
+		t.Fatalf("create workflow: %v", err)
+	}
+
+	exec, err := executionOp.Create(ctx, created.ID, v1.OptCreateExecutionReq{})
+	if err != nil {
+		t.Fatalf("create execution: %v", err)
+	}
+
+	canceled, err := executionOp.Cancel(ctx, created.ID, exec.ExecutionId)
+	if err != nil {
+		t.Fatalf("cancel execution: %v", err)
+	}
+	if canceled.Status != v1.CancelExecutionOKExecutionStatusCanceled {
+		t.Errorf("status = %q, want Canceled", canceled.Status)
+	}
+
+	got, err := executionOp.Read(ctx, created.ID, exec.ExecutionId)
+	if err != nil {
+		t.Fatalf("read execution: %v", err)
+	}
+	if got.Status != v1.ReadExecutionOKExecutionStatusCanceled {
+		t.Errorf("status after cancel = %q, want Canceled", got.Status)
+	}
+
+	if _, err := executionOp.Cancel(ctx, created.ID, exec.ExecutionId); err == nil {
+		t.Error("expected canceling a canceled execution to fail")
+	}
+}

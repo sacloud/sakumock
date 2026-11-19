@@ -715,10 +715,9 @@ func (s *Server) handleCancelExecution(w http.ResponseWriter, r *http.Request) {
 	workflowID := r.PathValue("id")
 	executionID := r.PathValue("executionId")
 
-	if s.dataPlaneEnabled() {
-		s.executor.cancel(executionID)
-	}
-
+	// Record the cancellation before stopping the runner: the runner records
+	// Canceled too once it stops, and seeing that first would turn this
+	// request into a conflict.
 	exec, err := s.store.CancelExecution(workflowID, executionID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -727,6 +726,9 @@ func (s *Server) handleCancelExecution(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusConflict, err.Error())
 		}
 		return
+	}
+	if s.dataPlaneEnabled() {
+		s.executor.cancel(executionID)
 	}
 	core.WriteJSON(w, http.StatusOK, map[string]any{
 		"is_ok":     true,

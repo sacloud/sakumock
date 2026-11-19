@@ -1,8 +1,10 @@
 package workflows
 
 import (
+	"cmp"
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -169,8 +171,8 @@ type getSubscriptionResponse struct {
 }
 
 type suggestItemJSON struct {
-	Id   string `json:"Id"`
-	Name string `json:"Name"`
+	Name  string `json:"Name"`
+	Count int    `json:"Count"`
 }
 
 func (s *Server) buildMux() *http.ServeMux {
@@ -403,16 +405,34 @@ func (s *Server) handleListWorkflowSuggest(w http.ResponseWriter, r *http.Reques
 	workflows := s.store.ListWorkflows()
 	nameFilter := r.URL.Query().Get("Name")
 
-	suggests := make([]suggestItemJSON, 0)
+	// A suggestion is a distinct workflow name with the number of workflows
+	// carrying it.
+	counts := make(map[string]int)
 	for _, wf := range workflows {
 		if nameFilter != "" && !strings.Contains(wf.Name, nameFilter) {
 			continue
 		}
-		suggests = append(suggests, suggestItemJSON{
-			Id:   wf.ID,
-			Name: wf.Name,
-		})
+		counts[wf.Name]++
 	}
+	suggests := make([]suggestItemJSON, 0, len(counts))
+	for name, count := range counts {
+		suggests = append(suggests, suggestItemJSON{Name: name, Count: count})
+	}
+	byCount := r.URL.Query().Get("SortBy") == "count"
+	desc := r.URL.Query().Get("Order") == "desc"
+	slices.SortFunc(suggests, func(a, b suggestItemJSON) int {
+		c := 0
+		if byCount {
+			c = cmp.Compare(a.Count, b.Count)
+		}
+		if c == 0 {
+			c = cmp.Compare(a.Name, b.Name)
+		}
+		if desc {
+			c = -c
+		}
+		return c
+	})
 
 	paged, from := applyPaging(suggests, parsePaging(r))
 	core.WriteJSON(w, http.StatusOK, map[string]any{

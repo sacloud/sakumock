@@ -19,12 +19,15 @@ func TestValidateCreateCluster(t *testing.T) {
 		t.Fatalf("expected valid, got %q", msg)
 	}
 
+	if msg := validateCreateCluster(&createClusterReq{Name: "no-ports", ServicePrincipalID: "123456789012", Ports: []clusterPortJSON{}}); msg != "" {
+		t.Fatalf("expected a cluster without ports to be valid, got %q", msg)
+	}
+
 	tests := []struct {
 		name   string
 		modify func(r *createClusterReq)
 		want   string
 	}{
-		{"no ports", func(r *createClusterReq) { r.Ports = nil }, "at least one port"},
 		{"reserved port", func(r *createClusterReq) {
 			r.Ports = []clusterPortJSON{{Port: 5955, Protocol: "tcp"}}
 		}, "reserved"},

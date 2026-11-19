@@ -37,10 +37,9 @@ func validateUpdateCluster(req *updateClusterReq) string {
 	return validateClusterPorts(req.Ports)
 }
 
+// validateClusterPorts accepts an empty list: the spec sets no minimum, and
+// the real API creates a cluster listening on no port.
 func validateClusterPorts(ports []clusterPortJSON) string {
-	if len(ports) == 0 {
-		return "at least one port is required"
-	}
 	for _, p := range ports {
 		if p.Port >= 5950 && p.Port <= 5959 {
 			return fmt.Sprintf("port %d is reserved (5950-5959)", p.Port)

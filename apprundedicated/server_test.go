@@ -432,6 +432,39 @@ func TestUpdateClusterPorts(t *testing.T) {
 	if !strings.Contains(err.Error(), "400") {
 		t.Fatalf("reserved port: expected 400, got %v", err)
 	}
+
+	// An empty list, unlike an omitted one, removes every port.
+	if err := update([]v1.ClusterLoadBalancerPort{}); err != nil {
+		t.Fatalf("update with no ports: %v", err)
+	}
+	if got := ports(); len(got) != 0 {
+		t.Fatalf("an empty ports list should remove them, got %+v", got)
+	}
+}
+
+// TestCreateClusterWithoutPorts covers a cluster listening on no port, which
+// the real API accepts (#267).
+func TestCreateClusterWithoutPorts(t *testing.T) {
+	srv := apprundedicated.NewTestServer(apprundedicated.Config{})
+	defer closeAndCheck(t, srv)
+	ctx := t.Context()
+	client := newTestClient(t, srv.TestURL())
+
+	created, err := client.CreateCluster(ctx, &v1.CreateClusterRequest{
+		Name:               "no-ports",
+		ServicePrincipalID: "123456789012",
+		Ports:              []v1.ClusterLoadBalancerPort{},
+	})
+	if err != nil {
+		t.Fatalf("CreateCluster: %v", err)
+	}
+	got, err := client.ReadCluster(ctx, v1.ReadClusterParams{ClusterID: created.Cluster.GetClusterID()})
+	if err != nil {
+		t.Fatalf("ReadCluster: %v", err)
+	}
+	if ports := got.Cluster.GetPorts(); len(ports) != 0 {
+		t.Fatalf("ports = %+v, want none", ports)
+	}
 }
 
 func TestApplicationEnoughResources(t *testing.T) {

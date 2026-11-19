@@ -13,7 +13,7 @@ require (
 	github.com/golang/snappy v1.0.0
 	github.com/google/uuid v1.6.0
 	github.com/ogen-go/ogen v1.24.0
-	github.com/sacloud/sacloud-sdk-go v0.7.0
+	github.com/sacloud/sacloud-sdk-go v0.7.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.72.0
 	go.opentelemetry.io/otel v1.47.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.47.0

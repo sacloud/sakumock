@@ -304,9 +304,9 @@ func TestRoutingReorder(t *testing.T) {
 }
 
 // TestNullTags covers clients sending Tags as null when none are set, which
-// the portal spec forbids but the Terraform provider does (see
-// bodyNullableFields). The Go SDK now rejects nil Tags itself, so the request
-// is sent as raw JSON.
+// the portal spec forbids but the Terraform provider up to v3.14.x does (see
+// bodyNullableFields). The Go SDK sends nil Tags as an empty array, so the
+// request is sent as raw JSON.
 func TestNullTags(t *testing.T) {
 	srv := simplenotification.NewTestServer(simplenotification.Config{})
 	defer closeAndCheck(t, srv)

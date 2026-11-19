@@ -14,7 +14,7 @@ var bodyNonEmptyFields = map[string][]string{
 
 // bodyNullableFields lists request-body fields the SDK sends as null although
 // the portal spec forbids it; core.WithNullable accepts null for them. The
-// Terraform provider sends null Tags when no tags are set.
+// Terraform provider up to v3.14.x sends null Tags when no tags are set.
 var bodyNullableFields = map[string][]core.SDKFix{
 	"POST /commonserviceitem":     {tagsNullable},
 	"PUT /commonserviceitem/{id}": {tagsNullable},

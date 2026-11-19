@@ -261,7 +261,7 @@ Pass a certificate and key (`--tls-cert`/`--tls-key`, or `SAKUMOCK_TLS_CERT`/`SA
 
 ### Generated certificate (`--tls-auto`)
 
-`sakumock all --tls-auto` generates the certificate itself: a private CA and a server certificate signed by it, so there is nothing to create by hand. The client trusts the CA through `SAKURA_CA_CERT_PATH`, which `sakumock env` emits when given the same flags. The SDK **adds** that CA to the system roots, so services that are not pointed at the mock still reach the real API. This needs sacloud-sdk-go v0.7.0 or later (a Terraform provider built on an older SDK ignores the variable and fails certificate verification).
+`sakumock all --tls-auto` generates the certificate itself: a private CA and a server certificate signed by it, so there is nothing to create by hand. The client trusts the CA through `SAKURA_CA_CERT_PATH`, which `sakumock env` emits when given the same flags. The SDK **adds** that CA to the system roots, so services that are not pointed at the mock still reach the real API. This needs sacloud-sdk-go v0.7.0 or later. The Terraform provider (`sacloud/sakura`) trusts the CA from v3.15.1, and only through an SDK profile (`--profile-dir`, below): it does not pass `SAKURA_CA_CERT_PATH` on to the SDK, so with the variable alone certificate verification fails.
 
 ```bash
 sakumock all --tls-auto --tls-ca-dir ~/.sakumock/tls

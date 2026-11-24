@@ -114,6 +114,11 @@ Records come back; goroutines, containers and external processes do not. Bring t
 - `--latency` (`Config.Latency`) is applied at the top of `Server.ServeHTTP` with `core.APILatency(r, s.latency)`, which exempts `/_sakumock/` paths. Same-port data planes are covered by it.
 - A separate-listener in-process data plane adds `DataPlaneLatency time.Duration` (`env:"<SERVICE>_DATA_PLANE_LATENCY"`) and wraps its handler inside the trace wrap: `core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency, h))` — no path is exempt there, since it serves user paths. External data planes (versitygw) have no such flag.
 
+### Rate limit
+
+- `--rate-limit` / `--rate-limit-window` (`Config.RateLimit`, `Config.RateLimitWindow`) build a `core.RateLimiter` in `NewHandler` with the service's own error writer; `routeTable()` wraps every `"api"` route with it. Same-port data planes are covered by it.
+- A separate-listener in-process data plane adds `DataPlaneRateLimit float64` / `DataPlaneRateLimitWindow time.Duration` (`env:"<SERVICE>_DATA_PLANE_RATE_LIMIT"`, `..._WINDOW`) next to `DataPlaneLatency` and wraps its handler inside the latency wrap: `core.LatencyHandler(cfg.DataPlaneLatency, core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, errWrite, h))` — one bucket for the listener, no path exempt, 429 in the data plane's own error shape (`core.PlainTextRateLimitError` where it answers with `http.Error`). Wherever `--data-plane-latency` exists, so does `--data-plane-rate-limit`. External data planes (versitygw) have neither.
+
 ### Fault injection
 
 - `core.FaultInjector` (`core/fault.go`) is built in `NewHandler` with the service's own error writer (`core.ParseFaultSpecs(cfg.Fault, core.WithFaultErrorWriter(...))`; nil when unconfigured, and `Middleware` on nil is a no-op). A service with two error envelopes builds two injectors (simplemq).

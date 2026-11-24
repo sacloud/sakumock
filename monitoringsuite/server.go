@@ -22,10 +22,12 @@ type Config struct {
 	// listener accepts Prometheus remote-write (metrics) and OTLP/HTTP (logs,
 	// traces); received payloads are acknowledged and, for debugging, optionally
 	// logged or written as JSON. There is no query side. See dataplane.go.
-	EnableDataPlane  bool          `help:"Serve the telemetry data plane: Prometheus remote-write (metrics) and OTLP/HTTP (logs, traces). Ingest only — payloads are acknowledged, not queryable." env:"MONITORINGSUITE_ENABLE_DATA_PLANE" default:"false"`
-	DataPlaneAddr    string        `help:"Listen address for the telemetry data plane (control-plane port + 10000)" env:"MONITORINGSUITE_DATA_PLANE_ADDR" default:"127.0.0.1:28084"`
-	DataPlaneLatency time.Duration `help:"Artificial latency added to every data plane response" env:"MONITORINGSUITE_DATA_PLANE_LATENCY"`
-	DataPlaneDumpDir string        `help:"Write each received telemetry payload as JSON to this directory (debugging); empty disables file dumps. Combine with --debug to also log payloads." env:"MONITORINGSUITE_DATA_PLANE_DUMP_DIR"`
+	EnableDataPlane          bool          `help:"Serve the telemetry data plane: Prometheus remote-write (metrics) and OTLP/HTTP (logs, traces). Ingest only — payloads are acknowledged, not queryable." env:"MONITORINGSUITE_ENABLE_DATA_PLANE" default:"false"`
+	DataPlaneAddr            string        `help:"Listen address for the telemetry data plane (control-plane port + 10000)" env:"MONITORINGSUITE_DATA_PLANE_ADDR" default:"127.0.0.1:28084"`
+	DataPlaneLatency         time.Duration `help:"Artificial latency added to every data plane response" env:"MONITORINGSUITE_DATA_PLANE_LATENCY"`
+	DataPlaneRateLimit       float64       `help:"Data plane HTTP rate limit, shared across all its requests (events per --data-plane-rate-limit-window, 0 disables)" default:"0" env:"MONITORINGSUITE_DATA_PLANE_RATE_LIMIT"`
+	DataPlaneRateLimitWindow time.Duration `help:"Window for --data-plane-rate-limit (e.g. 1s, 1m)" default:"1s" env:"MONITORINGSUITE_DATA_PLANE_RATE_LIMIT_WINDOW"`
+	DataPlaneDumpDir         string        `help:"Write each received telemetry payload as JSON to this directory (debugging); empty disables file dumps. Combine with --debug to also log payloads." env:"MONITORINGSUITE_DATA_PLANE_DUMP_DIR"`
 
 	// idGen, when non-nil, is the resource ID generator injected by the unified
 	// binary via NewServer; nil means the store creates its own.

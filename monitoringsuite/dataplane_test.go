@@ -198,3 +198,43 @@ func TestDataPlaneLatency(t *testing.T) {
 		}
 	})
 }
+
+func TestDataPlaneRateLimit(t *testing.T) {
+	rw := snappy.Encode(nil, encodeRemoteWrite("up", 1, 1700000000000))
+	write := func(t *testing.T, srv *monitoringsuite.Server) int {
+		t.Helper()
+		return post(t, "http://"+srv.DataPlaneAddr()+"/prometheus/api/v1/write", "application/x-protobuf", rw)
+	}
+
+	t.Run("data plane rate limit applies", func(t *testing.T) {
+		srv := monitoringsuite.NewTestServer(monitoringsuite.Config{
+			EnableDataPlane:          true,
+			DataPlaneAddr:            "127.0.0.1:0",
+			DataPlaneRateLimit:       1,
+			DataPlaneRateLimitWindow: time.Minute,
+		})
+		defer srv.Close()
+		if code := write(t, srv); code != http.StatusNoContent {
+			t.Fatalf("first write status = %d, want %d", code, http.StatusNoContent)
+		}
+		// Every signal shares the one bucket.
+		if code := post(t, "http://"+srv.DataPlaneAddr()+"/v1/logs", "application/json", []byte(`{}`)); code != http.StatusTooManyRequests {
+			t.Errorf("second request status = %d, want %d", code, http.StatusTooManyRequests)
+		}
+	})
+
+	t.Run("control-plane rate limit does not", func(t *testing.T) {
+		srv := monitoringsuite.NewTestServer(monitoringsuite.Config{
+			EnableDataPlane: true,
+			DataPlaneAddr:   "127.0.0.1:0",
+			RateLimit:       1,
+			RateLimitWindow: time.Minute,
+		})
+		defer srv.Close()
+		for i := range 3 {
+			if code := write(t, srv); code != http.StatusNoContent {
+				t.Fatalf("write %d status = %d, want %d", i, code, http.StatusNoContent)
+			}
+		}
+	})
+}

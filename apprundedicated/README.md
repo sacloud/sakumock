@@ -24,7 +24,7 @@ sakumock-apprundedicated
 |------|-----|---------|-------------|
 | `--addr` | `APPRUN_DEDICATED_LOCALSERVER_ADDR` | `127.0.0.1:18089` | Listen address |
 | `--latency` | `APPRUN_DEDICATED_LATENCY` | `0` | Artificial latency added to every control-plane API response (e.g. `500ms`, `2s`) |
-| `--rate-limit` | `APPRUN_DEDICATED_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--rate-limit` | `APPRUN_DEDICATED_RATE_LIMIT` | `0` | HTTP rate limit shared across all control-plane API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `APPRUN_DEDICATED_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--state-dir` | `APPRUN_DEDICATED_STATE_DIR` | (none) | Directory to persist clusters, applications, versions, auto scaling groups, load balancers, their nodes, worker nodes and certificates in (`apprun-dedicated.json`), so they survive a restart (see [Persistent State](../README.md#persistent-state)). The file holds secret environment values, registry passwords and certificate private keys in plain text, readable by the owner only. Containers are restarted, not kept: see [Restart with `--state-dir`](#restart-with---state-dir) |
 | `--fault` | `APPRUN_DEDICATED_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
@@ -34,6 +34,8 @@ sakumock-apprundedicated
 | `--enable-data-plane` | `APPRUN_DEDICATED_ENABLE_DATA_PLANE` | `false` | Enable data plane (reverse proxy to Docker containers) |
 | `--data-plane-addr` | `APPRUN_DEDICATED_DATA_PLANE_ADDR` | `127.0.0.1:28089` | Listen address for the data plane (control-plane port + 10000) |
 | `--data-plane-latency` | `APPRUN_DEDICATED_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
+| `--data-plane-rate-limit` | `APPRUN_DEDICATED_DATA_PLANE_RATE_LIMIT` | `0` | HTTP rate limit shared across all data plane requests (events per `--data-plane-rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--data-plane-rate-limit-window` | `APPRUN_DEDICATED_DATA_PLANE_RATE_LIMIT_WINDOW` | `1s` | Window for `--data-plane-rate-limit` (e.g. `1s`, `1m`) |
 
 (Under the unified binary these are prefixed, e.g. `--apprun-dedicated-enable-data-plane`.)
 

@@ -410,3 +410,31 @@ func TestDataPlaneUpstreamErrors(t *testing.T) {
 		}
 	})
 }
+
+func TestDataPlaneRateLimit(t *testing.T) {
+	srv := apigw.NewTestServer(apigw.Config{
+		EnableDataPlane:          true,
+		DataPlaneAddr:            "127.0.0.1:0",
+		DataPlaneRateLimit:       1,
+		DataPlaneRateLimitWindow: time.Minute,
+	})
+	t.Cleanup(srv.Close)
+
+	// Unmatched requests consume the bucket too: the limit covers the listener.
+	if resp := gwDo(t, srv.DataPlaneAddr(), http.MethodGet, "unknown.localhost", "/"); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("first request status = %d, want %d", resp.StatusCode, http.StatusNotFound)
+	}
+	resp := gwDo(t, srv.DataPlaneAddr(), http.MethodGet, "unknown.localhost", "/")
+	if resp.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("second request status = %d, want %d", resp.StatusCode, http.StatusTooManyRequests)
+	}
+	if resp.Header.Get("Retry-After") == "" {
+		t.Error("Retry-After header is missing")
+	}
+	var body struct {
+		Message string `json:"message"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil || body.Message == "" {
+		t.Errorf("429 body is not the gateway error envelope: message=%q err=%v", body.Message, err)
+	}
+}

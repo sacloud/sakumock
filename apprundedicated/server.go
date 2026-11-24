@@ -18,9 +18,11 @@ type Config struct {
 	Fault           []string      `help:"Inject faults: CODE:RATE[:PHASE], repeatable — return HTTP status CODE (or drop the connection when CODE is 'reset') with probability RATE, before (default) or after running the handler" placeholder:"CODE:RATE[:PHASE]" env:"APPRUN_DEDICATED_FAULT"`
 	Debug           bool          `help:"Enable debug mode" env:"APPRUN_DEDICATED_DEBUG" default:"false"`
 
-	EnableDataPlane  bool          `help:"Enable data plane (reverse proxy to Docker containers)" env:"APPRUN_DEDICATED_ENABLE_DATA_PLANE" default:"false"`
-	DataPlaneAddr    string        `help:"Data plane address (control-plane port + 10000)" env:"APPRUN_DEDICATED_DATA_PLANE_ADDR" default:"127.0.0.1:28089"`
-	DataPlaneLatency time.Duration `help:"Artificial latency added to every data plane response" env:"APPRUN_DEDICATED_DATA_PLANE_LATENCY"`
+	EnableDataPlane          bool          `help:"Enable data plane (reverse proxy to Docker containers)" env:"APPRUN_DEDICATED_ENABLE_DATA_PLANE" default:"false"`
+	DataPlaneAddr            string        `help:"Data plane address (control-plane port + 10000)" env:"APPRUN_DEDICATED_DATA_PLANE_ADDR" default:"127.0.0.1:28089"`
+	DataPlaneLatency         time.Duration `help:"Artificial latency added to every data plane response" env:"APPRUN_DEDICATED_DATA_PLANE_LATENCY"`
+	DataPlaneRateLimit       float64       `help:"Data plane HTTP rate limit, shared across all its requests (events per --data-plane-rate-limit-window, 0 disables)" default:"0" env:"APPRUN_DEDICATED_DATA_PLANE_RATE_LIMIT"`
+	DataPlaneRateLimitWindow time.Duration `help:"Window for --data-plane-rate-limit (e.g. 1s, 1m)" default:"1s" env:"APPRUN_DEDICATED_DATA_PLANE_RATE_LIMIT_WINDOW"`
 
 	logger *slog.Logger
 	tls    core.TLSFiles

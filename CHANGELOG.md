@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.15.1](https://github.com/sacloud/sakumock/compare/v0.15.0...v0.15.1) - 2026-11-24
+
+### Other Changes
+- Add --data-plane-rate-limit for in-process data planes by @fujiwara in https://github.com/sacloud/sakumock/pull/274
+
 ## [v0.15.0](https://github.com/sacloud/sakumock/compare/v0.14.0...v0.15.0) - 2026-11-19
 
 ### 🚀 New Features

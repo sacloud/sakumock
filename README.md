@@ -225,7 +225,7 @@ sakumock all --monitoringsuite-latency 200ms --monitoringsuite-data-plane-latenc
 
 ## Rate Limiting
 
-To test how a client handles throttling, every service can limit its control-plane API with `--rate-limit EVENTS` per `--rate-limit-window DURATION` (default `1s`). A request over the limit gets `429 Too Many Requests` with a `Retry-After` header, in the service's own error envelope. The limit also covers same-port data planes such as simplemq messages (where it is per queue); the mock-only `/_sakumock/` inspection endpoints consume no tokens.
+To test how a client handles throttling, every service can limit its control-plane API with `--rate-limit EVENTS` per `--rate-limit-window DURATION` (default `1s`). A request over the limit gets `429 Too Many Requests` with a `Retry-After` header, in the service's own error envelope. simplemq is the exception: its limit is per queue and covers only the message API, not queue management. The mock-only `/_sakumock/` inspection endpoints consume no tokens.
 
 Services with a separate-listener in-process data plane — Monitoring Suite ingest, AppRun / AppRun Dedicated proxies, API Gateway — limit it independently with `--data-plane-rate-limit EVENTS` and `--data-plane-rate-limit-window DURATION`: one bucket shared by every request to that listener. The object storage S3 data plane is served by versitygw, an external process, and has no `--data-plane-rate-limit`.
 

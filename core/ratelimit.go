@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
@@ -101,15 +102,23 @@ func (rl *RateLimiter) Middleware(keyFn RateLimitKeyFunc, next http.HandlerFunc)
 			next(w, r)
 			return
 		}
-		l := rl.getLimiter(key)
-		now := time.Now()
-		if !l.AllowN(now, 1) {
-			w.Header().Set("Retry-After", strconv.Itoa(rl.retryAfterSeconds(l)))
-			rl.errWrite(w, http.StatusTooManyRequests, "rate limit exceeded")
+		if rl.reject(w, key) {
 			return
 		}
 		next(w, r)
 	}
+}
+
+// reject takes a token from key's bucket; when none is left it writes the 429
+// response and reports true.
+func (rl *RateLimiter) reject(w http.ResponseWriter, key string) bool {
+	l := rl.getLimiter(key)
+	if l.AllowN(time.Now(), 1) {
+		return false
+	}
+	w.Header().Set("Retry-After", strconv.Itoa(rl.retryAfterSeconds(l)))
+	rl.errWrite(w, http.StatusTooManyRequests, "rate limit exceeded")
+	return true
 }
 
 func (rl *RateLimiter) getLimiter(key string) *rate.Limiter {
@@ -144,12 +153,25 @@ func (rl *RateLimiter) retryAfterSeconds(l *rate.Limiter) int {
 // bucket (the --data-plane-rate-limit flag). It returns h unchanged when events
 // is not positive. Unlike a control plane's per-route limiter no path is
 // exempt: a data plane serves user paths. A nil errWrite keeps the default.
-func RateLimitHandler(events float64, window time.Duration, errWrite RateLimitErrorWriter, h http.Handler) http.Handler {
+//
+// A rejected request never reaches h, so it is logged here at Info (h logs the
+// requests it serves); a nil logger means slog.Default().
+func RateLimitHandler(events float64, window time.Duration, errWrite RateLimitErrorWriter, logger *slog.Logger, h http.Handler) http.Handler {
 	rl := NewRateLimiter(events, WithRateLimitWindow(window), WithRateLimitErrorWriter(errWrite))
 	if rl == nil {
 		return h
 	}
-	return rl.Middleware(GlobalKey(), h.ServeHTTP)
+	if logger == nil {
+		logger = slog.Default()
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rw := NewResponseRecorder(w)
+		if rl.reject(rw, globalRateLimitKey) {
+			logger.Info("data plane request", RequestLogArgs(r, rw, "host", r.Host)...)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 // PlainTextRateLimitError is a RateLimitErrorWriter answering in plain text,
@@ -171,9 +193,11 @@ func PathValueKey(name string) RateLimitKeyFunc {
 // per-resource.
 func GlobalKey() RateLimitKeyFunc {
 	return func(*http.Request) string {
-		return "_global"
+		return globalRateLimitKey
 	}
 }
+
+const globalRateLimitKey = "_global"
 
 func defaultRateLimitErrorWriter(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")

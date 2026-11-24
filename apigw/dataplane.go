@@ -77,7 +77,7 @@ func startDataPlane(cfg Config, store *MemoryStore, logger *slog.Logger) (*dataP
 	}
 
 	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency,
-		core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, writeError, dp)))}
+		core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, writeError, logger, dp)))}
 	go func() {
 		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane serve error", "error", err)

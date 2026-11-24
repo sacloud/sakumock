@@ -223,6 +223,17 @@ Services with a separate-listener in-process data plane — Monitoring Suite ing
 sakumock all --monitoringsuite-latency 200ms --monitoringsuite-data-plane-latency 2s
 ```
 
+## Rate Limiting
+
+To test how a client handles throttling, every service can limit its control-plane API with `--rate-limit EVENTS` per `--rate-limit-window DURATION` (default `1s`). A request over the limit gets `429 Too Many Requests` with a `Retry-After` header, in the service's own error envelope. simplemq is the exception: its limit is per queue and covers only the message API, not queue management. The mock-only `/_sakumock/` inspection endpoints consume no tokens.
+
+Services with a separate-listener in-process data plane — Monitoring Suite ingest, AppRun / AppRun Dedicated proxies, API Gateway — limit it independently with `--data-plane-rate-limit EVENTS` and `--data-plane-rate-limit-window DURATION`: one bucket shared by every request to that listener. The object storage S3 data plane is served by versitygw, an external process, and has no `--data-plane-rate-limit`.
+
+```bash
+# Under sakumock all, use the service prefix
+sakumock all --monitoringsuite-rate-limit 10 --monitoringsuite-data-plane-rate-limit 100 --monitoringsuite-data-plane-rate-limit-window 1m
+```
+
 ## Fault Injection
 
 To test how a client (SDK, Terraform provider, your application) handles server errors and network failures, every service can probabilistically inject faults into its control-plane API with `--fault CODE:RATE[:PHASE]` (repeatable):

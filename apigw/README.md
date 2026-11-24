@@ -24,12 +24,14 @@ sakumock-apigw
 |------|-----|---------|-------------|
 | `--addr` | `APIGW_LOCALSERVER_ADDR` | `127.0.0.1:18091` | Listen address |
 | `--latency` | `APIGW_LATENCY` | `0` | Artificial latency added to every control-plane API response (e.g. `500ms`, `2s`) |
-| `--rate-limit` | `APIGW_RATE_LIMIT` | `0` | HTTP rate limit shared across all API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--rate-limit` | `APIGW_RATE_LIMIT` | `0` | HTTP rate limit shared across all control-plane API endpoints (events per `--rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
 | `--rate-limit-window` | `APIGW_RATE_LIMIT_WINDOW` | `1s` | Window for `--rate-limit` (e.g. `1s`, `1m`) |
 | `--fault` | `APIGW_FAULT` | (none) | Inject faults: `CODE:RATE[:PHASE]`, repeatable (see [Fault Injection](../README.md#fault-injection)) |
 | `--enable-data-plane` | `APIGW_ENABLE_DATA_PLANE` | `false` | Enable the gateway data plane: a separate listener routing requests by Host header to the configured upstreams |
 | `--data-plane-addr` | `APIGW_DATA_PLANE_ADDR` | `127.0.0.1:28091` | Data plane listen address (control-plane port + 10000) |
 | `--data-plane-latency` | `APIGW_DATA_PLANE_LATENCY` | `0` | Artificial latency added to every data plane response (e.g. `500ms`, `2s`) |
+| `--data-plane-rate-limit` | `APIGW_DATA_PLANE_RATE_LIMIT` | `0` | HTTP rate limit shared across all data plane requests (events per `--data-plane-rate-limit-window`, `0` disables). Excess requests get `429 Too Many Requests` with a `Retry-After` header |
+| `--data-plane-rate-limit-window` | `APIGW_DATA_PLANE_RATE_LIMIT_WINDOW` | `1s` | Window for `--data-plane-rate-limit` (e.g. `1s`, `1m`) |
 | `--state-dir` | `APIGW_STATE_DIR` | (none) | Directory to persist the gateway configuration in (`apigw.json`), so it survives a restart (see [Persistent State](../README.md#persistent-state) and [below](#persistent-state)). The file holds credentials and certificate keys in plain text, readable by the owner only |
 | `--debug` | `APIGW_DEBUG` | `false` | Enable debug mode |
 | `--tls-cert` | `APIGW_TLS_CERT` | (none) | TLS certificate file; with `--tls-key`, the server serves HTTPS instead of plain HTTP |

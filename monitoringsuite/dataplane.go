@@ -67,7 +67,17 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		func(m proto.Message) int { return len(m.(*logspb.LogsData).ResourceLogs) }))
 	mux.HandleFunc("POST /v1/traces", dp.handleOTLP("traces", func() proto.Message { return &tracepb.TracesData{} },
 		func(m proto.Message) int { return len(m.(*tracepb.TracesData).ResourceSpans) }))
-	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency, mux))}
+	limited := core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, core.PlainTextRateLimitError, mux)
+	// A rate-limited request never reaches the ingest handlers and their logs;
+	// they answer no 429 of their own, so the status identifies it.
+	logged := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rw := core.NewResponseRecorder(w)
+		limited.ServeHTTP(rw, r)
+		if rw.Status == http.StatusTooManyRequests {
+			logger.Info("data plane request", core.RequestLogArgs(r, rw)...)
+		}
+	})
+	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency, logged))}
 	go func() {
 		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane server stopped", "error", err)
@@ -79,6 +89,7 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		"remote_write", "POST /prometheus/api/v1/write",
 		"otlp_http", "POST /v1/{logs,traces}",
 		"latency", cfg.DataPlaneLatency,
+		"rate_limit", core.RateLimitHint(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, ""),
 		"dump_dir", cfg.DataPlaneDumpDir,
 	)
 	return dp, nil

@@ -140,6 +140,24 @@ func (rl *RateLimiter) retryAfterSeconds(l *rate.Limiter) int {
 	return max(int(math.Ceil(wait.Seconds())), 1)
 }
 
+// RateLimitHandler limits h to events requests per window, all sharing one
+// bucket (the --data-plane-rate-limit flag). It returns h unchanged when events
+// is not positive. Unlike a control plane's per-route limiter no path is
+// exempt: a data plane serves user paths. A nil errWrite keeps the default.
+func RateLimitHandler(events float64, window time.Duration, errWrite RateLimitErrorWriter, h http.Handler) http.Handler {
+	rl := NewRateLimiter(events, WithRateLimitWindow(window), WithRateLimitErrorWriter(errWrite))
+	if rl == nil {
+		return h
+	}
+	return rl.Middleware(GlobalKey(), h.ServeHTTP)
+}
+
+// PlainTextRateLimitError is a RateLimitErrorWriter answering in plain text,
+// for data planes whose own errors are plain text (http.Error).
+func PlainTextRateLimitError(w http.ResponseWriter, status int, message string) {
+	http.Error(w, message, status)
+}
+
 // PathValueKey buckets requests by the named path parameter of the matched
 // route pattern.
 func PathValueKey(name string) RateLimitKeyFunc {

@@ -236,7 +236,7 @@ func startDataPlane(cfg Config, docker *DockerManager, store *MemoryStore, logge
 	}
 
 	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency,
-		core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, core.PlainTextRateLimitError, logger, dp.handler())))}
+		core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, core.PlainTextRateLimitError, dp.handler())))}
 	go func() {
 		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane serve error", "error", err)

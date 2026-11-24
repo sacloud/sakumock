@@ -117,7 +117,8 @@ Records come back; goroutines, containers and external processes do not. Bring t
 ### Rate limit
 
 - `--rate-limit` / `--rate-limit-window` (`Config.RateLimit`, `Config.RateLimitWindow`) build a `core.RateLimiter` in `NewHandler` with the service's own error writer; `routeTable()` wraps every `"api"` route with it, same-port data planes included. simplemq is the exception: its limiter is per queue (`core.PathValueKey("queueName")`) and wraps only the message routes, not queue management.
-- A separate-listener in-process data plane adds `DataPlaneRateLimit float64` / `DataPlaneRateLimitWindow time.Duration` (`env:"<SERVICE>_DATA_PLANE_RATE_LIMIT"`, `..._WINDOW`) next to `DataPlaneLatency` and wraps its handler inside the latency wrap: `core.LatencyHandler(cfg.DataPlaneLatency, core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, errWrite, logger, h))` — one bucket for the listener, no path exempt, 429 in the data plane's own error shape (`core.PlainTextRateLimitError` where it answers with `http.Error`). It logs the requests it rejects at Info, since they never reach the handler's own request log. Wherever `--data-plane-latency` exists, so does `--data-plane-rate-limit`. External data planes (versitygw) have neither.
+- A separate-listener in-process data plane adds `DataPlaneRateLimit float64` / `DataPlaneRateLimitWindow time.Duration` (`env:"<SERVICE>_DATA_PLANE_RATE_LIMIT"`, `..._WINDOW`) next to `DataPlaneLatency` and limits its handler inside the latency wrap: `core.LatencyHandler(cfg.DataPlaneLatency, core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, errWrite, h))` — one bucket for the listener, no path exempt, 429 in the data plane's own error shape (`core.PlainTextRateLimitError` where it answers with `http.Error`). Wherever `--data-plane-latency` exists, so does `--data-plane-rate-limit`. External data planes (versitygw) have neither.
+- A rejected request never reaches the wrapped handler, so a data plane that logs its requests keeps the rejection visible itself: apigw applies the limiter inside its request log (`dp.rateLimiter.Middleware` in `ServeHTTP`) instead of wrapping, monitoringsuite logs it from its error writer.
 
 ### Fault injection
 
@@ -170,6 +171,7 @@ Use `github.com/google/uuid` (`uuid.NewString()` for v4, `uuid.NewV7()` when tim
 
 ### Code style
 
+- Exported API: sakumock is also consumed as a library, so changing an exported function signature or interface forces a minor version bump on every consumer. Before changing one, establish that the change is truly necessary. Do not solve a problem by adding one more parameter: first look for a way inside the existing API (compose at the call site, use an existing hook, keep the concern in the caller). A PR that does change an exported signature carries the `sacloud-minor` label (the tagpr minor-bump label, see `.tagpr`).
 - Logging: `log/slog`. Per-request logs MUST be **Info** (the mock's purpose is to show it is handling requests); Debug for internals. Wrap the ResponseWriter with `core.NewResponseRecorder` and log via `core.RequestLogArgs(r, rw, extras...)` so error responses carry their reason.
 - CLI: `alecthomas/kong`.
 - JSON bodies: a named struct with `json` tags for any fixed shape, even if used once; `map[string]any` only for genuinely dynamic data; share a type when a shape recurs.

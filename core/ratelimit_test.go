@@ -1,8 +1,6 @@
 package core_test
 
 import (
-	"bytes"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -272,9 +270,7 @@ func TestRateLimiterRecovery(t *testing.T) {
 
 func TestRateLimitHandler(t *testing.T) {
 	// No path is exempt on a data plane, and every path shares the bucket.
-	var logs bytes.Buffer
-	logger := slog.New(slog.NewTextHandler(&logs, nil))
-	h := core.RateLimitHandler(2, time.Minute, core.PlainTextRateLimitError, logger, http.HandlerFunc(okHandler))
+	h := core.RateLimitHandler(2, time.Minute, core.PlainTextRateLimitError, http.HandlerFunc(okHandler))
 	for i, tc := range []struct {
 		path string
 		want int
@@ -298,18 +294,9 @@ func TestRateLimitHandler(t *testing.T) {
 			t.Errorf("Content-Type = %q, want text/plain", ct)
 		}
 	}
-	// Only the rejected request is logged here; the wrapped handler logs its own.
-	if got := strings.Count(logs.String(), "\n"); got != 1 {
-		t.Errorf("logged %d requests, want 1:\n%s", got, logs.String())
-	}
-	for _, want := range []string{"level=INFO", "status=429", "path=/a", `error="rate limit exceeded"`} {
-		if !strings.Contains(logs.String(), want) {
-			t.Errorf("log misses %s:\n%s", want, logs.String())
-		}
-	}
 
 	// A non-positive limit leaves the handler unlimited.
-	h = core.RateLimitHandler(0, time.Second, nil, nil, http.HandlerFunc(okHandler))
+	h = core.RateLimitHandler(0, time.Second, nil, http.HandlerFunc(okHandler))
 	for range 5 {
 		rec := httptest.NewRecorder()
 		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))

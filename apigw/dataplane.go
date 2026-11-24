@@ -30,6 +30,9 @@ type dataPlane struct {
 	server   *http.Server
 	store    *MemoryStore
 	logger   *slog.Logger
+	// rateLimiter is the --data-plane-rate-limit bucket shared by every
+	// request to this listener; nil when unlimited.
+	rateLimiter *core.RateLimiter
 	// scheme is the protocol this listener serves ("https" when the shared
 	// TLS files are set), used for URLs built from the request and
 	// X-Forwarded-Proto. Routes are https-only per the spec; a plain-http
@@ -74,10 +77,12 @@ func startDataPlane(cfg Config, store *MemoryStore, logger *slog.Logger) (*dataP
 		pendingLogins: make(map[string]pendingLogin),
 		sessions:      make(map[string]gwSession),
 		s3Clients:     make(map[string]*cachedS3Client),
+		rateLimiter: core.NewRateLimiter(cfg.DataPlaneRateLimit,
+			core.WithRateLimitWindow(cfg.DataPlaneRateLimitWindow),
+			core.WithRateLimitErrorWriter(writeError)),
 	}
 
-	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency,
-		core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, writeError, logger, dp)))}
+	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency, dp))}
 	go func() {
 		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane serve error", "error", err)
@@ -121,15 +126,20 @@ type matchResult struct {
 func (dp *dataPlane) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rw := core.NewResponseRecorder(w)
 
-	m := dp.match(rw, r)
-	switch {
-	case m == nil:
-	case dp.handleCORSPreflight(rw, r, m):
-		// Preflights are answered before authentication: browsers send them
-		// without credentials.
-	case dp.authorize(rw, r, m):
-		dp.proxy(rw, r, m)
-	}
+	// The limiter sits inside the request log, so a rejected request is logged
+	// like any other response.
+	var m *matchResult
+	dp.rateLimiter.Middleware(core.GlobalKey(), func(w http.ResponseWriter, r *http.Request) {
+		m = dp.match(w, r)
+		switch {
+		case m == nil:
+		case dp.handleCORSPreflight(w, r, m):
+			// Preflights are answered before authentication: browsers send
+			// them without credentials.
+		case dp.authorize(w, r, m):
+			dp.proxy(w, r, m)
+		}
+	})(rw, r)
 
 	args := core.RequestLogArgs(r, rw, "host", r.Host)
 	if m != nil {

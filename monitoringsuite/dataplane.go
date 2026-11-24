@@ -67,12 +67,17 @@ func startDataPlane(cfg Config, logger *slog.Logger) (*dataPlane, error) {
 		func(m proto.Message) int { return len(m.(*logspb.LogsData).ResourceLogs) }))
 	mux.HandleFunc("POST /v1/traces", dp.handleOTLP("traces", func() proto.Message { return &tracepb.TracesData{} },
 		func(m proto.Message) int { return len(m.(*tracepb.TracesData).ResourceSpans) }))
-	rateLimited := func(w http.ResponseWriter, status int, message string) {
-		logger.Warn("data plane rejected", "error", message)
-		core.PlainTextRateLimitError(w, status, message)
-	}
-	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency,
-		core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, rateLimited, mux)))}
+	limited := core.RateLimitHandler(cfg.DataPlaneRateLimit, cfg.DataPlaneRateLimitWindow, core.PlainTextRateLimitError, mux)
+	// A rate-limited request never reaches the ingest handlers and their logs;
+	// they answer no 429 of their own, so the status identifies it.
+	logged := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rw := core.NewResponseRecorder(w)
+		limited.ServeHTTP(rw, r)
+		if rw.Status == http.StatusTooManyRequests {
+			logger.Info("data plane request", core.RequestLogArgs(r, rw)...)
+		}
+	})
+	dp.server = &http.Server{Handler: core.TraceHandler(cfg.Name(), core.LatencyHandler(cfg.DataPlaneLatency, logged))}
 	go func() {
 		if err := core.ServeListener(dp.server, ln, cfg.tls); err != nil && err != http.ErrServerClosed {
 			logger.Error("data plane server stopped", "error", err)

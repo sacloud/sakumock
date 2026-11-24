@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -264,5 +265,43 @@ func TestRateLimiterRecovery(t *testing.T) {
 			t.Fatalf("limiter never refilled within deadline; last status=%d", r.StatusCode)
 		}
 		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func TestRateLimitHandler(t *testing.T) {
+	// No path is exempt on a data plane, and every path shares the bucket.
+	h := core.RateLimitHandler(2, time.Minute, core.PlainTextRateLimitError, http.HandlerFunc(okHandler))
+	for i, tc := range []struct {
+		path string
+		want int
+	}{
+		{"/a", http.StatusOK},
+		{"/_sakumock/x", http.StatusOK},
+		{"/a", http.StatusTooManyRequests},
+	} {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tc.path, nil))
+		if rec.Code != tc.want {
+			t.Fatalf("request %d (%s): status = %d, want %d", i, tc.path, rec.Code, tc.want)
+		}
+		if tc.want != http.StatusTooManyRequests {
+			continue
+		}
+		if rec.Header().Get("Retry-After") == "" {
+			t.Error("Retry-After header is missing")
+		}
+		if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
+			t.Errorf("Content-Type = %q, want text/plain", ct)
+		}
+	}
+
+	// A non-positive limit leaves the handler unlimited.
+	h = core.RateLimitHandler(0, time.Second, nil, http.HandlerFunc(okHandler))
+	for range 5 {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("unlimited handler: status = %d", rec.Code)
+		}
 	}
 }

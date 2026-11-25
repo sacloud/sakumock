@@ -1,6 +1,6 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  version: '1.7.0'
+  version: 1.7.1
   title: さくらのオブジェクトストレージ APIドキュメント
   contact:
     name: SAKURA internet Inc.
@@ -314,7 +314,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error401'
-  '/clusters/{id}':
+  /clusters/{id}:
     get:
       operationId: readCluster
       tags:
@@ -355,7 +355,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
-  '/buckets':
+  /buckets:
     get:
       operationId: listBuckets
       tags:
@@ -383,7 +383,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error401'
-  '/buckets/{name}':
+  /buckets/{name}:
     put:
       operationId: createBucket
       tags:
@@ -512,6 +512,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
+      servers:
+        - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1
     post:
       operationId: createBucketReplication
       tags:
@@ -603,6 +605,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
+      servers:
+        - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1
   /buckets/{name}/replicable-targets:
     get:
       operationId: listBucketReplicableTargets
@@ -642,7 +646,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
-  '/buckets/{name}/encryption':
+      servers:
+        - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/fed/v1
+  /buckets/{name}/encryption:
     get:
       operationId: readBucketEncryption
       tags:
@@ -688,6 +694,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
+        '405':
+          description: このサイトでは指定された操作を実行できません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error405'
     put:
       operationId: updateBucketEncryption
       tags:
@@ -745,6 +757,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
+        '405':
+          description: このサイトでは指定された操作を実行できません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error405'
     delete:
       operationId: deleteBucketEncryption
       tags:
@@ -781,7 +799,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
-  '/buckets/{name}/plan':
+        '405':
+          description: このサイトでは指定された操作を実行できません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error405'
+  /buckets/{name}/plan:
     get:
       operationId: readBucketPlan
       tags:
@@ -902,7 +926,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDefault'
-  '/buckets/{name}/penalty':
+  /buckets/{name}/penalty:
     get:
       operationId: readBucketPenalty
       tags:
@@ -949,7 +973,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDefault'
-  '/buckets/{name}/usage':
+  /buckets/{name}/usage:
     get:
       operationId: readBucketUsage
       tags:
@@ -996,7 +1020,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDefault'
-  '/buckets/{name}/quota':
+  /buckets/{name}/quota:
     get:
       operationId: readBucketQuota
       tags:
@@ -1387,8 +1411,7 @@ paths:
         なお、サイト名の取得方法は「利用例＞接続先サイト一覧の取得」をご参考下さい。
       parameters: []
       requestBody:
-        description: >-
-          どのバケットを制御するかを定義します。
+        description: どのバケットを制御するかを定義します。
         required: true
         content:
           application/json:
@@ -1414,8 +1437,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error404'
         '409':
-          description: >-
-            制御対象のバケットの数が上限を超えています。
+          description: 制御対象のバケットの数が上限を超えています。
           content:
             application/json:
               schema:
@@ -1551,8 +1573,7 @@ paths:
           required: true
           description: パーミッションID
       requestBody:
-        description: >-
-          どのバケットを制御するかを定義します。
+        description: どのバケットを制御するかを定義します。
         required: true
         content:
           application/json:
@@ -1578,8 +1599,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error404'
         '409':
-          description: >-
-            制御対象のバケットの数が上限を超えています。
+          description: 制御対象のバケットの数が上限を超えています。
           content:
             application/json:
               schema:
@@ -1714,8 +1734,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error404'
         '409':
-          description: >-
-            制御対象のバケットの数が上限を超えています。
+          description: 制御対象のバケットの数が上限を超えています。
           content:
             application/json:
               schema:
@@ -1861,7 +1880,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDefault'
-
   /plans:
     get:
       operationId: listPlans
@@ -1903,7 +1921,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDefault'
-
   /quota:
     get:
       operationId: readQuota
@@ -1967,17 +1984,13 @@ paths:
         - in: query
           name: from
           schema:
-            type: string
-            format: date
-            example: '2022-03'
+            $ref: '#/components/schemas/YearMonth'
           description: 範囲の開始月
           required: true
         - in: query
           name: to
           schema:
-            type: string
-            format: date
-            example: '2022-08'
+            $ref: '#/components/schemas/YearMonth'
           description: 範囲の終了月
           required: true
       responses:
@@ -1988,7 +2001,7 @@ paths:
               schema:
                 type: object
                 required:
-                - data
+                  - data
                 properties:
                   data:
                     type: array
@@ -2012,16 +2025,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorDefault'
-
 servers:
   - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/isk01/v2
   - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/tky01/v2
   - url: https://secure.sakura.ad.jp/cloud/zone/is1a/api/objectstorage/1.0/arc02/v2
-
 security:
   - BasicAuth: []
 components:
-
   securitySchemes:
     BasicAuth:
       type: http
@@ -2043,7 +2053,8 @@ components:
           nullable: true
           description: If not specified, the bucket will be created as "standard".
           properties:
-            type: { $ref: '#/components/schemas/model.PlanType' }
+            type:
+              $ref: '#/components/schemas/model.PlanType'
             service_class_path:
               $ref: '#/components/schemas/ServiceClassPath'
     handler.UpdateBucketEncryptionRequestBody:
@@ -2081,24 +2092,24 @@ components:
     handler.ReadClusterResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           $ref: '#/components/schemas/ClusterResponseBody'
     handler.ListClustersResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
-          description: 'If use a pointer type, break output'
+          description: If use a pointer type, break output
           type: array
           items:
             $ref: '#/components/schemas/ClusterResponseBody'
     handler.ListBucketsResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           type: array
@@ -2107,64 +2118,60 @@ components:
     handler.CreateBucketResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           $ref: '#/components/schemas/BucketResponseBody'
     handler.ReadBucketReplicationResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           $ref: '#/components/schemas/model.Replication'
-      # Specifying examples for individual models results in incorrect responses;
-      # therefore, the example is defined here.
       example:
         data:
           source_bucket:
             name: my-bucket
             cluster_id: isk01
             plan:
-              type: ""
-              service_class_path: ""
+              type: ''
+              service_class_path: ''
           dest_bucket:
             name: my-bucket-replica
             cluster_id: tky01
             plan:
-              type: ""
-              service_class_path: ""
+              type: ''
+              service_class_path: ''
           config_status: created
           created_at: '2024-01-01T12:00:00+09:00'
     handler.CreateBucketReplicationResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           $ref: '#/components/schemas/model.Replication'
-      # Specifying examples for individual models results in incorrect responses;
-      # therefore, the example is defined here.
       example:
         data:
           source_bucket:
             name: my-bucket
             cluster_id: isk01
             plan:
-              type: ""
-              service_class_path: ""
+              type: ''
+              service_class_path: ''
           dest_bucket:
             name: my-bucket-replica
             cluster_id: tky01
             plan:
-              type: ""
-              service_class_path: ""
+              type: ''
+              service_class_path: ''
           config_status: created
           created_at: '2024-01-01T12:00:00+09:00'
     handler.ListBucketReplicableTargetsResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           type: array
@@ -2173,14 +2180,14 @@ components:
     handler.CreatePermissionKeyResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           $ref: '#/components/schemas/PermissionKeyCreateResponseBody'
     handler.ListPermissionKeysResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           type: array
@@ -2189,7 +2196,7 @@ components:
     handler.ReadPermissionKeyResponse:
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           $ref: '#/components/schemas/PermissionKeyReadResponseBody'
@@ -2292,88 +2299,40 @@ components:
         - created_at
       properties:
         source_bucket:
-          type: object
-          required:
-            - name
-            - cluster_id
-            - plan
+          allOf:
+          - $ref: '#/components/schemas/ReplicationBucket'
           description: Source bucket info
-          properties:
-            name:
-              type: string
-            cluster_id:
-              type: string
-            plan:
-              type: object
-              required:
-                - type
-                - service_class_path
-              properties:
-                type:
-                  $ref: '#/components/schemas/model.PlanType'
-                service_class_path:
-                  $ref: '#/components/schemas/ServiceClassPath'
-          example:
-            name: my-bucket
-            cluster_id: isk01
-            plan:
-              type: standard
-              service_class_path: "objectstorage/isk01/bucket"
         dest_bucket:
-          type: object
-          required:
-            - name
-            - cluster_id
-            - plan
+          allOf:
+            - $ref: '#/components/schemas/ReplicationBucket'
           description: Destination bucket info
-          properties:
-            name:
-              type: string
-            cluster_id:
-              type: string
-            plan:
-              type: object
-              required:
-                - type
-                - service_class_path
-              properties:
-                type:
-                  $ref: '#/components/schemas/model.PlanType'
-                service_class_path:
-                  $ref: '#/components/schemas/ServiceClassPath'
-          example:
-            name: my-bucket-replica
-            cluster_id: tky01
-            plan:
-              type: standard
-              service_class_path: "objectstorage/isk01/bucket"
         config_status:
           type: string
           enum:
             - creating
             - created
-          description: 'creating=federation→cluster applying / created=cluster applied'
+          description: creating=federation→cluster applying / created=cluster applied
         created_at:
           type: string
           format: date-time
     ClusterResponseBody:
       allOf:
-      - $ref: '#/components/schemas/model.Cluster'
-      - type: object
-        required:
-        - api_zone
-        - control_panel_url
-        - display_name_en_us
-        - display_name_ja
-        - display_name
-        - display_order
-        - endpoint_base
-        - id
-        - region
-        - s3_endpoint
-        - s3_endpoint_for_control_panel
-        - storage_zone
-        - plan_family
+        - $ref: '#/components/schemas/model.Cluster'
+        - type: object
+          required:
+            - api_zone
+            - control_panel_url
+            - display_name_en_us
+            - display_name_ja
+            - display_name
+            - display_order
+            - endpoint_base
+            - id
+            - region
+            - s3_endpoint
+            - s3_endpoint_for_control_panel
+            - storage_zone
+            - plan_family
     PlanChangeReqBody:
       type: object
       required:
@@ -2383,13 +2342,14 @@ components:
         previous_contract:
           type: object
           required:
-          - resource_id
+            - resource_id
           properties:
             resource_id:
               description: >
                 Current contract resource ID.
                 This is for validation to avoid recontracting from an unexpected state.
-              $ref: '#/components/schemas/ResourceID'
+              allOf:
+                - $ref: '#/components/schemas/ResourceID'
         new_plan:
           type: object
           required:
@@ -2413,17 +2373,19 @@ components:
     ContractSummary:
       type: object
       required:
-      - resource_id
-      - status
-      - created_at
-      - deleted_at
+        - resource_id
+        - status
+        - created_at
+        - deleted_at
       properties:
         resource_id:
           type: string
-          example: "113200009999"
+          example: '113200009999'
         status:
           type: string
-          enum: [active, terminated]
+          enum:
+            - active
+            - terminated
         created_at:
           type: string
           format: date-time
@@ -2434,10 +2396,10 @@ components:
     PlanSummary:
       type: object
       required:
-      - type
-      - service_class_path
-      - cluster_id
-      - capacity_gib
+        - type
+        - service_class_path
+        - cluster_id
+        - capacity_gib
       properties:
         type:
           $ref: '#/components/schemas/model.PlanType'
@@ -2457,8 +2419,8 @@ components:
     PlanWithContract:
       type: object
       required:
-      - plan
-      - contract
+        - plan
+        - contract
       properties:
         plan:
           $ref: '#/components/schemas/PlanSummary'
@@ -2467,11 +2429,11 @@ components:
     PlanItem:
       type: object
       required:
-      - service_class_path
-      - type
-      - cluster_id
-      - capacity_gib
-      - fee
+        - service_class_path
+        - type
+        - cluster_id
+        - capacity_gib
+        - fee
       properties:
         service_class_path:
           $ref: '#/components/schemas/ServiceClassPath'
@@ -2486,10 +2448,10 @@ components:
         fee:
           type: object
           required:
-          - for_month
-          - monthly
-          - daily
-          - hourly
+            - for_month
+            - monthly
+            - daily
+            - hourly
           description: Fee information (tax included)
           properties:
             for_month:
@@ -2504,6 +2466,7 @@ components:
             hourly:
               type: integer
               example: 36
+          nullable: true
     ServiceClassPath:
       type: string
       description: >-
@@ -2514,13 +2477,13 @@ components:
       description: Bucket usage
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           type: object
           required:
-          - num_objects_per_bucket
-          - amount_gib_per_bucket
+            - num_objects_per_bucket
+            - amount_gib_per_bucket
           properties:
             num_objects_per_bucket:
               type: integer
@@ -2532,8 +2495,8 @@ components:
     BucketListResponseBody:
       type: object
       required:
-      - name
-      - resource_id
+        - name
+        - resource_id
       properties:
         name:
           allOf:
@@ -2550,20 +2513,20 @@ components:
               $ref: '#/components/schemas/ServiceClassPath'
     BucketResponseBody:
       allOf:
-      - $ref: '#/components/schemas/model.Bucket'
-      - type: object
-        required:
-        - cluster_id
-        - name
-        - plan
-        properties:
-          plan:
-            $ref: '#/components/schemas/BucketPlanResponseBody'
+        - $ref: '#/components/schemas/model.Bucket'
+        - type: object
+          required:
+            - cluster_id
+            - name
+            - plan
+          properties:
+            plan:
+              $ref: '#/components/schemas/BucketPlanResponseBody'
     BucketPlanResponseBody:
       type: object
       required:
-      - type
-      - service_class_path
+        - type
+        - service_class_path
       properties:
         type:
           $ref: '#/components/schemas/model.PlanType'
@@ -2572,8 +2535,8 @@ components:
     PermissionKeyReadResponseBody:
       type: object
       required:
-      - id
-      - created_at
+        - id
+        - created_at
       properties:
         id:
           $ref: '#/components/schemas/PermissionKeyID'
@@ -2581,30 +2544,30 @@ components:
           $ref: '#/components/schemas/CreatedAt'
     PermissionKeyCreateResponseBody:
       allOf:
-      - $ref: '#/components/schemas/PermissionKey'
-      - type: object
-        required:
-        - id
-        - secret
-        - created_at
+        - $ref: '#/components/schemas/PermissionKey'
+        - type: object
+          required:
+            - id
+            - secret
+            - created_at
     BucketPenalty:
       description: Bucket penalty
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           type: object
           required:
-          - num_objects_per_bucket
-          - amount_gib_per_bucket
+            - num_objects_per_bucket
+            - amount_gib_per_bucket
           properties:
             num_objects_per_bucket:
               type: object
               required:
-              - val
-              - quota
-              - is_applied
+                - val
+                - quota
+                - is_applied
               properties:
                 val:
                   type: integer
@@ -2617,9 +2580,9 @@ components:
             amount_gib_per_bucket:
               type: object
               required:
-              - val
-              - quota
-              - is_applied
+                - val
+                - quota
+                - is_applied
               properties:
                 val:
                   type: number
@@ -2636,14 +2599,14 @@ components:
       description: Bucket quota
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - num_objects_per_bucket
-          - amount_gib_per_bucket
+            - num_objects_per_bucket
+            - amount_gib_per_bucket
           properties:
             num_objects_per_bucket:
               type: integer
@@ -2656,19 +2619,19 @@ components:
       description: Quota
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - num_root_keys
-          - num_buckets
-          - num_permissions
-          - num_keys_per_permission
-          - num_buckets_per_permission
-          - num_objects_per_bucket
-          - amount_gib_per_bucket
+            - num_root_keys
+            - num_buckets
+            - num_permissions
+            - num_keys_per_permission
+            - num_buckets_per_permission
+            - num_objects_per_bucket
+            - amount_gib_per_bucket
           properties:
             num_root_keys:
               type: integer
@@ -2696,25 +2659,23 @@ components:
       description: Charge information
       type: object
       required:
-      - found
-      - usage
-      - charge
-      - is_closing
-      - from
-      - to
+        - found
+        - usage
+        - charge
+        - is_closing
+        - from
+        - to
       properties:
         found:
           type: boolean
           example: true
           description: Whether billing record was found or not. `false` means that bucket was not found, bucket was owned by other accounts, or error on metering.
         usage:
-          # payment_contract_charge.usage
           type: number
           format: double
           example: 1100.0
           description: Usage for calculating charge
         charge:
-          # payment_contract_charge.amount
           type: integer
           example: 456
           description: Amount billed including tax
@@ -2724,43 +2685,48 @@ components:
           description: Result of monthly closing or not
         from:
           type: string
-          format: date
-          example: '2022-08-01'
+          format: date-time
+          example: '2022-08-01T00:00:00Z'
           description: The first day of metering range
         to:
           type: string
-          format: date
-          example: '2022-08-31'
+          format: date-time
+          example: '2022-08-31T23:59:59Z'
           description: The last day of metering range
     BucketBillingItem:
       description: Bucket usage and charge for metering
       type: object
       required:
-      - year_month
-      - basic
-      - storage_usage
-      - num_objects
-      - num_transactions
-      - transfer_amount
+        - year_month
+        - basic
+        - storage_usage
+        - num_objects
+        - num_transactions
+        - transfer_amount
       properties:
         year_month:
-          type: string
-          example: '2022-08'
+          allOf:
+            - $ref: '#/components/schemas/YearMonth'
           description: 集計対象の年月
         basic:
-          $ref: '#/components/schemas/BucketBillingItemDetail'
+          allOf:
+            - $ref: '#/components/schemas/BucketBillingItemDetail'
           description: 基本料金
         storage_usage:
-          $ref: '#/components/schemas/BucketBillingItemDetail'
+          allOf:
+            - $ref: '#/components/schemas/BucketBillingItemDetail'
           description: ストレージ使用量
         num_objects:
-          $ref: '#/components/schemas/BucketBillingItemDetail'
+          allOf:
+            - $ref: '#/components/schemas/BucketBillingItemDetail'
           description: オブジェクト数
         num_transactions:
-          $ref: '#/components/schemas/BucketBillingItemDetail'
+          allOf:
+            - $ref: '#/components/schemas/BucketBillingItemDetail'
           description: トランザクション数
         transfer_amount:
-          $ref: '#/components/schemas/BucketBillingItemDetail'
+          allOf:
+            - $ref: '#/components/schemas/BucketBillingItemDetail'
           description: 転送量
     PermissionID:
       description: Permission ID
@@ -2770,7 +2736,7 @@ components:
     ResourceID:
       description: Resource ID
       type: string
-      pattern: '^\d{1,12}$'
+      pattern: ^\d{1,12}$
       example: '123456789012'
     Code:
       description: Code
@@ -2811,12 +2777,12 @@ components:
       description: Secret Access key
       type: string
       pattern: ^[\w\d\/+=]{1,40}$
-      example: '/NOTICE==EXISTS+ONLY+WHEN+JUST+CREATED/'
+      example: /NOTICE==EXISTS+ONLY+WHEN+JUST+CREATED/
     accountKeys:
       description: Root user access keys
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
@@ -2824,8 +2790,8 @@ components:
           items:
             type: object
             required:
-            - id
-            - created_at
+              - id
+              - created_at
             properties:
               id:
                 allOf:
@@ -2837,15 +2803,15 @@ components:
       description: Root user access key
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - id
-          - created_at
-          - secret
+            - id
+            - created_at
+            - secret
           properties:
             id:
               allOf:
@@ -2860,14 +2826,14 @@ components:
       description: Root user access key
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - id
-          - created_at
+            - id
+            - created_at
           properties:
             id:
               allOf:
@@ -2881,10 +2847,10 @@ components:
       items:
         type: object
         required:
-        - bucket_name
-        - can_read
-        - can_write
-        - created_at
+          - bucket_name
+          - can_read
+          - can_write
+          - created_at
         properties:
           bucket_name:
             $ref: '#/components/schemas/BucketName'
@@ -2900,9 +2866,9 @@ components:
       items:
         type: object
         required:
-        - bucket_name
-        - can_read
-        - can_write
+          - bucket_name
+          - can_read
+          - can_write
         properties:
           bucket_name:
             $ref: '#/components/schemas/BucketName'
@@ -2919,20 +2885,20 @@ components:
       description: Permission secret key
       type: string
       pattern: ^[\w\d\/+=]{1,40}$
-      example: '/NOTICE==EXISTS+ONLY+WHEN+JUST+CREATED/'
+      example: /NOTICE==EXISTS+ONLY+WHEN+JUST+CREATED/
     Account:
       description: Account info
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - resource_id
-          - code
-          - created_at
+            - resource_id
+            - code
+            - created_at
           properties:
             resource_id:
               allOf:
@@ -2947,7 +2913,7 @@ components:
       description: Permission
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
@@ -2955,10 +2921,10 @@ components:
           items:
             type: object
             required:
-            - id
-            - display_name
-            - bucket_controls
-            - created_at
+              - id
+              - display_name
+              - bucket_controls
+              - created_at
             properties:
               id:
                 allOf:
@@ -2976,16 +2942,16 @@ components:
       description: Permission
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - id
-          - display_name
-          - bucket_controls
-          - created_at
+            - id
+            - display_name
+            - bucket_controls
+            - created_at
           properties:
             id:
               allOf:
@@ -3003,8 +2969,8 @@ components:
       description: Request body for bucket controls for Permission
       type: object
       required:
-      - display_name
-      - bucket_controls
+        - display_name
+        - bucket_controls
       properties:
         display_name:
           allOf:
@@ -3016,7 +2982,7 @@ components:
       description: Permission Key
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
@@ -3024,8 +2990,8 @@ components:
           items:
             type: object
             required:
-            - id
-            - created_at
+              - id
+              - created_at
             properties:
               id:
                 allOf:
@@ -3050,16 +3016,16 @@ components:
       description: Status
       type: object
       required:
-      - data
+        - data
       properties:
         data:
           description: data type
           type: object
           required:
-          - accept_new
-          - message
-          - started_at
-          - status_code
+            - accept_new
+            - message
+            - started_at
+            - status_code
           properties:
             accept_new:
               type: boolean
@@ -3074,8 +3040,8 @@ components:
             status_code:
               type: object
               required:
-              - id
-              - status
+                - id
+                - status
               properties:
                 id:
                   type: integer
@@ -3083,7 +3049,6 @@ components:
                 status:
                   type: string
                   example: available
-
     ErrorCode:
       description: |
         エラーコード。
@@ -3152,163 +3117,124 @@ components:
           reason:
             allOf:
               - $ref: '#/components/schemas/ErrorsReason'
-            example: >-
-              XXXX is wrong. Should set valid parameters.
+            example: XXXX is wrong. Should set valid parameters.
     Error400:
-      type: object
-      properties:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
         error:
-          description: error 400
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 400
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: Invalid parameters.
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
+          code: 400
+          message: Invalid parameters.
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
     Error401:
-      type: object
-      properties:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
         error:
-          description: error 401
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 401
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: Authentication failed.
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
+          code: 401
+          message: Authentication failed.
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
     Error403:
-      type: object
-      properties:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
         error:
-          description: error 403
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 403
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: XXXX creation denied.
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
+          code: 403
+          message: Creation denied.
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
     Error404:
-      type: object
-      properties:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
         error:
-          description: error 404
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 404
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: XXXX does not exist.
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
+          code: 404
+          message: Resource does not exist.
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
     Error405:
-      type: object
-      properties:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
         error:
-          description: error 405
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 405
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: Method Not Allowed
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
+          code: 405
+          message: Method Not Allowed
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
     Error409:
-      type: object
-      properties:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
         error:
-          description: error 409
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 409
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: XXXX already created.
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
+          code: 409
+          message: Resource already exists.
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
     ErrorDefault:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        error:
+          code: 500
+          message: unknown error occurred.
+          trace_id: 0f36837633984f3fc8871f515e8efa24
+          errors: []
+    YearMonth:
+      type: string
+      pattern: ^\d{4}-(0[1-9]|1[0-2])$
+      example: 2026-11
+    ReplicationPlan:
       type: object
+      required:
+        - type
+        - service_class_path
+      properties:
+        type:
+          type: string
+          enum:
+            - ''
+            - standard
+            - archive
+        service_class_path:
+          type: string
+    ReplicationBucket:
+      type: object
+      required:
+        - name
+        - cluster_id
+        - plan
+      properties:
+        name:
+          $ref: '#/components/schemas/BucketName'
+        cluster_id:
+          type: string
+        plan:
+          $ref: '#/components/schemas/ReplicationPlan'
+    ErrorBody:
+      type: object
+      required:
+        - code
+        - message
+        - trace_id
+        - errors
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          $ref: '#/components/schemas/ErrorMessage'
+        trace_id:
+          $ref: '#/components/schemas/ErrorTraceId'
+        errors:
+          $ref: '#/components/schemas/Errors'
+    ErrorResponse:
+      type: object
+      required:
+        - error
       properties:
         error:
-          description: error 500
-          type: object
-          properties:
-            code:
-              allOf:
-                - $ref: '#/components/schemas/ErrorCode'
-              example: 500
-            message:
-              allOf:
-                - $ref: '#/components/schemas/ErrorMessage'
-              example: unknown error occurred.
-            trace_id:
-              allOf:
-                - $ref: '#/components/schemas/ErrorTraceId'
-              example: 0f36837633984f3fc8871f515e8efa24
-            errors:
-              allOf:
-                - $ref: '#/components/schemas/Errors'
-
+          $ref: '#/components/schemas/ErrorBody'
 tags:
   - name: サイト
     description: サイトに関する情報

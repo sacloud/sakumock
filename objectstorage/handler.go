@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sacloud/sakumock/core"
 )
 
@@ -20,8 +22,20 @@ type errorResponse struct {
 }
 
 type errorBody struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	TraceID string        `json:"trace_id"`
+	Errors  []errorDetail `json:"errors"`
+}
+
+// errorDetail is an item of error.errors. The mock reports no details, so the
+// array is always empty.
+type errorDetail struct {
+	Domain       string `json:"domain,omitempty"`
+	Location     string `json:"location,omitempty"`
+	LocationType string `json:"location_type,omitempty"`
+	Message      string `json:"message,omitempty"`
+	Reason       string `json:"reason,omitempty"`
 }
 
 type planJSON struct {
@@ -217,11 +231,18 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.state.SaveAfter(r)
 }
 
-// writeError writes the object storage error shape: {"error":{"code","message"}}.
+// writeError writes the object storage error shape:
+// {"error":{"code","message","trace_id","errors"}}, all four required by the spec.
 // The SDK reads error.code to classify the failure (e.g. saclient.IsNotFoundError
-// checks for 404), so the body's code must mirror the HTTP status.
+// checks for 404), so the body's code must mirror the HTTP status. trace_id is a
+// random 32-hex string, as the real API returns, and errors is always empty.
 func writeError(w http.ResponseWriter, status int, msg string) {
-	core.WriteJSON(w, status, errorResponse{Error: errorBody{Code: status, Message: msg}})
+	core.WriteJSON(w, status, errorResponse{Error: errorBody{
+		Code:    status,
+		Message: msg,
+		TraceID: strings.ReplaceAll(uuid.NewString(), "-", ""),
+		Errors:  []errorDetail{},
+	}})
 }
 
 func parsePermissionID(s string) (int64, bool) {

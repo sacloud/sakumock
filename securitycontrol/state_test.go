@@ -63,7 +63,7 @@ func TestStateSurvivesRestart(t *testing.T) {
 
 			// The catalog rules are restored in place, not added to the
 			// ones a fresh store starts with.
-			rules, err := securitycontrol.NewEvaluationRulesOp(client).List(ctx, v1.EvaluationRulesListParams{})
+			rules, err := securitycontrol.NewEvaluationRulesOp(client).List(ctx, v1.ListEvaluationRulesParams{})
 			if err != nil {
 				t.Fatal(err)
 			}

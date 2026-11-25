@@ -53,7 +53,7 @@ func TestApplianceLifecycle(t *testing.T) {
 		t.Fatalf("expected 0 appliances, got %d", len(listed.Appliances))
 	}
 
-	created, err := op.Create(ctx, v1.ModelsApplianceApplianceCreateRequest{
+	created, err := op.Create(ctx, v1.ModelsApplianceCreateServiceEndpointGatewayRequest{
 		Appliance: v1.ModelsApplianceApplianceCreateBody{
 			Remark: v1.ModelsRemarkApplianceCreateRemark{
 				Switch:  v1.ModelsRemarkSwitchRemark{ID: "123456789012"},
@@ -94,7 +94,7 @@ func TestApplianceLifecycle(t *testing.T) {
 		t.Fatalf("unexpected read response: %+v", read)
 	}
 
-	updated, err := op.Update(ctx, id, v1.ModelsApplianceApplianceUpdateRequest{
+	updated, err := op.Update(ctx, id, v1.ModelsApplianceUpdateServiceEndpointGatewayRequest{
 		Appliance: v1.ModelsApplianceApplianceUpdateBody{
 			Settings: v1.ModelsSettingsApplianceSettings{
 				ServiceEndpointGateway: v1.ModelsSettingsServiceEndpointGatewaySettings{
@@ -190,7 +190,7 @@ func TestCreateRejectsEmptyServerIPAddress(t *testing.T) {
 	ctx := t.Context()
 	op := segsdk.NewServiceEndpointGatewayOp(newTestClient(t, srv.TestURL()))
 
-	_, err := op.Create(ctx, v1.ModelsApplianceApplianceCreateRequest{
+	_, err := op.Create(ctx, v1.ModelsApplianceCreateServiceEndpointGatewayRequest{
 		Appliance: v1.ModelsApplianceApplianceCreateBody{
 			Remark: v1.ModelsRemarkApplianceCreateRemark{
 				Switch:  v1.ModelsRemarkSwitchRemark{ID: "123456789012"},
@@ -217,7 +217,7 @@ func TestUpdateEnabledServiceSimpleAI(t *testing.T) {
 	ctx := t.Context()
 	op := segsdk.NewServiceEndpointGatewayOp(newTestClient(t, srv.TestURL()))
 
-	created, err := op.Create(ctx, v1.ModelsApplianceApplianceCreateRequest{
+	created, err := op.Create(ctx, v1.ModelsApplianceCreateServiceEndpointGatewayRequest{
 		Appliance: v1.ModelsApplianceApplianceCreateBody{
 			Remark: v1.ModelsRemarkApplianceCreateRemark{
 				Switch:  v1.ModelsRemarkSwitchRemark{ID: "123456789012"},
@@ -231,7 +231,7 @@ func TestUpdateEnabledServiceSimpleAI(t *testing.T) {
 	}
 	id := created.Appliance.ID
 
-	if _, err := op.Update(ctx, id, v1.ModelsApplianceApplianceUpdateRequest{
+	if _, err := op.Update(ctx, id, v1.ModelsApplianceUpdateServiceEndpointGatewayRequest{
 		Appliance: v1.ModelsApplianceApplianceUpdateBody{
 			Settings: v1.ModelsSettingsApplianceSettings{
 				ServiceEndpointGateway: v1.ModelsSettingsServiceEndpointGatewaySettings{

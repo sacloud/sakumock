@@ -10,8 +10,8 @@ import (
 	"github.com/sacloud/sakumock/seg"
 )
 
-func stateCreateRequest() v1.ModelsApplianceApplianceCreateRequest {
-	return v1.ModelsApplianceApplianceCreateRequest{
+func stateCreateRequest() v1.ModelsApplianceCreateServiceEndpointGatewayRequest {
+	return v1.ModelsApplianceCreateServiceEndpointGatewayRequest{
 		Appliance: v1.ModelsApplianceApplianceCreateBody{
 			Remark: v1.ModelsRemarkApplianceCreateRemark{
 				Switch:  v1.ModelsRemarkSwitchRemark{ID: "123456789012"},
@@ -37,7 +37,7 @@ func TestStateSurvivesRestart(t *testing.T) {
 			sharedSwitchID = created.Appliance.Interfaces[0].Switch.ID
 			sharedIP = created.Appliance.Interfaces[0].IPAddress.Value
 
-			updated, err := op.Update(ctx, id, v1.ModelsApplianceApplianceUpdateRequest{
+			updated, err := op.Update(ctx, id, v1.ModelsApplianceUpdateServiceEndpointGatewayRequest{
 				Appliance: v1.ModelsApplianceApplianceUpdateBody{
 					Settings: v1.ModelsSettingsApplianceSettings{
 						ServiceEndpointGateway: v1.ModelsSettingsServiceEndpointGatewaySettings{

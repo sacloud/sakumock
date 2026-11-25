@@ -151,10 +151,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /fed/v1/buckets/{name}": {
 		204: nil,
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -193,10 +195,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -238,10 +242,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /fed/v1/buckets/{name}/replication": {
 		204: nil,
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -280,10 +286,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -325,10 +333,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /{site}/v2/account": {
 		204: nil,
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -367,10 +377,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -412,10 +424,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /{site}/v2/account/keys/{id}": {
 		204: nil,
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -457,10 +471,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /{site}/v2/buckets/{name}/encryption": {
 		204: nil,
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -499,10 +515,56 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		405: {
+			Type:     "object",
+			Required: []string{"error"},
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -544,10 +606,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /{site}/v2/permissions/{id}": {
 		204: nil,
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -589,10 +653,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 	"DELETE /{site}/v2/permissions/{id}/keys/{key_id}": {
 		204: nil,
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -631,10 +697,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -712,10 +780,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -754,10 +824,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -820,7 +892,10 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "string",
 								},
 								"name": {
-									Type: "string",
+									Type:      "string",
+									MinLength: new(3),
+									MaxLength: new(64),
+									Pattern:   "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
 								},
 								"plan": {
 									Type:     "object",
@@ -831,7 +906,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"type": {
 											Type: "string",
-											Enum: []any{"standard", "archive"},
+											Enum: []any{"", "standard", "archive"},
 										},
 									},
 								},
@@ -845,7 +920,10 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "string",
 								},
 								"name": {
-									Type: "string",
+									Type:      "string",
+									MinLength: new(3),
+									MaxLength: new(64),
+									Pattern:   "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
 								},
 								"plan": {
 									Type:     "object",
@@ -856,7 +934,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"type": {
 											Type: "string",
-											Enum: []any{"standard", "archive"},
+											Enum: []any{"", "standard", "archive"},
 										},
 									},
 								},
@@ -867,10 +945,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -909,10 +989,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1014,10 +1096,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1116,10 +1200,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1158,10 +1244,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1225,10 +1313,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1267,10 +1357,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1333,10 +1425,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1375,10 +1469,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1438,10 +1534,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1480,10 +1578,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1561,10 +1661,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1624,10 +1726,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1666,10 +1770,56 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		405: {
+			Type:     "object",
+			Required: []string{"error"},
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1752,10 +1902,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1794,10 +1946,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1890,10 +2044,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1932,10 +2088,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -1974,10 +2132,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		405: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2036,10 +2196,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2078,10 +2240,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2120,10 +2284,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2182,10 +2348,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2224,10 +2392,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2398,7 +2568,8 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 								},
 							},
 							"year_month": {
-								Type: "string",
+								Type:    "string",
+								Pattern: "^\\d{4}-(0[1-9]|1[0-2])$",
 							},
 						},
 					},
@@ -2406,10 +2577,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2448,10 +2621,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2541,10 +2716,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2631,10 +2808,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2673,10 +2852,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2739,10 +2920,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2781,10 +2964,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2844,10 +3029,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2886,10 +3073,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -2947,6 +3136,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 							},
 							"fee": {
 								Type:     "object",
+								Nullable: true,
 								Required: []string{"daily", "for_month", "hourly", "monthly"},
 								Properties: map[string]*core.BodySchema{
 									"daily": {
@@ -2976,10 +3166,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3053,10 +3245,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3130,10 +3324,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3196,7 +3392,10 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "string",
 								},
 								"name": {
-									Type: "string",
+									Type:      "string",
+									MinLength: new(3),
+									MaxLength: new(64),
+									Pattern:   "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
 								},
 								"plan": {
 									Type:     "object",
@@ -3207,7 +3406,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"type": {
 											Type: "string",
-											Enum: []any{"standard", "archive"},
+											Enum: []any{"", "standard", "archive"},
 										},
 									},
 								},
@@ -3221,7 +3420,10 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 									Type: "string",
 								},
 								"name": {
-									Type: "string",
+									Type:      "string",
+									MinLength: new(3),
+									MaxLength: new(64),
+									Pattern:   "^[a-z0-9][a-z0-9-]*[a-z0-9]$",
 								},
 								"plan": {
 									Type:     "object",
@@ -3232,7 +3434,7 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 										},
 										"type": {
 											Type: "string",
-											Enum: []any{"standard", "archive"},
+											Enum: []any{"", "standard", "archive"},
 										},
 									},
 								},
@@ -3243,10 +3445,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3285,10 +3489,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3327,10 +3533,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3394,10 +3602,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3436,10 +3646,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		403: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3478,10 +3690,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3545,10 +3759,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3587,10 +3803,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3629,10 +3847,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3719,10 +3939,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3761,10 +3983,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3803,10 +4027,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3870,10 +4096,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3912,10 +4140,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -3954,10 +4184,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4031,10 +4263,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4073,10 +4307,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4115,10 +4351,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4178,10 +4416,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4220,10 +4460,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4262,10 +4504,56 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
+					Properties: map[string]*core.BodySchema{
+						"code": {
+							Type: "integer",
+						},
+						"errors": {
+							Type: "array",
+							Items: &core.BodySchema{
+								Type: "object",
+								Properties: map[string]*core.BodySchema{
+									"domain": {
+										Type: "string",
+									},
+									"location": {
+										Type: "string",
+									},
+									"location_type": {
+										Type: "string",
+									},
+									"message": {
+										Type: "string",
+									},
+									"reason": {
+										Type: "string",
+									},
+								},
+							},
+						},
+						"message": {
+							Type: "string",
+						},
+						"trace_id": {
+							Type: "string",
+						},
+					},
+				},
+			},
+		},
+		405: {
+			Type:     "object",
+			Required: []string{"error"},
+			Properties: map[string]*core.BodySchema{
+				"error": {
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4377,10 +4665,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		400: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4419,10 +4709,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		405: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4461,10 +4753,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4551,10 +4845,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		401: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4593,10 +4889,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		404: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",
@@ -4635,10 +4933,12 @@ var responseSchemas = map[string]map[int]*core.BodySchema{
 			},
 		},
 		409: {
-			Type: "object",
+			Type:     "object",
+			Required: []string{"error"},
 			Properties: map[string]*core.BodySchema{
 				"error": {
-					Type: "object",
+					Type:     "object",
+					Required: []string{"code", "errors", "message", "trace_id"},
 					Properties: map[string]*core.BodySchema{
 						"code": {
 							Type: "integer",

@@ -85,7 +85,7 @@ func TestSiteAPI(t *testing.T) {
 	}
 	found := false
 	for _, s := range sites {
-		if s.ID.Value == testSiteID {
+		if s.ID == testSiteID {
 			found = true
 		}
 	}
@@ -97,8 +97,8 @@ func TestSiteAPI(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if site.ID.Value != testSiteID {
-		t.Errorf("unexpected site id: %s", site.ID.Value)
+	if site.ID != testSiteID {
+		t.Errorf("unexpected site id: %s", site.ID)
 	}
 
 	if _, err := op.Read(t.Context(), "no-such-site"); err == nil {
@@ -130,15 +130,15 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.Secret.Value == "" {
+	if created.Secret == "" {
 		t.Error("expected secret on key creation")
 	}
-	got, err := accountOp.ReadAccessKey(ctx, string(created.ID.Value))
+	got, err := accountOp.ReadAccessKey(ctx, string(created.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Secret.Value != "" {
-		t.Errorf("expected empty secret on read, got %q", got.Secret.Value)
+	if got.ID != created.ID {
+		t.Errorf("read key id = %s, want %s", got.ID, created.ID)
 	}
 	keys, err := accountOp.ListAccessKeys(ctx)
 	if err != nil {
@@ -160,11 +160,11 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bucket.Name.Value != bucketName {
-		t.Errorf("unexpected bucket name: %s", bucket.Name.Value)
+	if bucket.Name != bucketName {
+		t.Errorf("unexpected bucket name: %s", bucket.Name)
 	}
-	if bucket.ClusterID.Value != testSiteID {
-		t.Errorf("unexpected cluster id: %s", bucket.ClusterID.Value)
+	if bucket.ClusterID != testSiteID {
+		t.Errorf("unexpected cluster id: %s", bucket.ClusterID)
 	}
 
 	// Duplicate create is a conflict.
@@ -179,7 +179,7 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 	if len(buckets) != 1 || string(buckets[0].Name) != bucketName {
 		t.Fatalf("unexpected bucket list: %+v", buckets)
 	}
-	if buckets[0].ResourceID.Value == "" {
+	if buckets[0].ResourceID == "" {
 		t.Error("expected a resource id in bucket list")
 	}
 
@@ -194,7 +194,7 @@ func TestAccountAndBucketLifecycle(t *testing.T) {
 		t.Fatalf("expected no buckets after delete, got %d", len(buckets))
 	}
 
-	if err := accountOp.DeleteAccessKey(ctx, string(created.ID.Value)); err != nil {
+	if err := accountOp.DeleteAccessKey(ctx, string(created.ID)); err != nil {
 		t.Fatal(err)
 	}
 	if err := accountOp.Delete(ctx); err != nil {
@@ -209,27 +209,27 @@ func TestPermissionCRUD(t *testing.T) {
 	ctx := t.Context()
 
 	op := sdk.NewPermissionOp(site)
-	controls := v2.BucketControls{
+	controls := v2.BucketControlsBody{
 		{
-			BucketName: v2.NewOptBucketName("tf-test-bucket"),
-			CanRead:    v2.NewOptCanRead(true),
-			CanWrite:   v2.NewOptCanWrite(false),
+			BucketName: v2.BucketName("tf-test-bucket"),
+			CanRead:    true,
+			CanWrite:   false,
 		},
 	}
 	created, err := op.Create(ctx, "my-permission", controls)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.DisplayName.Value != "my-permission" {
-		t.Errorf("unexpected display name: %s", created.DisplayName.Value)
+	if created.DisplayName != "my-permission" {
+		t.Errorf("unexpected display name: %s", created.DisplayName)
 	}
-	id := strconv.FormatInt(int64(created.ID.Value), 10)
+	id := strconv.FormatInt(int64(created.ID), 10)
 
 	got, err := op.Read(ctx, id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.BucketControls) != 1 || string(got.BucketControls[0].BucketName.Value) != "tf-test-bucket" {
+	if len(got.BucketControls) != 1 || string(got.BucketControls[0].BucketName) != "tf-test-bucket" {
 		t.Errorf("unexpected bucket controls: %+v", got.BucketControls)
 	}
 
@@ -237,34 +237,31 @@ func TestPermissionCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updated.DisplayName.Value != "renamed" {
-		t.Errorf("unexpected display name after update: %s", updated.DisplayName.Value)
+	if updated.DisplayName != "renamed" {
+		t.Errorf("unexpected display name after update: %s", updated.DisplayName)
 	}
 
 	key, err := op.CreateAccessKey(ctx, id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if key.Secret.Value == "" {
+	if key.Secret == "" {
 		t.Error("expected secret on permission key creation")
 	}
-	readKey, err := op.ReadAccessKey(ctx, id, string(key.ID.Value))
+	readKey, err := op.ReadAccessKey(ctx, id, string(key.ID))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if readKey.Secret.Value != "" {
-		t.Errorf("expected empty secret on read, got %q", readKey.Secret.Value)
+	if readKey.ID != key.ID {
+		t.Errorf("read permission key id = %s, want %s", readKey.ID, key.ID)
 	}
 
 	keys, err := op.ListAccessKeys(ctx, id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(keys) != 1 || keys[0].ID.Value != key.ID.Value {
-		t.Errorf("permission keys = %+v, want only %s", keys, key.ID.Value)
-	}
-	if len(keys) == 1 && keys[0].Secret.Value != "" {
-		t.Errorf("expected empty secret on list, got %q", keys[0].Secret.Value)
+	if len(keys) != 1 || keys[0].ID != key.ID {
+		t.Errorf("permission keys = %+v, want only %s", keys, key.ID)
 	}
 
 	// The real API allows only one access key per permission
@@ -288,7 +285,7 @@ func TestPermissionCRUD(t *testing.T) {
 		t.Fatalf("expected 1 permission, got %d", len(list))
 	}
 
-	if err := op.DeleteAccessKey(ctx, id, string(key.ID.Value)); err != nil {
+	if err := op.DeleteAccessKey(ctx, id, string(key.ID)); err != nil {
 		t.Fatal(err)
 	}
 	if err := op.Delete(ctx, id); err != nil {
@@ -323,8 +320,8 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(enc.KmsKeyID.Value) != "990000099999" {
-		t.Errorf("unexpected kms key id: %s", enc.KmsKeyID.Value)
+	if string(enc.KmsKeyID) != "990000099999" {
+		t.Errorf("unexpected kms key id: %s", enc.KmsKeyID)
 	}
 	if err := extra.DisableEncryption(ctx); err != nil {
 		t.Fatal(err)
@@ -343,15 +340,15 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 		t.Fatal(err)
 	}
 	fedRaw := newRawClient(t, srv.TestURL(), "/fed/v1")
-	res, err := fedRaw.GetBucketReplicableTargets(ctx, v2.GetBucketReplicableTargetsParams{Name: "enc-bucket"})
+	res, err := fedRaw.ListBucketReplicableTargets(ctx, v2.ListBucketReplicableTargetsParams{Name: "enc-bucket"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	targets, ok := res.(*v2.HandlerGetReplicableTargetsRes)
+	targets, ok := res.(*v2.HandlerListBucketReplicableTargetsResponse)
 	if !ok {
 		t.Fatalf("unexpected replicable-targets response: %T", res)
 	}
-	if len(targets.Data) != 1 || targets.Data[0].Name.Value != "enc-bucket-replica" {
+	if len(targets.Data) != 1 || targets.Data[0].Name != "enc-bucket-replica" {
 		t.Fatalf("unexpected replicable targets: %+v", targets.Data)
 	}
 
@@ -359,8 +356,8 @@ func TestBucketEncryptionAndReplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if repl.DestBucket.ClusterID.Value != "tky01" {
-		t.Errorf("unexpected replication destination cluster: %s", repl.DestBucket.ClusterID.Value)
+	if repl.DestBucket.ClusterID != "tky01" {
+		t.Errorf("unexpected replication destination cluster: %s", repl.DestBucket.ClusterID)
 	}
 	if _, err := extra.ReadReplication(ctx); err != nil {
 		t.Fatal(err)
@@ -384,38 +381,38 @@ func TestBucketPlan(t *testing.T) {
 	}
 	siteRaw := newRawClient(t, srv.TestURL(), "/"+testSiteID+"/v2")
 
-	res, err := siteRaw.GetBucketPlan(ctx, v2.GetBucketPlanParams{Name: "plan-bucket"})
+	res, err := siteRaw.ReadBucketPlan(ctx, v2.ReadBucketPlanParams{Name: "plan-bucket"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	current, ok := res.(*v2.GetBucketPlanOK)
+	current, ok := res.(*v2.ReadBucketPlanOK)
 	if !ok {
 		t.Fatalf("unexpected get-plan response: %T", res)
 	}
-	contract := current.Data.Contract.Value
-	if contract.Status.Value != v2.ContractSummaryStatusActive || !contract.DeletedAt.Null {
+	contract := current.Data.Contract
+	if contract.Status != v2.ContractSummaryStatusActive || !contract.DeletedAt.Null {
 		t.Errorf("unexpected current contract: %+v", contract)
 	}
-	if plan := current.Data.Plan.Value; plan.ClusterID.Value != testSiteID || !plan.CapacityGib.Null {
+	if plan := current.Data.Plan; plan.ClusterID != testSiteID || !plan.CapacityGib.Null {
 		t.Errorf("unexpected current plan: %+v", plan)
 	}
 
-	pres, err := siteRaw.PutBucketPlan(ctx, &v2.PlanChangeReqBody{
-		PreviousContract: v2.PlanChangeReqBodyPreviousContract{ResourceID: v2.NewOptResourceID(v2.ResourceID(contract.ResourceID.Value))},
+	pres, err := siteRaw.UpdateBucketPlan(ctx, &v2.PlanChangeReqBody{
+		PreviousContract: v2.PlanChangeReqBodyPreviousContract{ResourceID: v2.ResourceID(contract.ResourceID)},
 		NewPlan:          v2.PlanChangeReqBodyNewPlan{Type: v2.ModelPlanTypeStandard, ServiceClassPath: "objectstorage/isk01/bucket"},
-	}, v2.PutBucketPlanParams{Name: "plan-bucket"})
+	}, v2.UpdateBucketPlanParams{Name: "plan-bucket"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	changed, ok := pres.(*v2.PutBucketPlanOK)
+	changed, ok := pres.(*v2.UpdateBucketPlanOK)
 	if !ok {
 		t.Fatalf("unexpected put-plan response: %T", pres)
 	}
 	prev, next := changed.Data.PreviousContract.Value, changed.Data.NewContract.Value
-	if prev.Status.Value != v2.ContractSummaryStatusTerminated || prev.DeletedAt.Null || !prev.DeletedAt.Set {
+	if prev.Status != v2.ContractSummaryStatusTerminated || prev.DeletedAt.Null {
 		t.Errorf("unexpected previous contract: %+v", prev)
 	}
-	if next.ResourceID.Value == contract.ResourceID.Value || !next.DeletedAt.Null {
+	if next.ResourceID == contract.ResourceID || !next.DeletedAt.Null {
 		t.Errorf("unexpected new contract: %+v", next)
 	}
 }

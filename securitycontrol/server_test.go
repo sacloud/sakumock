@@ -171,7 +171,7 @@ func TestAutomatedActionLifecycle(t *testing.T) {
 	if read.Name != "run-workflow" {
 		t.Fatalf("unexpected read action: %+v", read)
 	}
-	list, err := op.List(ctx, v1.AutomatedActionsListParams{})
+	list, err := op.List(ctx, v1.ListAutomatedActionsParams{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +229,7 @@ func TestAutomatedActionPagination(t *testing.T) {
 	}
 
 	var got []string
-	params := v1.AutomatedActionsListParams{PageSize: v1.NewOptInt(2)}
+	params := v1.ListAutomatedActionsParams{PageSize: v1.NewOptInt(2)}
 	var pages int
 	for {
 		page, err := op.List(ctx, params)
@@ -257,7 +257,7 @@ func TestAutomatedActionPagination(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	back, err := op.List(ctx, v1.AutomatedActionsListParams{PageSize: v1.NewOptInt(2), Prev: last.PrevPageToken})
+	back, err := op.List(ctx, v1.ListAutomatedActionsParams{PageSize: v1.NewOptInt(2), Prev: last.PrevPageToken})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +265,7 @@ func TestAutomatedActionPagination(t *testing.T) {
 		t.Fatalf("prev page: %+v", back.Items)
 	}
 
-	for name, p := range map[string]v1.AutomatedActionsListParams{
+	for name, p := range map[string]v1.ListAutomatedActionsParams{
 		"next and prev":      {Next: params.Next, Prev: params.Next},
 		"page_size mismatch": {PageSize: v1.NewOptInt(3), Next: params.Next},
 		"broken token":       {Next: v1.NewOptString("!!")},
@@ -283,7 +283,7 @@ func TestEvaluationRules(t *testing.T) {
 	ctx := t.Context()
 	op := securitycontrol.NewEvaluationRulesOp(client)
 
-	list, err := op.List(ctx, v1.EvaluationRulesListParams{})
+	list, err := op.List(ctx, v1.ListEvaluationRulesParams{})
 	if err != nil {
 		t.Fatal(err)
 	}

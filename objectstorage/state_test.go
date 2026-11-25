@@ -20,11 +20,11 @@ import (
 )
 
 // readOnly is the bucket controls of a permission that may only read bucket.
-func readOnly(bucket string) v2.BucketControls {
-	return v2.BucketControls{{
-		BucketName: v2.NewOptBucketName(v2.BucketName(bucket)),
-		CanRead:    v2.NewOptCanRead(true),
-		CanWrite:   v2.NewOptCanWrite(false),
+func readOnly(bucket string) v2.BucketControlsBody {
+	return v2.BucketControlsBody{{
+		BucketName: v2.BucketName(bucket),
+		CanRead:    true,
+		CanWrite:   false,
 	}}
 }
 
@@ -58,35 +58,35 @@ func TestStateSurvivesRestart(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			accountID = string(account.ResourceID.Value)
+			accountID = string(account.ResourceID)
 			accountKey, err := accountOp.CreateAccessKey(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}
-			accountKeyID = string(accountKey.ID.Value)
+			accountKeyID = string(accountKey.ID)
 
 			permOp := sdk.NewPermissionOp(site)
 			perm, err := permOp.Create(ctx, "persisted-permission", readOnly("persisted"))
 			if err != nil {
 				t.Fatal(err)
 			}
-			permID = strconv.FormatInt(int64(perm.ID.Value), 10)
+			permID = strconv.FormatInt(int64(perm.ID), 10)
 			permKey, err := permOp.CreateAccessKey(ctx, permID)
 			if err != nil {
 				t.Fatal(err)
 			}
-			permKeyID = string(permKey.ID.Value)
+			permKeyID = string(permKey.ID)
 			// A permission whose key was deleted is restored without keys.
 			keyless, err := permOp.Create(ctx, "keyless", readOnly("replica"))
 			if err != nil {
 				t.Fatal(err)
 			}
-			keylessID := strconv.FormatInt(int64(keyless.ID.Value), 10)
+			keylessID := strconv.FormatInt(int64(keyless.ID), 10)
 			key, err := permOp.CreateAccessKey(ctx, keylessID)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := permOp.DeleteAccessKey(ctx, keylessID, string(key.ID.Value)); err != nil {
+			if err := permOp.DeleteAccessKey(ctx, keylessID, string(key.ID)); err != nil {
 				t.Fatal(err)
 			}
 		},
@@ -105,14 +105,14 @@ func TestStateSurvivesRestart(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(enc.KmsKeyID.Value) != kmsKeyID {
-				t.Errorf("restored encryption key = %s, want %s", enc.KmsKeyID.Value, kmsKeyID)
+			if string(enc.KmsKeyID) != kmsKeyID {
+				t.Errorf("restored encryption key = %s, want %s", enc.KmsKeyID, kmsKeyID)
 			}
 			repl, err := extra.ReadReplication(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(repl.DestBucket.Name.Value) != "replica" || repl.DestBucket.ClusterID.Value != "tky01" {
+			if string(repl.DestBucket.Name) != "replica" || repl.DestBucket.ClusterID != "tky01" {
 				t.Errorf("restored replication = %+v, want replica in tky01", repl.DestBucket)
 			}
 
@@ -121,8 +121,8 @@ func TestStateSurvivesRestart(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(account.ResourceID.Value) != accountID {
-				t.Errorf("restored account = %s, want %s", account.ResourceID.Value, accountID)
+			if string(account.ResourceID) != accountID {
+				t.Errorf("restored account = %s, want %s", account.ResourceID, accountID)
 			}
 			if _, err := accountOp.ReadAccessKey(ctx, accountKeyID); err != nil {
 				t.Errorf("restored account key: %v", err)
@@ -140,10 +140,10 @@ func TestStateSurvivesRestart(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if perm.DisplayName.Value != "persisted-permission" || len(perm.BucketControls) != 1 {
+			if perm.DisplayName != "persisted-permission" || len(perm.BucketControls) != 1 {
 				t.Fatalf("restored permission = %+v", perm)
 			}
-			if c := perm.BucketControls[0]; string(c.BucketName.Value) != "persisted" || !bool(c.CanRead.Value) || bool(c.CanWrite.Value) {
+			if c := perm.BucketControls[0]; string(c.BucketName) != "persisted" || !bool(c.CanRead) || bool(c.CanWrite) {
 				t.Errorf("restored bucket control = %+v", c)
 			}
 			if _, err := permOp.ReadAccessKey(ctx, permID, permKeyID); err != nil {
@@ -189,9 +189,9 @@ func TestStateRestoredIDsAreNotReused(t *testing.T) {
 			t.Fatal(err)
 		}
 		return []string{
-			string(buckets[0].ResourceID.Value),
-			string(account.ResourceID.Value),
-			strconv.FormatInt(int64(perm.ID.Value), 10),
+			string(buckets[0].ResourceID),
+			string(account.ResourceID),
+			strconv.FormatInt(int64(perm.ID), 10),
 		}
 	}
 	coretest.StateRestart(t, objectstorage.Config{},
@@ -259,13 +259,13 @@ func TestStateDataPlaneSurvivesRestart(t *testing.T) {
 		t.Fatalf("create account access key: %v", err)
 	}
 	permOp := sdk.NewPermissionOp(site)
-	newPermKey := func(name string) (string, *v2.PermissionKeyData) {
+	newPermKey := func(name string) (string, *v2.PermissionKeyCreateResponseBody) {
 		t.Helper()
 		perm, err := permOp.Create(ctx, name, readOnly(bucket))
 		if err != nil {
 			t.Fatalf("create permission %s: %v", name, err)
 		}
-		id := strconv.FormatInt(int64(perm.ID.Value), 10)
+		id := strconv.FormatInt(int64(perm.ID), 10)
 		key, err := permOp.CreateAccessKey(ctx, id)
 		if err != nil {
 			t.Fatalf("create permission access key: %v", err)
@@ -274,10 +274,10 @@ func TestStateDataPlaneSurvivesRestart(t *testing.T) {
 	}
 	_, permKey := newPermKey("kept")
 	revokedPermID, revokedKey := newPermKey("revoked")
-	if err := permOp.DeleteAccessKey(ctx, revokedPermID, string(revokedKey.ID.Value)); err != nil {
+	if err := permOp.DeleteAccessKey(ctx, revokedPermID, string(revokedKey.ID)); err != nil {
 		t.Fatalf("delete permission access key: %v", err)
 	}
-	putObject(t, newS3Client(addr, string(accountKey.ID.Value), string(accountKey.Secret.Value)), bucket, object, "before-restart")
+	putObject(t, newS3Client(addr, string(accountKey.ID), string(accountKey.Secret)), bucket, object, "before-restart")
 	stop()
 
 	if _, err := os.Stat(filepath.Join(dir, "objectstorage-data", bucket, object)); err != nil {
@@ -286,12 +286,12 @@ func TestStateDataPlaneSurvivesRestart(t *testing.T) {
 
 	url, addr, _ = start()
 	fed, site = newClients(t, url)
-	if _, err := sdk.NewAccountOp(site).ReadAccessKey(ctx, string(accountKey.ID.Value)); err != nil {
+	if _, err := sdk.NewAccountOp(site).ReadAccessKey(ctx, string(accountKey.ID)); err != nil {
 		t.Errorf("restored account key on the control plane: %v", err)
 	}
 	for name, key := range map[string][2]string{
-		"account key":    {string(accountKey.ID.Value), string(accountKey.Secret.Value)},
-		"permission key": {string(permKey.ID.Value), string(permKey.Secret.Value)},
+		"account key":    {string(accountKey.ID), string(accountKey.Secret)},
+		"permission key": {string(permKey.ID), string(permKey.Secret)},
 	} {
 		c := newS3Client(addr, key[0], key[1])
 		if !bucketListed(t, c, bucket) {
@@ -301,7 +301,7 @@ func TestStateDataPlaneSurvivesRestart(t *testing.T) {
 			t.Errorf("object via the restored %s = %q, want %q", name, got, "before-restart")
 		}
 	}
-	revoked := newS3Client(addr, string(revokedKey.ID.Value), string(revokedKey.Secret.Value))
+	revoked := newS3Client(addr, string(revokedKey.ID), string(revokedKey.Secret))
 	if _, err := revoked.ListBuckets(ctx, &s3.ListBucketsInput{}); err == nil {
 		t.Error("a key deleted before the restart must not authenticate after it")
 	}

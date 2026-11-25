@@ -223,7 +223,7 @@ func TestDataPlaneControlPlaneKeys(t *testing.T) {
 	}
 
 	// The issued key authenticates S3 requests...
-	issued := newS3Client(addr, string(key.ID.Value), string(key.Secret.Value))
+	issued := newS3Client(addr, string(key.ID), string(key.Secret))
 	putObject(t, issued, bucket, object, "issued-key")
 	if got := getObjectBody(t, issued, bucket, object); got != "issued-key" {
 		t.Errorf("object via issued key = %q, want %q", got, "issued-key")
@@ -245,7 +245,7 @@ func TestDataPlaneControlPlaneKeys(t *testing.T) {
 
 	// Deleting the key revokes it immediately (versitygw runs with its IAM
 	// cache disabled).
-	if err := accountOp.DeleteAccessKey(ctx, string(key.ID.Value)); err != nil {
+	if err := accountOp.DeleteAccessKey(ctx, string(key.ID)); err != nil {
 		t.Fatalf("delete account access key: %v", err)
 	}
 	if _, err := issued.ListBuckets(ctx, &s3.ListBucketsInput{}); err == nil {
@@ -255,20 +255,20 @@ func TestDataPlaneControlPlaneKeys(t *testing.T) {
 	// Permission keys follow the same flow, revoked when their permission is
 	// deleted.
 	permOp := sdk.NewPermissionOp(site)
-	perm, err := permOp.Create(ctx, "dataplane-key-test", v2.BucketControls{{
-		BucketName: v2.NewOptBucketName(bucket),
-		CanRead:    v2.NewOptCanRead(true),
-		CanWrite:   v2.NewOptCanWrite(true),
+	perm, err := permOp.Create(ctx, "dataplane-key-test", v2.BucketControlsBody{{
+		BucketName: v2.BucketName(bucket),
+		CanRead:    true,
+		CanWrite:   true,
 	}})
 	if err != nil {
 		t.Fatalf("create permission: %v", err)
 	}
-	permID := strconv.FormatInt(int64(perm.ID.Value), 10)
+	permID := strconv.FormatInt(int64(perm.ID), 10)
 	pkey, err := permOp.CreateAccessKey(ctx, permID)
 	if err != nil {
 		t.Fatalf("create permission access key: %v", err)
 	}
-	permClient := newS3Client(addr, string(pkey.ID.Value), string(pkey.Secret.Value))
+	permClient := newS3Client(addr, string(pkey.ID), string(pkey.Secret))
 	if got := getObjectBody(t, permClient, bucket, object); got != "issued-key" {
 		t.Errorf("object via permission key = %q, want %q", got, "issued-key")
 	}

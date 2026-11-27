@@ -1,6 +1,7 @@
 package monitoringsuite
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -88,10 +89,22 @@ type logStorageCreateRequest struct {
 	ServicePrincipalID *int64  `json:"service_principal_id"`
 }
 
+// nullableInt64 tells an explicit JSON null (clear the value) from an absent
+// field (leave it unchanged) in update requests.
+type nullableInt64 struct {
+	set   bool
+	value *int64
+}
+
+func (n *nullableInt64) UnmarshalJSON(b []byte) error {
+	n.set = true
+	return json.Unmarshal(b, &n.value)
+}
+
 type logStorageRequest struct {
-	Name               *string `json:"name"`
-	Description        *string `json:"description"`
-	ServicePrincipalID *int64  `json:"service_principal_id"`
+	Name               *string       `json:"name"`
+	Description        *string       `json:"description"`
+	ServicePrincipalID nullableInt64 `json:"service_principal_id"`
 }
 
 func (s *Server) handleListLogStorages(w http.ResponseWriter, r *http.Request) {
@@ -158,8 +171,8 @@ func (s *Server) handleUpdateLogStorage(w http.ResponseWriter, r *http.Request) 
 	if req.Description != nil {
 		st.Description = *req.Description
 	}
-	if req.ServicePrincipalID != nil {
-		st.ServicePrincipalID = req.ServicePrincipalID
+	if req.ServicePrincipalID.set {
+		st.ServicePrincipalID = req.ServicePrincipalID.value
 	}
 	core.WriteJSON(w, http.StatusOK, s.logStorageToJSON(st, true))
 }
@@ -379,9 +392,9 @@ type traceStorageCreateRequest struct {
 }
 
 type traceStorageRequest struct {
-	Name               *string `json:"name"`
-	Description        *string `json:"description"`
-	ServicePrincipalID *int64  `json:"service_principal_id"`
+	Name               *string       `json:"name"`
+	Description        *string       `json:"description"`
+	ServicePrincipalID nullableInt64 `json:"service_principal_id"`
 }
 
 func (s *Server) handleListTraceStorages(w http.ResponseWriter, r *http.Request) {
@@ -447,8 +460,8 @@ func (s *Server) handleUpdateTraceStorage(w http.ResponseWriter, r *http.Request
 	if req.Description != nil {
 		st.Description = *req.Description
 	}
-	if req.ServicePrincipalID != nil {
-		st.ServicePrincipalID = req.ServicePrincipalID
+	if req.ServicePrincipalID.set {
+		st.ServicePrincipalID = req.ServicePrincipalID.value
 	}
 	core.WriteJSON(w, http.StatusOK, s.traceStorageToJSON(st, true))
 }

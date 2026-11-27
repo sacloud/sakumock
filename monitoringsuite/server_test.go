@@ -967,3 +967,107 @@ func TestLogMeasureRuleLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDedicatedStorageKMS(t *testing.T) {
+	client, closeFn := newServer(t)
+	defer closeFn()
+	ctx := t.Context()
+	const kmsKeyID, spID, newSPID = int64(110000000001), int64(110000000002), int64(110000000003)
+
+	// check asserts the KMS key stays and the service principal is want (nil = null).
+	type optInt64 interface{ Get() (int64, bool) }
+	check := func(t *testing.T, step string, kms, sp optInt64, want *int64) {
+		t.Helper()
+		if v, ok := kms.Get(); !ok || v != kmsKeyID {
+			t.Fatalf("%s: kms_key_id = %+v, want %d", step, kms, kmsKeyID)
+		}
+		v, ok := sp.Get()
+		if want == nil && ok || want != nil && (!ok || v != *want) {
+			t.Fatalf("%s: service_principal_id = %+v, want %v", step, sp, want)
+		}
+	}
+
+	t.Run("log", func(t *testing.T) {
+		op := mssdk.NewLogsStorageOp(client)
+		created, err := op.Create(ctx, mssdk.LogStorageCreateParams{
+			Name:               "dedicated-logs",
+			Classification:     new(v1.LogStorageCreateRequestClassificationDedicated),
+			KmsKeyID:           v1.NewOptNilInt64(kmsKeyID),
+			ServicePrincipalID: v1.NewOptNilInt64(spID),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if created.GetClassification() != v1.LogStorageClassificationDedicated {
+			t.Fatalf("classification = %s", created.GetClassification())
+		}
+		check(t, "create", created.GetKmsKeyID(), created.GetServicePrincipalID(), new(spID))
+		id := ridOf(t, created.GetResourceID())
+
+		// An update without service_principal_id leaves it unchanged.
+		updated, err := op.Update(ctx, id, mssdk.LogStorageUpdateParams{Name: new("renamed")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		check(t, "rename", updated.GetKmsKeyID(), updated.GetServicePrincipalID(), new(spID))
+
+		updated, err = op.Update(ctx, id, mssdk.LogStorageUpdateParams{ServicePrincipalID: v1.NewOptNilInt64(newSPID)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		check(t, "replace", updated.GetKmsKeyID(), updated.GetServicePrincipalID(), new(newSPID))
+
+		// An explicit null clears it.
+		var null v1.OptNilInt64
+		null.SetToNull()
+		if _, err := op.Update(ctx, id, mssdk.LogStorageUpdateParams{ServicePrincipalID: null}); err != nil {
+			t.Fatal(err)
+		}
+		read, err := op.Read(ctx, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		check(t, "clear", read.GetKmsKeyID(), read.GetServicePrincipalID(), nil)
+	})
+
+	t.Run("trace", func(t *testing.T) {
+		op := mssdk.NewTracesStorageOp(client)
+		created, err := op.Create(ctx, mssdk.TracesStorageCreateParams{
+			Name:               "dedicated-traces",
+			Classification:     new(v1.TraceStorageCreateRequestClassificationDedicated),
+			KmsKeyID:           v1.NewOptNilInt64(kmsKeyID),
+			ServicePrincipalID: v1.NewOptNilInt64(spID),
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if created.GetClassification() != v1.TraceStorageClassificationDedicated {
+			t.Fatalf("classification = %s", created.GetClassification())
+		}
+		check(t, "create", created.GetKmsKeyID(), created.GetServicePrincipalID(), new(spID))
+		id := fmt.Sprintf("%d", created.GetResourceID())
+
+		updated, err := op.Update(ctx, id, mssdk.TracesStorageUpdateParams{Name: new("renamed")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		check(t, "rename", updated.GetKmsKeyID(), updated.GetServicePrincipalID(), new(spID))
+
+		updated, err = op.Update(ctx, id, mssdk.TracesStorageUpdateParams{ServicePrincipalID: v1.NewOptNilInt64(newSPID)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		check(t, "replace", updated.GetKmsKeyID(), updated.GetServicePrincipalID(), new(newSPID))
+
+		var null v1.OptNilInt64
+		null.SetToNull()
+		if _, err := op.Update(ctx, id, mssdk.TracesStorageUpdateParams{ServicePrincipalID: null}); err != nil {
+			t.Fatal(err)
+		}
+		read, err := op.Read(ctx, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		check(t, "clear", read.GetKmsKeyID(), read.GetServicePrincipalID(), nil)
+	})
+}

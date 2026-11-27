@@ -51,3 +51,19 @@ resource "sakura_monitoring_suite_alert_log_measure_rule" "test" {
     }
   }
 }
+
+# Dedicated storages are encrypted with a KMS key, reached through a service
+# principal (provider >= 3.16.0).
+resource "sakura_monitoring_suite_log_storage" "dedicated" {
+  name                 = "sakumock-tf-dedicated-log-storage"
+  classification       = "dedicated"
+  kms_key_id           = sakura_kms.test.id
+  service_principal_id = sakura_iam_service_principal.test.id
+}
+
+resource "sakura_monitoring_suite_trace_storage" "dedicated" {
+  name                 = "sakumock-tf-dedicated-trace-storage"
+  classification       = "dedicated"
+  kms_key_id           = sakura_kms.test.id
+  service_principal_id = sakura_iam_service_principal.test.id
+}

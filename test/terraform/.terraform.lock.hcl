@@ -2,25 +2,25 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/sacloud/sakura" {
-  version     = "3.15.2"
+  version     = "3.16.0"
   constraints = "~> 3.0"
   hashes = [
-    "h1:2OxcHCizQurY0HZivOLxI37yrW4RleRF5rK3cXL/yoY=",
-    "h1:bqIbrGIsB8iiNOoDOEEHTgc7ILNGM04oP9l5KFBkABw=",
-    "h1:gbPntwdKc0sGEygfgA9KqxSkGv346ap1SVBAH+fobJA=",
-    "h1:oLQ0Oi2TwlL2x2IR0SNvdtTPpGHbieJdsnhQyC2x3CQ=",
-    "h1:s5/2CCtoYv9k4oXTizIXPbIHkhtoMTpM7ynEVpMq4I0=",
-    "zh:013a83cfa66127d2eec9270cde32499d07aa15e72e0933fdc4b8d0ea9e2b0edb",
-    "zh:0926aaac148171ecb5235bca058865704dae8de6520d7264c853f42b248ee208",
-    "zh:39ba01a383e31b1635748b23d38d34387a6b632f6f9f9251826f42ad9fc59992",
-    "zh:3ff6d4c33bc99f9d6668f9ab0cfdffae29af3e0c3baf23f4872929555a535ea0",
-    "zh:5d6f4e2a0130bc7d7ade65b3a95e29d95237397884f6c633ac34cb8c8d7e671d",
-    "zh:779c0f97d432a08e10ab88c337a272ba76d4d64b7418a201edc11d434e15b46e",
-    "zh:87584b9b33420d78ef9c2ec20d5cc8166759df4cde854ccf8935a56772b4f20e",
-    "zh:8bc2f86b3d45d374fe80022642af300619d0eabd3586592603e79492522610bb",
-    "zh:cd2aa2868c354fc58340c8b9b65149bfbc1548984c25c8227a5ee25f66dc191b",
-    "zh:d485fa40d0d28ec944c5bfa834662490df396399fb0519bdc15d906bf9c5cc41",
-    "zh:d9063c70ccc0fafbc0a7966d3209ee7f4bb3a76f079fb052cad4dfe6a881e2cd",
-    "zh:f101708444f3fcfe5bc5d7f7e0915450f2aed9eaa5eb6bfd9be648f0cc7527fe",
+    "h1:HQDJ6da6o91HhB1/BMvJ+MPAsTiStw3lZVoxTvQDDFM=",
+    "h1:MlmyLL3Hl9K0TTeEL+AYAakkWoGrVVgIiime4JxvC10=",
+    "h1:VL6pmpT7F3FtD7DJOzoumy1iAAfM+zSsYDlKg4hTzjU=",
+    "h1:ZnKRmp14Upw/69MGud13BfVvONrjCs+bRa/C50wHM5o=",
+    "h1:dvSOpfdC1OqfJi46PlnkFIejk3mrQbvxTB/4F/wJyrY=",
+    "zh:0a0db8674b198b09b8adedda45710cf5df80d2864f9dfec6fa00062f26f92a2e",
+    "zh:15d7872ab552d004fba53d53e06bbec7c460b98e5207be97f918e4e3a34209db",
+    "zh:3537f99fe0d808dad6635b60773364bea56c09d6b2b413a3e361f54f286abf7b",
+    "zh:54e22d28478aaadcd20adf9f5223cb935a9de8fc5599d69f436b188f1a59917c",
+    "zh:575c4ed5212b183e8c23d78339dd897b54d9a28c326052afc9a2822270054817",
+    "zh:611bd476e57ff100eb6b954c17f2529d3060031962aeaf20309d246e87095241",
+    "zh:8d2b3a7b50b9826172622a0c6a60239423f8826a116b21760c49fc1f0c62de27",
+    "zh:a293ac0fa7ae3debbce114ce5db8b3577647dc64065dccbe0586ebb43b9f136d",
+    "zh:a76f26ce41477e26fffecd595a29d134c9483c37cba4c48436dcb4404a3333ee",
+    "zh:c25fb86fa3ff32c03c15c0d73ac1ba6ad11397532fd4eab818da889e7216ef79",
+    "zh:e8db5dabf66037eb353325fe292cea36a419cb05440ed04639bf8b0844a712bb",
+    "zh:f3f07b7a54e95ff07f6110a07d38468fdf50e7f5c2c3c8d5042732d7e5ffbc1a",
   ]
 }

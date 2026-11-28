@@ -1,7 +1,7 @@
 openapi: 3.1.0
 
 info:
-  version: 1.1.0
+  version: 1.1.1
   title: EventBus さくらのクラウドAPI
   contact:
     url: https://help.sakura.ad.jp/contact/
@@ -391,8 +391,7 @@ components:
           type: string
           description: リソース名
         Description:
-          type: string
-          nullable: true
+          type: [string, "null"]
         Settings:
           $ref: '#/components/schemas/Settings'
         SettingsHash:
@@ -400,8 +399,7 @@ components:
         Status:
           $ref: '#/components/schemas/Status'
         ServiceClass:
-          type: string
-          nullable: true
+          type: [string, "null"]
         Availability:
           type: string
         CreatedAt:
@@ -464,7 +462,7 @@ components:
           description: 実行間隔単位
         Crontab:
           type: string
-          description: crontab形式
+          description: crontab形式（JST（日本標準時）で解釈されます）
         StartsAt:
           oneOf:
           - type: integer
@@ -481,13 +479,11 @@ components:
         Source:
           type: string
         Types:
-          type: array
-          nullable: true
+          type: [array, "null"]
           items:
             type: string
         Conditions:
-          type: array
-          nullable: true
+          type: [array, "null"]
           items:
             discriminator:
               propertyName: Op
@@ -545,8 +541,7 @@ components:
             type: string
 
     Status:
-      type: object
-      nullable: true
+      type: [object, "null"]
       properties:
         Success:
           type: boolean
@@ -571,8 +566,7 @@ components:
           type: string
 
     Icon:
-      type: object
-      nullable: true
+      type: [object, "null"]
       properties:
         ID:
           type: string
@@ -600,8 +594,7 @@ components:
               type: string
               description: リソース名
             Description:
-              type: string
-              nullable: true
+              type: [string, "null"]
             Settings:
               $ref: '#/components/schemas/Settings'
             Provider:
@@ -624,8 +617,7 @@ components:
               type: string
               description: リソース名
             Description:
-              type: string
-              nullable: true
+              type: [string, "null"]
             Settings:
               $ref: '#/components/schemas/Settings'
             Provider:

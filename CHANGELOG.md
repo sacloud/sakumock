@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.16.0](https://github.com/sacloud/sakumock/compare/v0.15.1...v0.16.0) - 2026-11-28
+
+### 🚀 New Features
+- deps: update sacloud-sdk-go to v0.8.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/276
+### Other Changes
+- Follow terraform-provider-sakura v3.16.0 by @fujiwara in https://github.com/sacloud/sakumock/pull/278
+- eventbus: follow portal OpenAPI 1.1.1 by @fujiwara in https://github.com/sacloud/sakumock/pull/280
+
 ## [v0.15.1](https://github.com/sacloud/sakumock/compare/v0.15.0...v0.15.1) - 2026-11-24
 
 ### Other Changes

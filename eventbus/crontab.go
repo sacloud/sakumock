@@ -7,13 +7,8 @@ import (
 	"time"
 )
 
-// crontabLocation is the timezone schedules are evaluated in.
-//
-// The published EventBus documentation does not state which timezone the real
-// service uses to evaluate crontab expressions; JST (UTC+9, no DST) is an
-// assumption based on the service being operated for Japan. If the real
-// service turns out to evaluate in a different zone, only this variable needs
-// to change.
+// crontabLocation is the timezone schedules are evaluated in: the spec states
+// that Crontab is interpreted in JST (UTC+9, no DST).
 var crontabLocation = time.FixedZone("JST", 9*60*60)
 
 // Crontab is a parsed crontab expression as accepted by the EventBus API.

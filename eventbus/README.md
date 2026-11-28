@@ -112,7 +112,7 @@ A schedule's `Crontab` is validated against the notation published in the [Event
 
 Two points the published spec does not define; the mock's choices are documented here so you know what you are relying on:
 
-- **Timezone**: crontab expressions are evaluated in **JST (UTC+9, no DST)**. The real service's evaluation timezone is not documented; JST is an assumption.
+- **Timezone**: crontab expressions are evaluated in **JST (UTC+9, no DST)**, as the API spec states.
 - **Day matching**: when both the day-of-month and day-of-week fields are restricted (neither is `*`), the schedule fires when *either* matches (the classic Vixie cron rule).
 
 Note: the manual's example table describes `0 0 1 */2 *` as firing in even months, but standard cron semantics for `*/2` in the month field (stepping from the range start, 1) give the odd months 1, 3, 5, 7, 9, 11. The mock follows standard cron semantics.
